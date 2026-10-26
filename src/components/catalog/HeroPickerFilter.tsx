@@ -8,7 +8,7 @@
 
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal } from '@/components/ui/icons'
 import { FACTION_ORDER } from '@/lib/factions'
 import { PORTRAIT_KINDS, PORTRAIT_KIND_LABELS, type PortraitKind } from '@/lib/catalog/portraits'
 import FilterRows, {

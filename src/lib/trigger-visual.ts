@@ -31,8 +31,8 @@ import {
   Camera,
   Bot,
   HelpCircle,
-  type LucideIcon,
-} from 'lucide-react'
+  type AppIcon,
+} from '@/components/ui/icons'
 
 // ─── UI-only condition categories ────────────────────────────────────────────
 // A friendlier, consolidated regrouping of schema/conditions.ts's comment
@@ -44,7 +44,7 @@ import {
 
 export interface UiCategory {
   label: string
-  icon: LucideIcon
+  icon: AppIcon
   types: string[]
 }
 
@@ -139,7 +139,7 @@ export function getConditionCategory(type: string): UiCategory | undefined {
 // One icon per existing ACTION_CATEGORIES value (schema/actions.ts already
 // has real categories — this just attaches a soft visual language to them).
 
-export const ACTION_CATEGORY_ICONS: Record<string, LucideIcon> = {
+export const ACTION_CATEGORY_ICONS: Record<string, AppIcon> = {
   'Quest Management': ListChecks,
   'Technical': Wrench,
   'Counter': Hash,
@@ -154,7 +154,7 @@ export const ACTION_CATEGORY_ICONS: Record<string, LucideIcon> = {
   'AI': Bot,
 }
 
-export function getActionCategoryIcon(category: string): LucideIcon {
+export function getActionCategoryIcon(category: string): AppIcon {
   return ACTION_CATEGORY_ICONS[category] ?? HelpCircle
 }
 

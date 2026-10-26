@@ -13,14 +13,30 @@ export type RoadKind = 'dirt' | 'stone'
 
 /** Sheet to read, the colour its strokes average to in the game's top-down screenshots (the sheets are darker than what is drawn), and how much wider than the sheet's stroke the road is drawn (the stone road is broader in the game). */
 const SHEETS: Record<RoadKind, { name: string; target: readonly [number, number, number]; width: number }> = {
-  dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 0.8 },
-  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 0.8 },
+  dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 0.65 },
+  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 0.65 },
 }
 const COLUMNS = 3
 const ROWS = 2
 
 /** How many tiles one repeat of the cobble texture (512 px, stones of about 50 px) covers, so a stone is about a sixth of the road's width. */
 const STONE_FILL_TILES = 1.6
+
+// road_stone's colour is pale grey stones on near-white; its alpha is a height map (stones high, joints low). In the game the joints
+// are transparent and the terrain shows through (stated by the user, not read from game data), so alpha is kept as the joints' opacity.
+/** Opacity of the joints between the cobbles: 0 = fully transparent (terrain shows through), 1 = the texture's own pale colour. */
+const STONE_JOINT_OPACITY = 0.0
+// Texture alpha at or below JOINT_ALPHA_FROM is a joint, at or above JOINT_ALPHA_TO a stone, fading between (chosen by eye).
+const JOINT_ALPHA_FROM = 100
+const JOINT_ALPHA_TO = 180
+
+/** Turns the cobble texture's alpha height map into joint transparency (stones stay opaque). */
+function bakeStoneJoints(rgba: Uint8ClampedArray): void {
+  for (let i = 0; i < rgba.length; i += 4) {
+    const t = Math.min(1, Math.max(0, (rgba[i + 3] - JOINT_ALPHA_FROM) / (JOINT_ALPHA_TO - JOINT_ALPHA_FROM)))
+    rgba[i + 3] = 255 * (STONE_JOINT_OPACITY + (1 - STONE_JOINT_OPACITY) * t)
+  }
+}
 
 /** Stroke length as a share of the distance between two road tiles' centres: a little over, so neighbours overlap into one road. */
 const OVERLAP = 1.12
@@ -94,7 +110,7 @@ async function loadKind(kind: RoadKind): Promise<{ strokes: HTMLCanvasElement[];
 
 /** Both sheets, or null while one is not extracted yet. */
 export function loadRoadStrokes(): Promise<RoadStrokes | null> {
-  cached ??= Promise.all([loadKind('dirt'), loadKind('stone'), loadLayer('road_stone').catch(() => null)]).then(([dirt, stone, stoneFill]) => {
+  cached ??= Promise.all([loadKind('dirt'), loadKind('stone'), loadLayer('road_stone', true, bakeStoneJoints).catch(() => null)]).then(([dirt, stone, stoneFill]) => {
     if (!dirt || !stone) return null
     return {
       stoneFill,
@@ -221,8 +237,8 @@ export function drawRoads(ctx: CanvasRenderingContext2D, assets: RoadStrokes, se
   const pattern = lg.createPattern(fill, 'repeat')
   if (pattern) {
     pattern.setTransform(new DOMMatrix().scale((px * STONE_FILL_TILES) / fill.width))
-    lg.globalCompositeOperation = 'source-atop'
-    lg.globalAlpha = 0.85
+    lg.globalCompositeOperation = 'source-in'
+    lg.globalAlpha = 1
     lg.fillStyle = pattern
     lg.fillRect(0, 0, layer.width, layer.height)
   }

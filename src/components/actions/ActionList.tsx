@@ -1,7 +1,7 @@
 import type { Action } from '@/types/scenario'
 import ActionForm from './ActionForm'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus } from '@/components/ui/icons'
 
 interface Props {
   actions: Action[]

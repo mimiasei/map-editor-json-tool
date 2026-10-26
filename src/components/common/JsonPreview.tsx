@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Copy, Check, Pencil, AlertTriangle } from 'lucide-react'
+import { Copy, Check, Pencil, AlertTriangle } from '@/components/ui/icons'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'

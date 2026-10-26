@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Trash2, ClipboardCopy } from 'lucide-react'
+import { Trash2, ClipboardCopy } from '@/components/ui/icons'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'

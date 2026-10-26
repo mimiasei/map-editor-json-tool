@@ -9,6 +9,7 @@ import { isTauri } from '@/lib/native-fs'
 import { isIconKnown } from '@/hooks/useThumbnailManifest'
 import { assetLeafName, heroPortraitIcon } from '@/lib/catalog/icon-requests'
 import type { CreatureStats } from '@/lib/catalog/types'
+import type { CSSProperties } from 'react'
 
 // Cached once per session — populated by warmThumbnailDir() at startup.
 let _appLocalDataDir: string | null = null
@@ -66,6 +67,8 @@ interface CatalogIconProps {
   className?: string
   /** Resolved src override, when the caller already picked a variant. */
   src?: string | null
+  /** Extra inline style for the image (the text fallback ignores it). */
+  style?: CSSProperties
 }
 
 /**
@@ -82,6 +85,7 @@ export function CatalogIcon({
   height,
   className,
   src: srcOverride,
+  style,
 }: CatalogIconProps) {
   const src = srcOverride !== undefined ? srcOverride : thumbnailPath(iconId)
   const h = height ?? size
@@ -95,7 +99,7 @@ export function CatalogIcon({
         height={h}
         className={className}
         draggable={false}
-        style={{ objectFit: 'contain', flexShrink: 0 }}
+        style={{ objectFit: 'contain', flexShrink: 0, ...style }}
       />
     )
   }

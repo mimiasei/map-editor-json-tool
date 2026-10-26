@@ -1,7 +1,7 @@
 import type { DialogCondition } from '@/types/dialog'
 import DialogConditionForm from './DialogConditionForm'
 import { Button } from '@/components/ui/button'
-import { Plus, ClipboardPaste } from 'lucide-react'
+import { Plus, ClipboardPaste } from '@/components/ui/icons'
 import { useClipboardHasPayload } from '@/lib/clipboard'
 
 interface Props {

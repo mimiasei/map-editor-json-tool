@@ -88,6 +88,25 @@ export interface FootprintCell {
  * solid object (mountains/rocks/trees always declare an explicit `nodes:[1]`
  * even at 1×1). That case returns a non-blocking `value: 0` cell instead.
  */
+/**
+ * Smallest plus largest local column of the template's blocked (`1`) cells: a mirrored object is flipped about the centre of
+ * those block tiles (seen in GME, which shows the mirror option for interactables only), i.e. local column lx becomes
+ * `span - lx`. Falls back to the whole template width when it has no blocked cell.
+ */
+export function mirrorSpan(template: FootprintTemplate | undefined): number {
+  const sizeX = template?.sizeX ?? 1
+  if (!template?.nodes?.length) return 0
+  let min = Infinity
+  let max = -Infinity
+  template.nodes.forEach((v, i) => {
+    if (v !== 1) return
+    const lx = i % sizeX
+    if (lx < min) min = lx
+    if (lx > max) max = lx
+  })
+  return min === Infinity ? sizeX - 1 : min + max
+}
+
 export function computeFootprintTiles(
   template: FootprintTemplate | undefined,
   anchorX: number,
@@ -103,14 +122,15 @@ export function computeFootprintTiles(
   const sizeX = template.sizeX ?? 1
   const pivotX = template.pivotX ?? 0
   const pivotZ = template.pivotZ ?? 0
+  const span = mirrorSpan(template)
   const cells: FootprintCell[] = []
   for (let i = 0; i < template.nodes.length; i++) {
     const lx = i % sizeX
     const lz = Math.floor(i / sizeX)
     cells.push({
-      // The game's mirrored variant (rotation 10-13) runs the local x axis the other way round
-      // the pivot (an assumption, see rmg/zone-mirror.ts); quarter turns are still not modelled.
-      x: rotation >= 10 ? anchorX - lx + pivotX : anchorX + lx - pivotX,
+      // The mirrored variant (rotation 10-13) flips about the centre of the block tiles (see mirrorSpan), the anchor
+      // tile staying put (an assumption, see rmg/zone-mirror.ts); quarter turns are still not modelled.
+      x: anchorX + (rotation >= 10 ? span - lx : lx) - pivotX,
       z: anchorZ - lz + pivotZ,
       value: template.nodes[i],
     })

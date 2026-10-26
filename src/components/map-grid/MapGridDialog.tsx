@@ -12,6 +12,7 @@
 // never drift out of alignment.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { findMapObject } from '@/lib/catalog/map-object-lookup'
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
@@ -22,13 +23,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useStackOrderStore } from '@/store/useStackOrderStore'
+import { layerPxPerTile, resolveDrawQuality } from '@/lib/map-grid/draw-quality'
+import { FX_IMAGE_STYLE, FX_SPARKLE_SIZE, FX_SPARKLE_STYLE } from '@/lib/map-grid/fx-style'
+import { isDefaultDepthOrder, isFxSid, layerOrder, orderStack } from '@/lib/map-grid/stack-order'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import {
   buildTileIndex,
-  pickPrimary,
+  groupOf,
   type PrimaryPick,
   getVisibleRange,
   resolveFootprintCells,
@@ -56,11 +61,13 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
+import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
 import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
-import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
+import { buildTexturePatterns, drawBiomeEdgeFade, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { riverSid, useRiverSprites } from '@/lib/map-grid/river-tiles'
 import { buildLoneRoadTiles, buildRoadSegments, drawRoads, useRoadStrokes } from '@/lib/map-grid/road-strokes'
@@ -75,7 +82,7 @@ import { tilesInRadius } from '@/lib/map-grid/brush'
 import {buildBlockedTileSet, buildEntranceTileSet, objectBlockedCells} from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
-import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
+import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, mirrorSpan, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
 import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
@@ -97,6 +104,7 @@ import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
 import MapGridSettingsDialog, {
   loadMapGridSettings,
+  TERRAIN_TEXTURE_STRENGTH,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
 import ImageColorMappingDialog, { type ImageColorMappingResult, type ImportedImage } from '@/components/map-grid/ImageColorMappingDialog'
@@ -111,7 +119,6 @@ import {
     ChevronDown,
     Ban,
     Plus,
-    Minus,
     ArrowUp,
     ArrowDown,
     ArrowLeft,
@@ -136,19 +143,28 @@ import {
     Box,
   Castle,
   Crown,
-  UserRound
-} from 'lucide-react'
+  UserRound,
+  Sparkles,
+  FilterReset,
+  Cancel,
+  StepUp,
+  StepDown,
+  Freehand,
+  RectSelect,
+} from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
+
+// Height of the Paint tools row and the Browse pills row, so switching mode doesn't move the grid. min-h, because the pills wrap.
+const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
-// Custom cursor for the rotate-drag handle ring — lucide-react's RotateCw
-// glyph (see node_modules/lucide-react/dist/esm/icons/rotate-cw.js for the
-// source path data) on a translucent white badge so it reads on both light
+// Custom cursor for the rotate-drag handle ring — the RotateCw glyph of the
+// icon set the app used before Hugeicons (path data copied below) on a translucent white badge so it reads on both light
 // and dark canvas backgrounds. Built as a raw data-URI (not the React
 // component) since a CSS cursor needs a URL, not a rendered element.
 const ROTATE_CURSOR_CSS = `url("data:image/svg+xml,${encodeURIComponent(
@@ -158,9 +174,6 @@ const ROTATE_CURSOR_CSS = `url("data:image/svg+xml,${encodeURIComponent(
     '<path d="M21 3v5h-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
     '</svg>'
 )}") 11 11, auto`
-/** Below this on-screen cell size, icons/letters aren't legible — canvas swatches only. */
-const ICON_LOD_THRESHOLD_PX = 16
-const OVERDRAW_CELLS = 3
 /** Same order as ObjectBrowserPanel.tsx's own BIOME_ORDER — each file keeps
  *  its own copy rather than sharing, matching that file's existing convention. */
 const PAINT_BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
@@ -412,6 +425,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     saveDecorationSubFilter(next)
   }
 
+  // Every header pill back on, both sub-category dropdowns fully ticked, "Entity SIDs only" off.
+  const resetAllFilters = () => {
+    const allOn = Object.fromEntries(GRID_GROUP_ORDER.map((g) => [g, true])) as GridFilterState
+    setFilter(allOn)
+    saveGridFilter(allOn)
+    setAllInteractableSubcategories(true)
+    setAllDecorationSubcategories(true)
+    setEntitySidsOnly(false)
+    saveEntitySidsOnly(false)
+  }
+
   // ── Search (issue #130) — matches sid/entitySid/displayName, highlights
   // every matching tile. Deliberately separate from `highlightedNode` (the
   // single pulsing portal-connection marker): one is exactly one node with
@@ -432,6 +456,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [placedObjects, searchQuery])
 
   const [settings, setSettings] = useState(loadMapGridSettings)
+  // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
+  const quality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
+  const iconLodPx = quality.objects.iconFromPx
+  const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
   const renderIndex = useObjectRenderStore((s) => s.index)
   const updateSettings = (next: typeof settings) => {
@@ -507,40 +535,52 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return map
   }, [placedObjects, catalog])
 
-  const { primaryByNode, underlayByNode } = useMemo(() => {
+  // The user's own arrangement of a tile's stack (info column), see stack-order.ts.
+  const manualStacks = useStackOrderStore((s) => s.byNode)
+  const sessionFromId = useStackOrderStore((s) => s.sessionFromId)
+
+  // Whether one object is drawn under the current filters. Each object on a stacked tile is judged on its own, so hiding the trees
+  // shows the mine under one instead of an empty tile.
+  const isShown = useCallback((item: PlacedObject): boolean => {
+    const group = groupOf(item, catalog)
+    if (!group || !filter[group]) return false
+    if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
+    if (group === 'decorations') {
+      const category = findMapObject(catalog, item.sid)?.category
+      if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
+    }
+    return true
+  }, [catalog, filter, interactableSubFilter, decorationSubFilter])
+
+  const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
+    /** Every drawn object of a tile, top of the stack first. */
+    const stacks = new Map<number, PrimaryPick[]>()
+    /** An object registered on several tiles (a mountain) keeps the pick of the first one met. */
+    const byKey = new Map<string, PrimaryPick>()
     // What lies under an object drawn as a transparent bundled image: the best other item on the
     // same tile, so e.g. grass decorations stay visible behind a mine instead of only terrain.
     const underlay = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
-    const accepted = (pick: PrimaryPick | undefined): pick is PrimaryPick => {
-      if (!pick || !filter[pick.group]) return false
-      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) return false
-      if (pick.group === 'decorations') {
-        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
-        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) return false
-      }
-      return true
-    }
     for (const [node, items] of tileIndex) {
       // issue #130: markers ("zones") are real, filterable items now — no
-      // hard exclusion here anymore, just the per-group filter[] toggle below.
+      // hard exclusion here anymore, just the per-group filter[] toggle.
       // "Entity SIDs only" is cross-cutting: untagged items are dropped
       // before picking a primary, so they neither render nor count.
       const candidates = entitySidsOnly ? items.filter((item) => item.entitySid?.trim()) : items
-      const pick = pickPrimary(candidates, catalog)
-      // issue #130: interactables additionally need their sub-category selected.
-      if (!accepted(pick)) continue
-      map.set(node, pick)
-      if (settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary))) {
-        const below = pickPrimary(
-          candidates.filter((i) => i.key !== pick.primary.key && !hasObjectRender(renderSidFor(i))),
-          catalog,
-        )
-        if (accepted(below)) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
+      const ordered = orderStack(candidates.filter(isShown), catalog, manualStacks[node])
+      if (ordered.length === 0) continue
+      const picks = ordered.map((item, i): PrimaryPick => ({ primary: item, group: groupOf(item, catalog)!, count: i === 0 ? candidates.length : 1 }))
+      const top = picks[0]
+      stacks.set(node, picks)
+      for (const p of picks) if (!byKey.has(p.primary.key)) byKey.set(p.primary.key, p)
+      map.set(node, top)
+      if (settings.iconImagesEnabled && hasObjectRender(renderSidFor(top.primary))) {
+        const below = picks.find((p) => p !== top && !hasObjectRender(renderSidFor(p.primary)))
+        if (below) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
       }
     }
-    return { primaryByNode: map, underlayByNode: underlay }
-  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter, settings.iconImagesEnabled, renderIndex])
+    return { primaryByNode: map, underlayByNode: underlay, stackByNode: stacks, pickByKey: byKey }
+  }, [tileIndex, catalog, isShown, manualStacks, entitySidsOnly, settings.iconImagesEnabled, renderIndex])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -1026,13 +1066,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'paintTerrain', changes: region.map((n) => ({ node: n, biomeId })) }, 'bucket-fill terrain')
   }, [bucketFillRegion, applyEdit])
 
+  // After a level edit has been applied: water next to a newly lowered area spreads over it (water-extend.ts). A second edit, so it is
+  // computed only once the stroke is done, never while drawing. levelsMap/waterMap here are still the ones from before the edit.
+  const spreadWaterOver = useCallback((changes: { node: number; level: number }[]) => {
+    if (changes.length === 0 || waterMap.length === 0) return
+    const water = waterExtensionAfterLevelPaint(levelsMap, waterMap, sizeX, sizeZ, changes)
+    if (water.length > 0) applyEdit({ kind: 'paintWater', changes: water }, 'spread water over lowered area')
+  }, [levelsMap, waterMap, sizeX, sizeZ, applyEdit])
+
   // Same idea for Level — flood-fill the biome region, set every tile's
   // level in one edit.
   const applyLevelBucketFill = useCallback((node: number, level: -1 | 0 | 1) => {
     const region = bucketFillRegion(node)
     if (region.length === 0) return
-    applyEdit({ kind: 'paintLevel', changes: region.map((n) => ({ node: n, level })) }, 'bucket-fill level')
-  }, [bucketFillRegion, applyEdit])
+    const changes = region.map((n) => ({ node: n, level }))
+    applyEdit({ kind: 'paintLevel', changes }, 'bucket-fill level')
+    spreadWaterOver(changes)
+  }, [bucketFillRegion, applyEdit, spreadWaterOver])
 
   // Same idea for Obstacles/Trees — flood-fill the biome region, then feed
   // it straight to the same commit function a freehand/Rectangle stroke
@@ -1219,11 +1269,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (tool === 'terrain' && paintBiome !== null) {
       applyEdit({ kind: 'paintTerrain', changes: nodes.map((n) => ({ node: n, biomeId: paintBiome })) }, 'paint terrain')
     } else if (tool === 'level' && levelBrush !== null) {
-      applyEdit({ kind: 'paintLevel', changes: nodes.map((n) => ({ node: n, level: levelBrush })) }, 'paint level')
+      const changes = nodes.map((n) => ({ node: n, level: levelBrush }))
+      applyEdit({ kind: 'paintLevel', changes }, 'paint level')
+      spreadWaterOver(changes)
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, applyEdit, spreadWaterOver, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -1246,7 +1298,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
     setPaintLevelStaged(new Map())
     applyEdit({ kind: 'paintLevel', changes }, 'paint level')
-  }, [paintLevelStaged, applyEdit])
+    spreadWaterOver(changes)
+  }, [paintLevelStaged, applyEdit, spreadWaterOver])
 
   const stopWaterPainting = () => {
     setWaterBrush(null)
@@ -2421,10 +2474,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // nothing extracted leaves the base canvas opaque, i.e. exactly the flat-colour grid.
   const [textureCanvasEl, setTextureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const biomeTextures = useBiomeTextures()
-  const textureStrength = biomeTextures.size > 0 ? settings.terrainTextureStrength : 0
+  const textureStrength = biomeTextures.size > 0 && settings.terrainTextureEnabled ? TERRAIN_TEXTURE_STRENGTH : 0
   useEffect(() => {
     if (!textureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ)
+    const scale = textureScale(sizeX, sizeZ, quality.terrain)
     textureCanvasEl.width = sizeX * scale
     textureCanvasEl.height = sizeZ * scale
     const ctx = textureCanvasEl.getContext('2d')
@@ -2444,20 +2497,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = patterns.get(key)!
       ctx.fill(path)
     }
-  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged])
+    if (settings.biomeEdgeFade) {
+      const keys = stagedTilesMap.map((t, node) => textureKeyFor(t, waterMap[node]))
+      drawBiomeEdgeFade(ctx, patterns, keys, sizeX, sizeZ, scale)
+    }
+  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged, quality.terrain, settings.biomeEdgeFade])
   // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
   // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
   // As in the game, the upward-facing surfaces of the rock carry the ground texture of the tile's biome: each piece is baked once per biome
   // with the texture painted through its top-surface mask.
   const [cliffCanvasEl, setCliffCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
+  // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
+  // the swatch is then the only thing marking the object.
+  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
+  // Zoomed out far enough that objects are not drawn, the fine detail (cliff edges, road/river textures and edge shading) is not either.
   const cliffSprites = useCliffSprites()
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ)
+    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const ctx = cliffCanvasEl.getContext('2d')
-    if (!ctx || !settings.showCliffs || !renderIndex || cliffSprites.sprites.size === 0) return
+    if (!ctx || !settings.showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
     let levels = levelsMap
     if (paintLevelStaged.size > 0) {
       levels = levelsMap.slice()
@@ -2625,11 +2687,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
-  // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
-  // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
-  // the swatch is then the only thing marking the object.
-  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= ICON_LOD_THRESHOLD_PX
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2699,18 +2757,58 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // not real game graphics (per the original ask), just shaped instead of
   // a flat full-tile fill. Live-preview data (paintRoadStaged/riverStaged)
   // merges in exactly like every other paint tool's preview.
+  // Water as a translucent plane over the cliff walls, with the game's ripple shading and glints (water-surface.ts). The pit's walls show
+  // faintly through it and the rim stones stand out of it, as in GME. Stacked after the cliff canvas.
+  const waterSurface = useWaterSurface()
+  const [waterCanvasEl, setWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
+    waterCanvasEl.width = sizeX * scale
+    waterCanvasEl.height = sizeZ * scale
+    const ctx = waterCanvasEl.getContext('2d')
+    if (!ctx || !settings.waterSurface || !iconsVisibleForSwatch || !waterSurface) return
+    const path = new Path2D()
+    for (let node = 0; node < sizeX * sizeZ; node++) {
+      if (waterMap[node]) path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
+    }
+    ctx.fillStyle = WATER_SURFACE_COLOR
+    ctx.fill(path)
+    const pattern = waterSurfacePattern(ctx, waterSurface, scale)
+    if (pattern) {
+      ctx.fillStyle = pattern
+      ctx.fill(path)
+    }
+    fadeWaterShore(ctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
+  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
+  // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
+  const coveredLineNodesRef = useRef<Set<number>>(new Set())
+  const coveredLineNodes = useMemo(() => {
+    const next = new Set<number>()
+    for (const [node, pick] of primaryByNode) {
+      if (!(iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary)))) next.add(node)
+    }
+    const prev = coveredLineNodesRef.current
+    if (prev.size === next.size && [...next].every((n) => prev.has(n))) return prev
+    coveredLineNodesRef.current = next
+    return next
+    // renderIndex: hasObjectRender reads the render store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [primaryByNode, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex])
   const lineTextures = useLineTextures()
   const roadStrokes = useRoadStrokes()
   const riverSprites = useRiverSprites()
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
-    // Textured: a finer canvas (capped at 4096 px) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
-    const textured = settings.lineFeatureTextures && lineTextures.size > 0
-    const strokedRoads = settings.lineFeatureTextures && roadStrokes !== null
-    const strokedRivers = settings.lineFeatureTextures && riverSprites.size > 0 && renderIndex !== null
-    const SUBPX = textured || strokedRoads || strokedRivers ? Math.max(12, Math.min(strokedRoads || strokedRivers ? 64 : 32, Math.floor(4096 / Math.max(sizeX, sizeZ)))) : 12
+    // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
+    const texturesOn = settings.lineFeatureTextures && iconsVisibleForSwatch
+    const textured = texturesOn && lineTextures.size > 0
+    const strokedRoads = texturesOn && roadStrokes !== null
+    const strokedRivers = texturesOn && riverSprites.size > 0 && renderIndex !== null
+    const SUBPX = textured || strokedRoads || strokedRivers ? layerPxPerTile({ ...quality.lines, pxPerTile: strokedRoads || strokedRivers ? quality.lines.pxPerTile : Math.min(32, quality.lines.pxPerTile) }, sizeX, sizeZ, 12) : 12
     const BAND = textured || strokedRoads || strokedRivers ? SUBPX * 0.3 : 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
     canvas.width = sizeX * SUBPX
@@ -2770,8 +2868,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     const fillFor = (kind: 'road1' | 'road2' | 'river', color: string): string | CanvasPattern =>
       patterns.get(kind === 'road2' ? 'stone' : kind === 'road1' ? 'dirt' : 'water') ?? color
+    // An object drawn as a picture lets the road or river show through its transparent parts; only a flat swatch (no picture) hides it.
+    const coversLine = (node: number) => coveredLineNodes.has(node)
     const drawBand = (node: number, color: string | CanvasPattern, hasFeature: (n: number) => boolean) => {
-      if (primaryByNode.has(node)) return
+      if (coversLine(node)) return
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       const baseX = x * SUBPX
@@ -2791,7 +2891,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // edges, semi-transparent black over whatever color was just filled
       // so it works uniformly for both road colors and the river color
       // without a per-color darken table.
-      if (!settings.lineFeatureShading || dirs.length === 0) return
+      // The switch is hidden while textured roads and rivers are on, so shading is off then whatever its saved value.
+      if (!settings.lineFeatureShading || !iconsVisibleForSwatch || texturesOn || dirs.length === 0) return
       const hasH = dirs.includes('E') || dirs.includes('W')
       const hasV = dirs.includes('N') || dirs.includes('S')
       if (hasH && !hasV) {
@@ -2837,8 +2938,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (strokedRoads && roadStrokes) {
       // The game's own road strokes, one per connection (road-strokes.ts).
       const roadAt = (node: number) => mergedRoadId(node)
-      const segments = buildRoadSegments(sizeX, sizeZ, roadAt).filter((seg) => !(primaryByNode.has(seg.az * sizeX + seg.ax) && primaryByNode.has(seg.bz * sizeX + seg.bx)))
-      const lone = buildLoneRoadTiles(sizeX, sizeZ, roadAt).filter((l) => !primaryByNode.has(l.z * sizeX + l.x))
+      const segments = buildRoadSegments(sizeX, sizeZ, roadAt).filter((seg) => !(coversLine(seg.az * sizeX + seg.ax) && coversLine(seg.bz * sizeX + seg.bx)))
+      const lone = buildLoneRoadTiles(sizeX, sizeZ, roadAt).filter((l) => !coversLine(l.z * sizeX + l.x))
       drawRoads(ctx, roadStrokes, segments, lone, SUBPX, sizeZ)
     } else if (roadsMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
@@ -2848,6 +2949,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     // The game's river pieces: one render per tile, chosen by its connections (river-tiles.ts); the flat band where one is missing.
+    const riverLayer = strokedRivers && settings.waterSurface && waterSurface ? document.createElement('canvas') : null
+    if (riverLayer) {
+      riverLayer.width = canvas.width
+      riverLayer.height = canvas.height
+    }
+    const riverLayerCtx = riverLayer?.getContext('2d') ?? null
+    if (riverLayerCtx) riverLayerCtx.imageSmoothingQuality = 'high'
     const drawRiver = (node: number) => {
       const sid = (() => {
         const dirs = connectedDirections(node, hasRiver, sizeX, sizeZ)
@@ -2860,16 +2968,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         drawBand(node, fillFor('river', RIVER_BASE_COLOR), hasRiver)
         return
       }
-      if (primaryByNode.has(node)) return
+      if (coversLine(node)) return
       const k = SUBPX / RENDER_PX_PER_TILE
-      ctx.drawImage(sprite, ((node % sizeX) + 0.5) * SUBPX - entry.ox * k, (sizeZ - 1 - Math.floor(node / sizeX) + 0.5) * SUBPX - entry.oy * k, sprite.width * k, sprite.height * k)
+      const target = riverLayerCtx ?? ctx
+      target.drawImage(sprite, ((node % sizeX) + 0.5) * SUBPX - entry.ox * k, (sizeZ - 1 - Math.floor(node / sizeX) + 0.5) * SUBPX - entry.oy * k, sprite.width * k, sprite.height * k)
     }
     ctx.imageSmoothingQuality = 'high'
     for (const node of riverNodes.keys()) drawRiver(node)
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex])
+    // The ripple shading and glints go on the river pieces only (not on a road beneath them), hence the separate layer.
+    if (riverLayer && riverLayerCtx && waterSurface) {
+      const pattern = waterSurfacePattern(riverLayerCtx, waterSurface, SUBPX)
+      if (pattern) {
+        riverLayerCtx.globalCompositeOperation = 'source-atop'
+        riverLayerCtx.fillStyle = pattern
+        riverLayerCtx.fillRect(0, 0, riverLayer.width, riverLayer.height)
+      }
+      ctx.drawImage(riverLayer, 0, 0)
+    }
+  }, [lineFeatureCanvasEl, waterSurface, settings.waterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
@@ -3021,7 +3140,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
-  const showIcons = effectiveCellPx >= ICON_LOD_THRESHOLD_PX
+  const showIcons = effectiveCellPx >= iconLodPx
 
   // "Cell border thickness" was previously a CSS border drawn on the icon
   // cell — but the icon <img> itself was always a fixed 24px regardless of
@@ -3044,11 +3163,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       containerSize,
       { sizeX, sizeZ },
       BASE_CELL_PX,
-      OVERDRAW_CELLS,
+      overdrawCells,
     ),
-    [transform, containerSize, sizeX, sizeZ],
+    [transform, containerSize, sizeX, sizeZ, overdrawCells],
   )
 
+  // Every drawn single-tile object, not only the top of each stack: objects placed on top of each other all show, in stack order.
   const visibleCells = useMemo(() => {
     if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
     const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
@@ -3058,44 +3178,26 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const z = sizeZ - 1 - screenRow
       for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
         const node = z * sizeX + x
-        const pick = primaryByNode.get(node)
-        if (!pick) continue
-        // Multi-tile footprints (issue #167) get one bigger icon spanning
-        // their bounding box instead — see multiTileIcons below — so skip
-        // them here to avoid rendering the same object once per cell.
-        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
-        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
-        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
-        cells.push({ x, z, node, pick })
+        const stack = stackByNode.get(node)
+        if (!stack) continue
+        for (const pick of stack) {
+          // Multi-tile footprints (issue #167) get one bigger icon spanning
+          // their bounding box instead — see multiTileIcons below — so skip
+          // them here to avoid rendering the same object once per cell.
+          const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+          const bounds1 = cells1 ? footprintIconBounds(cells1) : null
+          if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
+          cells.push({ x, z, node, pick })
+        }
       }
     }
     return cells
-  }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode, footprintCellsByKey])
-
-  // Single-tile icons for what lies under an image object (see underlayByNode). Multi-tile things
-  // underneath are skipped: repeating one big object's icon on every covered cell would look wrong.
-  const underlayCells = useMemo(() => {
-    if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
-    const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
-    for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
-      const z = sizeZ - 1 - screenRow
-      for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
-        const node = z * sizeX + x
-        const pick = underlayByNode.get(node)
-        if (!pick) continue
-        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
-        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
-        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
-        cells.push({ x, z, node, pick })
-      }
-    }
-    return cells
-  }, [showIcons, visibleRange, sizeX, sizeZ, underlayByNode, footprintCellsByKey])
+  }, [showIcons, visibleRange, sizeX, sizeZ, stackByNode, footprintCellsByKey])
 
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
   // box is found by its own extent-vs-viewport intersection regardless of
-  // where its anchor tile happens to sit (no OVERDRAW_CELLS bump needed for
+  // where its anchor tile happens to sit (no overdrawCells bump needed for
   // this, unlike the original plan's assumption — see MapGridDialog's commit
   // notes). Only objects that actually win the stacking pick at their own
   // anchor tile render here, so one 1x1 object sitting exactly on another
@@ -3116,8 +3218,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const bounds = footprintIconBounds(cells)
       if (!bounds) continue
       if (bounds.maxX === bounds.minX && bounds.maxZ === bounds.minZ) continue // plain 1x1 — handled above
-      const pick = primaryByNode.get(obj.node)
-      if (!pick || pick.primary.key !== obj.key) continue
+      const pick = pickByKey.get(obj.key)
+      if (!pick) continue
       const screenRowMin = sizeZ - 1 - bounds.maxZ
       const screenRowMax = sizeZ - 1 - bounds.minZ
       if (bounds.maxX < visibleRange.xMin || bounds.minX > visibleRange.xMax) continue
@@ -3125,7 +3227,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       icons.push({ key: obj.key, ...bounds, screenRowMin, screenRowMax, pick })
     }
     return icons
-  }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, primaryByNode, visibleRange])
+  }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, pickByKey, visibleRange])
 
   // Combined, position-sorted render list — plain 1x1 icons and multi-tile
   // bounding boxes together, painted in top-left → bottom-right order
@@ -3140,57 +3242,52 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       left: number; top: number; width: number; height: number
       clickNode: number
       pick: { primary: PlacedObject; group: GridGroup; count: number }
-      sortRow: number; sortCol: number
-      /** 0 = under an image object, painted before everything else. */
-      layer: 0 | 1
+      row: number; col: number
+      /** Tiles the object stands on, for the stack order. */
+      nodes: number[]
     }[] = []
-    for (const c of underlayCells) {
-      const screenRow = sizeZ - 1 - c.z
-      entries.push({
-        key: `u${c.node}`,
-        left: c.x * BASE_CELL_PX,
-        top: screenRow * BASE_CELL_PX,
-        width: BASE_CELL_PX,
-        height: BASE_CELL_PX,
-        clickNode: c.node,
-        pick: c.pick,
-        sortRow: screenRow,
-        sortCol: c.x,
-        layer: 0,
-      })
-    }
     for (const c of visibleCells) {
       const screenRow = sizeZ - 1 - c.z
       entries.push({
-        key: `s${c.node}`,
+        key: c.pick.primary.key,
         left: c.x * BASE_CELL_PX,
         top: screenRow * BASE_CELL_PX,
         width: BASE_CELL_PX,
         height: BASE_CELL_PX,
         clickNode: c.node,
         pick: c.pick,
-        sortRow: screenRow,
-        sortCol: c.x,
-        layer: 1,
+        row: screenRow,
+        col: c.x,
+        nodes: [c.node],
       })
     }
     for (const m of multiTileIcons) {
+      const nodes = (footprintCellsByKey.get(m.key) ?? []).filter((cell) => cell.value === 1 && cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ).map((cell) => cell.z * sizeX + cell.x)
       entries.push({
-        key: `m${m.key}`,
+        key: m.key,
         left: m.minX * BASE_CELL_PX,
         top: m.screenRowMin * BASE_CELL_PX,
         width: (m.maxX - m.minX + 1) * BASE_CELL_PX,
         height: (m.screenRowMax - m.screenRowMin + 1) * BASE_CELL_PX,
         clickNode: m.pick.primary.node,
         pick: m.pick,
-        sortRow: m.screenRowMin,
-        sortCol: m.minX,
-        layer: 1,
+        row: m.screenRowMin,
+        col: m.minX,
+        nodes,
       })
     }
-    entries.sort((a, b) => a.layer - b.layer || a.sortRow - b.sortRow || a.sortCol - b.sortCol)
-    return entries
-  }, [underlayCells, visibleCells, multiTileIcons, sizeZ])
+    // Lower right in front by default; an object always comes after the one under it on a shared tile (stack-order.ts).
+    const keysByNode = new Map<number, string[]>()
+    for (const [node, picks] of stackByNode) keysByNode.set(node, picks.map((p) => p.primary.key))
+    const placedByKey = new Map(placedObjects.map((o) => [o.key, o]))
+    // A tile the user has arranged by hand keeps that order whatever the ids say.
+    const byDepth = (upper: string, lower: string, node: number) => {
+      const a = placedByKey.get(upper)
+      const b = placedByKey.get(lower)
+      return !!a && !!b && !manualStacks[node] && isDefaultDepthOrder(a, b, catalog, sessionFromId)
+    }
+    return layerOrder(entries, keysByNode, byDepth)
+  }, [visibleCells, multiTileIcons, footprintCellsByKey, stackByNode, sizeX, sizeZ, placedObjects, manualStacks, catalog, sessionFromId])
 
   // Ramp/slope direction arrows — windowed to the viewport the same way
   // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
@@ -3221,7 +3318,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const columnClosed = useMapGridStore((s) => s.columnClosed)
   const selectNode = useMapGridStore((s) => s.selectNode)
   const closeColumn = useMapGridStore((s) => s.closeColumn)
-  const selectedItems = selectedNode !== null ? tileIndex.get(selectedNode) ?? [] : []
+  // Everything on the tile, top of the stack first (the order the info column lists and the map draws).
+  const selectedItems = useMemo(
+    () => (selectedNode !== null ? orderStack(tileIndex.get(selectedNode) ?? [], catalog, manualStacks[selectedNode]) : []),
+    [selectedNode, tileIndex, catalog, manualStacks],
+  )
+  const handleMoveInStack = (item: PlacedObject, delta: -1 | 1) => {
+    if (selectedNode === null) return
+    const keys = selectedItems.map((i) => i.key)
+    const from = keys.indexOf(item.key)
+    const to = from + delta
+    if (from < 0 || to < 0 || to >= keys.length) return
+    const moved = keys.splice(from, 1)[0]
+    keys.splice(to, 0, moved)
+    useStackOrderStore.getState().setOrder(selectedNode, keys)
+  }
   // The cell-info column swaps to a full object browser while this is true
   // (see the column render below), forcing the column open even with no
   // tile selected — declared up here (not alongside the rest of the "Place
@@ -3438,6 +3549,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // from the already-committed item.
   const stepRotate = (item: PlacedObject, delta: 1 | -1) => {
     applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: stepRotation(item.rotation ?? 0, delta) }, 'rotate object')
+  }
+
+  const setMirrored = (item: PlacedObject, mirrored: boolean) => {
+    const quadrant = (item.rotation ?? 0) % 10
+    applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: quadrant + (mirrored ? 10 : 0) }, mirrored ? 'mirror object' : 'unmirror object')
   }
 
   // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
@@ -3687,23 +3803,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects: [], levelsMap, climbsMap, waterMap }, catalog),
     [sizeX, sizeZ, levelsMap, climbsMap, waterMap, catalog],
   )
-  const isNodeBlockedForObjectPaint = useCallback((node: number, sid: string): boolean => {
-    if ((isGroundCoverSid(sid, catalog) ? terrainBlockedSet : blockedTileSet).has(node)) return true
+  // Objects may be placed on top of others (GME does too, e.g. a tree on a mountain's tile; the newest is drawn in front, see
+  // stack-order.ts), so only water and elevation walls block; the stroke's own footprints still do.
+  const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
+    if (terrainBlockedSet.has(node)) return true
     for (const [stagedNode, sid] of paintObjectStaged) {
       for (const cell of objectBlockedCells(sid, stagedNode % sizeX, Math.floor(stagedNode / sizeX), catalog)) {
         if (cell.z * sizeX + cell.x === node) return true
       }
     }
     return false
-  }, [blockedTileSet, terrainBlockedSet, paintObjectStaged, sizeX, catalog])
+  }, [terrainBlockedSet, paintObjectStaged, sizeX, catalog])
 
-  // Whether painting `paintedSid` on a tile removes an existing object there. Ordinary paint
-  // replaces non-blocking instances; ground cover only replaces other ground cover, so grass never
-  // deletes the things it sits underneath.
+  // Whether painting `paintedSid` on a tile removes an existing object there. Objects stack, so only a copy of the same
+  // object is replaced (painting over a stroke twice must not pile up duplicates); ground cover also replaces other ground cover,
+  // so grass never deletes the things it sits underneath.
   const objectPaintReplaces = useCallback((paintedSid: string | undefined, existing: PlacedObject): boolean => {
     if (!paintedSid) return false
     if (isGroundCoverSid(paintedSid, catalog)) return isGroundCoverSid(existing.sid, catalog)
-    return objectBlockedCells(existing.sid, existing.x, existing.z, catalog).length === 0
+    return existing.sid === paintedSid
   }, [catalog])
 
   const applyImageColorMapping = useCallback(async (
@@ -3728,7 +3846,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterChanges.set(node, target.waterId)
           waterLevelChanges.set(node, -1)
         }
-        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node, target.sid)) {
+        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
           additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
         }
       }
@@ -3759,7 +3877,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // city-spawner/hero-spawner are real player-start points, never a
     // decorative scatter — always single-tile, brush Size/Disperse ignored.
     const tiles = (isSingleTileSid(sid) ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
-      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid))
+      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {
       const next = new Map(prev)
@@ -3778,7 +3896,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const commitObjectPaintStroke = useCallback((nodes?: number[]) => {
     const sid = placingSid
     const entries: [number, string][] = nodes
-      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid)).map((n): [number, string] => [n, sid]) : [])
+      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n)).map((n): [number, string] => [n, sid]) : [])
       : [...paintObjectStaged.entries()]
     if (entries.length === 0) return
     const additions = entries.map(([node, s]) => ({ node, sid: s, rotation: randomInitialRotation(s) }))
@@ -4221,8 +4339,73 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                alone (mode-switching UX research: minimizes "mode error"
                risk). Behavior is unchanged from before this phase — same
                state, same handlers, same stage-then-Save convention. */
-            <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
-              <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
+
+            //bg-amber-500/10 border-y border-amber-500/20
+            <div className={`flex items-center gap-2 -mx-4 px-4 ${TOOLBAR_ROW_H} shrink-0`} data-nodrag>
+              {/* <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span> */}
+
+              {paintBiome !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                          style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
+                        />
+                        {BIOME_NAMES[paintBiome]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {PAINT_BIOME_ORDER.map((b) => (
+                        <button
+                          key={b}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setPaintBiome(b)}
+                        >
+                          <span
+                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                            style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
+                          />
+                          {BIOME_NAMES[b]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setTerrainBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous same-biome region"
+                      onClick={() => setTerrainBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
+                  {paintStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting} title="Stop (Esc)">
+                    {paintStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Paintbrush className="h-3.5 w-3.5" />}
+                  label="Terrain"
+                  title="Paint terrain"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
+                />
+              )}
+              
+
               {placingSid && !isSingleTileSid(placingSid) ? (
                 <div className="flex items-center gap-1">
                   <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
@@ -4327,7 +4510,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid('random-hero') }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Landmark — places one randomly-picked interactable per
                   tile (mines, shrines, camps, monuments, ...), always
                   exactly one tile per position like Road. Biome-mix/high-
@@ -4341,8 +4524,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Landmark className="h-3.5 w-3.5" />
                     Drawing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4353,7 +4536,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); stopZonePainting(); setInteractableActive(true) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Encounter (issue #203) — places a random-squad guard
                   encounter, always exactly one tile per position like
                   Landmark/Road. Difficulty/biome-mix/place-resource-above
@@ -4366,8 +4549,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Swords className="h-3.5 w-3.5" />
                     Drawing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopSquadPainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopSquadPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4383,13 +4566,323 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
                         <Gem className="h-3.5 w-3.5" /> Drawing…
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopResourcePainting}>Stop (Esc)</Button>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopResourcePainting} title="Stop (Esc)"><Cancel className="h-3.5 w-3.5" /></Button>
                 </div>
               ) : (
                 <ToolButton icon={<Gem className="h-3.5 w-3.5" />} label="Resource" title="Resource — drag to scatter resource pickups"
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setResourceActive(true) }} />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+           
+              
+              {/* Level brush (issue #193 Phase 2) — same freehand-stroke
+                  staging as Terrain, targeting levelsMap instead of
+                  tilesMap. Deliberately no ramp/climbsMap authoring — see
+                  paintLevelTiles' doc comment in map-write.ts. */}
+              {levelBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    {([-1, 0, 1] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        className={`h-6 px-2 text-xs transition-colors ${
+                          levelBrush === lvl ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                        }`}
+                        onClick={() => setLevelBrush(lvl)}
+                      >
+                        {lvl === -1 ? 'Lower' : lvl === 0 ? 'Flat' : 'Higher'}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setLevelBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous same-biome region"
+                      onClick={() => setLevelBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
+                  {paintLevelStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting} title="Stop (Esc)">
+                    {paintLevelStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Layers className="h-3.5 w-3.5" />}
+                  label="Level"
+                  title="Paint elevation level"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
+                />
+              )}
+              
+              {/* Ramp — toggles climbsMap, restricted to tiles that already
+                  border a strictly higher neighbor (isValidRampNode) — a
+                  ramp tile has no meaning anywhere else, confirmed by real
+                  sample map data (zero exceptions). Direction (up/down/
+                  left/right) is never chosen here — it's derived
+                  automatically from which neighbor is higher, via the same
+                  buildRampDirectionMap the existing arrow rendering
+                  already uses, now fed this tool's live-staged data too. */}
+              {rampActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <TrendingUpDown className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<TrendingUpDown className="h-3.5 w-3.5" />}
+                  label="Ramp"
+                  title="Ramp — drag onto the lower side of a level boundary"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRampActive(true) }}
+                />
+              )}
+              
+              {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
+                  a freehand stroke — see applyWaterFill's doc comment. Each
+                  click applies immediately (issue #195 follow-up), so
+                  there's nothing to Cancel — just Stop to exit the tool. */}
+              {waterBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        {WATER_TYPE_NAMES[waterBrush]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {WATER_TYPE_ORDER.map((w) => (
+                        <button
+                          key={w}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setWaterBrush(w)}
+                        >
+                          {WATER_TYPE_NAMES[w]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Droplets className="h-3.5 w-3.5" />}
+                  label="Water"
+                  title="Flood-fill water (click a tile at level 0 or lower)"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); setWaterBrush(1) }}
+                />
+              )}
+              
+              {/* River — a single-mode tool, ordered-drag path tracing (see
+                  riverActive's own doc comment). Can freely cross an existing
+                  road tile (or vice versa) — no special handling needed,
+                  same as the road/river crossing case confirmed against
+                  real map data. */}
+              {riverActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <Waves className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Waves className="h-3.5 w-3.5" />}
+                  label="River"
+                  title="Draw a river — drag to trace a path"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
+                />
+              )}
+              
+              {/* Road brush — same freehand-stroke staging as Level, targeting
+                  roadsMap instead of levelsMap. Can freely paint over an
+                  existing river node (or vice versa) — a straight road/river
+                  crossing needs no special handling, confirmed against real
+                  map data (see paintRoadTiles's doc comment). */}
+              {roadBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    {([1, 2] as const).map((r) => (
+                      <button
+                        key={r}
+                        className={`h-6 px-2 text-xs transition-colors ${
+                          roadBrush === r ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                        }`}
+                        onClick={() => setRoadBrush(r)}
+                      >
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50 mr-1 align-middle"
+                          style={{ backgroundColor: ROAD_BASE_COLORS[r] }}
+                        />
+                        {ROAD_TYPE_NAMES[r]}
+                      </button>
+                    ))}
+                  </div>
+                  {paintRoadStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintRoadStaged.size} staged</p>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRoadPainting} title="Stop (Esc)">
+                    {paintRoadStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Milestone className="h-3.5 w-3.5" />}
+                  label="Road"
+                  title="Paint a road (dirt or stone)"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRoadBrush(1) }}
+                />
+              )}
+              {fuzzyObstaclePools && (
+                <>
+                  
+                  {/* Fuzzy obstacle brush (issue #193 Phase 5) — drag (or
+                      Rectangle-mode select); every enclosed tile samples a
+                      biome-appropriate obstacle/clutter/nothing on release,
+                      weighted by distance from the stroke's center, and
+                      applies immediately via the same 'paintObjects' edit
+                      Objects itself uses (issue #195 follow-up — no staging,
+                      nothing to Cancel mid-drag, only Stop to exit the tool). */}
+                  {obstacleBrushActive ? (
+                    <div className="flex items-center gap-1">
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                        <Mountain className="h-3.5 w-3.5" />
+                        Drawing…
+                      </Button>
+                      <div className="flex items-center rounded border border-border overflow-hidden">
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${!obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Freehand brush — drag to scatter"
+                          onClick={() => setObstacleBucketMode(false)}
+                        >
+                          Brush
+                        </button>
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Bucket fill — click to scatter across the contiguous same-biome region"
+                          onClick={() => setObstacleBucketMode(true)}
+                        >
+                          Bucket
+                        </button>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting} title="Stop (Esc)">
+                        <Cancel className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <ToolButton
+                      icon={<Mountain className="h-3.5 w-3.5" />}
+                      label="Obstacles"
+                      title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
+                      onClick={() => {
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
+                        setObstacleBrushActive(true)
+                      }}
+                    />
+                  )}
+                </>
+              )}
+              {treePools && (
+                <>
+                  
+                  {/* Trees brush — a dedicated copy of Obstacles above,
+                      restricted to tree_/pinetree_ catalog entries only
+                      (buildTreePools, fuzzy-obstacle.ts). Same drag/
+                      sampling/apply-immediately behavior. */}
+                  {treesActive ? (
+                    <div className="flex items-center gap-1">
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                        <Trees className="h-3.5 w-3.5" />
+                        Drawing…
+                      </Button>
+                      <div className="flex items-center rounded border border-border overflow-hidden">
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Freehand brush — drag to scatter"
+                          onClick={() => setTreeBucketMode(false)}
+                        >
+                          Brush
+                        </button>
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Bucket fill — click to scatter across the contiguous same-biome region"
+                          onClick={() => setTreeBucketMode(true)}
+                        >
+                          Bucket
+                        </button>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopTreePainting} title="Stop (Esc)">
+                        <Cancel className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <ToolButton
+                      icon={<Trees className="h-3.5 w-3.5" />}
+                      label="Trees"
+                      title="Tree brush — drag to scatter biome-appropriate trees"
+                      onClick={() => {
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        setTreesActive(true)
+                      }}
+                    />
+                  )}
+                </>
+              )}
+              {catalog && catalog.zoneTemplates.length > 0 && (
+                <>
+                  
+                  {/* Zones (issue #193 Phase 3) — thin wrapper on the
+                      already-fully-built addMarker write path. */}
+                  {placingZoneSid ? (
+                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
+                      <SquareDashed className="h-3.5 w-3.5" />
+                      Placing {placingZoneSid}…
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <ToolButton icon={<SquareDashed className="h-3.5 w-3.5" />} label="Zones" title="Place a zone marker" onClick={() => {}} />
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
+                        {catalog.zoneTemplates.map((z) => (
+                          <button
+                            key={z.id}
+                            className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                            onClick={() => {
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                              setPlacingZoneSid(z.id)
+                            }}
+                          >
+                            <span>{z.id}</span>
+                            <span className="text-muted-foreground">{z.sizeX}×{z.sizeZ}</span>
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </>
+              )}
+              
               {paintZone !== null ? (
                 <div className="flex items-center gap-1">
                   <Popover>
@@ -4445,385 +4938,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {paintZoneStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintZoneStaged.size} staged</p>
                   )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopZonePainting}>
-                    {paintZoneStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopZonePainting} title="Stop (Esc)">
+                    {paintZoneStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               ) : (
                 <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} label="Player Areas" title="Player Areas — paint color-coded zones associated with a player"
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {paintBiome !== null ? (
-                <div className="flex items-center gap-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                        <span
-                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                          style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
-                        />
-                        {BIOME_NAMES[paintBiome]}
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
-                      {PAINT_BIOME_ORDER.map((b) => (
-                        <button
-                          key={b}
-                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                          onClick={() => setPaintBiome(b)}
-                        >
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                            style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
-                          />
-                          {BIOME_NAMES[b]}
-                        </button>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
-                  <div className="flex items-center rounded border border-border overflow-hidden">
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Freehand brush — drag to paint"
-                      onClick={() => setTerrainBucketMode(false)}
-                    >
-                      Brush
-                    </button>
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Bucket fill — click to fill the contiguous same-biome region"
-                      onClick={() => setTerrainBucketMode(true)}
-                    >
-                      Bucket
-                    </button>
-                  </div>
-                  {paintStaged.size > 0 && (
-                    <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
-                    {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Paintbrush className="h-3.5 w-3.5" />}
-                  label="Terrain"
-                  title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
-                />
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* Level brush (issue #193 Phase 2) — same freehand-stroke
-                  staging as Terrain, targeting levelsMap instead of
-                  tilesMap. Deliberately no ramp/climbsMap authoring — see
-                  paintLevelTiles' doc comment in map-write.ts. */}
-              {levelBrush !== null ? (
-                <div className="flex items-center gap-1">
-                  <div className="flex items-center rounded border border-border overflow-hidden">
-                    {([-1, 0, 1] as const).map((lvl) => (
-                      <button
-                        key={lvl}
-                        className={`h-6 px-2 text-xs transition-colors ${
-                          levelBrush === lvl ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
-                        }`}
-                        onClick={() => setLevelBrush(lvl)}
-                      >
-                        {lvl === -1 ? 'Lower' : lvl === 0 ? 'Flat' : 'Higher'}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center rounded border border-border overflow-hidden">
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${!levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Freehand brush — drag to paint"
-                      onClick={() => setLevelBucketMode(false)}
-                    >
-                      Brush
-                    </button>
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Bucket fill — click to fill the contiguous same-biome region"
-                      onClick={() => setLevelBucketMode(true)}
-                    >
-                      Bucket
-                    </button>
-                  </div>
-                  {paintLevelStaged.size > 0 && (
-                    <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting}>
-                    {paintLevelStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Layers className="h-3.5 w-3.5" />}
-                  label="Level"
-                  title="Paint elevation level"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
-                />
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* Ramp — toggles climbsMap, restricted to tiles that already
-                  border a strictly higher neighbor (isValidRampNode) — a
-                  ramp tile has no meaning anywhere else, confirmed by real
-                  sample map data (zero exceptions). Direction (up/down/
-                  left/right) is never chosen here — it's derived
-                  automatically from which neighbor is higher, via the same
-                  buildRampDirectionMap the existing arrow rendering
-                  already uses, now fed this tool's live-staged data too. */}
-              {rampActive ? (
-                <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <TrendingUpDown className="h-3.5 w-3.5" />
-                    Drawing…
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting}>
-                    Stop (Esc)
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<TrendingUpDown className="h-3.5 w-3.5" />}
-                  label="Ramp"
-                  title="Ramp — drag onto the lower side of a level boundary"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRampActive(true) }}
-                />
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
-                  a freehand stroke — see applyWaterFill's doc comment. Each
-                  click applies immediately (issue #195 follow-up), so
-                  there's nothing to Cancel — just Stop to exit the tool. */}
-              {waterBrush !== null ? (
-                <div className="flex items-center gap-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                        {WATER_TYPE_NAMES[waterBrush]}
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
-                      {WATER_TYPE_ORDER.map((w) => (
-                        <button
-                          key={w}
-                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                          onClick={() => setWaterBrush(w)}
-                        >
-                          {WATER_TYPE_NAMES[w]}
-                        </button>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting}>
-                    Stop (Esc)
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Droplets className="h-3.5 w-3.5" />}
-                  label="Water"
-                  title="Flood-fill water (click a tile at level 0 or lower)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); setWaterBrush(1) }}
-                />
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* River — a single-mode tool, ordered-drag path tracing (see
-                  riverActive's own doc comment). Can freely cross an existing
-                  road tile (or vice versa) — no special handling needed,
-                  same as the road/river crossing case confirmed against
-                  real map data. */}
-              {riverActive ? (
-                <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Waves className="h-3.5 w-3.5" />
-                    Drawing…
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting}>
-                    Stop (Esc)
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Waves className="h-3.5 w-3.5" />}
-                  label="River"
-                  title="Draw a river — drag to trace a path"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
-                />
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* Road brush — same freehand-stroke staging as Level, targeting
-                  roadsMap instead of levelsMap. Can freely paint over an
-                  existing river node (or vice versa) — a straight road/river
-                  crossing needs no special handling, confirmed against real
-                  map data (see paintRoadTiles's doc comment). */}
-              {roadBrush !== null ? (
-                <div className="flex items-center gap-1">
-                  <div className="flex items-center rounded border border-border overflow-hidden">
-                    {([1, 2] as const).map((r) => (
-                      <button
-                        key={r}
-                        className={`h-6 px-2 text-xs transition-colors ${
-                          roadBrush === r ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
-                        }`}
-                        onClick={() => setRoadBrush(r)}
-                      >
-                        <span
-                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50 mr-1 align-middle"
-                          style={{ backgroundColor: ROAD_BASE_COLORS[r] }}
-                        />
-                        {ROAD_TYPE_NAMES[r]}
-                      </button>
-                    ))}
-                  </div>
-                  {paintRoadStaged.size > 0 && (
-                    <p className="text-xs text-amber-600">{paintRoadStaged.size} staged</p>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRoadPainting}>
-                    {paintRoadStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Milestone className="h-3.5 w-3.5" />}
-                  label="Road"
-                  title="Paint a road (dirt or stone)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRoadBrush(1) }}
-                />
-              )}
-              {fuzzyObstaclePools && (
-                <>
-                  <div className="w-px h-4 bg-amber-500/30" />
-                  {/* Fuzzy obstacle brush (issue #193 Phase 5) — drag (or
-                      Rectangle-mode select); every enclosed tile samples a
-                      biome-appropriate obstacle/clutter/nothing on release,
-                      weighted by distance from the stroke's center, and
-                      applies immediately via the same 'paintObjects' edit
-                      Objects itself uses (issue #195 follow-up — no staging,
-                      nothing to Cancel mid-drag, only Stop to exit the tool). */}
-                  {obstacleBrushActive ? (
-                    <div className="flex items-center gap-1">
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                        <Mountain className="h-3.5 w-3.5" />
-                        Drawing…
-                      </Button>
-                      <div className="flex items-center rounded border border-border overflow-hidden">
-                        <button
-                          className={`h-6 px-2 text-xs transition-colors ${!obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                          title="Freehand brush — drag to scatter"
-                          onClick={() => setObstacleBucketMode(false)}
-                        >
-                          Brush
-                        </button>
-                        <button
-                          className={`h-6 px-2 text-xs transition-colors ${obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                          title="Bucket fill — click to scatter across the contiguous same-biome region"
-                          onClick={() => setObstacleBucketMode(true)}
-                        >
-                          Bucket
-                        </button>
-                      </div>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting}>
-                        Stop (Esc)
-                      </Button>
-                    </div>
-                  ) : (
-                    <ToolButton
-                      icon={<Mountain className="h-3.5 w-3.5" />}
-                      label="Obstacles"
-                      title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
-                      onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
-                        setObstacleBrushActive(true)
-                      }}
-                    />
-                  )}
-                </>
-              )}
-              {treePools && (
-                <>
-                  <div className="w-px h-4 bg-amber-500/30" />
-                  {/* Trees brush — a dedicated copy of Obstacles above,
-                      restricted to tree_/pinetree_ catalog entries only
-                      (buildTreePools, fuzzy-obstacle.ts). Same drag/
-                      sampling/apply-immediately behavior. */}
-                  {treesActive ? (
-                    <div className="flex items-center gap-1">
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                        <Trees className="h-3.5 w-3.5" />
-                        Drawing…
-                      </Button>
-                      <div className="flex items-center rounded border border-border overflow-hidden">
-                        <button
-                          className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                          title="Freehand brush — drag to scatter"
-                          onClick={() => setTreeBucketMode(false)}
-                        >
-                          Brush
-                        </button>
-                        <button
-                          className={`h-6 px-2 text-xs transition-colors ${treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                          title="Bucket fill — click to scatter across the contiguous same-biome region"
-                          onClick={() => setTreeBucketMode(true)}
-                        >
-                          Bucket
-                        </button>
-                      </div>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopTreePainting}>
-                        Stop (Esc)
-                      </Button>
-                    </div>
-                  ) : (
-                    <ToolButton
-                      icon={<Trees className="h-3.5 w-3.5" />}
-                      label="Trees"
-                      title="Tree brush — drag to scatter biome-appropriate trees"
-                      onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
-                        setTreesActive(true)
-                      }}
-                    />
-                  )}
-                </>
-              )}
-              {catalog && catalog.zoneTemplates.length > 0 && (
-                <>
-                  <div className="w-px h-4 bg-amber-500/30" />
-                  {/* Zones (issue #193 Phase 3) — thin wrapper on the
-                      already-fully-built addMarker write path. */}
-                  {placingZoneSid ? (
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
-                      <SquareDashed className="h-3.5 w-3.5" />
-                      Placing {placingZoneSid}…
-                    </Button>
-                  ) : (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <ToolButton icon={<SquareDashed className="h-3.5 w-3.5" />} label="Zones" title="Place a zone marker" onClick={() => {}} />
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
-                        {catalog.zoneTemplates.map((z) => (
-                          <button
-                            key={z.id}
-                            className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                            onClick={() => {
-                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
-                              setPlacingZoneSid(z.id)
-                            }}
-                          >
-                            <span>{z.id}</span>
-                            <span className="text-muted-foreground">{z.sizeX}×{z.sizeZ}</span>
-                          </button>
-                        ))}
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                </>
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Eraser (issue #195 follow-up) — deletes non-terrain
                   content (objects/units/zones) under the brush; drag
                   (brush-size, via eraserDragRef) or Rectangle-mode select,
@@ -4835,8 +4958,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Eraser className="h-3.5 w-3.5" />
                     Erasing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopEraser}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopEraser} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4850,7 +4973,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
                   own doc comment for why player-start spawners are kept and
                   why this is one atomic edit rather than a per-object loop. */}
@@ -4921,18 +5044,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
                       title="Drag to paint tile by tile"
                       onClick={() => setInteractionMode('freehand')}
                     >
-                      Freehand
+                      <Freehand className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
                       title="Drag a rectangle — Shift=square, Alt=from center"
                       onClick={() => setInteractionMode('rectangle')}
                     >
-                      Rectangle
+                      <RectSelect className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </>
@@ -4948,27 +5071,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Smaller brush"
-                    disabled={brushRadius <= 1}
-                    onClick={() => setBrushRadius((r) => Math.max(1, r - 1))}
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </Button>
                   <span className="text-xs tabular-nums w-5 text-center">{brushRadius}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Bigger brush"
-                    disabled={brushRadius >= 15}
-                    onClick={() => setBrushRadius((r) => Math.min(15, r + 1))}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="Bigger brush" disabled={brushRadius >= 15} onClick={() => setBrushRadius((r) => Math.min(15, r + 1))}>
+                      <StepUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="Smaller brush" disabled={brushRadius <= 1} onClick={() => setBrushRadius((r) => Math.max(1, r - 1))}>
+                      <StepDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                   {/* Disperse — thins the same circular brush.ts area Size
                       just sized, rather than painting it solid: 0% (default)
                       is unchanged full-coverage behavior, 100% leaves only a
@@ -4977,27 +5088,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       the exact same brush area every one of these tools
                       already gets from Size. */}
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0 ml-1">Disperse:</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Less disperse"
-                    disabled={brushDisperse <= 0}
-                    onClick={() => setBrushDisperse((d) => Math.max(0, Math.round((d - 0.1) * 10) / 10))}
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </Button>
                   <span className="text-xs tabular-nums w-9 text-center">{Math.round(brushDisperse * 100)}%</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="More disperse"
-                    disabled={brushDisperse >= 1}
-                    onClick={() => setBrushDisperse((d) => Math.min(1, Math.round((d + 0.1) * 10) / 10))}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="More disperse" disabled={brushDisperse >= 1} onClick={() => setBrushDisperse((d) => Math.min(1, Math.round((d + 0.1) * 10) / 10))}>
+                      <StepUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="Less disperse" disabled={brushDisperse <= 0} onClick={() => setBrushDisperse((d) => Math.max(0, Math.round((d - 0.1) * 10) / 10))}>
+                      <StepDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               )}
               {/* issue #195 follow-up: every tool here now applies straight
@@ -5011,7 +5110,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   (not-yet-committed) drag stroke. */}
             </div>
           ) : (
-          <div className="flex gap-1 flex-wrap" data-nodrag>
+          <div className={`flex items-center gap-1 flex-wrap ${TOOLBAR_ROW_H}`} data-nodrag>
             {GRID_GROUP_ORDER.map((g) => (
               <div key={g} className="flex items-stretch">
                 <button
@@ -5151,6 +5250,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             >
               Entity SIDs only
             </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              onClick={resetAllFilters}
+              title="Reset all filters (every pill on, Entity SIDs only off)"
+            >
+              <FilterReset className="h-3.5 w-3.5" />
+            </Button>
           </div>
           )}
         </div>
@@ -5319,6 +5427,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
                 />
 
+                {/* Water surface — see waterCanvasEl above. After the cliff canvas, before the icon layer. */}
+                <canvas
+                  ref={setWaterCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
+                />
+
                 {/* Interactive icon layer — windowed to the visible range, only
                     above the LOD threshold. Single combined, position-sorted
                     list (see sortedIconEntries above) so plain and multi-tile
@@ -5364,6 +5479,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ? entry.pick.primary.rotation
                     : undefined
                   const rotationDegrees = rotation !== undefined ? (rotation % 10) * 90 : 0
+                  // The image is drawn flipped for a mirrored object and for a rotatable one turned 180° or 270° (its art isn't turned in 3D, so a flip is the
+                  // visible cue); both together cancel.
+                  const flipImage = entry.pick.primary.type === 0
+                    && ((entry.pick.primary.rotation ?? 0) >= 10) !== (rotation !== undefined && rotation % 10 >= 2)
                   return (
                     <div
                       key={entry.key}
@@ -5391,6 +5510,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           render={visual.render}
                           name={name}
                           cell={BASE_CELL_PX}
+                          fx={isFxSid(entry.pick.primary.sid, catalog)}
+                          mirrored={flipImage}
+                          mirrorCentreTiles={(() => {
+                            const p = entry.pick.primary
+                            if (!flipImage) return 0
+                            // Flip about the centre of the block tiles; the anchor (select) tile is pivotX columns in from the left edge.
+                            const t = catalog?.mapObjects.find((o) => o.id === p.sid)
+                            return t?.nodes?.length ? mirrorSpan(t) / 2 - (t.pivotX ?? 0) : 0
+                          })()}
                           // Relative to this box: the anchor tile's corner minus the box corner.
                           shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
                           // A faction city standing in for a city spawner sits one tile too high with the spawner's anchor: one tile lower (user-verified).
@@ -5398,20 +5526,41 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         />
                       )}
                       {visual.kind === 'catalog' && (
-                        <CatalogIcon
-                          iconId={entry.pick.primary.sid}
-                          name={name}
-                          size={thisIconSize}
-                          src={settings.iconImagesEnabled ? undefined : null}
-                        />
+                        <>
+                          {/* Effects (fog, light, flies) have no render, only their catalog image: half see-through with a sparkle (as RenderedObject does). */}
+                          <CatalogIcon
+                            iconId={entry.pick.primary.sid}
+                            name={name}
+                            size={thisIconSize}
+                            style={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? FX_IMAGE_STYLE : undefined}
+                            src={settings.iconImagesEnabled ? undefined : null}
+                          />
+                          {settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) && (
+                            <Sparkles
+                              size={Math.max(8, thisIconSize * FX_SPARKLE_SIZE)}
+                              className="absolute pointer-events-none text-white"
+                              style={FX_SPARKLE_STYLE}
+                            />
+                          )}
+                        </>
                       )}
                       {visual.kind === 'catalogOverride' && (
-                        <CatalogIcon
-                          iconId={visual.iconId}
-                          name={visual.name}
-                          size={thisIconSize}
-                          src={settings.iconImagesEnabled ? undefined : null}
-                        />
+                        <>
+                          <CatalogIcon
+                            iconId={visual.iconId}
+                            name={visual.name}
+                            size={thisIconSize}
+                            style={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? FX_IMAGE_STYLE : undefined}
+                            src={settings.iconImagesEnabled ? undefined : null}
+                          />
+                          {settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) && (
+                            <Sparkles
+                              size={Math.max(8, thisIconSize * FX_SPARKLE_SIZE)}
+                              className="absolute pointer-events-none text-white"
+                              style={FX_SPARKLE_STYLE}
+                            />
+                          )}
+                        </>
                       )}
                       {mapBadgeOwner(entry.pick.primary) !== undefined && (
                         <span
@@ -5425,7 +5574,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           {mapBadgeOwner(entry.pick.primary)}
                         </span>
                       )}
-                      {entry.pick.count > 1 && (
+                      {settings.objectCountEnabled && entry.pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {entry.pick.count}
                         </span>
@@ -5472,7 +5621,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
-                      {visual.kind === 'render' && <RenderedObject render={visual.render} name={icon.sid} cell={BASE_CELL_PX} shiftX={0} shiftY={0} />}
+                      {visual.kind === 'render' && <RenderedObject render={visual.render} name={icon.sid} cell={BASE_CELL_PX} shiftX={0} shiftY={0} fx={isFxSid(icon.sid, catalog)} />}
                       {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
                         <CatalogIcon
                           iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
@@ -5792,6 +5941,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : selectedNode !== null ? (
                 <MapGridCellContent
                   items={selectedItems}
+                  onMoveInStack={canEditEntities ? handleMoveInStack : undefined}
                   terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX, levelsMap, rampDirectionMap.get(selectedNode))}
                   catalog={catalog}
                   existingSids={existingSids}
@@ -5823,6 +5973,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onStartMove={canEditEntities ? startMove : undefined}
                   onCancelMove={canEditEntities ? cancelMove : undefined}
                   onStepRotate={canEditEntities ? stepRotate : undefined}
+                  onSetMirrored={canEditEntities ? setMirrored : undefined}
                   deleteTarget={deleteTarget}
                   deleteUsageWarnings={deleteUsageWarnings}
                   onStartDelete={canEditEntities ? startDelete : undefined}

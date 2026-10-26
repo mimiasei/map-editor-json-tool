@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import MapEntityPickField from '@/components/common/MapEntityPickField'

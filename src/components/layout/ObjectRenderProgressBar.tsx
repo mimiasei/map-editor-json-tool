@@ -2,7 +2,7 @@
 // usable while it runs. Hidden when no job has run; a finished, cancelled or failed job leaves a one-line result to dismiss.
 
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { X } from '@/components/ui/icons'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { useObjectRenderStore, type JobName } from '@/store/useObjectRenderStore'

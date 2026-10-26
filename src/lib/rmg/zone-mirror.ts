@@ -12,11 +12,10 @@
 // An object copied to the right half is placed at the mirrored tile with the
 // game's own "mirrored" rotation variant (rotations 10-13, see map-write.ts's
 // stepRotation). The footprint model for a mirrored object is: the local x axis
-// is flipped about the object's pivot (cells at `anchorX - lx + pivotX` instead
-// of `anchorX + lx - pivotX`), which makes the reflected anchor exactly
-// `sizeX - 1 - anchorX`. That is an assumption, see computeFootprintTiles.
+// is flipped inside the object's own box (see computeFootprintTiles, an assumption),
+// so the reflected copy's anchor is `mirrorAnchorNode`, not simply `mirrorNode`.
 
-import { computeFootprintTiles, type FootprintCell, type FootprintTemplate } from '@/lib/map-grid/footprint'
+import { computeFootprintTiles, mirrorSpan, type FootprintCell, type FootprintTemplate } from '@/lib/map-grid/footprint'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { ZoneCenter } from './zone-layout'
 import type { ConcreteSquadPlacement, ZonePlacement } from './zone-population'
@@ -26,6 +25,14 @@ import type { MirrorInfo } from './zone-archetypes'
 export function mirrorNode(node: number, sizeX: number): number {
   const x = node % sizeX
   return node - x + (sizeX - 1 - x)
+}
+
+/** Anchor tile of the mirror image of an object anchored at `node`: the mirrored footprint is flipped about the
+ *  centre of its block tiles, so the anchor sits `2 * pivotX - mirrorSpan` columns off the plain reflection. */
+export function mirrorAnchorNode(template: FootprintTemplate | undefined, node: number, sizeX: number): number {
+  const p = template?.nodes?.length ? template.pivotX ?? 0 : 0
+  const x = node % sizeX
+  return node - x + (sizeX - 1 - x + 2 * p - mirrorSpan(template))
 }
 
 /** Whether a tile is in the left half, the half that carries the generated content. */
@@ -161,7 +168,7 @@ export function mirrorObjects(input: MirrorObjectsInput): { copied: number; drop
       const original = tempIdToPlacement.get(next.ids[i])
       if (!original) continue
       const tempId = nextTempId()
-      const node = mirrorNode(next.nodes[i], sizeX)
+      const node = mirrorAnchorNode(catalogById.get(sid), next.nodes[i], sizeX)
       const rotation = mirrorRotation(next.rotations[i])
       tempIdToPlacement.set(tempId, { ...original, tempId, node, rotation })
       if (decorativeIds.has(next.ids[i])) decorativeIds.add(tempId)

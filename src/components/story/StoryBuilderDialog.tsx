@@ -8,7 +8,7 @@
 // built-in text in place; without it everything still works.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDown, ArrowUp, Dices, Loader2, Plus, Settings2, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowUp, Dices, Loader2, Plus, Settings2, Trash2 } from '@/components/ui/icons'
 import {
   Dialog,
   DialogContent,

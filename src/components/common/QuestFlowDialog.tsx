@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Maximize2, X, Zap } from 'lucide-react'
+import { Maximize2, X, Zap } from '@/components/ui/icons'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
 

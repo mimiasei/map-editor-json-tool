@@ -4,7 +4,7 @@
 // dialog never keeps it after saving.
 
 import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, CheckCircle2, ExternalLink } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ExternalLink } from '@/components/ui/icons'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

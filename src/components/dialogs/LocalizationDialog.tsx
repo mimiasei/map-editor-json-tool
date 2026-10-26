@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, Upload, Plus, X, Languages, Trash2 } from 'lucide-react'
+import { Search, Upload, Plus, X, Languages, Trash2 } from '@/components/ui/icons'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 

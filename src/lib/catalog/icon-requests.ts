@@ -42,6 +42,8 @@ export const TERRAIN_LAYER_ICONS = [
   'dirt_ground1', 'dirt_ground2', 'dirt_ground3',
   // Roads and rivers on the Map Grid: cobble road, brown dirt, water (the game's own road/river meshes are shader-driven, no texture of their own).
   'nature_road', 'WaterTexture', 'road_dirt_1', 'road_stone_1', 'road_stone',
+  // The water surface overlay (map-grid/water-surface.ts).
+  'WaterNormal',
 ] as const
 
 /** Suffix of the large hero portraits — see heroPortraitIcon(). */

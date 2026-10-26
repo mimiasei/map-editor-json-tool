@@ -13,7 +13,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { isTauri, openExternal } from '@/lib/native-fs'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink } from '@/components/ui/icons'
 import about from '@/data/about.json'
 
 interface Props {

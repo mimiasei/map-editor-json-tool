@@ -31,7 +31,7 @@ import {
   Box,
   Gem,
   Sparkles,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { isTauri } from '@/lib/native-fs'
 import { syncHeroItemsEverywhere } from '@/lib/hero-items-sync'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'

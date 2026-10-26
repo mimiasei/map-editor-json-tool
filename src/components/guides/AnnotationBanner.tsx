@@ -1,5 +1,5 @@
 import { useGuideStore } from '@/store/useGuideStore'
-import { Info, X } from 'lucide-react'
+import { Info, X } from '@/components/ui/icons'
 
 interface Props {
   /** JSON path of this node, e.g. "quests[0].subQuests[0].triggers[0]" */

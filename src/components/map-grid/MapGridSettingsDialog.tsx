@@ -16,20 +16,32 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { DEFAULT_TERRAIN_BLEND } from '@/lib/map-grid/terrain-colors'
+import {
+  DRAW_QUALITY_LIMITS, DRAW_QUALITY_PRESETS, estimateCanvasMegabytes, layerPxPerTile, resolveDrawQuality,
+  type CanvasLayerQuality, type DrawQuality, type DrawQualityChoice,
+} from '@/lib/map-grid/draw-quality'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
-import { Settings, ChevronDown } from 'lucide-react'
+import { Settings, ChevronDown } from '@/components/ui/icons'
 
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */
   terrainOpacity: number
-  /** 0-1, how strongly the game's ground textures show through the terrain colours (0 = flat colours only). Needs the
-   *  textures extracted, see biomeTexturesAvailable(). */
-  terrainTextureStrength: number
+  /** The game's ground textures under the terrain colours (strength: TERRAIN_TEXTURE_STRENGTH). Needs the textures extracted,
+   *  see biomeTexturesAvailable(). */
+  terrainTextureEnabled: boolean
   /** When false, every cell forces its letter-badge fallback instead of a real icon. */
   iconImagesEnabled: boolean
   /** When false, a rotated object's small green degree badge is hidden. */
   rotationNumberEnabled: boolean
+  /** When false, the small badge with the number of objects on a tile is hidden. */
+  objectCountEnabled: boolean
+  /** When true, a ground texture fades into the neighbouring biome's along land-to-land borders. */
+  biomeEdgeFade: boolean
+  /** How finely each layer is drawn: a preset, or 'custom' with the numbers in drawQualityCustom (draw-quality.ts). */
+  drawQuality: DrawQualityChoice
+  drawQualityCustom: DrawQuality
   /** 1px lines between every cell, on/off — always the same fixed thickness. */
   showGridLines: boolean
   /** 0 = off (icon fills the whole tile); otherwise the number of screen
@@ -57,6 +69,8 @@ export interface MapGridSettings {
   showCliffs: boolean
   /** Roads and rivers filled with the game's own textures instead of flat colours (needs the extracted textures). */
   lineFeatureTextures: boolean
+  /** Water as a translucent teal plane over the cliff walls, with the game's ripple shading and glints (water-surface.ts), also on rivers. */
+  waterSurface: boolean
   /** Translucent per-zone color fill over every painted "Player Areas" tile
    *  (see zone-colors.ts) — an escape hatch to hide the overlay, same
    *  rationale as showBlockedTiles above. */
@@ -96,11 +110,18 @@ export interface MapGridSettings {
   confirmBeforeDelete: boolean
 }
 
+/** How strongly the ground textures show over the flat terrain colours (0-1). 1 = the texture alone: the colour layer is drawn fully transparent. */
+export const TERRAIN_TEXTURE_STRENGTH = 1
+
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
-  terrainTextureStrength: 0.5,
+  terrainTextureEnabled: true,
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
+  objectCountEnabled: true,
+  biomeEdgeFade: true,
+  drawQuality: 'high',
+  drawQualityCustom: DRAW_QUALITY_PRESETS.high,
   showGridLines: false,
   cellBorderThickness: 0,
   showGridNumbers: false,
@@ -109,6 +130,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showElevationShading: true,
   showCliffs: true,
   lineFeatureTextures: true,
+  waterSurface: true,
   showPlayerAreas: true,
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
@@ -151,6 +173,21 @@ export default function MapGridSettingsDialog({
   // Not persisted — purely a "did the user open this section" UI state,
   // same as every other popover's own open/closed state.
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  // Select primitives: an object built inside the selector is a new reference every call and loops the render.
+  const mapSizeX = useMapContextStore((s) => s.context?.sizeX)
+  const mapSizeZ = useMapContextStore((s) => s.context?.sizeZ)
+  const mapSize = mapSizeX && mapSizeZ ? { x: mapSizeX, z: mapSizeZ } : null
+  const quality = resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom)
+  const setQualityChoice = (choice: DrawQualityChoice) => {
+    // Picking Custom starts from the numbers of the preset in use.
+    update(choice === 'custom' ? { drawQuality: choice, drawQualityCustom: quality } : { drawQuality: choice })
+  }
+  const updateCustom = (patch: Partial<DrawQuality>) => update({ drawQuality: 'custom', drawQualityCustom: { ...quality, ...patch } })
+  const layerRows: { key: 'terrain' | 'cliffs' | 'lines'; label: string }[] = [
+    { key: 'terrain', label: 'Terrain textures' },
+    { key: 'cliffs', label: 'Cliff edges' },
+    { key: 'lines', label: 'Roads and rivers' },
+  ]
 
   const updateRange = (label: string, patch: Partial<Pick<DifficultyRange, 'min' | 'max'>>) => {
     update({
@@ -178,30 +215,41 @@ export default function MapGridSettingsDialog({
       >
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Terrain opacity</Label>
-            <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
+            <Label htmlFor="grid-terrain-texture" className="text-xs cursor-pointer">Terrain texture</Label>
+            <Switch
+              id="grid-terrain-texture"
+              checked={settings.terrainTextureEnabled}
+              onCheckedChange={(v) => update({ terrainTextureEnabled: v })}
+              disabled={!biomeTexturesAvailable()}
+            />
           </div>
-          <Slider
-            min={0} max={1} step={0.01}
-            value={[settings.terrainOpacity]}
-            onValueChange={([v]) => update({ terrainOpacity: v })}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Terrain texture</Label>
-            <span className="text-xs text-muted-foreground">{Math.round(settings.terrainTextureStrength * 100)}%</span>
-          </div>
-          <Slider
-            min={0} max={1} step={0.01}
-            value={[settings.terrainTextureStrength]}
-            onValueChange={([v]) => update({ terrainTextureStrength: v })}
-            disabled={!biomeTexturesAvailable()}
-          />
           {!biomeTexturesAvailable() && (
             <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
           )}
+        </div>
+
+        {!(settings.terrainTextureEnabled && biomeTexturesAvailable()) && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Terrain opacity</Label>
+              <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
+            </div>
+            <Slider
+              min={0} max={1} step={0.01}
+              value={[settings.terrainOpacity]}
+              onValueChange={([v]) => update({ terrainOpacity: v })}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
+          <Switch
+            id="grid-biome-fade"
+            checked={settings.biomeEdgeFade}
+            onCheckedChange={(v) => update({ biomeEdgeFade: v })}
+            disabled={!biomeTexturesAvailable()}
+          />
         </div>
 
         <div className="flex items-center justify-between">
@@ -219,6 +267,83 @@ export default function MapGridSettingsDialog({
             id="grid-rotation-numbers"
             checked={settings.rotationNumberEnabled}
             onCheckedChange={(v) => update({ rotationNumberEnabled: v })}
+          />
+        </div>
+
+        <div className="space-y-2 rounded-md border border-border p-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Drawing quality</Label>
+            <select
+              className="h-6 rounded border border-input bg-background px-1 text-xs"
+              value={settings.drawQuality}
+              onChange={(e) => setQualityChoice(e.target.value as DrawQualityChoice)}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="ultra">Ultra</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {mapSize && 'Current: ' + estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) + ' MB of canvas memory.'}
+          </p>
+          {settings.drawQuality === 'custom' && (
+            <div className="space-y-2">
+              {layerRows.map(({ key, label }) => (
+                <div key={key} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">{label}</Label>
+                    <span className="text-xs text-muted-foreground">
+                      {quality[key].pxPerTile} px/tile{mapSize ? ` (now ${layerPxPerTile(quality[key], mapSize.x, mapSize.z)})` : ''}
+                    </span>
+                  </div>
+                  <Slider
+                    min={DRAW_QUALITY_LIMITS.pxPerTile.min} max={DRAW_QUALITY_LIMITS.pxPerTile.max} step={4}
+                    value={[quality[key].pxPerTile]}
+                    onValueChange={([v]) => updateCustom({ [key]: { ...quality[key], pxPerTile: v } as CanvasLayerQuality })}
+                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] text-muted-foreground">Largest canvas side</Label>
+                    <span className="text-[11px] text-muted-foreground">{quality[key].maxSide} px</span>
+                  </div>
+                  <Slider
+                    min={DRAW_QUALITY_LIMITS.maxSide.min} max={DRAW_QUALITY_LIMITS.maxSide.max} step={512}
+                    value={[quality[key].maxSide]}
+                    onValueChange={([v]) => updateCustom({ [key]: { ...quality[key], maxSide: v } as CanvasLayerQuality })}
+                  />
+                </div>
+              ))}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Object icons from</Label>
+                  <span className="text-xs text-muted-foreground">{quality.objects.iconFromPx} px per tile on screen</span>
+                </div>
+                <Slider
+                  min={DRAW_QUALITY_LIMITS.iconFromPx.min} max={DRAW_QUALITY_LIMITS.iconFromPx.max} step={2}
+                  value={[quality.objects.iconFromPx]}
+                  onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, iconFromPx: v } })}
+                />
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] text-muted-foreground">Extra tiles beyond the screen</Label>
+                  <span className="text-[11px] text-muted-foreground">{quality.objects.overdrawTiles}</span>
+                </div>
+                <Slider
+                  min={DRAW_QUALITY_LIMITS.overdrawTiles.min} max={DRAW_QUALITY_LIMITS.overdrawTiles.max} step={1}
+                  value={[quality.objects.overdrawTiles]}
+                  onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, overdrawTiles: v } })}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-object-count" className="text-xs cursor-pointer">Object count per tile</Label>
+          <Switch
+            id="grid-object-count"
+            checked={settings.objectCountEnabled}
+            onCheckedChange={(v) => update({ objectCountEnabled: v })}
           />
         </div>
 
@@ -259,7 +384,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges (rendered game art)</Label>
+          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges</Label>
           <Switch
               id="grid-show-cliffs"
               checked={settings.showCliffs}
@@ -286,13 +411,24 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">Road/river edge shading</Label>
+          <Label htmlFor="grid-water-surface" className="text-xs cursor-pointer">Water ripples and surface</Label>
           <Switch
-              id="grid-line-feature-shading"
-              checked={settings.lineFeatureShading}
-              onCheckedChange={(v) => update({ lineFeatureShading: v })}
+              id="grid-water-surface"
+              checked={settings.waterSurface}
+              onCheckedChange={(v) => update({ waterSurface: v })}
           />
         </div>
+
+        {!settings.lineFeatureTextures && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">Road/river edge shading</Label>
+            <Switch
+                id="grid-line-feature-shading"
+                checked={settings.lineFeatureShading}
+                onCheckedChange={(v) => update({ lineFeatureShading: v })}
+            />
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">

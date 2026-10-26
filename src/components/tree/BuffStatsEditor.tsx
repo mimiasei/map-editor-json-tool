@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from '@/components/ui/icons'
 import {
   BUFF_STAT_ATTRIBUTES,
   COMMON_DAMAGE_TYPES,

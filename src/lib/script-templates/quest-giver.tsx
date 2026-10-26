@@ -15,7 +15,7 @@ import type { ScriptTemplateDef, ScriptTemplateInput, ScriptTemplateFieldsProps 
 import { uniqueSid } from '@/store/useScenarioStore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw } from '@/components/ui/icons'
 import MapEntityPickField from '@/components/common/MapEntityPickField'
 import {
   Field,

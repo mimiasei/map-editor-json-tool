@@ -26,7 +26,7 @@ import { computeFootprintTiles, protectedNeighborNodes } from '@/lib/map-grid/fo
 import { isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { createPlacementState, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
-import { mirrorNode } from './zone-mirror'
+import { mirrorAnchorNode, mirrorNode } from './zone-mirror'
 
 /** A zone smaller than this is not walled in (the boundary pass does the same). */
 const MIN_ZONE_SIZE_TO_WALL = 40
@@ -336,7 +336,7 @@ export function closeMirroredBorders(input: CloseBordersInput): CloseBordersResu
   // 4. The walls (the left half's also copied to the right half with the game's mirrored rotation).
   for (const r of records) {
     result.walls.push(r.placement)
-    if (r.kind === 'left') result.walls.push({ ...r.placement, tempId: nextTempId(), node: mirrorNode(r.placement.node, sizeX), rotation: 10 })
+    if (r.kind === 'left') result.walls.push({ ...r.placement, tempId: nextTempId(), node: mirrorAnchorNode(catalogById.get(r.placement.sid), r.placement.node, sizeX), rotation: 10 })
   }
   for (const guard of leftGuards) {
     result.guards.push({ ...guard, tempId: nextTempId(), node: mirrorNode(guard.node, sizeX) })

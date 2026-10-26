@@ -4,7 +4,7 @@
 // action — every click handler here stops propagation so the card's outer
 // onClick (open the edit Sheet) never also fires.
 
-import { Eye } from 'lucide-react'
+import { Eye } from '@/components/ui/icons'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'

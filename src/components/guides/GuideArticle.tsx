@@ -2,7 +2,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 import type { GuideSection } from '@/hooks/useGuideData'
-import { Info, AlertTriangle } from 'lucide-react'
+import { Info, AlertTriangle } from '@/components/ui/icons'
 import { useGuideStore } from '@/store/useGuideStore'
 
 interface Props {

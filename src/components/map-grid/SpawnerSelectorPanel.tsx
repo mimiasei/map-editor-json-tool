@@ -7,7 +7,7 @@
 // find/inspect a player's start position without hunting for it visually on
 // a large map.
 
-import { Crown, Landmark, X } from 'lucide-react'
+import { Crown, Landmark, X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { factionDisplayName } from '@/lib/factions'

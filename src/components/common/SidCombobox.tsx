@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { ChevronsUpDown, X } from 'lucide-react'
+import { ChevronsUpDown, X } from '@/components/ui/icons'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

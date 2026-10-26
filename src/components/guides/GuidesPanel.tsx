@@ -5,7 +5,7 @@ import type { GuideArticle as GuideArticleType } from '@/hooks/useGuideData'
 import GuideArticle from './GuideArticle'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, ChevronRight } from 'lucide-react'
+import { Search, ChevronRight } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 /**

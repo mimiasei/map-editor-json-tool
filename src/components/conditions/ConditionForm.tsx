@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { MapPin, Trash2 } from 'lucide-react'
+import { MapPin, Trash2 } from '@/components/ui/icons'
 import PlayerSelect from '@/components/common/PlayerSelect'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'

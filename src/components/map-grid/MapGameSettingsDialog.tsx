@@ -21,7 +21,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Settings2 } from 'lucide-react'
+import { Settings2 } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { readMapSettings, type MapSettingsPatch } from '@/lib/map-write'
 

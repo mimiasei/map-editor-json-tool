@@ -10,6 +10,7 @@ import { compositeSplat, type SplatLayerPixels } from './terrain-splat'
 import { decodePng } from '@/lib/png-decode'
 import { thumbnailFilePath, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { isBiomeId } from './terrain-colors'
+import { DRAW_QUALITY_PRESETS, layerPxPerTile, type CanvasLayerQuality } from './draw-quality'
 
 export type TextureKey = keyof typeof BIOME_TEXTURE_ICONS
 
@@ -19,14 +20,105 @@ export const TEXTURE_REPEAT_TILES = 12
 /** The same for a blended biome: one copy of the splat map. */
 export const SPLAT_REPEAT_TILES = 24
 
-/** Canvas pixels per tile for the texture layer, capped so the canvas stays at most ~3072 px on a side. */
-export function textureScale(sizeX: number, sizeZ: number): number {
-  return Math.max(4, Math.min(64, Math.floor(4096 / Math.max(sizeX, sizeZ, 1))))
+/** Canvas pixels per tile for the texture layer (and the cliffs), within the chosen draw quality (draw-quality.ts). */
+export function textureScale(sizeX: number, sizeZ: number, layer: CanvasLayerQuality = DRAW_QUALITY_PRESETS.high.terrain): number {
+  return layerPxPerTile(layer, sizeX, sizeZ)
 }
 
 /** True when the textures have been extracted (manifest knows them). */
 export function biomeTexturesAvailable(): boolean {
   return thumbnailPath(BIOME_TEXTURE_ICONS[1]) !== null
+}
+
+// Land-to-land biome borders fade: along each tile edge that meets another biome, that biome's texture is laid over the tile in
+// steps of falling opacity. The widths and opacities are chosen by eye; the game itself blends through a splat map.
+/** How far the neighbour's texture reaches into the tile, as a share of the tile. */
+export const BIOME_FADE_TILES = 0.4
+/** Opacity of the neighbour's texture right at the border (0.5 = an even mix with the tile's own texture there). */
+export const BIOME_FADE_EDGE_OPACITY = 0.5
+const BIOME_FADE_STEPS = 6
+/** Shore: land's texture reaches this far into a water tile (its outer half), nearly opaque at the shore and falling to none. */
+const WATER_FADE_TILES = 0.5
+const WATER_FADE_EDGE_OPACITY = 0.95
+
+/**
+ * Draws the fade strips over a texture canvas already filled tile by tile. `keys` is each node's texture key. Land borders fade into each
+ * other; along a shore the land's texture fades out over the water tile, so the water turns see-through toward the land. Strips of one
+ * neighbour texture and one step share a path, so a map costs a few fills, not one per edge.
+ */
+export function drawBiomeEdgeFade(
+  ctx: CanvasRenderingContext2D,
+  patterns: ReadonlyMap<TextureKey, CanvasPattern>,
+  keys: readonly (TextureKey | null)[],
+  sizeX: number,
+  sizeZ: number,
+  scale: number,
+): void {
+  fadeStrips(ctx, patterns, keys, sizeX, sizeZ, scale, BIOME_FADE_TILES, BIOME_FADE_EDGE_OPACITY, (here, there) => typeof here === 'number' && typeof there === 'number' && there !== here)
+  fadeStrips(ctx, patterns, keys, sizeX, sizeZ, scale, WATER_FADE_TILES, WATER_FADE_EDGE_OPACITY, (here, there) => here === 'water' && typeof there === 'number')
+}
+
+function fadeStrips(
+  ctx: CanvasRenderingContext2D,
+  patterns: ReadonlyMap<TextureKey, CanvasPattern>,
+  keys: readonly (TextureKey | null)[],
+  sizeX: number,
+  sizeZ: number,
+  scale: number,
+  reachTiles: number,
+  total: number,
+  applies: (here: TextureKey | null, there: TextureKey | null) => boolean,
+): void {
+  const reach = reachTiles * scale
+  // Opacities per nested strip so that the opacities stack up to the edge value at the border and fall to nothing inside.
+  // Strip 0 is the widest and reaches deepest, so the band farthest from the border is covered by it alone: its alpha is the
+  // target there (total / steps), and each narrower strip adds what is still missing, so the opacity falls evenly to the strip's
+  // end instead of stopping at a visible step. P is the see-through share left after strips 0..s.
+  const stepAlpha: number[] = []
+  let passed = 1
+  for (let step = 0; step < BIOME_FADE_STEPS; step++) {
+    const left = 1 - (total * (step + 1)) / BIOME_FADE_STEPS
+    stepAlpha.push(1 - left / passed)
+    passed = left
+  }
+  const paths = new Map<TextureKey, Path2D[]>()
+  const pathFor = (key: TextureKey, step: number): Path2D => {
+    let list = paths.get(key)
+    if (!list) paths.set(key, (list = Array.from({ length: BIOME_FADE_STEPS }, () => new Path2D())))
+    return list[step]
+  }
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x < sizeX; x++) {
+      const here = keys[z * sizeX + x]
+      const left = x * scale
+      const top = (sizeZ - 1 - z) * scale
+      // Neighbours as [dx, dz]; dz = +1 is the canvas row above.
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1]] as const) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ) continue
+        const there = keys[nz * sizeX + nx]
+        if (there === null || !applies(here, there) || !patterns.has(there)) continue
+        for (let step = 0; step < BIOME_FADE_STEPS; step++) {
+          const w = (reach * (BIOME_FADE_STEPS - step)) / BIOME_FADE_STEPS
+          const path = pathFor(there, step)
+          if (dx === -1) path.rect(left, top, w, scale)
+          else if (dx === 1) path.rect(left + scale - w, top, w, scale)
+          else if (dz === 1) path.rect(left, top, scale, w)
+          else path.rect(left, top + scale - w, scale, w)
+        }
+      }
+    }
+  }
+  ctx.save()
+  for (const [key, list] of paths) {
+    ctx.fillStyle = patterns.get(key)!
+    list.forEach((path, step) => {
+      ctx.globalAlpha = stepAlpha[step]
+      ctx.fill(path)
+    })
+  }
+  ctx.restore()
 }
 
 /** Texture key of one tile: water wins over the biome, same rule as terrainFillColor. */
@@ -113,12 +205,14 @@ function pixelsOf(img: HTMLCanvasElement, size: number, copies: number, blur = 0
 /**
  * An extracted texture as an opaque canvas. Read through the fs plugin and decoded by hand: pixels of an asset:// image cannot
  * be read back from a canvas (cross-origin), and a canvas would premultiply the colour by the height map in alpha.
+ * `bake` gets the raw RGBA (alpha kept) to fold the height map into the colour itself; the result keeps whatever alpha it sets.
  */
-export async function loadLayer(name: string, keepAlpha = false): Promise<HTMLCanvasElement | null> {
+export async function loadLayer(name: string, keepAlpha = false, bake?: (rgba: Uint8ClampedArray) => void): Promise<HTMLCanvasElement | null> {
   const path = thumbnailFilePath(name)
   if (!path) return null
   const { readFile } = await import('@tauri-apps/plugin-fs')
-  const { width, height, rgba } = await decodePng(await readFile(path), keepAlpha)
+  const { width, height, rgba } = await decodePng(await readFile(path), keepAlpha || !!bake)
+  bake?.(rgba)
   const c = document.createElement('canvas')
   c.width = width
   c.height = height

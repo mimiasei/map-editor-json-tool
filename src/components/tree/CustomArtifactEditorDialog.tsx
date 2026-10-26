@@ -49,7 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from '@/components/ui/icons'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import { ENTITY_REGISTRIES } from '@/schema/entities'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'

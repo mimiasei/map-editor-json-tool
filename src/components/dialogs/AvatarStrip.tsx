@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AssetCombobox from './AssetCombobox'
-import { LayoutGrid, MessageSquare, Plus, Trash2, UserRound } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Plus, Trash2, UserRound } from '@/components/ui/icons'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 
