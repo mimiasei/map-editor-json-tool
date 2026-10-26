@@ -61,6 +61,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
 import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
@@ -1061,13 +1062,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'paintTerrain', changes: region.map((n) => ({ node: n, biomeId })) }, 'bucket-fill terrain')
   }, [bucketFillRegion, applyEdit])
 
+  // After a level edit has been applied: water next to a newly lowered area spreads over it (water-extend.ts). A second edit, so it is
+  // computed only once the stroke is done, never while drawing. levelsMap/waterMap here are still the ones from before the edit.
+  const spreadWaterOver = useCallback((changes: { node: number; level: number }[]) => {
+    if (changes.length === 0 || waterMap.length === 0) return
+    const water = waterExtensionAfterLevelPaint(levelsMap, waterMap, sizeX, sizeZ, changes)
+    if (water.length > 0) applyEdit({ kind: 'paintWater', changes: water }, 'spread water over lowered area')
+  }, [levelsMap, waterMap, sizeX, sizeZ, applyEdit])
+
   // Same idea for Level — flood-fill the biome region, set every tile's
   // level in one edit.
   const applyLevelBucketFill = useCallback((node: number, level: -1 | 0 | 1) => {
     const region = bucketFillRegion(node)
     if (region.length === 0) return
-    applyEdit({ kind: 'paintLevel', changes: region.map((n) => ({ node: n, level })) }, 'bucket-fill level')
-  }, [bucketFillRegion, applyEdit])
+    const changes = region.map((n) => ({ node: n, level }))
+    applyEdit({ kind: 'paintLevel', changes }, 'bucket-fill level')
+    spreadWaterOver(changes)
+  }, [bucketFillRegion, applyEdit, spreadWaterOver])
 
   // Same idea for Obstacles/Trees — flood-fill the biome region, then feed
   // it straight to the same commit function a freehand/Rectangle stroke
@@ -1254,11 +1265,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (tool === 'terrain' && paintBiome !== null) {
       applyEdit({ kind: 'paintTerrain', changes: nodes.map((n) => ({ node: n, biomeId: paintBiome })) }, 'paint terrain')
     } else if (tool === 'level' && levelBrush !== null) {
-      applyEdit({ kind: 'paintLevel', changes: nodes.map((n) => ({ node: n, level: levelBrush })) }, 'paint level')
+      const changes = nodes.map((n) => ({ node: n, level: levelBrush }))
+      applyEdit({ kind: 'paintLevel', changes }, 'paint level')
+      spreadWaterOver(changes)
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, applyEdit, spreadWaterOver, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -1281,7 +1294,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
     setPaintLevelStaged(new Map())
     applyEdit({ kind: 'paintLevel', changes }, 'paint level')
-  }, [paintLevelStaged, applyEdit])
+    spreadWaterOver(changes)
+  }, [paintLevelStaged, applyEdit, spreadWaterOver])
 
   const stopWaterPainting = () => {
     setWaterBrush(null)
