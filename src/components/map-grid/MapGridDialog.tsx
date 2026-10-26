@@ -2734,6 +2734,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // a flat full-tile fill. Live-preview data (paintRoadStaged/riverStaged)
   // merges in exactly like every other paint tool's preview.
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
+  // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
+  const coveredLineNodesRef = useRef<Set<number>>(new Set())
+  const coveredLineNodes = useMemo(() => {
+    const next = new Set<number>()
+    for (const [node, pick] of primaryByNode) {
+      if (!(iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary)))) next.add(node)
+    }
+    const prev = coveredLineNodesRef.current
+    if (prev.size === next.size && [...next].every((n) => prev.has(n))) return prev
+    coveredLineNodesRef.current = next
+    return next
+    // renderIndex: hasObjectRender reads the render store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [primaryByNode, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex])
   const lineTextures = useLineTextures()
   const roadStrokes = useRoadStrokes()
   const riverSprites = useRiverSprites()
@@ -2805,10 +2820,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const fillFor = (kind: 'road1' | 'road2' | 'river', color: string): string | CanvasPattern =>
       patterns.get(kind === 'road2' ? 'stone' : kind === 'road1' ? 'dirt' : 'water') ?? color
     // An object drawn as a picture lets the road or river show through its transparent parts; only a flat swatch (no picture) hides it.
-    const coversLine = (node: number) => {
-      const pick = primaryByNode.get(node)
-      return !!pick && !(iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary)))
-    }
+    const coversLine = (node: number) => coveredLineNodes.has(node)
     const drawBand = (node: number, color: string | CanvasPattern, hasFeature: (n: number) => boolean) => {
       if (coversLine(node)) return
       const x = node % sizeX
@@ -2909,7 +2921,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, iconsVisibleForSwatch, settings.iconImagesEnabled, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
