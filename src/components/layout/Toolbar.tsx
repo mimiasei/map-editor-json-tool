@@ -724,15 +724,18 @@ export default function Toolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="gap-1.5">
+              <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="relative gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
                 Validate
-                <Badge
-                  variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
-                  className={`ml-1 h-4 px-1 text-xs${validation.errors.length === 0 && validation.warnings.length === 0 ? ' invisible' : ''}`}
-                >
-                  {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
-                </Badge>
+                {/* Sits on the button's corner, so it adds no width: the gap to the next button is the same as to the one before. */}
+                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
+                  <Badge
+                    variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
+                    className="absolute -top-1 -right-1 h-4 min-w-4 justify-center px-1 text-[10px] leading-none"
+                  >
+                    {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
+                  </Badge>
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>Validate scenario</TooltipContent>
