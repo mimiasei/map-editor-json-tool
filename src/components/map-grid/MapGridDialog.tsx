@@ -5444,12 +5444,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           cell={BASE_CELL_PX}
                           fx={isFxSid(entry.pick.primary.sid, catalog)}
                           mirrored={entry.pick.primary.type === 0 && (entry.pick.primary.rotation ?? 0) >= 10}
-                          mirrorShiftTiles={(() => {
+                          mirrorCentreTiles={(() => {
                             const p = entry.pick.primary
                             if (p.type !== 0 || (p.rotation ?? 0) < 10) return 0
-                            // The flip is about the anchor tile: an anchor at the left edge needs width - 1, a centre anchor (3x3 mountains) none.
+                            // Flip about the footprint's centre column; the anchor (select) tile is pivotX columns in from the left edge.
                             const t = catalog?.mapObjects.find((o) => o.id === p.sid)
-                            return t?.nodes?.length ? (t.sizeX ?? 1) - 1 - 2 * (t.pivotX ?? 0) : 0
+                            return t?.nodes?.length ? ((t.sizeX ?? 1) - 1) / 2 - (t.pivotX ?? 0) : 0
                           })()}
                           // Relative to this box: the anchor tile's corner minus the box corner.
                           shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
