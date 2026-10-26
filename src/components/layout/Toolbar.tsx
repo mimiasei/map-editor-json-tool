@@ -87,7 +87,8 @@ import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
-import PlayerBalancePanel from '@/components/common/PlayerBalancePanel'
+import PlayerBalancePanel, { DecorationBalanceSection } from '@/components/common/PlayerBalancePanel'
+import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 import { ImageIcon } from '@/components/ui/icons'
 
@@ -179,6 +180,7 @@ export default function Toolbar({
   // A boolean selector, so map edits don't re-render the toolbar.
   const hasMap = useMapContextStore((s) => !!s.context)
   const [fairness, setFairness] = useState<PlayerBalance | null>(null)
+  const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   // On-demand only (per issue: no continuous/auto-validation while editing)
@@ -577,6 +579,7 @@ export default function Toolbar({
   const handleOpenFairness = () => {
     const context = useMapContextStore.getState().context
     setFairness(context ? computePlayerBalance(context, catalog) : null)
+    setDecorationBalance(context ? computeDecorationBalance(context, catalog) : null)
     setFairnessOpen(true)
   }
 
@@ -1115,11 +1118,12 @@ export default function Toolbar({
 
       {/* Fairness dialog */}
       <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Map fairness</DialogTitle>
           </DialogHeader>
           <PlayerBalancePanel balance={fairness} />
+          <DecorationBalanceSection decoration={decorationBalance} />
           <p className="text-xs text-muted-foreground">
             The same score the random map generator uses. It compares each player's own area (land, mines, hills, sites), not the neutral zones between them.
           </p>
