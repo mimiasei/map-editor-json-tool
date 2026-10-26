@@ -414,6 +414,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     saveDecorationSubFilter(next)
   }
 
+  // Every header pill back on, both sub-category dropdowns fully ticked, "Entity SIDs only" off.
+  const resetAllFilters = () => {
+    const allOn = Object.fromEntries(GRID_GROUP_ORDER.map((g) => [g, true])) as GridFilterState
+    setFilter(allOn)
+    saveGridFilter(allOn)
+    setAllInteractableSubcategories(true)
+    setAllDecorationSubcategories(true)
+    setEntitySidsOnly(false)
+    saveEntitySidsOnly(false)
+  }
+
   // ── Search (issue #130) — matches sid/entitySid/displayName, highlights
   // every matching tile. Deliberately separate from `highlightedNode` (the
   // single pulsing portal-connection marker): one is exactly one node with
@@ -5180,6 +5191,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               title="Show only items with a user-defined entity SID"
             >
               Entity SIDs only
+            </button>
+            <button
+              onClick={resetAllFilters}
+              className="h-6 px-2 text-xs rounded shrink-0 border border-transparent bg-transparent text-muted-foreground hover:text-foreground transition-colors"
+              title="Turn every filter pill back on and clear Entity SIDs only"
+            >
+              Reset all
             </button>
           </div>
           )}
