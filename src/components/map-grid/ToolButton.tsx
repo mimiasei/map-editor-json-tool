@@ -29,7 +29,7 @@ const ToolButton = forwardRef<HTMLButtonElement, Props>(function ToolButton({ ic
           type="button"
           title={title}
           {...rest}
-          className={`flex items-center h-6 ${BUTTON_PADDING_X} ${ICON_SIZE} [&:hover_svg_*]:[stroke-width:1.5] [&_svg_*]:transition-[stroke-width] [&_svg_*]:duration-125 [&:hover_svg]:scale-[2.0] [&_svg]:transition-transform [&_svg]:duration-125 text-xs font-medium text-muted-foreground transition-colors duration-125 hover:text-accent-foreground`}
+          className={`flex items-center h-9 ${BUTTON_PADDING_X} ${ICON_SIZE} rounded-xl px-1.0 py-2.0 hover:bg-secondary [&:hover_svg_*]:[stroke-width:1.5] [&_svg_*]:transition-[stroke-width] [&_svg_*]:duration-125 [&:hover_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg]:duration-125 text-xs font-medium text-muted-foreground transition-colors duration-125 hover:text-accent-foreground`}
         >
           {icon}
         </button>

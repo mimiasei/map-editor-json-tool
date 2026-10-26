@@ -4275,8 +4275,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                alone (mode-switching UX research: minimizes "mode error"
                risk). Behavior is unchanged from before this phase — same
                state, same handlers, same stage-then-Save convention. */
-            <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
-              <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
+
+            //bg-amber-500/10 border-y border-amber-500/20
+            <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 " data-nodrag>
+              {/* <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span> */}
 
               {paintBiome !== null ? (
                 <div className="flex items-center gap-1">
@@ -4338,7 +4340,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
 
               {placingSid && !isSingleTileSid(placingSid) ? (
                 <div className="flex items-center gap-1">
@@ -4444,7 +4446,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid('random-hero') }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Landmark — places one randomly-picked interactable per
                   tile (mines, shrines, camps, monuments, ...), always
                   exactly one tile per position like Road. Biome-mix/high-
@@ -4470,7 +4472,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); stopZonePainting(); setInteractableActive(true) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Encounter (issue #203) — places a random-squad guard
                   encounter, always exactly one tile per position like
                   Landmark/Road. Difficulty/biome-mix/place-resource-above
@@ -4507,7 +4509,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setResourceActive(true) }} />
               )}
            
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Level brush (issue #193 Phase 2) — same freehand-stroke
                   staging as Terrain, targeting levelsMap instead of
                   tilesMap. Deliberately no ramp/climbsMap authoring — see
@@ -4558,7 +4560,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Ramp — toggles climbsMap, restricted to tiles that already
                   border a strictly higher neighbor (isValidRampNode) — a
                   ramp tile has no meaning anywhere else, confirmed by real
@@ -4585,7 +4587,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRampActive(true) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
                   a freehand stroke — see applyWaterFill's doc comment. Each
                   click applies immediately (issue #195 follow-up), so
@@ -4623,7 +4625,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); setWaterBrush(1) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* River — a single-mode tool, ordered-drag path tracing (see
                   riverActive's own doc comment). Can freely cross an existing
                   road tile (or vice versa) — no special handling needed,
@@ -4647,7 +4649,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Road brush — same freehand-stroke staging as Level, targeting
                   roadsMap instead of levelsMap. Can freely paint over an
                   existing river node (or vice versa) — a straight road/river
@@ -4689,7 +4691,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
               {fuzzyObstaclePools && (
                 <>
-                  <div className="w-px h-4 bg-amber-500/30" />
+                  
                   {/* Fuzzy obstacle brush (issue #193 Phase 5) — drag (or
                       Rectangle-mode select); every enclosed tile samples a
                       biome-appropriate obstacle/clutter/nothing on release,
@@ -4738,7 +4740,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
               {treePools && (
                 <>
-                  <div className="w-px h-4 bg-amber-500/30" />
+                  
                   {/* Trees brush — a dedicated copy of Obstacles above,
                       restricted to tree_/pinetree_ catalog entries only
                       (buildTreePools, fuzzy-obstacle.ts). Same drag/
@@ -4784,7 +4786,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
               {catalog && catalog.zoneTemplates.length > 0 && (
                 <>
-                  <div className="w-px h-4 bg-amber-500/30" />
+                  
                   {/* Zones (issue #193 Phase 3) — thin wrapper on the
                       already-fully-built addMarker write path. */}
                   {placingZoneSid ? (
@@ -4816,7 +4818,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   )}
                 </>
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {paintZone !== null ? (
                 <div className="flex items-center gap-1">
                   <Popover>
@@ -4880,7 +4882,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} label="Player Areas" title="Player Areas — paint color-coded zones associated with a player"
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Eraser (issue #195 follow-up) — deletes non-terrain
                   content (objects/units/zones) under the brush; drag
                   (brush-size, via eraserDragRef) or Rectangle-mode select,
@@ -4907,7 +4909,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
+              
               {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
                   own doc comment for why player-start spawners are kept and
                   why this is one atomic edit rather than a per-object loop. */}
