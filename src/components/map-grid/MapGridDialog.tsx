@@ -732,6 +732,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (placingZoneSid below) which is an unrelated marker/trigger-zone
   // feature.
   const [paintZone, setPaintZone] = useState<number | null>(null)
+  // Painting Player Areas while "Player Areas fill" is off in the settings shows nothing, which looks like a broken tool: a banner says
+  // so and offers to turn it on. "Don't show again" is remembered; the X only hides it until the next time the tool is started.
+  const PLAYER_AREAS_BANNER_KEY = 'oe:hide-player-areas-banner'
+  const [neverShowPlayerAreasBanner, setNeverShowPlayerAreasBanner] = useState(() => {
+    try { return localStorage.getItem(PLAYER_AREAS_BANNER_KEY) === '1' } catch { return false }
+  })
+  const [playerAreasBannerClosed, setPlayerAreasBannerClosed] = useState(false)
+  useEffect(() => {
+    if (paintZone === null) setPlayerAreasBannerClosed(false)
+  }, [paintZone])
   const [zoneBucketMode, setZoneBucketMode] = useState(false)
   const [paintZoneStaged, setPaintZoneStaged] = useState<Map<number, number>>(new Map())
   const zonePaintingRef = useRef(false)
@@ -5763,6 +5773,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {/* Connected-portal highlight (issue #127 item 8) — same screen-space
                   technique as the overlays above, so its border stays a constant
                   physical size instead of scaling with zoom. */}
+              {paintZone !== null && !settings.showPlayerAreas && !neverShowPlayerAreasBanner && !playerAreasBannerClosed && (
+                <div
+                  className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 rounded-lg bg-popover/95 px-3 py-2 text-xs shadow-lg ring-1 ring-amber-500/50"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                >
+                  <span>Player Areas are hidden in the settings, so what you paint here won't show.</span>
+                  <Button size="sm" className="h-6 text-xs" onClick={() => updateSettings({ ...settings, showPlayerAreas: true })}>
+                    Show player areas
+                  </Button>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
+                    <Checkbox
+                      checked={false}
+                      onCheckedChange={() => {
+                        try { localStorage.setItem(PLAYER_AREAS_BANNER_KEY, '1') } catch { /* not remembered */ }
+                        setNeverShowPlayerAreasBanner(true)
+                      }}
+                    />
+                    Don't show again
+                  </label>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Close" onClick={() => setPlayerAreasBannerClosed(true)}>
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
               {portalLinkFrom && (
                 <>
                   {allPortals.filter((p) => p.key !== portalLinkFrom.key).map((p) => (
