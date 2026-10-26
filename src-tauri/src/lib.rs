@@ -415,6 +415,8 @@ pub fn run() {
             // already were) — this gives it a native home instead of removing the
             // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
             let open_map_item = MenuItemBuilder::with_id("open-map", "Open Map...").build(app)?;
+            // The dialog of recently opened files (recent-files.ts); the list lives in the frontend, so this only relays.
+            let open_recent_item = MenuItemBuilder::with_id("open-recent", "Open Recent...").build(app)?;
             // Same rationale as open_map_item above: gives the "More" dropdown's
             // existing Import H3 Map action (Toolbar.tsx) a second, native home
             // rather than replacing it.
@@ -441,6 +443,7 @@ pub fn run() {
                 .item(&new_item)
                 .item(&open_item)
                 .item(&open_map_item)
+                .item(&open_recent_item)
                 .item(&import_h3m_item)
                 .separator()
                 .item(&save_item)
