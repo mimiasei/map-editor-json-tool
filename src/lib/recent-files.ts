@@ -1,6 +1,9 @@
-// ─── Recently opened files (File > Open Recent...) ───────────────────────────
-// Desktop only: a file opened from the browser has no path to reopen. Kept in localStorage, newest first, so it survives restarts without
-// a new Rust command. The list is advisory: a file may have been moved or deleted since, which the dialog finds out when you click it.
+// ─── Recently opened files (File > Open Recent) ──────────────────────────────
+// Desktop only: a file opened from the browser has no path to reopen. Kept in localStorage, newest first, so it survives restarts. The
+// native File > Open Recent submenu is redrawn from it (syncRecentMenu) whenever it changes. The list is advisory: a file may have been
+// moved or deleted since, which is found out when it is clicked.
+
+import { isTauri } from '@/lib/native-fs'
 
 export type RecentFileKind = 'map' | 'json'
 
@@ -30,6 +33,23 @@ function write(list: RecentFile[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
   } catch { /* storage unavailable: the list just isn't kept */ }
+  syncRecentMenu()
+}
+
+/** "name  (folder)": the folder tells apart two files of the same name. */
+function menuLabel(f: RecentFile): string {
+  const parts = f.path.replace(/\\/g, '/').split('/')
+  const folder = parts.length > 1 ? parts[parts.length - 2] : ''
+  return folder ? `${f.name}  (${folder})` : f.name
+}
+
+/** Redraws the native File > Open Recent submenu from the stored list. Also called once at startup. */
+export function syncRecentMenu(): void {
+  if (!isTauri()) return
+  const files = getRecentFiles().map((f) => ({ path: f.path, label: menuLabel(f) }))
+  void import('@tauri-apps/api/core')
+    .then(({ invoke }) => invoke('set_recent_files', { files }))
+    .catch(() => undefined)
 }
 
 /** Most recently opened first. */

@@ -1,12 +1,59 @@
+use std::sync::Mutex;
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
-    Emitter,
+    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
+    Emitter, Manager, Wry,
 };
 
 mod game_dir;
 mod text_writer;
 
 use text_writer::{GeneratedText, Provider, StoryDraft, TextRequest, WriterError};
+
+// ─── File > Open Recent ──────────────────────────────────────────────────────
+// The list itself lives in the frontend (recent-files.ts); this only draws it into the native submenu. Each entry's menu id is
+// "recent:<path>", relayed to the frontend like every other menu item.
+
+struct RecentMenu(Mutex<Option<Submenu<Wry>>>);
+
+#[derive(serde::Deserialize)]
+struct RecentEntry {
+    path: String,
+    label: String,
+}
+
+#[tauri::command]
+fn set_recent_files(
+    app: tauri::AppHandle,
+    state: tauri::State<RecentMenu>,
+    files: Vec<RecentEntry>,
+) -> Result<(), String> {
+    let guard = state.0.lock().map_err(|e| e.to_string())?;
+    let Some(menu) = guard.as_ref() else { return Ok(()) };
+    for item in menu.items().map_err(|e| e.to_string())? {
+        menu.remove(&item).map_err(|e| e.to_string())?;
+    }
+    if files.is_empty() {
+        let none = MenuItemBuilder::with_id("recent-none", "No recent files")
+            .enabled(false)
+            .build(&app)
+            .map_err(|e| e.to_string())?;
+        menu.append(&none).map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    for file in files {
+        let item = MenuItemBuilder::with_id(format!("recent:{}", file.path), file.label)
+            .build(&app)
+            .map_err(|e| e.to_string())?;
+        menu.append(&item).map_err(|e| e.to_string())?;
+    }
+    let separator = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    menu.append(&separator).map_err(|e| e.to_string())?;
+    let clear = MenuItemBuilder::with_id("clear-recent", "Clear Recent Files")
+        .build(&app)
+        .map_err(|e| e.to_string())?;
+    menu.append(&clear).map_err(|e| e.to_string())?;
+    Ok(())
+}
 
 // ─── Text writer (Story Builder) ─────────────────────────────────────────────
 // Prompts and validation live in text_writer/; the key never leaves Rust.
@@ -346,7 +393,8 @@ pub fn run() {
             text_writer_check,
             text_writer_test,
             text_writer_generate,
-            story_import
+            story_import,
+            set_recent_files
         ])
         .setup(|app| {
             // ── Auto-update (desktop only) ───────────────────────────────────
@@ -415,8 +463,14 @@ pub fn run() {
             // already were) — this gives it a native home instead of removing the
             // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
             let open_map_item = MenuItemBuilder::with_id("open-map", "Open Map...").build(app)?;
-            // The dialog of recently opened files (recent-files.ts); the list lives in the frontend, so this only relays.
-            let open_recent_item = MenuItemBuilder::with_id("open-recent", "Open Recent...").build(app)?;
+            // Filled by the frontend through set_recent_files once it has loaded; until then (and when empty) a disabled placeholder.
+            let recent_placeholder = MenuItemBuilder::with_id("recent-none", "No recent files")
+                .enabled(false)
+                .build(app)?;
+            let recent_menu = SubmenuBuilder::new(app, "Open Recent")
+                .item(&recent_placeholder)
+                .build()?;
+            app.manage(RecentMenu(Mutex::new(Some(recent_menu.clone()))));
             // Same rationale as open_map_item above: gives the "More" dropdown's
             // existing Import H3 Map action (Toolbar.tsx) a second, native home
             // rather than replacing it.
@@ -443,7 +497,7 @@ pub fn run() {
                 .item(&new_item)
                 .item(&open_item)
                 .item(&open_map_item)
-                .item(&open_recent_item)
+                .item(&recent_menu)
                 .item(&import_h3m_item)
                 .separator()
                 .item(&save_item)

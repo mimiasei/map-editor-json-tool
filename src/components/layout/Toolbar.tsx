@@ -18,8 +18,7 @@ import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
 import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
-import { recordRecentFile, type RecentFile } from '@/lib/recent-files'
-import OpenRecentDialog from '@/components/common/OpenRecentDialog'
+import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import NewMapDialog from '@/components/common/NewMapDialog'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
@@ -396,13 +395,11 @@ export default function Toolbar({
   }
 
   // ── File > Open Recent... — same unsaved-changes guard as New Map above, since opening replaces what is loaded.
-  const [openRecentOpen, setOpenRecentOpen] = useState(false)
   const handleOpenRecentEntry = async (entry: RecentFile) => {
     if (isDirty || mapIsDirty) {
       const ok = await confirmDialog(`You have unsaved changes. Open ${entry.name} anyway?`, 'Open Recent')
       if (!ok) return
     }
-    setOpenRecentOpen(false)
     try {
       if (entry.kind === 'map') {
         const result = await openMapFromPath(entry.path)
@@ -418,6 +415,8 @@ export default function Toolbar({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Failed to open recent file: ${msg}`)
+      // The menu can't offer an X per entry, so a file that is gone drops off the list when it fails to open.
+      removeRecentFile(entry.path)
       setImportErrors([msg])
       setImportFeedbackOpen(true)
     }
@@ -567,13 +566,16 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates })
-  handlersRef.current = { handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates }
+  const handlersRef = useRef({ handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
+  handlersRef.current = { handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
 
   useEffect(() => {
     const onOpen      = () => { handlersRef.current.handleImport() }
     const onOpenMap   = () => { handlersRef.current.handleOpenMap() }
-    const onOpenRecent = () => { setOpenRecentOpen(true) }
+    const onOpenRecentFile = (e: Event) => {
+      const entry = getRecentFiles().find((f) => f.path === (e as CustomEvent<string>).detail)
+      if (entry) void handlersRef.current.handleOpenRecentEntry(entry)
+    }
     const onImportH3m = () => { void handlersRef.current.handleImportH3mClick() }
     const onSave      = () => { handlersRef.current.handleSave() }
     const onSaveAs    = () => { handlersRef.current.handleExport() }
@@ -585,7 +587,7 @@ export default function Toolbar({
     window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',       onOpen)
     window.addEventListener('oe:open-map',   onOpenMap)
-    window.addEventListener('oe:open-recent', onOpenRecent)
+    window.addEventListener('oe:open-recent-file', onOpenRecentFile)
     window.addEventListener('oe:import-h3m', onImportH3m)
     window.addEventListener('oe:save',       onSave)
     window.addEventListener('oe:save-as',    onSaveAs)
@@ -594,7 +596,7 @@ export default function Toolbar({
       window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',       onOpen)
       window.removeEventListener('oe:open-map',   onOpenMap)
-      window.removeEventListener('oe:open-recent', onOpenRecent)
+      window.removeEventListener('oe:open-recent-file', onOpenRecentFile)
       window.removeEventListener('oe:import-h3m', onImportH3m)
       window.removeEventListener('oe:save',       onSave)
       window.removeEventListener('oe:save-as',    onSaveAs)
@@ -1151,8 +1153,6 @@ export default function Toolbar({
           </Tooltip>
         </div>
       </header>
-
-      <OpenRecentDialog open={openRecentOpen} onOpenChange={setOpenRecentOpen} onPick={(f) => void handleOpenRecentEntry(f)} />
 
       {/* Fairness dialog */}
       <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
