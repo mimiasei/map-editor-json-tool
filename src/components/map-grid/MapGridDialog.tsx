@@ -2595,13 +2595,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
   // Zoomed out far enough that objects are not drawn, the fine detail (cliff edges, road/river textures and edge shading) is not either.
   const cliffSprites = useCliffSprites()
+  const cliffLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; key: unknown[]; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
-    const ctx = cliffCanvasEl.getContext('2d')
-    if (!ctx || !showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
+    const out = cliffCanvasEl.getContext('2d')
+    if (!out || !showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
+    // Baking every piece is slow, so the finished layer is kept and copied back when the layer is switched on again (wheel zoom, zooming
+    // back in) with nothing it depends on changed. It is drawn on an offscreen canvas and copied to the visible one at the end.
+    const cacheKey = [cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, levelsMap, climbsMap, paintLevelStaged, paintRampStaged]
+    const cached = cliffLayerCacheRef.current
+    if (cached && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ && cached.key.every((v, i) => v === cacheKey[i])) {
+      out.drawImage(cached.canvas, 0, 0)
+      return
+    }
+    const layer = document.createElement('canvas')
+    layer.width = cliffCanvasEl.width
+    layer.height = cliffCanvasEl.height
+    const ctx = layer.getContext('2d')
+    if (!ctx) return
     let levels = levelsMap
     if (paintLevelStaged.size > 0) {
       levels = levelsMap.slice()
@@ -2769,6 +2783,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
+    cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
+    out.drawImage(layer, 0, 0)
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
