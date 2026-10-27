@@ -164,6 +164,9 @@ const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
 const ZOOM_SETTLE_MS = 1000
+// Experiment switch: cap the draw quality at medium while zooming. Resizing a canvas reallocates it (an 8192x8192 one is 256 MB), and the cap
+// resizes the terrain and road/river canvases twice per zoom, so with it off those canvases are left alone.
+const CAP_QUALITY_WHILE_ZOOMING = false
 // Timing of the layer redraws after a wheel zoom (fast-zoom experiment). "draw" is only the time the JS spent issuing the canvas calls: the
 // browser rasterises them afterwards, so "on screen" is measured to the second animation frame after (the frame that includes the draw).
 // "+Nms" is the time since the zoom settled. Remove with the experiment.
@@ -489,13 +492,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [wheelZooming, setWheelZooming] = useState(false)
   const wheelTimerRef = useRef<number | null>(null)
   const quality = useMemo(
-    () => resolveDrawQuality(wheelZooming && settings.drawQuality !== 'low' ? 'medium' : settings.drawQuality, settings.drawQualityCustom),
+    () => resolveDrawQuality(CAP_QUALITY_WHILE_ZOOMING && wheelZooming && settings.drawQuality !== 'low' ? 'medium' : settings.drawQuality, settings.drawQualityCustom),
     [wheelZooming, settings.drawQuality, settings.drawQualityCustom],
   )
   // The water layer is slow to rebuild, so it is hidden with CSS while zooming (its canvas stays as drawn) and never follows the capped quality.
-  const waterQuality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
+  const userQuality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
   const showWaterSurface = settings.waterSurface
-  const showCliffs = settings.showCliffs && !wheelZooming
+  const showCliffs = settings.showCliffs
   const showLineTextures = settings.lineFeatureTextures && !wheelZooming
   const iconLodPx = quality.objects.iconFromPx
   const overdrawCells = quality.objects.overdrawTiles
@@ -2623,7 +2626,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const cliffLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; key: unknown[]; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
+    const scale = textureScale(sizeX, sizeZ, userQuality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const out = cliffCanvasEl.getContext('2d')
@@ -2814,7 +2817,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
     out.drawImage(layer, 0, 0)
     logLayer('cliffs', t0, `rebuilt ${layer.width}x${layer.height}`)
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, userQuality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2891,7 +2894,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const waterLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; waterMap: typeof waterMap; surface: HTMLCanvasElement; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ, waterQuality.cliffs)
+    const scale = textureScale(sizeX, sizeZ, userQuality.cliffs)
     waterCanvasEl.width = sizeX * scale
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
@@ -2926,7 +2929,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
     ctx.drawImage(layer, 0, 0)
     logLayer('water', t0, `rebuilt ${layer.width}x${layer.height}`)
-  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, waterQuality.cliffs])
+  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, userQuality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
   // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
@@ -5602,7 +5605,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <canvas
                   ref={setCliffCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
-                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming ? 'hidden' : 'visible' }}
                 />
 
                 {/* Water surface — see waterCanvasEl above. After the cliff canvas, before the icon layer. */}
