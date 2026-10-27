@@ -254,15 +254,17 @@ export default function MapGridSettingsDialog({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
-          <Switch
-            id="grid-biome-fade"
-            checked={settings.biomeEdgeFade}
-            onCheckedChange={(v) => update({ biomeEdgeFade: v })}
-            disabled={!biomeTexturesAvailable()}
-          />
-        </div>
+        {/* Only drawn on the ground textures, so it has nothing to do while they are off. */}
+        {settings.terrainTextureEnabled && biomeTexturesAvailable() && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
+            <Switch
+              id="grid-biome-fade"
+              checked={settings.biomeEdgeFade}
+              onCheckedChange={(v) => update({ biomeEdgeFade: v })}
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <Label htmlFor="grid-icon-images" className="text-xs cursor-pointer">Icon images</Label>
