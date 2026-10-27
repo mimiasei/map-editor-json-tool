@@ -541,9 +541,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const manualStacks = useStackOrderStore((s) => s.byNode)
   const sessionFromId = useStackOrderStore((s) => s.sessionFromId)
 
+  // Objects the eraser has swept over in the stroke still being held. They are hidden at once so the erasing is seen as it happens, and
+  // deleted together on release (one undo step), see commitEraserStroke.
+  const [erasedKeys, setErasedKeys] = useState<Set<string>>(new Set())
+
   // Whether one object is drawn under the current filters. Each object on a stacked tile is judged on its own, so hiding the trees
   // shows the mine under one instead of an empty tile.
   const isShown = useCallback((item: PlacedObject): boolean => {
+    if (erasedKeys.has(item.key)) return false
     const group = groupOf(item, catalog)
     if (!group || !filter[group]) return false
     if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
@@ -552,7 +557,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
     }
     return true
-  }, [catalog, filter, interactableSubFilter, decorationSubFilter])
+  }, [catalog, filter, interactableSubFilter, decorationSubFilter, erasedKeys])
 
   const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
@@ -964,8 +969,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // covers an eraser mistake same as any other edit).
   const [eraserActive, setEraserActive] = useState(false)
   const eraserDragRef = useRef<Set<number> | null>(null)
-  const stopEraser = () => setEraserActive(false)
+  const stopEraser = () => { setEraserActive(false); setErasedKeys(new Set()) }
+  // The tile index registers an object on every footprint cell, the same overlap rule commitEraserStroke deletes by.
+  const hideErasedAt = useCallback((tiles: number[]) => {
+    setErasedKeys((prev) => {
+      let next: Set<string> | null = null
+      for (const n of tiles) {
+        for (const item of tileIndex.get(n) ?? []) {
+          if (prev.has(item.key) || next?.has(item.key)) continue
+          next ??= new Set(prev)
+          next.add(item.key)
+        }
+      }
+      return next ?? prev
+    })
+  }, [tileIndex])
   const commitEraserStroke = useCallback((nodes: number[]) => {
+    setErasedKeys(new Set())
     if (nodes.length === 0) return
     const erased = new Set(nodes)
     // Match by footprint overlap (resolveFootprintCells — the same function
@@ -1921,9 +1941,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
-          eraserDragRef.current.add(n)
-        }
+        const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+        for (const n of tiles) eraserDragRef.current.add(n)
+        hideErasedAt(tiles)
       }
       return
     }
@@ -2120,9 +2140,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (eraserDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
-          eraserDragRef.current.add(n)
-        }
+        const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+        for (const n of tiles) eraserDragRef.current.add(n)
+        hideErasedAt(tiles)
       }
       setHoveredNode(node)
       return
