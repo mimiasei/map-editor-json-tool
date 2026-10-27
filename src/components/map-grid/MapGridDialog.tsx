@@ -163,6 +163,7 @@ import { sampleResource } from '@/lib/map-grid/resource-pool'
 const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
+const ZOOM_SETTLE_MS = 1000
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
@@ -460,7 +461,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const [settings, setSettings] = useState(loadMapGridSettings)
   // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
-  const quality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
+  // While the wheel zooms (and for ZOOM_SETTLE_MS after), the costly layers are switched off and the quality capped at medium, so a big map
+  // zooms smoothly; the user's own settings come back when the wheel has been still that long.
+  const [wheelZooming, setWheelZooming] = useState(false)
+  const wheelTimerRef = useRef<number | null>(null)
+  const quality = useMemo(
+    () => resolveDrawQuality(wheelZooming && settings.drawQuality !== 'low' ? 'medium' : settings.drawQuality, settings.drawQualityCustom),
+    [wheelZooming, settings.drawQuality, settings.drawQualityCustom],
+  )
+  const showCliffs = settings.showCliffs && !wheelZooming
+  const showWaterSurface = settings.waterSurface && !wheelZooming
+  const showLineTextures = settings.lineFeatureTextures && !wheelZooming
   const iconLodPx = quality.objects.iconFromPx
   const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
@@ -2506,6 +2517,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     e.preventDefault()
     const rect = e.currentTarget.getBoundingClientRect()
     const factor = Math.exp(-e.deltaY * 0.001)
+    setWheelZooming(true)
+    if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
+    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; setWheelZooming(false) }, ZOOM_SETTLE_MS)
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
@@ -2585,7 +2599,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const ctx = cliffCanvasEl.getContext('2d')
-    if (!ctx || !settings.showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
+    if (!ctx || !showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
     let levels = levelsMap
     if (paintLevelStaged.size > 0) {
       levels = levelsMap.slice()
@@ -2753,7 +2767,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2833,7 +2847,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     waterCanvasEl.width = sizeX * scale
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
-    if (!ctx || !settings.waterSurface || !iconsVisibleForSwatch || !waterSurface) return
+    if (!ctx || !showWaterSurface || !iconsVisibleForSwatch || !waterSurface) return
     const path = new Path2D()
     for (let node = 0; node < sizeX * sizeZ; node++) {
       if (waterMap[node]) path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
@@ -2846,7 +2860,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fill(path)
     }
     fadeWaterShore(ctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
-  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
+  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, quality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
   // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
@@ -2870,7 +2884,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
-    const texturesOn = settings.lineFeatureTextures && iconsVisibleForSwatch
+    const texturesOn = showLineTextures && iconsVisibleForSwatch
     const textured = texturesOn && lineTextures.size > 0
     const strokedRoads = texturesOn && roadStrokes !== null
     const strokedRivers = texturesOn && riverSprites.size > 0 && renderIndex !== null
@@ -3015,7 +3029,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     // The game's river pieces: one render per tile, chosen by its connections (river-tiles.ts); the flat band where one is missing.
-    const riverLayer = strokedRivers && settings.waterSurface && waterSurface ? document.createElement('canvas') : null
+    const riverLayer = strokedRivers && showWaterSurface && waterSurface ? document.createElement('canvas') : null
     if (riverLayer) {
       riverLayer.width = canvas.width
       riverLayer.height = canvas.height
@@ -3054,7 +3068,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       ctx.drawImage(riverLayer, 0, 0)
     }
-  }, [lineFeatureCanvasEl, waterSurface, settings.waterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
+  }, [lineFeatureCanvasEl, waterSurface, showWaterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, showLineTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
