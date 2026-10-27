@@ -16,6 +16,7 @@ Desktop release for macOS (Apple Silicon), Windows, and Linux.
 - Map Grid: drawing quality setting, object browser Size filter and Reset all, a banner when painting Player Areas while they are hidden in settings, a styled paint toolbar with new icons, and faster edits.
 - **New Walkables brush** (flower icon, right of Trees): scatters grass, flowers and mushrooms with the same biome-mix settings as Trees.
 - **Trees and Obstacles brushes mix more biomes on Snow and Lava** when high-contrast biomes are off: Snow also takes Grass pine trees, Deathland and Dirt; Lava also takes Deathland and Grass. The Mountains share in Obstacles now starts at 50%.
+- **The eraser removes objects while you drag**, instead of only when you release the mouse button (rivers, roads and ramps still go on release).
 - **Saving no longer pops up a list of map issues**; the Validate button still lists them on demand.
 - **Help > What's new** shows these notes.
 - Elevation now blocks the lower ring around a raised area, as verified in the game.
