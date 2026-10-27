@@ -614,6 +614,7 @@ export default function AppShell() {
             useScenarioStore.setState({ isDirty: true })
             break
           // Help menu — the Toolbar owns both dialogs, so relay rather than duplicate.
+          case 'whats-new':     window.dispatchEvent(new Event('oe:whats-new')); break
           case 'about':         window.dispatchEvent(new Event('oe:about')); break
           case 'check-updates': window.dispatchEvent(new Event('oe:check-updates')); break
           // win.close() (defined just below) fires the same closeRequested event
