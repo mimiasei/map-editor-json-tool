@@ -469,8 +469,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => resolveDrawQuality(wheelZooming && settings.drawQuality !== 'low' ? 'medium' : settings.drawQuality, settings.drawQualityCustom),
     [wheelZooming, settings.drawQuality, settings.drawQualityCustom],
   )
+  // The water layer is slow to rebuild, so it is hidden with CSS while zooming (its canvas stays as drawn) and never follows the capped quality.
+  const waterQuality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
+  const showWaterSurface = settings.waterSurface
   const showCliffs = settings.showCliffs && !wheelZooming
-  const showWaterSurface = settings.waterSurface && !wheelZooming
   const showLineTextures = settings.lineFeatureTextures && !wheelZooming
   const iconLodPx = quality.objects.iconFromPx
   const overdrawCells = quality.objects.overdrawTiles
@@ -2843,7 +2845,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [waterCanvasEl, setWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
   useEffect(() => {
     if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
+    const scale = textureScale(sizeX, sizeZ, waterQuality.cliffs)
     waterCanvasEl.width = sizeX * scale
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
@@ -2860,7 +2862,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fill(path)
     }
     fadeWaterShore(ctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
-  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, quality.cliffs])
+  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, waterQuality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
   // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
@@ -5541,7 +5543,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <canvas
                   ref={setWaterCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
-                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming ? 'hidden' : 'visible' }}
                 />
 
                 {/* Interactive icon layer — windowed to the visible range, only
