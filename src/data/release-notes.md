@@ -19,7 +19,7 @@ Desktop release for macOS (Apple Silicon), Windows, and Linux.
 - **The eraser removes objects while you drag**, instead of only when you release the mouse button (rivers, roads and ramps still go on release).
 - **Random cities can be given an owner and a faction** in the info column. A new random city now starts with no owner ("None", as in GME) instead of becoming Player 1's when GME opens the map. "Neutral" owners are now called "None".
 - **The Map Grid pans with the right mouse button**, as in GME (it was the middle button), and a banner with a progress bar shows while the terrain textures load.
-- **Encounter difficulty ranges are 75% higher** (Easy 700-3500, Normal 3501-7000, Difficult 7001-10500, Impossible 10501-14000, Lethal 14001-28000). Ranges you have edited yourself are kept.
+- **Encounter difficulty ranges are higher** (Easy 1050-5250, Normal 5251-10500, Difficult 10501-15750, Impossible 15751-21000, Lethal 21001-50000). Ranges you have edited yourself are kept.
 - **Saving no longer pops up a list of map issues**; the Validate button still lists them on demand.
 - **Help > What's new** shows these notes.
 - Elevation now blocks the lower ring around a raised area, as verified in the game.
