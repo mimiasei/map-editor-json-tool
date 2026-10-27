@@ -3471,6 +3471,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // A random-hero belongs to an existing player; no spawner slot is involved.
   const handleSetObjectOwner = (item: PlacedObject, owner: number) =>
     applyEdit({ kind: 'setObjectOwner', entityType: item.type, entityId: item.id, owner }, 'set hero owner')
+  const handleSetRandomCityFaction = (item: PlacedObject, factionSid: string) =>
+    applyEdit({ kind: 'setRandomCityFaction', entityType: item.type, entityId: item.id, factionSid }, 'set city faction')
   const handleSetObjectHero = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
   const handleSetObjectActions = (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) =>
@@ -6090,6 +6092,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetHeroSid={canEditEntities ? handleSetHeroSid : undefined}
                   onSetObjectOwner={canEditEntities ? handleSetObjectOwner : undefined}
                   onSetObjectHero={canEditEntities ? handleSetObjectHero : undefined}
+                  onSetRandomCityFaction={canEditEntities ? handleSetRandomCityFaction : undefined}
                   onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
                   onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
                   allPortals={allPortals}

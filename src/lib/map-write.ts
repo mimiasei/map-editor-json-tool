@@ -644,6 +644,20 @@ export function setCustomCityName(chunk: Uint8Array, entityType: number, entityI
   return new TextEncoder().encode(patchedText)
 }
 
+/** Faction of a free-standing `random-city` ('' = random). Unlike setCityFaction there is no Block 1 spawns entry to keep in sync.
+ *  Defining a faction also turns the companion hero off: spawnHero:true with no propHeroes row froze the game at 100% load. */
+export function setRandomCityFaction(chunk: Uint8Array, entityType: number, entityId: number, factionSid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propCities')
+  const entries = JSON.parse(span) as { type?: number | string; id?: number; factionSid?: string; isDefined?: boolean; spawnHero?: boolean }[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) throw new Error(`No propCities entry found for (type=${entityType}, id=${entityId}) — this object isn't a city`)
+  existing.factionSid = factionSid
+  existing.isDefined = factionSid !== ''
+  if (factionSid !== '') existing.spawnHero = false
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── Hero assignment (objectsProperties.propHeroes.heroSid) ─────────────────
 // A real shipped map (Fun_and_Graves.map) proves this table is also the join
 // point for a fully custom hero: its propHeroes entry for id 0 points
@@ -1299,7 +1313,7 @@ const RANDOM_CITY_DEFAULT_TABLES: { table: string; row: (id: number, overrides: 
   {
     table: 'propCities',
     row: (id, { factionSid, spawnHero }) => ({
-      type: 0, id, isDefined: true, factionSid, spawnHero,
+      type: 0, id, isDefined: factionSid !== '', factionSid, spawnHero,
       buildingsConstructionSid: 'default_buildings_construction',
       buildingsBanSid: 'default_buildings_ban',
       buildingsSettingsSid: 'default_buildings_settings', customCityName: '',
@@ -1326,6 +1340,10 @@ const RANDOM_CITY_DEFAULT_TABLES: { table: string; row: (id: number, overrides: 
     }),
   },
 ]
+
+/** A random city placed by hand: random faction (blank factionSid, isDefined:false, what GME itself saves for a city it has not configured)
+ *  and no companion hero, since spawnHero:true without a propHeroes row froze the game at 100% load (see zone-population.ts). */
+const UNCONFIGURED_RANDOM_CITY = { factionSid: '', spawnHero: false }
 
 /** Real resource-pickup sids (`resource_gold`/`resource_wood`/`resource_ore`/
  *  `resource_mercury`/`resource_crystals`/`resource_gemstones`/`resource_dust`
@@ -1430,6 +1448,11 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
   }
   if (RESOURCE_PICKUP_SIDS.has(sid)) {
     tryAppendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(newId))
+  }
+  if (sid === 'random-city') {
+    // A hand-placed random city gets the same four rows GME writes for one it has opened, with no owner ("None") and a random faction.
+    // Without a propOwners row GME read the city as Player 1's and wrote owner 0 back on save.
+    for (const { table, row } of RANDOM_CITY_DEFAULT_TABLES) tryAppendRow(table, row(newId, UNCONFIGURED_RANDOM_CITY))
   }
   if (sid === 'random-hero') {
     // Every one of 42 shipped random-heroes has both rows: the owning player and
@@ -2064,8 +2087,8 @@ export function addObjectInstances(
       if (sid === 'random-hire' && randomHireOverrides) row.tier = randomHireOverrides.tier
       appendRow(randomSpawnerDefault.table, row)
     }
-    if (sid === 'random-city' && randomCityOverrides) {
-      for (const { table, row } of RANDOM_CITY_DEFAULT_TABLES) appendRow(table, row(id, randomCityOverrides))
+    if (sid === 'random-city') {
+      for (const { table, row } of RANDOM_CITY_DEFAULT_TABLES) appendRow(table, row(id, randomCityOverrides ?? UNCONFIGURED_RANDOM_CITY))
     }
     if (RESOURCE_PICKUP_SIDS.has(sid)) {
       appendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(id))

@@ -47,6 +47,7 @@ export interface PlacedObjectEnrichment {
   citySquadSidsByKey: Map<string, string[]>
   randomSquadValueByKey: Map<string, number>
   isCityByKey: Set<string>
+  cityFactionByKey: Map<string, string>
   heroSidByKey: Map<string, string>
   actionsBeforeByKey: Map<string, ObjectActions>
   actionsAfterByKey: Map<string, ObjectActions>
@@ -86,6 +87,7 @@ export function buildPlacedObjects(
       citySquadSids: enrichment.citySquadSidsByKey.get(key),
       randomSquadValue: enrichment.randomSquadValueByKey.get(key),
       isCity: enrichment.isCityByKey.has(key) || undefined,
+      cityFactionSid: enrichment.cityFactionByKey.get(key),
       heroSid: enrichment.heroSidByKey.get(key),
       actionsBefore: enrichment.actionsBeforeByKey.get(key),
       actionsAfter: enrichment.actionsAfterByKey.get(key),
@@ -364,6 +366,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     citySquadSidsByKey,
     randomSquadValueByKey,
     isCityByKey,
+    cityFactionByKey: factionByKey,
     actionsBeforeByKey,
     actionsAfterByKey,
     heroSidByKey,
