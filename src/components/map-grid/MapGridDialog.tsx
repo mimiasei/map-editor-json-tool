@@ -487,7 +487,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const [settings, setSettings] = useState(loadMapGridSettings)
   // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
-  // While the wheel zooms (and for ZOOM_SETTLE_MS after), the costly layers are switched off and the quality capped at medium, so a big map
+  // While the wheel zooms (and for ZOOM_SETTLE_MS after), the costly layers (cliffs, water, roads/rivers) are hidden with CSS, not redrawn, so a big map
   // zooms smoothly; the user's own settings come back when the wheel has been still that long.
   const [wheelZooming, setWheelZooming] = useState(false)
   const wheelTimerRef = useRef<number | null>(null)
@@ -499,7 +499,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const userQuality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
   const showWaterSurface = settings.waterSurface
   const showCliffs = settings.showCliffs
-  const showLineTextures = settings.lineFeatureTextures && !wheelZooming
+  const showLineTextures = settings.lineFeatureTextures
   const iconLodPx = quality.objects.iconFromPx
   const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
@@ -5598,6 +5598,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     width: sizeX * BASE_CELL_PX,
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
+                    visibility: wheelZooming ? 'hidden' : 'visible',
                   }}
                 />
 
