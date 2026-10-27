@@ -167,29 +167,6 @@ const ZOOM_SETTLE_MS = 1000
 // Experiment switch: cap the draw quality at medium while zooming. Resizing a canvas reallocates it (an 8192x8192 one is 256 MB), and the cap
 // resizes the terrain and road/river canvases twice per zoom, so with it off those canvases are left alone.
 const CAP_QUALITY_WHILE_ZOOMING = false
-// Timing of the layer redraws after a wheel zoom (fast-zoom experiment). "draw" is only the time the JS spent issuing the canvas calls: the
-// browser rasterises them afterwards, so "on screen" is measured to the second animation frame after (the frame that includes the draw).
-// "+Nms" is the time since the zoom settled. Remove with the experiment.
-let zoomSettledAt = 0
-// Main-thread stalls (long tasks, over 50ms) for 6s after the zoom settles, with their start relative to that moment: unlike the per-layer
-// numbers this also catches work outside the layer effects (React renders, icon layer, GPU uploads that block the thread).
-function watchStalls(): void {
-  if (typeof PerformanceObserver === 'undefined' || !PerformanceObserver.supportedEntryTypes?.includes('longtask')) return
-  const settled = performance.now()
-  const observer = new PerformanceObserver((list) => {
-    for (const e of list.getEntries()) console.info(`[map-grid] main thread blocked ${Math.round(e.duration)}ms, starting +${Math.round(e.startTime - settled)}ms after zoom settled`)
-  })
-  observer.observe({ entryTypes: ['longtask'] })
-  window.setTimeout(() => observer.disconnect(), 6000)
-}
-function logLayer(layer: string, startedAt: number, note = ''): void {
-  const drawn = performance.now()
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const now = performance.now()
-    const since = zoomSettledAt > 0 && now - zoomSettledAt < 15000 ? ` (+${Math.round(now - zoomSettledAt)}ms after zoom settled)` : ''
-    console.info(`[map-grid] ${layer}: draw ${Math.round(drawn - startedAt)}ms, on screen ${Math.round(now - startedAt)}ms${note ? ` ${note}` : ''}${since}`)
-  }))
-}
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
@@ -2547,7 +2524,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const factor = Math.exp(-e.deltaY * 0.001)
     setWheelZooming(true)
     if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
-    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; zoomSettledAt = performance.now(); watchStalls(); setWheelZooming(false) }, ZOOM_SETTLE_MS)
+    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; setWheelZooming(false) }, ZOOM_SETTLE_MS)
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
@@ -2590,7 +2567,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     textureCanvasEl.height = sizeZ * scale
     const ctx = textureCanvasEl.getContext('2d')
     if (!ctx || textureStrength <= 0) return
-    const t0 = performance.now()
     const patterns = buildTexturePatterns(ctx, biomeTextures, scale)
     const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
     // One path per texture, filled once: far fewer fill calls than one per tile.
@@ -2610,7 +2586,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const keys = stagedTilesMap.map((t, node) => textureKeyFor(t, waterMap[node]))
       drawBiomeEdgeFade(ctx, patterns, keys, sizeX, sizeZ, scale)
     }
-    logLayer('terrain textures', t0, `${ctx.canvas.width}x${ctx.canvas.height}`)
   }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged, quality.terrain, settings.biomeEdgeFade])
   // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
   // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
@@ -2636,12 +2611,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const cacheKey = [cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, levelsMap, climbsMap, paintLevelStaged, paintRampStaged]
     const cached = cliffLayerCacheRef.current
     if (cached && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ && cached.key.every((v, i) => v === cacheKey[i])) {
-      const tc = performance.now()
       out.drawImage(cached.canvas, 0, 0)
-      logLayer('cliffs', tc, 'from cache')
       return
     }
-    const t0 = performance.now()
     const layer = document.createElement('canvas')
     layer.width = cliffCanvasEl.width
     layer.height = cliffCanvasEl.height
@@ -2816,7 +2788,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
     out.drawImage(layer, 0, 0)
-    logLayer('cliffs', t0, `rebuilt ${layer.width}x${layer.height}`)
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, userQuality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
@@ -2903,12 +2874,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // layer is switched on again or the canvas is remounted; it is rebuilt only when the water, its size or the texture changed.
     const cached = waterLayerCacheRef.current
     if (cached && cached.waterMap === waterMap && cached.surface === waterSurface && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ) {
-      const tc = performance.now()
       ctx.drawImage(cached.canvas, 0, 0)
-      logLayer('water', tc, 'from cache')
       return
     }
-    const t0 = performance.now()
     const layer = document.createElement('canvas')
     layer.width = waterCanvasEl.width
     layer.height = waterCanvasEl.height
@@ -2928,7 +2896,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
     waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
     ctx.drawImage(layer, 0, 0)
-    logLayer('water', t0, `rebuilt ${layer.width}x${layer.height}`)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, userQuality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
@@ -2951,7 +2918,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const riverSprites = useRiverSprites()
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const t0 = performance.now()
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
     const texturesOn = showLineTextures && iconsVisibleForSwatch
@@ -3138,7 +3104,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       ctx.drawImage(riverLayer, 0, 0)
     }
-    logLayer('roads and rivers', t0, `${canvas.width}x${canvas.height}`)
   }, [lineFeatureCanvasEl, waterSurface, showWaterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, showLineTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
