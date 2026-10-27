@@ -168,6 +168,17 @@ const ZOOM_SETTLE_MS = 1000
 // browser rasterises them afterwards, so "on screen" is measured to the second animation frame after (the frame that includes the draw).
 // "+Nms" is the time since the zoom settled. Remove with the experiment.
 let zoomSettledAt = 0
+// Main-thread stalls (long tasks, over 50ms) for 6s after the zoom settles, with their start relative to that moment: unlike the per-layer
+// numbers this also catches work outside the layer effects (React renders, icon layer, GPU uploads that block the thread).
+function watchStalls(): void {
+  if (typeof PerformanceObserver === 'undefined' || !PerformanceObserver.supportedEntryTypes?.includes('longtask')) return
+  const settled = performance.now()
+  const observer = new PerformanceObserver((list) => {
+    for (const e of list.getEntries()) console.info(`[map-grid] main thread blocked ${Math.round(e.duration)}ms, starting +${Math.round(e.startTime - settled)}ms after zoom settled`)
+  })
+  observer.observe({ entryTypes: ['longtask'] })
+  window.setTimeout(() => observer.disconnect(), 6000)
+}
 function logLayer(layer: string, startedAt: number, note = ''): void {
   const drawn = performance.now()
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -2533,7 +2544,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const factor = Math.exp(-e.deltaY * 0.001)
     setWheelZooming(true)
     if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
-    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; zoomSettledAt = performance.now(); setWheelZooming(false) }, ZOOM_SETTLE_MS)
+    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; zoomSettledAt = performance.now(); watchStalls(); setWheelZooming(false) }, ZOOM_SETTLE_MS)
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
