@@ -2843,6 +2843,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // faintly through it and the rim stones stand out of it, as in GME. Stacked after the cliff canvas.
   const waterSurface = useWaterSurface()
   const [waterCanvasEl, setWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const waterLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; waterMap: typeof waterMap; surface: HTMLCanvasElement; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const scale = textureScale(sizeX, sizeZ, waterQuality.cliffs)
@@ -2850,18 +2851,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
     if (!ctx || !showWaterSurface || !iconsVisibleForSwatch || !waterSurface) return
+    // The shore fade (64 strips over every shore edge) is what makes this slow, so the finished layer is kept and only copied back when the
+    // layer is switched on again or the canvas is remounted; it is rebuilt only when the water, its size or the texture changed.
+    const cached = waterLayerCacheRef.current
+    if (cached && cached.waterMap === waterMap && cached.surface === waterSurface && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ) {
+      ctx.drawImage(cached.canvas, 0, 0)
+      return
+    }
+    const layer = document.createElement('canvas')
+    layer.width = waterCanvasEl.width
+    layer.height = waterCanvasEl.height
+    const lctx = layer.getContext('2d')
+    if (!lctx) return
     const path = new Path2D()
     for (let node = 0; node < sizeX * sizeZ; node++) {
       if (waterMap[node]) path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
     }
-    ctx.fillStyle = WATER_SURFACE_COLOR
-    ctx.fill(path)
-    const pattern = waterSurfacePattern(ctx, waterSurface, scale)
+    lctx.fillStyle = WATER_SURFACE_COLOR
+    lctx.fill(path)
+    const pattern = waterSurfacePattern(lctx, waterSurface, scale)
     if (pattern) {
-      ctx.fillStyle = pattern
-      ctx.fill(path)
+      lctx.fillStyle = pattern
+      lctx.fill(path)
     }
-    fadeWaterShore(ctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
+    fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
+    waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
+    ctx.drawImage(layer, 0, 0)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, waterQuality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
