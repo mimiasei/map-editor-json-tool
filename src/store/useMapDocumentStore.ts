@@ -223,10 +223,9 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       commitToDisk: async (mapFilePath, scenario) => {
         const current = get().container
         if (!current) throw new Error('No .map document is currently loaded')
-        const context = extractMapContext(containerToRawBlocks(current))
-        const issues = findMapValidationIssues(context, useCatalogStore.getState().catalog)
         const result = await writeMapChunks(mapFilePath, current, scenario)
-        set({ mapIsDirty: false, mapValidationIssues: issues.length > 0 ? issues : null })
+        // No post-save issue dialog: a map in progress is expected to have open problems, and the toolbar's Validate button lists them on demand.
+        set({ mapIsDirty: false })
         return { status: 'saved', ...result }
       },
 

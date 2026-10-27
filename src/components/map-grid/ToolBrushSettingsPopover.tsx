@@ -17,7 +17,7 @@ import { Settings } from '@/components/ui/icons'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
 interface Props {
-  tool: 'obstacles' | 'trees' | 'interactable' | 'squad' | 'resource'
+  tool: 'obstacles' | 'trees' | 'flowers' | 'interactable' | 'squad' | 'resource'
   /** Obstacles only — chance an obstacle-role pick is specifically a
    *  mountain_* entry (0 = None, 1 = Always). */
   mountainChance: number
@@ -68,6 +68,7 @@ function pctLabel(value: number, zeroLabel: string, oneLabel: string): string {
 const TOOL_TITLES: Record<Props['tool'], string> = {
   obstacles: 'Obstacle brush settings',
   trees: 'Tree brush settings',
+  flowers: 'Walkables brush settings',
   interactable: 'Interactable brush settings',
   squad: 'Encounter brush settings',
   resource: 'Resource brush settings',
@@ -199,7 +200,7 @@ export default function ToolBrushSettingsPopover({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <LabelWithTooltip
-                  tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
+                  tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'flowers' ? 'walkable types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
                 >
                   Biome mix
                 </LabelWithTooltip>
@@ -219,7 +220,7 @@ export default function ToolBrushSettingsPopover({
           <div className="flex items-center justify-between">
             <LabelWithTooltip
               htmlFor={`${tool}-high-contrast`}
-              tooltip="When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix freely with each other, but Snow, Lava, and Deathland never mix with any other biome."
+              tooltip="When off, a cross-biome pick only lands on a visually compatible biome — Grass/Autumn/Dirt mix freely with each other. Snow also takes Grass pine trees, Deathland and Dirt; Lava also takes Deathland and Grass. Sand and Deathland mix with nothing else."
             >
               Allow high-contrast biomes
             </LabelWithTooltip>

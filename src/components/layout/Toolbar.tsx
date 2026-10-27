@@ -88,6 +88,7 @@ import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
+import WhatsNewDialog from '@/components/common/WhatsNewDialog'
 import PlayerBalancePanel, { DecorationBalanceSection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
@@ -199,6 +200,7 @@ export default function Toolbar({
   const [updateChecking,      setUpdateChecking]      = useState(false)
   const [updateMessage,       setUpdateMessage]       = useState<string | null>(null)
   const [aboutOpen,           setAboutOpen]           = useState(false)
+  const [whatsNewOpen,        setWhatsNewOpen]        = useState(false)
   const [newMapOpen,          setNewMapOpen]          = useState(false)
   const [importH3mOpen,       setImportH3mOpen]       = useState(false)
 
@@ -581,9 +583,11 @@ export default function Toolbar({
     const onSaveAs    = () => { handlersRef.current.handleExport() }
 
     const onAbout   = () => { setAboutOpen(true) }
+    const onWhatsNew = () => { setWhatsNewOpen(true) }
     const onUpdates = () => { void handlersRef.current.handleCheckForUpdates() }
 
     window.addEventListener('oe:about',         onAbout)
+    window.addEventListener('oe:whats-new',     onWhatsNew)
     window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',       onOpen)
     window.addEventListener('oe:open-map',   onOpenMap)
@@ -593,6 +597,7 @@ export default function Toolbar({
     window.addEventListener('oe:save-as',    onSaveAs)
     return () => {
       window.removeEventListener('oe:about',         onAbout)
+      window.removeEventListener('oe:whats-new',     onWhatsNew)
       window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',       onOpen)
       window.removeEventListener('oe:open-map',   onOpenMap)
@@ -1416,6 +1421,7 @@ export default function Toolbar({
 
       {/* About works in both builds — the version row just reads "web build" on the web. */}
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+      <WhatsNewDialog open={whatsNewOpen} onOpenChange={setWhatsNewOpen} />
 
       {isTauri() && (
         <ImportH3mDialog

@@ -44,7 +44,8 @@
 //   new "Trees" tool restricted to tree_*/pinetree_* entries only.
 
 import type { BiomeId } from './terrain-colors'
-import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
+import type { CatalogEnvironmentBiome, CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
+import { isGroundCoverSid } from './decoration-subcategories'
 
 /** catalog.mapObjects' own `biome` string differs from tile-side BIOME_NAMES
  *  only at id 2 ("Desert" vs "Sand") — see CatalogMapObject.biome's doc
@@ -77,6 +78,26 @@ const COMPATIBLE_BIOME_CLUSTERS: BiomeId[][] = [[1, 5, 7]]
 export function areBiomesCompatible(a: BiomeId, b: BiomeId): boolean {
   if (a === b) return true
   return COMPATIBLE_BIOME_CLUSTERS.some((cluster) => cluster.includes(a) && cluster.includes(b))
+}
+
+/** Extra biomes whose decorations may stand on a Snow or Lava tile when high-contrast mixing is off (requested by the user: with the
+ *  strict rule, an "all biomes" mix still only painted Snow trees on Snow and Lava trees on Lava). From Grass only the pine trees fit
+ *  Snow, hence `onlyPrefix`. One-directional: a Snow tile accepts Dirt objects, a Dirt tile still does not accept Snow ones. */
+const EXTRA_BIOMES_ON: Partial<Record<BiomeId, { biome: BiomeId; onlyPrefix?: string }[]>> = {
+  4: [{ biome: 1, onlyPrefix: 'pinetree_' }, { biome: 3 }, { biome: 7 }],
+  6: [{ biome: 3 }, { biome: 1 }],
+}
+
+/** The pool a cross-biome pick from `from` may use on an `onto` tile when high-contrast mixing is off; null when that mix is not allowed. */
+function crossBiomePool(onto: BiomeId, from: BiomeId, pools: Record<BiomeId, FuzzyObstaclePool>): FuzzyObstaclePool | null {
+  if (areBiomesCompatible(onto, from)) return pools[from]
+  const extra = EXTRA_BIOMES_ON[onto]?.find((e) => e.biome === from)
+  if (!extra) return null
+  const pool = pools[from]
+  const prefix = extra.onlyPrefix
+  if (!prefix) return pool
+  const keep = (sids: string[]) => sids.filter((sid) => sid.startsWith(prefix))
+  return { obstacles: keep(pool.obstacles), clutter: keep(pool.clutter), mountains: keep(pool.mountains), pools: keep(pool.pools) }
 }
 
 /** Every non-campaign `environments` entry that reads as man-made rather
@@ -166,6 +187,23 @@ export function buildTreePools(mapObjects: CatalogMapObject[]): Record<BiomeId, 
     const biomeId = biomeIdByCatalogName.get(obj.biome)
     if (!biomeId) continue
     pools[biomeId].obstacles.push(obj.id)
+  }
+  return pools
+}
+
+/** Same idea again for the Walkables brush: only walkable ground cover (grass tufts, flowers, mushrooms; see isGroundCoverSid), which
+ *  goes in `obstacles` so the sampler scatters it with the same density falloff as trees. */
+export function buildWalkablePools(catalog: GameCatalog): Record<BiomeId, FuzzyObstaclePool> {
+  const pools = Object.fromEntries(
+    ALL_BIOME_IDS.map((id) => [id, { obstacles: [], clutter: [], mountains: [], pools: [] } as FuzzyObstaclePool]),
+  ) as Record<BiomeId, FuzzyObstaclePool>
+  const biomeIdByCatalogName = new Map<string, BiomeId>(
+    ALL_BIOME_IDS.map((id) => [BIOME_ID_TO_CATALOG_BIOME[id], id]),
+  )
+  for (const obj of catalog.mapObjects) {
+    if (obj.category !== 'environments' || !obj.biome || !isGroundCoverSid(obj.id, catalog)) continue
+    const biomeId = biomeIdByCatalogName.get(obj.biome)
+    if (biomeId) pools[biomeId].obstacles.push(obj.id)
   }
   return pools
 }
@@ -399,14 +437,20 @@ export function sampleFuzzyObstacles(
     if (ownBiome === undefined) continue
 
     let biomeId = ownBiome
+    let pool = pools[ownBiome]
     if (rng() < crossBiomeChance) {
-      const candidates = ALL_BIOME_IDS.filter(
-        (id) => id !== ownBiome && (pools[id].obstacles.length > 0 || pools[id].clutter.length > 0)
-          && (allowHighContrastBiomes || areBiomesCompatible(ownBiome, id)),
-      )
-      if (candidates.length > 0) biomeId = candidates[Math.floor(rng() * candidates.length)]
+      const candidates: { id: BiomeId; pool: FuzzyObstaclePool }[] = []
+      for (const id of ALL_BIOME_IDS) {
+        if (id === ownBiome) continue
+        const candidate = allowHighContrastBiomes ? pools[id] : crossBiomePool(ownBiome, id, pools)
+        if (candidate && (candidate.obstacles.length > 0 || candidate.clutter.length > 0)) candidates.push({ id, pool: candidate })
+      }
+      if (candidates.length > 0) {
+        const pick = candidates[Math.floor(rng() * candidates.length)]
+        biomeId = pick.id
+        pool = pick.pool
+      }
     }
-    const pool = pools[biomeId]
     const hasAnyObstacleRole = pool.obstacles.length > 0 || pool.mountains.length > 0 || pool.pools.length > 0
     const biomeWeights = weights?.[biomeId]
 

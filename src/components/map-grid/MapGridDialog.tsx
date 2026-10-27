@@ -76,7 +76,7 @@ import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
-import { buildFuzzyObstaclePools, buildTreePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
@@ -133,6 +133,7 @@ import {
     Milestone,
     Waves,
     Trees,
+    Flower2,
     TrendingUpDown,
     Landmark,
     Swords,
@@ -540,9 +541,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const manualStacks = useStackOrderStore((s) => s.byNode)
   const sessionFromId = useStackOrderStore((s) => s.sessionFromId)
 
+  // Objects the eraser has swept over in the stroke still being held. They are hidden at once so the erasing is seen as it happens, and
+  // deleted together on release (one undo step), see commitEraserStroke.
+  const [erasedKeys, setErasedKeys] = useState<Set<string>>(new Set())
+
   // Whether one object is drawn under the current filters. Each object on a stacked tile is judged on its own, so hiding the trees
   // shows the mine under one instead of an empty tile.
   const isShown = useCallback((item: PlacedObject): boolean => {
+    if (erasedKeys.has(item.key)) return false
     const group = groupOf(item, catalog)
     if (!group || !filter[group]) return false
     if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
@@ -551,7 +557,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
     }
     return true
-  }, [catalog, filter, interactableSubFilter, decorationSubFilter])
+  }, [catalog, filter, interactableSubFilter, decorationSubFilter, erasedKeys])
 
   const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
@@ -782,7 +788,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Obstacle brush settings (gear icon, left of Mode: Freehand/Rectangle) —
   // see ToolBrushSettingsPopover. mountainChance/poolChance feed directly
   // into sampleFuzzyObstacles's own options of the same name.
-  const [obstacleMountainChance, setObstacleMountainChance] = useState(0.3)
+  const [obstacleMountainChance, setObstacleMountainChance] = useState(0.5)
   const [obstaclePoolChance, setObstaclePoolChance] = useState(0)
   // 0 = fully mixed across all biomes, 1 = only the biome painted on — same
   // meaning/inversion as treeBiomePurity below.
@@ -800,6 +806,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (0 there means "always own biome", the opposite direction).
   const [treeBiomePurity, setTreeBiomePurity] = useState(0.9)
   const [treeAllowHighContrast, setTreeAllowHighContrast] = useState(false)
+  // The Walkables brush (flower icon) is the Trees brush fed ground cover instead of trees: it shares the active flag, drag, bucket and
+  // preview code, and only the pool and these two settings differ.
+  const [treeKind, setTreeKind] = useState<'trees' | 'flowers'>('trees')
+  const [flowerBiomePurity, setFlowerBiomePurity] = useState(0.9)
+  const [flowerAllowHighContrast, setFlowerAllowHighContrast] = useState(false)
 
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
@@ -917,14 +928,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => (catalog ? buildTreePools(catalog.mapObjects) : null),
     [catalog],
   )
+  const walkablePools = useMemo(
+    () => (catalog ? buildWalkablePools(catalog) : null),
+    [catalog],
+  )
   const sampleTreeAdditions = useCallback((nodes: number[]): { node: number; sid: string }[] => {
-    if (!treePools || nodes.length === 0) return []
+    const pools = treeKind === 'flowers' ? walkablePools : treePools
+    if (!pools || nodes.length === 0) return []
     const distances = computeFuzzyDistances(nodes, sizeX)
     return sampleFuzzyObstacles(distances, (n) => {
       const v = tilesMap[n]
       return v >= 1 && v <= 7 ? (v as BiomeId) : undefined
-    }, treePools, { crossBiomeChance: 1 - treeBiomePurity, allowHighContrastBiomes: treeAllowHighContrast })
-  }, [treePools, sizeX, tilesMap, treeBiomePurity, treeAllowHighContrast])
+    }, pools, treeKind === 'flowers'
+      ? { crossBiomeChance: 1 - flowerBiomePurity, allowHighContrastBiomes: flowerAllowHighContrast }
+      : { crossBiomeChance: 1 - treeBiomePurity, allowHighContrastBiomes: treeAllowHighContrast })
+  }, [treeKind, treePools, walkablePools, sizeX, tilesMap, treeBiomePurity, treeAllowHighContrast, flowerBiomePurity, flowerAllowHighContrast])
   const [treeStaged, setTreeStaged] = useState<{ node: number; sid: string }[]>([])
   const previewTreeStroke = useCallback((nodes: number[]) => {
     setTreeStaged(sampleTreeAdditions(nodes))
@@ -932,9 +950,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const commitTreeStroke = useCallback((nodes?: number[]) => {
     const additions = nodes ? sampleTreeAdditions(nodes) : treeStaged
     if (additions.length === 0) return
-    applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'scatter trees')
+    applyEdit({ kind: 'paintObjects', additions, deletions: [] }, treeKind === 'flowers' ? 'scatter walkables' : 'scatter trees')
     setTreeStaged([])
-  }, [treeStaged, sampleTreeAdditions, applyEdit])
+  }, [treeStaged, sampleTreeAdditions, applyEdit, treeKind])
   const stopTreePainting = () => {
     setTreesActive(false)
     treeDragRef.current = null
@@ -951,8 +969,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // covers an eraser mistake same as any other edit).
   const [eraserActive, setEraserActive] = useState(false)
   const eraserDragRef = useRef<Set<number> | null>(null)
-  const stopEraser = () => setEraserActive(false)
+  const stopEraser = () => { setEraserActive(false); setErasedKeys(new Set()) }
+  // The tile index registers an object on every footprint cell, the same overlap rule commitEraserStroke deletes by.
+  const hideErasedAt = useCallback((tiles: number[]) => {
+    setErasedKeys((prev) => {
+      let next: Set<string> | null = null
+      for (const n of tiles) {
+        for (const item of tileIndex.get(n) ?? []) {
+          if (prev.has(item.key) || next?.has(item.key)) continue
+          next ??= new Set(prev)
+          next.add(item.key)
+        }
+      }
+      return next ?? prev
+    })
+  }, [tileIndex])
   const commitEraserStroke = useCallback((nodes: number[]) => {
+    setErasedKeys(new Set())
     if (nodes.length === 0) return
     const erased = new Set(nodes)
     // Match by footprint overlap (resolveFootprintCells — the same function
@@ -1908,9 +1941,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
-          eraserDragRef.current.add(n)
-        }
+        const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+        for (const n of tiles) eraserDragRef.current.add(n)
+        hideErasedAt(tiles)
       }
       return
     }
@@ -2107,9 +2140,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (eraserDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
-          eraserDragRef.current.add(n)
-        }
+        const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+        for (const n of tiles) eraserDragRef.current.add(n)
+        hideErasedAt(tiles)
       }
       setHoveredNode(node)
       return
@@ -4845,7 +4878,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {treesActive ? (
                     <div className="flex items-center gap-1">
                       <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                        <Trees className="h-3.5 w-3.5" />
+                        {treeKind === 'flowers' ? <Flower2 className="h-3.5 w-3.5" /> : <Trees className="h-3.5 w-3.5" />}
                         Drawing…
                       </Button>
                       <div className="flex items-center rounded border border-border overflow-hidden">
@@ -4875,6 +4908,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       title="Tree brush — drag to scatter biome-appropriate trees"
                       onClick={() => {
                         stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        setTreeKind('trees')
+                        setTreesActive(true)
+                      }}
+                    />
+                  )}
+                  {!treesActive && walkablePools && (
+                    <ToolButton
+                      icon={<Flower2 className="h-3.5 w-3.5" />}
+                      label="Walkables"
+                      title="Walkables brush — drag to scatter biome-appropriate grass, flowers and mushrooms"
+                      onClick={() => {
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        setTreeKind('flowers')
                         setTreesActive(true)
                       }}
                     />
@@ -5056,15 +5102,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <div className="flex-1" />
                   {(obstacleBrushActive || treesActive || interactableActive || squadActive || resourceActive) && (
                     <ToolBrushSettingsPopover
-                      tool={obstacleBrushActive ? 'obstacles' : treesActive ? 'trees' : squadActive ? 'squad' : resourceActive ? 'resource' : 'interactable'}
+                      tool={obstacleBrushActive ? 'obstacles' : treesActive ? treeKind : squadActive ? 'squad' : resourceActive ? 'resource' : 'interactable'}
                       mountainChance={obstacleMountainChance}
                       onMountainChanceChange={setObstacleMountainChance}
                       poolChance={obstaclePoolChance}
                       onPoolChanceChange={setObstaclePoolChance}
-                      biomePurity={obstacleBrushActive ? obstacleBiomePurity : treesActive ? treeBiomePurity : squadActive ? squadBiomePurity : interactableBiomePurity}
-                      onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? setTreeBiomePurity : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
-                      allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : treesActive ? treeAllowHighContrast : interactableAllowHighContrast}
-                      onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? setTreeAllowHighContrast : setInteractableAllowHighContrast}
+                      biomePurity={obstacleBrushActive ? obstacleBiomePurity : treesActive ? (treeKind === 'flowers' ? flowerBiomePurity : treeBiomePurity) : squadActive ? squadBiomePurity : interactableBiomePurity}
+                      onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? (treeKind === 'flowers' ? setFlowerBiomePurity : setTreeBiomePurity) : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
+                      allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : treesActive ? (treeKind === 'flowers' ? flowerAllowHighContrast : treeAllowHighContrast) : interactableAllowHighContrast}
+                      onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? (treeKind === 'flowers' ? setFlowerAllowHighContrast : setTreeAllowHighContrast) : setInteractableAllowHighContrast}
                       squadDifficulties={squadDifficulties}
                       onToggleSquadDifficulty={toggleSquadDifficulty}
                       squadDifficultyRanges={settings.squadDifficultyRanges}
