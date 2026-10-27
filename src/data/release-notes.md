@@ -17,8 +17,11 @@ Desktop release for macOS (Apple Silicon), Windows, and Linux.
 - **New Walkables brush** (flower icon, right of Trees): scatters grass, flowers and mushrooms with the same biome-mix settings as Trees.
 - **Trees and Obstacles brushes mix more biomes on Snow and Lava** when high-contrast biomes are off: Snow also takes Grass pine trees, Deathland and Dirt; Lava also takes Deathland and Grass. The Mountains share in Obstacles now starts at 50%.
 - **The eraser removes objects while you drag**, instead of only when you release the mouse button (rivers, roads and ramps still go on release).
+- **Random cities can be given an owner and a faction** in the info column. A new random city now starts with no owner ("None", as in GME) instead of becoming Player 1's when GME opens the map. "Neutral" owners are now called "None".
+- **The Map Grid pans with the right mouse button**, as in GME (it was the middle button), and a banner with a progress bar shows while the terrain textures load.
+- **Encounter difficulty ranges are higher** (Easy 1050-5250, Normal 5251-10500, Difficult 10501-15750, Impossible 15751-21000, Lethal 21001-50000). Ranges you have edited yourself are kept.
 - **Saving no longer pops up a list of map issues**; the Validate button still lists them on demand.
 - **Help > What's new** shows these notes.
 - Elevation now blocks the lower ring around a raised area, as verified in the game.
 
-See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/compare/v0.9.4...v0.9.5-4) for what changed.
+See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/compare/v0.9.4...v0.9.5-5) for what changed.

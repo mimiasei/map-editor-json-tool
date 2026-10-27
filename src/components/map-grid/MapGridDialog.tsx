@@ -68,7 +68,7 @@ import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textur
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
 import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
-import { buildTexturePatterns, drawBiomeEdgeFade, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
+import { buildTexturePatterns, drawBiomeEdgeFade, textureKeyFor, textureScale, useBiomeTextures, useTextureLoadProgress, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { riverSid, useRiverSprites } from '@/lib/map-grid/river-tiles'
 import { buildLoneRoadTiles, buildRoadSegments, drawRoads, useRoadStrokes } from '@/lib/map-grid/road-strokes'
@@ -134,6 +134,7 @@ import {
     Waves,
     Trees,
     Flower2,
+    Loader2,
     TrendingUpDown,
     Landmark,
     Swords,
@@ -647,7 +648,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
 
-  // Panning is middle-mouse-button only (button 1) — left-button drag is
+  // Panning is right-mouse-button only (button 2, as in GME) — left-button drag is
   // reserved for object move/paint below. Left-button-down still lands here
   // as the fallback when nothing else claims it (e.g. moveState active,
   // clicking a destination tile), so a plain click can still fall through;
@@ -656,9 +657,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const dragRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number; moved: boolean; button: number } | null>(null)
   // Drives the viewport's cursor while actively panning — dragRef alone
   // can't do this since it's a plain ref (mutating it doesn't re-render), and
-  // the cursor should reflect "middle button is held" immediately, not only
+  // the cursor should reflect "right button is held" immediately, not only
   // once the pan crosses the click/drag threshold.
   const [isPanning, setIsPanning] = useState(false)
+  // Whether the last right-button gesture panned. The browser's contextmenu event comes after pointerup, when dragRef is already cleared,
+  // so this is what keeps the end of a pan from also cancelling a placement (a plain right-click does that).
+  const lastPanMovedRef = useRef(false)
 
   // Drag-to-move (issue #167 punch list "real drag-to-move v2") — a
   // pointerdown directly on an occupied tile's icon records the candidate
@@ -681,7 +685,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [isRotateHover, setIsRotateHover] = useState(false)
 
   // Drag-to-paint-objects — mirrors moveDragRef's shape, kept separate so a
-  // middle-mouse pan mid-placingSid can't be misread as a paint stroke (see
+  // right-mouse pan mid-placingSid can't be misread as a paint stroke (see
   // onPointerDown's button dispatch). Below CLICK_DRAG_THRESHOLD_PX, releasing
   // still falls through to the single-placement click in onPointerUp.
   const paintObjectDragRef = useRef<{ startX: number; startY: number; moved: boolean } | null>(null)
@@ -1652,14 +1656,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // cursor and arms a drag-rotate gesture on pointerdown.
   const ROTATE_HANDLE_MARGIN_PX = 14
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    // Panning is the middle mouse button only, so it never fights the
+    // Panning is the right mouse button only, so it never fights the
     // object-move/paint gestures below (which need left-button drag) and so
     // native HTML5 image drag on an icon <img> (a "no-drop" cursor, since
     // nothing here is a real drop target) never gets a chance to hijack a
     // left-button gesture in the first place.
-    if (e.button === 1) {
+    if (e.button === 2) {
       e.preventDefault()
-      dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false, button: 1 }
+      dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false, button: 2 }
+      lastPanMovedRef.current = false
       setIsPanning(true)
       return
     }
@@ -2247,13 +2252,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           return
         }
         drag.moved = true
-        if (drag.button === 1) e.currentTarget.setPointerCapture(e.pointerId)
+        if (drag.button === 2) e.currentTarget.setPointerCapture(e.pointerId)
       }
-      // Only the middle-button (pan) gesture actually moves the viewport —
+      // Only the right-button (pan) gesture actually moves the viewport —
       // a left-button drag that reaches here matched nothing else in
       // onPointerDown (e.g. empty background, no move/placing active), so it
       // deliberately does nothing rather than panning.
-      if (drag.button === 1) {
+      if (drag.button === 2) {
         setTransform((prev) => ({ ...prev, x: drag.startTx + dx, y: drag.startTy + dy }))
         setHoveredNode(null) // suppress hover info while actively panning
       }
@@ -2447,11 +2452,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     const drag = dragRef.current
-    const wasClick = !drag?.moved
-    if (drag?.moved && drag.button === 1 && e.currentTarget.hasPointerCapture(e.pointerId)) {
+    const wasClick = !drag?.moved && drag?.button !== 2 // a right-click is not a placement/move click
+    if (drag?.moved && drag.button === 2 && e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
-    if (drag?.button === 1) setIsPanning(false)
+    if (drag?.button === 2) {
+      setIsPanning(false)
+      lastPanMovedRef.current = drag.moved
+    }
     dragRef.current = null
     // A plain click (not a pan) while a move is active relocates immediately
     // — fires here (not the icon cells' own onClick) so it works identically
@@ -2466,6 +2474,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
   const onContextMenuViewport = (e: ReactMouseEvent) => {
+    // The right button pans the map, so the native context menu never opens over it.
+    e.preventDefault()
+    if (lastPanMovedRef.current) {
+      lastPanMovedRef.current = false
+      return
+    }
     if (placingSid) {
       e.preventDefault()
       stopPlacing()
@@ -2525,6 +2539,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // nothing extracted leaves the base canvas opaque, i.e. exactly the flat-colour grid.
   const [textureCanvasEl, setTextureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const biomeTextures = useBiomeTextures()
+  const textureLoadProgress = useTextureLoadProgress()
   const textureStrength = biomeTextures.size > 0 && settings.terrainTextureEnabled ? TERRAIN_TEXTURE_STRENGTH : 0
   useEffect(() => {
     if (!textureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
@@ -3471,6 +3486,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // A random-hero belongs to an existing player; no spawner slot is involved.
   const handleSetObjectOwner = (item: PlacedObject, owner: number) =>
     applyEdit({ kind: 'setObjectOwner', entityType: item.type, entityId: item.id, owner }, 'set hero owner')
+  const handleSetRandomCityFaction = (item: PlacedObject, factionSid: string) =>
+    applyEdit({ kind: 'setRandomCityFaction', entityType: item.type, entityId: item.id, factionSid }, 'set city faction')
   const handleSetObjectHero = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
   const handleSetObjectActions = (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) =>
@@ -3677,7 +3694,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return () => window.removeEventListener('keydown', handler)
   }, [open, moveState, sizeX, applyMoveTo])
 
-  // Arrow-key panning — an optional alternative to middle-mouse-button drag.
+  // Arrow-key panning — an optional alternative to right-mouse-button drag.
   // Deliberately disabled while a move is active: the arrow keys relocate it
   // there instead (immediately above), and that takes priority over panning
   // the viewport.
@@ -5819,6 +5836,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {/* Connected-portal highlight (issue #127 item 8) — same screen-space
                   technique as the overlays above, so its border stays a constant
                   physical size instead of scaling with zoom. */}
+              {textureLoadProgress && settings.terrainTextureEnabled && (
+                <div
+                  className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 rounded-lg bg-popover/95 px-3 py-2 text-xs shadow-lg ring-1 ring-border"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                >
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Loading terrain textures… {textureLoadProgress.done}/{textureLoadProgress.total}</span>
+                  <div className="h-1.5 w-24 overflow-hidden rounded bg-muted">
+                    <div className="h-full bg-primary transition-[width]" style={{ width: `${(textureLoadProgress.done / textureLoadProgress.total) * 100}%` }} />
+                  </div>
+                </div>
+              )}
               {paintZone !== null && !settings.showPlayerAreas && !neverShowPlayerAreasBanner && !playerAreasBannerClosed && (
                 <div
                   className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 rounded-lg bg-popover/95 px-3 py-2 text-xs shadow-lg ring-1 ring-amber-500/50"
@@ -6090,6 +6120,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetHeroSid={canEditEntities ? handleSetHeroSid : undefined}
                   onSetObjectOwner={canEditEntities ? handleSetObjectOwner : undefined}
                   onSetObjectHero={canEditEntities ? handleSetObjectHero : undefined}
+                  onSetRandomCityFaction={canEditEntities ? handleSetRandomCityFaction : undefined}
                   onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
                   onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
                   allPortals={allPortals}

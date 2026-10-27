@@ -37,6 +37,7 @@ import {
   upsertPropHeroRow,
   setCitySpawnHero,
   setCityFaction,
+  setRandomCityFaction,
   upsertPropSquads,
   upsertPropRandomSquads,
   setRandomSquadValue,
@@ -87,6 +88,8 @@ export type MapSaveEdit =
   | { kind: 'setMarkerState'; entityId: number; isActivate: boolean; isDelete: boolean }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
+  /** A free-standing `random-city`: propCities only, no Block 1 spawns entry. */
+  | { kind: 'setRandomCityFaction'; entityType: number; entityId: number; factionSid: string }
   | { kind: 'setMapSettings'; patch: MapSettingsPatch }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
@@ -217,6 +220,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const patched = upsertPropHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
     newChunks[0] = patched.block1Chunk
     newChunks[1] = patched.block2Chunk
+  } else if (edit?.kind === 'setRandomCityFaction') {
+    newChunks[1] = setRandomCityFaction(newChunks[1], edit.entityType, edit.entityId, edit.factionSid)
   } else if (edit?.kind === 'setObjectOwner') {
     newChunks[1] = upsertPropOwner(newChunks[1], edit.entityType, edit.entityId, edit.owner)
   } else if (edit?.kind === 'setObjectHero') {
@@ -430,6 +435,14 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.customCityName !== edit.customCityName) {
       throw new Error('Verification failed: city name not reflected in the rebuilt propCities table')
+    }
+  } else if (edit?.kind === 'setRandomCityFaction') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propCities?: Array<{ type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }> }
+    }
+    const match = (block2.objectsProperties?.propCities ?? []).find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.factionSid !== edit.factionSid || match.isDefined !== (edit.factionSid !== '')) {
+      throw new Error('Verification failed: faction not reflected in the rebuilt propCities table')
     }
   } else if (edit?.kind === 'setObjectOwner') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

@@ -47,7 +47,8 @@ export function randomSquadDifficultyLabel(value: number, ranges: DifficultyRang
 }
 
 /** Default ranges for the difficulty quick-pick buttons/Encounter tool
- *  setting. Easy floors at 400, not 0 — requestedValue:0 makes a
+ *  setting. Every bound was raised by 75%, then by 50% (Lethal's max set to 50000), in v0.9.5-4 (the old values were too
+ *  low); the figures in the rest of this comment are the old ones. Easy floors at 400, not 0 — requestedValue:0 makes a
  *  random-squad invisible in-game (see randomSquadDefaultValue's doc
  *  comment in map-write.ts), and 400 is a user-picked floor above that (250
  *  rolled too weak). Lethal has no documented real ceiling above 8000;
@@ -57,12 +58,12 @@ export function randomSquadDifficultyLabel(value: number, ranges: DifficultyRang
  *  boundary either side) — though pickSquadRange's weighted picking is what
  *  actually drives it now, not a flat roll across this range. */
 export const DEFAULT_SQUAD_DIFFICULTY_RANGES: DifficultyRange[] = [
-  { label: 'Random', min: 500, max: 15000 },
-  { label: 'Easy', min: 400, max: 2000 },
-  { label: 'Normal', min: 2001, max: 4000 },
-  { label: 'Difficult', min: 4001, max: 6000 },
-  { label: 'Impossible', min: 6001, max: 8000 },
-  { label: 'Lethal', min: 8001, max: 16000 },
+  { label: 'Random', min: 1313, max: 50000 },
+  { label: 'Easy', min: 1050, max: 5250 },
+  { label: 'Normal', min: 5251, max: 10500 },
+  { label: 'Difficult', min: 10501, max: 15750 },
+  { label: 'Impossible', min: 15751, max: 21000 },
+  { label: 'Lethal', min: 21001, max: 50000 },
 ]
 
 /** Default weighting for the `Random` option specifically — a flat roll

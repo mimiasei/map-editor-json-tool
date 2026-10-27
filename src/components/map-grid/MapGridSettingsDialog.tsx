@@ -143,10 +143,22 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
 
+/** Earlier default difficulty ranges: up to v0.9.5-3, and the interim ones of v0.9.5-4. Any setting change saves the whole settings blob, so
+ *  these can sit in storage as if the user had chosen them, and the raised defaults would never reach them. Ranges still equal to one of
+ *  these were never edited and are replaced. */
+const PREVIOUS_DEFAULT_SQUAD_RANGES = [
+  [[500, 15000], [400, 2000], [2001, 4000], [4001, 6000], [6001, 8000], [8001, 16000]],
+  [[875, 26250], [700, 3500], [3501, 7000], [7001, 10500], [10501, 14000], [14001, 28000]],
+].map((bounds) => JSON.stringify(['Random', 'Easy', 'Normal', 'Difficult', 'Impossible', 'Lethal'].map((label, i) => ({ label, min: bounds[i][0], max: bounds[i][1] }))))
+
 export function loadMapGridSettings(): MapGridSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY)
-    if (raw) return { ...DEFAULT_MAP_GRID_SETTINGS, ...JSON.parse(raw) }
+    if (raw) {
+      const saved = JSON.parse(raw)
+      if (PREVIOUS_DEFAULT_SQUAD_RANGES.includes(JSON.stringify(saved.squadDifficultyRanges))) delete saved.squadDifficultyRanges
+      return { ...DEFAULT_MAP_GRID_SETTINGS, ...saved }
+    }
   } catch { /* ignore */ }
   return DEFAULT_MAP_GRID_SETTINGS
 }

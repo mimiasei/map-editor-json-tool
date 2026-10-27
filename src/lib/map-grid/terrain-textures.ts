@@ -4,7 +4,7 @@
 // through them by the "Terrain texture" setting. Desktop build only: with nothing extracted every
 // helper here reports "no textures" and the grid keeps its flat colours.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { BIOME_TEXTURE_ICONS } from '@/lib/catalog/icon-requests'
 import { compositeSplat, type SplatLayerPixels } from './terrain-splat'
 import { decodePng } from '@/lib/png-decode'
@@ -240,17 +240,55 @@ async function blendBiome(key: TextureKey): Promise<HTMLCanvasElement | null> {
   return c
 }
 
-async function loadAll(): Promise<void> {
+/** How far the biome textures are along while loading (blending each biome takes a moment); null when nothing is loading. */
+export type TextureLoadProgress = { done: number; total: number } | null
+let loadProgress: TextureLoadProgress = null
+const progressListeners = new Set<() => void>()
+function setLoadProgress(next: TextureLoadProgress): void {
+  loadProgress = next
+  for (const listener of progressListeners) listener()
+}
+
+export function useTextureLoadProgress(): TextureLoadProgress {
+  return useSyncExternalStore(
+    (listener) => { progressListeners.add(listener); return () => { progressListeners.delete(listener) } },
+    () => loadProgress,
+  )
+}
+
+// Runs one after another: several components ask for the textures at once, and two runs blending the same biome would double the work
+// and make the progress jump.
+let loadChain: Promise<void> = Promise.resolve()
+function loadAll(): Promise<void> {
+  loadChain = loadChain.then(loadPending)
+  return loadChain
+}
+
+async function loadPending(): Promise<void> {
   // Object.keys gives the biome ids as strings; the tiles look them up as numbers.
-  for (const name of Object.keys(BIOME_TEXTURE_ICONS)) {
-    const key: TextureKey = name === 'water' ? 'water' : (Number(name) as TextureKey)
-    if (loaded.has(key)) continue
-    const blended = await blendBiome(key).catch((e) => { console.warn('terrain blend failed, using the minimap texture', e); return null })
-    if (blended) { loaded.set(key, blended); continue }
-    const url = thumbnailPath(BIOME_TEXTURE_ICONS[key])
-    const img = url ? await loadImage(url) : null
-    if (img) loaded.set(key, img)
+  const names = Object.keys(BIOME_TEXTURE_ICONS)
+  const pending = names.filter((name) => !loaded.has(name === 'water' ? 'water' : (Number(name) as TextureKey)))
+  if (pending.length === 0) return
+  let done = 0
+  setLoadProgress({ done, total: pending.length })
+  try {
+    for (const name of pending) {
+      await loadOne(name)
+      setLoadProgress({ done: ++done, total: pending.length })
+    }
+  } finally {
+    setLoadProgress(null)
   }
+}
+
+async function loadOne(name: string): Promise<void> {
+  const key: TextureKey = name === 'water' ? 'water' : (Number(name) as TextureKey)
+  if (loaded.has(key)) return
+  const blended = await blendBiome(key).catch((e) => { console.warn('terrain blend failed, using the minimap texture', e); return null })
+  if (blended) { loaded.set(key, blended); return }
+  const url = thumbnailPath(BIOME_TEXTURE_ICONS[key])
+  const img = url ? await loadImage(url) : null
+  if (img) loaded.set(key, img)
 }
 
 /** Loaded textures; the map is replaced when more arrive (also after a fresh extraction), so it can sit in effect deps. */

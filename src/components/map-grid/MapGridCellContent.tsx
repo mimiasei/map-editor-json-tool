@@ -111,6 +111,8 @@ export interface MapGridCellContentProps {
   onSetHeroSid?: (item: PlacedObject, heroSid: string) => void
   /** A random-hero's owning player — an existing one, no new slot (unlike the spawners). */
   onSetObjectOwner?: (item: PlacedObject, owner: number) => void
+  /** A random city's faction, '' for random. */
+  onSetRandomCityFaction?: (item: PlacedObject, factionSid: string) => void
   /** A random-hero's hero, or 'random'. */
   onSetObjectHero?: (item: PlacedObject, heroSid: string) => void
   /** Replace (or, with null, remove) an object's or zone's Actions Before/After — docked-only. */
@@ -232,6 +234,7 @@ export default function MapGridCellContent({
   onSetHeroSid,
   onSetObjectOwner,
   onSetObjectHero,
+  onSetRandomCityFaction,
   onSetObjectActions,
   onSetMarkerState,
   allPortals = [],
@@ -520,10 +523,10 @@ export default function MapGridCellContent({
               Inactive at start
             </Badge>
           )}
-          {selected.owner !== undefined && (
+          {selected.owner !== undefined && selected.sid !== 'random-city' && (
             <div>
               <p className="text-xs text-muted-foreground">Owner</p>
-              <p className="text-xs">{selected.owner === -1 ? 'Neutral' : `Player ${selected.owner}`}</p>
+              <p className="text-xs">{selected.owner === -1 ? 'None' : `Player ${selected.owner}`}</p>
             </div>
           )}
           {selected.entitySid && (
@@ -772,6 +775,59 @@ export default function MapGridCellContent({
             </div>
           )}
 
+          {/* A free-standing random city: owner (None, or a player) and faction. propOwners counts players from 0, so stored 0 is the Player 1
+              GME shows (GME read a city without a row as Player 1 and saved 0), while Block 1 spawns and the hero code above start at 1. */}
+          {selected && selected.sid === 'random-city' && (() => {
+            const owner = selected.owner ?? -1
+            const ownerOptions = [-1, ...Array.from({ length: playersCount }, (_, i) => i)]
+            if (!ownerOptions.includes(owner)) ownerOptions.push(owner)
+            const ownerLabel = (v: number) => (v === -1 ? 'None' : `Player ${v + 1}`)
+            const factionSid = selected.cityFactionSid ?? ''
+            return (
+              <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">Random city</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Owner</p>
+                  {onSetObjectOwner ? (
+                    <Select value={String(owner)} onValueChange={(v) => onSetObjectOwner(selected, Number(v))}>
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ownerOptions.map((p) => (
+                          <SelectItem key={p} value={String(p)}>{ownerLabel(p)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-xs">{ownerLabel(owner)}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Faction</p>
+                  {onSetRandomCityFaction ? (
+                    <Select
+                      value={factionSid || 'random'}
+                      onValueChange={(v) => onSetRandomCityFaction(selected, v === 'random' ? '' : v)}
+                    >
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="random">Random</SelectItem>
+                        {(catalog?.factions ?? []).map((f) => (
+                          <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-xs">{factionSid ? (catalog?.factions.find((f) => f.id === factionSid)?.name ?? factionSid) : 'Random'}</p>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* A free-standing random hero: unlike the hero spawner it takes no new
               player slot, it belongs to a player that already exists. */}
           {selected && selected.sid === 'random-hero' && !selected.spawnerInfo && (() => {
@@ -796,12 +852,12 @@ export default function MapGridCellContent({
                       </SelectTrigger>
                       <SelectContent>
                         {ownerOptions.map((p) => (
-                          <SelectItem key={p} value={String(p)}>{p === -1 ? 'Neutral' : `Player ${p}`}</SelectItem>
+                          <SelectItem key={p} value={String(p)}>{p === -1 ? 'None' : `Player ${p}`}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-xs">{owner === undefined ? 'Not set' : owner === -1 ? 'Neutral' : `Player ${owner}`}</p>
+                    <p className="text-xs">{owner === undefined ? 'Not set' : owner === -1 ? 'None' : `Player ${owner}`}</p>
                   )}
                 </div>
                 <div className="space-y-1">
