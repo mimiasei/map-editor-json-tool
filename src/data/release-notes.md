@@ -24,4 +24,4 @@ Desktop release for macOS (Apple Silicon), Windows, and Linux.
 - **Help > What's new** shows these notes.
 - Elevation now blocks the lower ring around a raised area, as verified in the game.
 
-See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/compare/v0.9.4...v0.9.5-4) for what changed.
+See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/compare/v0.9.4...v0.9.5-5) for what changed.
