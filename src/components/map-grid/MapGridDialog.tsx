@@ -164,6 +164,14 @@ const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
 const ZOOM_SETTLE_MS = 1000
+// Timing of the layer redraws after a wheel zoom (fast-zoom experiment): "+Nms" is the time since the zoom settled, so it shows how long
+// each layer took to come back. Remove with the experiment.
+let zoomSettledAt = 0
+function logLayer(layer: string, startedAt: number, note = ''): void {
+  const now = performance.now()
+  const since = zoomSettledAt > 0 && now - zoomSettledAt < 15000 ? ` (+${Math.round(now - zoomSettledAt)}ms after zoom settled)` : ''
+  console.info(`[map-grid] ${layer}: ${Math.round(now - startedAt)}ms${note ? ` ${note}` : ''}${since}`)
+}
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
@@ -2521,7 +2529,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const factor = Math.exp(-e.deltaY * 0.001)
     setWheelZooming(true)
     if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
-    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; setWheelZooming(false) }, ZOOM_SETTLE_MS)
+    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; zoomSettledAt = performance.now(); setWheelZooming(false) }, ZOOM_SETTLE_MS)
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
@@ -2564,6 +2572,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     textureCanvasEl.height = sizeZ * scale
     const ctx = textureCanvasEl.getContext('2d')
     if (!ctx || textureStrength <= 0) return
+    const t0 = performance.now()
     const patterns = buildTexturePatterns(ctx, biomeTextures, scale)
     const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
     // One path per texture, filled once: far fewer fill calls than one per tile.
@@ -2583,6 +2592,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const keys = stagedTilesMap.map((t, node) => textureKeyFor(t, waterMap[node]))
       drawBiomeEdgeFade(ctx, patterns, keys, sizeX, sizeZ, scale)
     }
+    logLayer('terrain textures', t0, `${ctx.canvas.width}x${ctx.canvas.height}`)
   }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged, quality.terrain, settings.biomeEdgeFade])
   // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
   // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
@@ -2608,9 +2618,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const cacheKey = [cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, levelsMap, climbsMap, paintLevelStaged, paintRampStaged]
     const cached = cliffLayerCacheRef.current
     if (cached && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ && cached.key.every((v, i) => v === cacheKey[i])) {
+      const tc = performance.now()
       out.drawImage(cached.canvas, 0, 0)
+      logLayer('cliffs', tc, 'from cache')
       return
     }
+    const t0 = performance.now()
     const layer = document.createElement('canvas')
     layer.width = cliffCanvasEl.width
     layer.height = cliffCanvasEl.height
@@ -2785,6 +2798,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
     out.drawImage(layer, 0, 0)
+    logLayer('cliffs', t0, `rebuilt ${layer.width}x${layer.height}`)
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
@@ -2871,9 +2885,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // layer is switched on again or the canvas is remounted; it is rebuilt only when the water, its size or the texture changed.
     const cached = waterLayerCacheRef.current
     if (cached && cached.waterMap === waterMap && cached.surface === waterSurface && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ) {
+      const tc = performance.now()
       ctx.drawImage(cached.canvas, 0, 0)
+      logLayer('water', tc, 'from cache')
       return
     }
+    const t0 = performance.now()
     const layer = document.createElement('canvas')
     layer.width = waterCanvasEl.width
     layer.height = waterCanvasEl.height
@@ -2893,6 +2910,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
     waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
     ctx.drawImage(layer, 0, 0)
+    logLayer('water', t0, `rebuilt ${layer.width}x${layer.height}`)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, waterQuality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
@@ -2915,6 +2933,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const riverSprites = useRiverSprites()
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const t0 = performance.now()
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
     const texturesOn = showLineTextures && iconsVisibleForSwatch
@@ -3101,6 +3120,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       ctx.drawImage(riverLayer, 0, 0)
     }
+    logLayer('roads and rivers', t0, `${canvas.width}x${canvas.height}`)
   }, [lineFeatureCanvasEl, waterSurface, showWaterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, showLineTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
