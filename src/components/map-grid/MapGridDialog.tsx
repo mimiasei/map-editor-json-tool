@@ -164,13 +164,17 @@ const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
 const ZOOM_SETTLE_MS = 1000
-// Timing of the layer redraws after a wheel zoom (fast-zoom experiment): "+Nms" is the time since the zoom settled, so it shows how long
-// each layer took to come back. Remove with the experiment.
+// Timing of the layer redraws after a wheel zoom (fast-zoom experiment). "draw" is only the time the JS spent issuing the canvas calls: the
+// browser rasterises them afterwards, so "on screen" is measured to the second animation frame after (the frame that includes the draw).
+// "+Nms" is the time since the zoom settled. Remove with the experiment.
 let zoomSettledAt = 0
 function logLayer(layer: string, startedAt: number, note = ''): void {
-  const now = performance.now()
-  const since = zoomSettledAt > 0 && now - zoomSettledAt < 15000 ? ` (+${Math.round(now - zoomSettledAt)}ms after zoom settled)` : ''
-  console.info(`[map-grid] ${layer}: ${Math.round(now - startedAt)}ms${note ? ` ${note}` : ''}${since}`)
+  const drawn = performance.now()
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const now = performance.now()
+    const since = zoomSettledAt > 0 && now - zoomSettledAt < 15000 ? ` (+${Math.round(now - zoomSettledAt)}ms after zoom settled)` : ''
+    console.info(`[map-grid] ${layer}: draw ${Math.round(drawn - startedAt)}ms, on screen ${Math.round(now - startedAt)}ms${note ? ` ${note}` : ''}${since}`)
+  }))
 }
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
