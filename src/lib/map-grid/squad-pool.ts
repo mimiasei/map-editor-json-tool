@@ -184,11 +184,9 @@ export function rollExampleSquad(
 ): ExampleSquad | null {
   if (!catalog) return null
   // The faction folders only: the campaign and custom-map templates are scripted one-offs.
-  // 'mix' is not a roll across factions: Core.zip has exactly one template with fraction "mix" (campaign squads_M5/squad_M5_demon_undead,
-  // trick_demon + skeleton), and in the game a mix random-squad always becomes that squad.
-  const usable = catalog.squadTemplates.filter((t) => (t.fraction === 'mix' || (SQUAD_FACTIONS.includes(t.fraction) && t.id.startsWith(`squad_${t.fraction}_`)))
+  const usable = catalog.squadTemplates.filter((t) => SQUAD_FACTIONS.includes(t.fraction) && t.id.startsWith(`squad_${t.fraction}_`)
     && t.unitSids.length > 0 && t.unitSids.every((sid) => unitValue(sid, catalog) > 0))
-  const wanted = fraction === 'mix' || SQUAD_FACTIONS.includes(fraction) ? fraction : SQUAD_FACTIONS[Math.floor(rng() * SQUAD_FACTIONS.length)]
+  const wanted = SQUAD_FACTIONS.includes(fraction) ? fraction : SQUAD_FACTIONS[Math.floor(rng() * SQUAD_FACTIONS.length)]
   const ofFaction = usable.filter((t) => t.fraction === wanted)
   if (ofFaction.length === 0) return null
 

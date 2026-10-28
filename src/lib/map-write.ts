@@ -957,8 +957,8 @@ export function setRandomSquadValue(chunk: Uint8Array, entityType: number, entit
   return new TextEncoder().encode(patchedText)
 }
 
-/** A random-squad's faction (propRandomSquads.fraction). Besides the seven factions the values seen are '' (any) and 'mix'; squads.map, made in
- *  GME with one random-squad per option, holds 'mix', 'nature', '' and 'neutral'. */
+/** A random-squad's faction (propRandomSquads.fraction): a faction, 'neutral' or '' (any). A GME-made map (squads.map) with 'nature', '' and
+ *  'neutral' squads showed up in the game; a 'mix' one did not, so 'mix' is not offered. */
 export function setRandomSquadFraction(chunk: Uint8Array, entityType: number, entityId: number, fraction: string): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')

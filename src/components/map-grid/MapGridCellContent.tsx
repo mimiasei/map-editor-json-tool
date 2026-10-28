@@ -1039,13 +1039,12 @@ export default function MapGridCellContent({
                   <p className="text-xs text-muted-foreground">Faction</p>
                   {(() => {
                     const fraction = selected.randomSquadFraction ?? ''
-                    const label = (v: string) => (v === '' ? 'Random' : v === 'mix' ? 'Mix' : v === 'neutral' ? 'Neutral' : catalog?.factions.find((f) => f.id === v)?.name ?? v)
+                    const label = (v: string) => (v === '' ? 'Random' : v === 'neutral' ? 'Neutral' : catalog?.factions.find((f) => f.id === v)?.name ?? v)
                     return onSetRandomSquadFraction ? (
                       <Select value={fraction || 'random'} onValueChange={(v) => onSetRandomSquadFraction(selected, v === 'random' ? '' : v)}>
                         <SelectTrigger className="h-7 text-xs mt-0.5 w-40"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="random">Random</SelectItem>
-                          <SelectItem value="mix">Mix</SelectItem>
                           {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>))}
                           <SelectItem value="neutral">Neutral</SelectItem>
                         </SelectContent>
