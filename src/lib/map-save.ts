@@ -41,6 +41,7 @@ import {
   upsertPropSquads,
   upsertPropRandomSquads,
   setRandomSquadValue,
+  setRandomSquadFraction,
   upsertPropRewardParams,
   moveObjectInstance,
   rotateObjectInstance,
@@ -93,6 +94,7 @@ export type MapSaveEdit =
   | { kind: 'setMapSettings'; patch: MapSettingsPatch }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
+  | { kind: 'setRandomSquadFraction'; entityType: number; entityId: number; fraction: string }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
@@ -268,6 +270,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = upsertPropSquads(newChunks[1], edit.entityType, edit.entityId, edit.unitProps)
   } else if (edit?.kind === 'setCityGarrison') {
     newChunks[1] = upsertPropRandomSquads(newChunks[1], edit.entityType, edit.entityId, edit.sids)
+  } else if (edit?.kind === 'setRandomSquadFraction') {
+    newChunks[1] = setRandomSquadFraction(newChunks[1], edit.entityType, edit.entityId, edit.fraction)
   } else if (edit?.kind === 'setRandomSquadValue') {
     newChunks[1] = setRandomSquadValue(newChunks[1], edit.entityType, edit.entityId, edit.requestedValue)
   } else if (edit?.kind === 'setRewardParams') {
@@ -595,6 +599,14 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || JSON.stringify(match.sids) !== JSON.stringify(edit.sids)) {
       throw new Error('Verification failed: garrison not reflected in the rebuilt propRandomSquads table')
+    }
+  } else if (edit?.kind === 'setRandomSquadFraction') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; fraction?: string }> }
+    }
+    const match = (block2.objectsProperties?.propRandomSquads ?? []).find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.fraction !== edit.fraction) {
+      throw new Error('Verification failed: faction not reflected in the rebuilt propRandomSquads table')
     }
   } else if (edit?.kind === 'setRandomSquadValue') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

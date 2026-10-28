@@ -151,3 +151,81 @@ export function sampleFraction(ownBiome: BiomeId, biomePurity: number, rng: () =
   const others = ALL_FRACTIONS.filter((f) => f !== ownFaction)
   return others[Math.floor(rng() * others.length)]
 }
+
+// ─── Example squad for a random-squad's value (read-only preview) ────────────
+// The game's squad templates (Core.zip DB/squads/**) carry a weight (rollChance), the army value they start to apply at (requiredValue), the
+// value they stop at (maxValue) and, per unit, the most value that unit may take (randomSquad.units[].v). How the game turns a requested value
+// into a squad is not documented; this follows what those fields suggest and is an approximation, not a copy of the game's roll.
+
+export interface ExampleSquadUnit {
+  sid: string
+  count: number
+  /** Army value of one creature. */
+  unitValue: number
+}
+
+export interface ExampleSquad {
+  templateId: string
+  fraction: string
+  units: ExampleSquadUnit[]
+  /** Army value of the units drawn: close to the requested value, not equal to it (whole creatures only). */
+  totalValue: number
+  /** True when no template covers the requested value, so the nearest one was used. */
+  nearest: boolean
+}
+
+const SQUAD_FACTIONS = ['human', 'undead', 'dungeon', 'nature', 'demon', 'unfrozen', 'neutral']
+
+export function rollExampleSquad(
+  requestedValue: number,
+  fraction: string,
+  catalog: GameCatalog | null,
+  rng: () => number = Math.random,
+): ExampleSquad | null {
+  if (!catalog) return null
+  // The faction folders only: the campaign and custom-map templates are scripted one-offs.
+  const usable = catalog.squadTemplates.filter((t) => SQUAD_FACTIONS.includes(t.fraction) && t.id.startsWith(`squad_${t.fraction}_`)
+    && t.unitSids.length > 0 && t.unitSids.every((sid) => unitValue(sid, catalog) > 0))
+  const wanted = SQUAD_FACTIONS.includes(fraction) ? fraction : SQUAD_FACTIONS[Math.floor(rng() * SQUAD_FACTIONS.length)]
+  const ofFaction = usable.filter((t) => t.fraction === wanted)
+  if (ofFaction.length === 0) return null
+
+  let pool = ofFaction.filter((t) => t.requiredValue <= requestedValue && requestedValue <= t.maxValue)
+  const nearest = pool.length === 0
+  if (nearest) {
+    // Above every template's range: the ones reaching highest; below: the ones starting lowest.
+    const reachable = ofFaction.filter((t) => t.requiredValue <= requestedValue)
+    if (reachable.length > 0) {
+      const top = Math.max(...reachable.map((t) => t.maxValue))
+      pool = reachable.filter((t) => t.maxValue === top)
+    } else {
+      const bottom = Math.min(...ofFaction.map((t) => t.requiredValue))
+      pool = ofFaction.filter((t) => t.requiredValue === bottom)
+    }
+  }
+
+  const totalWeight = pool.reduce((sum, t) => sum + Math.max(1, t.rollChance), 0)
+  let roll = rng() * totalWeight
+  let template = pool[pool.length - 1]
+  for (const t of pool) {
+    roll -= Math.max(1, t.rollChance)
+    if (roll < 0) { template = t; break }
+  }
+
+  // Spread the value over the units with some variation, each capped at what the template lets it take; at least one creature each.
+  const weights = template.unitSids.map(() => 0.6 + rng() * 0.8)
+  const weightSum = weights.reduce((a, b) => a + b, 0)
+  const units = template.unitSids.map((sid, i) => {
+    const value = unitValue(sid, catalog)
+    const cap = template.unitMaxValues.find((u) => u.sid === sid)?.maxValue ?? requestedValue
+    const share = Math.min(requestedValue * (weights[i] / weightSum), cap)
+    return { sid, unitValue: value, count: Math.max(1, Math.round(share / value)) }
+  })
+  return {
+    templateId: template.id,
+    fraction: template.fraction,
+    units,
+    totalValue: units.reduce((sum, u) => sum + u.count * u.unitValue, 0),
+    nearest,
+  }
+}

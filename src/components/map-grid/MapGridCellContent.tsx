@@ -23,9 +23,10 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, LinkPortal, PenLine, Tag, UnlinkPortal, UserCog, Wand2 } from '@/components/ui/icons'
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, LinkPortal, PenLine, Tag, UnlinkPortal, UserCog, Wand2, Dices } from '@/components/ui/icons'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import RandomSquadExampleDialog from './RandomSquadExampleDialog'
 import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
@@ -143,6 +144,7 @@ export interface MapGridCellContentProps {
   /** Set a random-squad's requestedValue ("army value" the game rolls a
    *  matching squad against) — docked-only, like the above. */
   onSetRandomSquadValue?: (item: PlacedObject, requestedValue: number) => void
+  onSetRandomSquadFraction?: (item: PlacedObject, fraction: string) => void
   /** Difficulty labels/min/max for the Value field's badge + quick-pick
    *  buttons — the (possibly user-customized, Map Grid settings' Advanced
    *  section) live ranges. Defaults to DEFAULT_SQUAD_DIFFICULTY_RANGES for
@@ -247,6 +249,7 @@ export default function MapGridCellContent({
   onSetGuardSquad,
   onSetCityGarrison,
   onSetRandomSquadValue,
+  onSetRandomSquadFraction,
   squadDifficultyRanges = DEFAULT_SQUAD_DIFFICULTY_RANGES,
   onSetRewardParams,
   moveTarget = null,
@@ -279,6 +282,7 @@ export default function MapGridCellContent({
   // keystroke would spam the edit history — this stays a local draft,
   // committed on blur instead.
   const [draftRandomSquadValue, setDraftRandomSquadValue] = useState<number | null>(null)
+  const [squadExampleOpen, setSquadExampleOpen] = useState(false)
 
   // A newly-clicked tile arrives as a new `items` array — default back to
   // the first row rather than keeping a stale selection from the old tile.
@@ -1011,6 +1015,42 @@ export default function MapGridCellContent({
                     <p className="text-xs tabular-nums">{shownValue}</p>
                   )}
                   <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(shownValue, squadDifficultyRanges)}</Badge>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Show an example squad for this value"
+                    aria-label="Show an example squad for this value"
+                    onClick={() => setSquadExampleOpen(true)}
+                  >
+                    <Dices className="h-3.5 w-3.5" />
+                  </Button>
+                  <RandomSquadExampleDialog
+                    open={squadExampleOpen}
+                    onOpenChange={setSquadExampleOpen}
+                    value={shownValue}
+                    fraction={selected.randomSquadFraction ?? ''}
+                    catalog={catalog}
+                    ranges={squadDifficultyRanges}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Faction</p>
+                  {(() => {
+                    const fraction = selected.randomSquadFraction ?? ''
+                    const label = (v: string) => (v === '' ? 'Random' : v === 'neutral' ? 'Neutral' : catalog?.factions.find((f) => f.id === v)?.name ?? v)
+                    return onSetRandomSquadFraction ? (
+                      <Select value={fraction || 'random'} onValueChange={(v) => onSetRandomSquadFraction(selected, v === 'random' ? '' : v)}>
+                        <SelectTrigger className="h-7 text-xs mt-0.5 w-40"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="random">Random</SelectItem>
+                          {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>))}
+                          <SelectItem value="neutral">Neutral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (<p className="text-xs">{label(fraction)}</p>)
+                  })()}
                 </div>
                 {onSetRandomSquadValue && (
                   <div className="flex flex-wrap gap-1">

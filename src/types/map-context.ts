@@ -209,6 +209,8 @@ export interface PlacedObject {
    *  instance — a random-squad's "army value" the game rolls a matching
    *  squad template against; only meaningful for the random-squad sid. */
   randomSquadValue?: number
+  /** Enrichment: propRandomSquads.fraction — the faction the random-squad draws its units from ('' = any). */
+  randomSquadFraction?: string
   /** Enrichment: whether this instance has a propCities entry at all (issue
    *  #143) — true, deliberately, even for a "random-city" (a procedurally-
    *  placed neutral/monster city with no propSpawns entry at all, so

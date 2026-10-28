@@ -39,6 +39,8 @@ export interface MapGridSettings {
   objectCountEnabled: boolean
   /** When true, a ground texture fades into the neighbouring biome's along land-to-land borders. */
   biomeEdgeFade: boolean
+  /** While the mouse wheel zooms, hide cliff edges, the water layer and road/river textures, and show them again a second after. */
+  fastZoom: boolean
   /** How finely each layer is drawn: a preset, or 'custom' with the numbers in drawQualityCustom (draw-quality.ts). */
   drawQuality: DrawQualityChoice
   drawQualityCustom: DrawQuality
@@ -120,6 +122,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   rotationNumberEnabled: true,
   objectCountEnabled: true,
   biomeEdgeFade: true,
+  fastZoom: true,
   drawQuality: 'high',
   drawQualityCustom: DRAW_QUALITY_PRESETS.high,
   showGridLines: false,
@@ -185,13 +188,15 @@ export default function MapGridSettingsDialog({
   // Not persisted — purely a "did the user open this section" UI state,
   // same as every other popover's own open/closed state.
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [customQualityOpen, setCustomQualityOpen] = useState(true)
   // Select primitives: an object built inside the selector is a new reference every call and loops the render.
   const mapSizeX = useMapContextStore((s) => s.context?.sizeX)
   const mapSizeZ = useMapContextStore((s) => s.context?.sizeZ)
   const mapSize = mapSizeX && mapSizeZ ? { x: mapSizeX, z: mapSizeZ } : null
   const quality = resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom)
   const setQualityChoice = (choice: DrawQualityChoice) => {
-    // Picking Custom starts from the numbers of the preset in use.
+    // Picking Custom starts from the numbers of the preset in use, with the sliders shown.
+    if (choice === 'custom') setCustomQualityOpen(true)
     update(choice === 'custom' ? { drawQuality: choice, drawQualityCustom: quality } : { drawQuality: choice })
   }
   const updateCustom = (patch: Partial<DrawQuality>) => update({ drawQuality: 'custom', drawQualityCustom: { ...quality, ...patch } })
@@ -254,14 +259,28 @@ export default function MapGridSettingsDialog({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
-          <Switch
-            id="grid-biome-fade"
-            checked={settings.biomeEdgeFade}
-            onCheckedChange={(v) => update({ biomeEdgeFade: v })}
-            disabled={!biomeTexturesAvailable()}
-          />
+        {/* Only drawn on the ground textures, so it has nothing to do while they are off. */}
+        {settings.terrainTextureEnabled && biomeTexturesAvailable() && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
+            <Switch
+              id="grid-biome-fade"
+              checked={settings.biomeEdgeFade}
+              onCheckedChange={(v) => update({ biomeEdgeFade: v })}
+            />
+          </div>
+        )}
+
+        <div className="space-y-0.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-fast-zoom" className="text-xs cursor-pointer">Fast zoom</Label>
+            <Switch
+              id="grid-fast-zoom"
+              checked={settings.fastZoom}
+              onCheckedChange={(v) => update({ fastZoom: v })}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">Hides GPU heavy layers while zooming.</p>
         </div>
 
         <div className="flex items-center justify-between">
@@ -285,22 +304,36 @@ export default function MapGridSettingsDialog({
         <div className="space-y-2 rounded-md border border-border p-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Drawing quality</Label>
-            <select
-              className="h-6 rounded border border-input bg-background px-1 text-xs"
-              value={settings.drawQuality}
-              onChange={(e) => setQualityChoice(e.target.value as DrawQualityChoice)}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="ultra">Ultra</option>
-              <option value="custom">Custom</option>
-            </select>
+            <div className="flex items-center gap-1">
+              {settings.drawQuality === 'custom' && (
+                <button
+                  type="button"
+                  className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  title={customQualityOpen ? 'Hide the custom sliders' : 'Show the custom sliders'}
+                  aria-label={customQualityOpen ? 'Hide the custom sliders' : 'Show the custom sliders'}
+                  aria-expanded={customQualityOpen}
+                  onClick={() => setCustomQualityOpen((v) => !v)}
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${customQualityOpen ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+              <select
+                className="h-6 rounded border border-input bg-background px-1 text-xs"
+                value={settings.drawQuality}
+                onChange={(e) => setQualityChoice(e.target.value as DrawQualityChoice)}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="ultra">Ultra</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
           </div>
           <p className="text-[11px] text-muted-foreground">
             {mapSize && 'Current: ' + estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) + ' MB of canvas memory.'}
           </p>
-          {settings.drawQuality === 'custom' && (
+          {settings.drawQuality === 'custom' && customQualityOpen && (
             <div className="space-y-2">
               {layerRows.map(({ key, label }) => (
                 <div key={key} className="space-y-1">
@@ -335,15 +368,6 @@ export default function MapGridSettingsDialog({
                   min={DRAW_QUALITY_LIMITS.iconFromPx.min} max={DRAW_QUALITY_LIMITS.iconFromPx.max} step={2}
                   value={[quality.objects.iconFromPx]}
                   onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, iconFromPx: v } })}
-                />
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] text-muted-foreground">Extra tiles beyond the screen</Label>
-                  <span className="text-[11px] text-muted-foreground">{quality.objects.overdrawTiles}</span>
-                </div>
-                <Slider
-                  min={DRAW_QUALITY_LIMITS.overdrawTiles.min} max={DRAW_QUALITY_LIMITS.overdrawTiles.max} step={1}
-                  value={[quality.objects.overdrawTiles]}
-                  onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, overdrawTiles: v } })}
                 />
               </div>
             </div>

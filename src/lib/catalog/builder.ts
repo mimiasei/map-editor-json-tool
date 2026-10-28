@@ -376,11 +376,16 @@ async function collectSquadTemplates(zip: JSZip): Promise<CatalogSquadTemplate[]
       const randomSquad = entry.randomSquad as Record<string, unknown> | undefined
       const units = Array.isArray(randomSquad?.units) ? randomSquad.units as Record<string, unknown>[] : []
       const unitSids = units.map((u) => str(u.s)).filter(Boolean)
+      const dynamicSquad = entry.dynamicSquad as Record<string, unknown> | undefined
       templates.push({
         id,
         fraction: str(entry.fraction),
         tier: num(entry.tier),
         unitSids,
+        rollChance: num(entry.rollChance),
+        requiredValue: num(dynamicSquad?.requiredValue),
+        maxValue: num(randomSquad?.maxValue),
+        unitMaxValues: units.filter((u) => str(u.s)).map((u) => ({ sid: str(u.s), maxValue: num(u.v) })),
       })
     }
   }

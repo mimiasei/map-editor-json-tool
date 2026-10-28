@@ -46,6 +46,7 @@ export interface PlacedObjectEnrichment {
   guardUnitPropsByKey: Map<string, { sid: string; count: number }[]>
   citySquadSidsByKey: Map<string, string[]>
   randomSquadValueByKey: Map<string, number>
+  randomSquadFractionByKey: Map<string, string>
   isCityByKey: Set<string>
   cityFactionByKey: Map<string, string>
   heroSidByKey: Map<string, string>
@@ -86,6 +87,7 @@ export function buildPlacedObjects(
       guardUnitProps: enrichment.guardUnitPropsByKey.get(key),
       citySquadSids: enrichment.citySquadSidsByKey.get(key),
       randomSquadValue: enrichment.randomSquadValueByKey.get(key),
+      randomSquadFraction: enrichment.randomSquadFractionByKey.get(key),
       isCity: enrichment.isCityByKey.has(key) || undefined,
       cityFactionSid: enrichment.cityFactionByKey.get(key),
       heroSid: enrichment.heroSidByKey.get(key),
@@ -324,11 +326,13 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   }
   const citySquadSidsByKey = new Map<string, string[]>()
   const randomSquadValueByKey = new Map<string, number>()
+  const randomSquadFractionByKey = new Map<string, string>()
   for (const rs of b2.objectsProperties?.propRandomSquads ?? []) {
     if (rs.id === undefined) continue
     const key = `${rs.type ?? ''}:${rs.id}`
     if (Array.isArray(rs.sids) && !citySquadSidsByKey.has(key)) citySquadSidsByKey.set(key, rs.sids)
     if (typeof rs.requestedValue === 'number' && !randomSquadValueByKey.has(key)) randomSquadValueByKey.set(key, rs.requestedValue)
+    if (typeof rs.fraction === 'string' && !randomSquadFractionByKey.has(key)) randomSquadFractionByKey.set(key, rs.fraction)
   }
   const heroSidByKey = new Map<string, string>()
   for (const h of propHeroes) {
@@ -365,6 +369,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     guardUnitPropsByKey,
     citySquadSidsByKey,
     randomSquadValueByKey,
+    randomSquadFractionByKey,
     isCityByKey,
     cityFactionByKey: factionByKey,
     actionsBeforeByKey,

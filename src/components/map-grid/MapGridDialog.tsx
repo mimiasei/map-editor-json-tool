@@ -163,6 +163,7 @@ import { sampleResource } from '@/lib/map-grid/resource-pool'
 const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
+const ZOOM_SETTLE_MS = 1000
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
@@ -460,9 +461,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const [settings, setSettings] = useState(loadMapGridSettings)
   // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
+  // With the Fast zoom setting on, the costly layers (cliffs, water, roads/rivers) are hidden with CSS while the wheel zooms and for
+  // ZOOM_SETTLE_MS after. Their canvases are left as drawn (never resized or redrawn), so a big map zooms smoothly and they reappear at once.
+  const [wheelZooming, setWheelZooming] = useState(false)
+  const wheelTimerRef = useRef<number | null>(null)
   const quality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
   const iconLodPx = quality.objects.iconFromPx
-  const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
   const renderIndex = useObjectRenderStore((s) => s.index)
   const updateSettings = (next: typeof settings) => {
@@ -2506,6 +2510,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     e.preventDefault()
     const rect = e.currentTarget.getBoundingClientRect()
     const factor = Math.exp(-e.deltaY * 0.001)
+    if (settings.fastZoom) {
+      setWheelZooming(true)
+      if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
+      wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; setWheelZooming(false) }, ZOOM_SETTLE_MS)
+    }
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
@@ -2579,13 +2588,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
   // Zoomed out far enough that objects are not drawn, the fine detail (cliff edges, road/river textures and edge shading) is not either.
   const cliffSprites = useCliffSprites()
+  const cliffLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; key: unknown[]; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
-    const ctx = cliffCanvasEl.getContext('2d')
-    if (!ctx || !settings.showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
+    const out = cliffCanvasEl.getContext('2d')
+    if (!out || !settings.showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
+    // Baking every piece is slow, so the finished layer is kept and copied back when the layer is switched on again (wheel zoom, zooming
+    // back in) with nothing it depends on changed. It is drawn on an offscreen canvas and copied to the visible one at the end.
+    const cacheKey = [cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, levelsMap, climbsMap, paintLevelStaged, paintRampStaged]
+    const cached = cliffLayerCacheRef.current
+    if (cached && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ && cached.key.every((v, i) => v === cacheKey[i])) {
+      out.drawImage(cached.canvas, 0, 0)
+      return
+    }
+    const layer = document.createElement('canvas')
+    layer.width = cliffCanvasEl.width
+    layer.height = cliffCanvasEl.height
+    const ctx = layer.getContext('2d')
+    if (!ctx) return
     let levels = levelsMap
     if (paintLevelStaged.size > 0) {
       levels = levelsMap.slice()
@@ -2753,6 +2776,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
+    cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
+    out.drawImage(layer, 0, 0)
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
@@ -2827,6 +2852,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // faintly through it and the rim stones stand out of it, as in GME. Stacked after the cliff canvas.
   const waterSurface = useWaterSurface()
   const [waterCanvasEl, setWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const waterLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; waterMap: typeof waterMap; surface: HTMLCanvasElement; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const scale = textureScale(sizeX, sizeZ, quality.cliffs)
@@ -2834,18 +2860,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
     if (!ctx || !settings.waterSurface || !iconsVisibleForSwatch || !waterSurface) return
+    // The shore fade (64 strips over every shore edge) is what makes this slow, so the finished layer is kept and only copied back when the
+    // layer is switched on again or the canvas is remounted; it is rebuilt only when the water, its size or the texture changed.
+    const cached = waterLayerCacheRef.current
+    if (cached && cached.waterMap === waterMap && cached.surface === waterSurface && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ) {
+      ctx.drawImage(cached.canvas, 0, 0)
+      return
+    }
+    const layer = document.createElement('canvas')
+    layer.width = waterCanvasEl.width
+    layer.height = waterCanvasEl.height
+    const lctx = layer.getContext('2d')
+    if (!lctx) return
     const path = new Path2D()
     for (let node = 0; node < sizeX * sizeZ; node++) {
       if (waterMap[node]) path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
     }
-    ctx.fillStyle = WATER_SURFACE_COLOR
-    ctx.fill(path)
-    const pattern = waterSurfacePattern(ctx, waterSurface, scale)
+    lctx.fillStyle = WATER_SURFACE_COLOR
+    lctx.fill(path)
+    const pattern = waterSurfacePattern(lctx, waterSurface, scale)
     if (pattern) {
-      ctx.fillStyle = pattern
-      ctx.fill(path)
+      lctx.fillStyle = pattern
+      lctx.fill(path)
     }
-    fadeWaterShore(ctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
+    fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
+    waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
+    ctx.drawImage(layer, 0, 0)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
@@ -3223,15 +3263,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // as the grid-line/map-edge overlays below.
   const iconSize = Math.max(4, BASE_CELL_PX - (2 * settings.cellBorderThickness) / transform.scale)
 
+  // No margin beyond the screen edge: every extra mounted icon makes panning at far zoom-out (ultra) visibly choppier, and the edge shows no gaps.
   const visibleRange = useMemo(
     () => getVisibleRange(
       { translateX: transform.x, translateY: transform.y, scale: transform.scale },
       containerSize,
       { sizeX, sizeZ },
       BASE_CELL_PX,
-      overdrawCells,
+      0,
     ),
-    [transform, containerSize, sizeX, sizeZ, overdrawCells],
+    [transform, containerSize, sizeX, sizeZ],
   )
 
   // Every drawn single-tile object, not only the top of each stack: objects placed on top of each other all show, in stack order.
@@ -3263,7 +3304,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
   // box is found by its own extent-vs-viewport intersection regardless of
-  // where its anchor tile happens to sit (no overdrawCells bump needed for
+  // where its anchor tile happens to sit (no overdraw margin needed for
   // this, unlike the original plan's assumption — see MapGridDialog's commit
   // notes). Only objects that actually win the stacking pick at their own
   // anchor tile render here, so one 1x1 object sitting exactly on another
@@ -3575,6 +3616,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids }, 'set city garrison')
   const handleSetRandomSquadValue = (item: PlacedObject, requestedValue: number) =>
     applyEdit({ kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue }, 'set random-squad value')
+  const handleSetRandomSquadFraction = (item: PlacedObject, fraction: string) =>
+    applyEdit({ kind: 'setRandomSquadFraction', entityType: item.type, entityId: item.id, fraction }, 'set random-squad faction')
   const handleSetRewardParams = (item: PlacedObject, parameters: string[]) =>
     applyEdit({ kind: 'setRewardParams', entityType: item.type, entityId: item.id, parameters }, 'set reward params')
 
@@ -5513,6 +5556,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     width: sizeX * BASE_CELL_PX,
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
+                    visibility: wheelZooming ? 'hidden' : 'visible',
                   }}
                 />
 
@@ -5520,14 +5564,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <canvas
                   ref={setCliffCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
-                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming ? 'hidden' : 'visible' }}
                 />
 
                 {/* Water surface — see waterCanvasEl above. After the cliff canvas, before the icon layer. */}
                 <canvas
                   ref={setWaterCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
-                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming ? 'hidden' : 'visible' }}
                 />
 
                 {/* Interactive icon layer — windowed to the visible range, only
@@ -6133,6 +6177,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetGuardSquad={canEditEntities ? handleSetGuardSquad : undefined}
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
                   onSetRandomSquadValue={canEditEntities ? handleSetRandomSquadValue : undefined}
+                  onSetRandomSquadFraction={canEditEntities ? handleSetRandomSquadFraction : undefined}
                   squadDifficultyRanges={settings.squadDifficultyRanges}
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}

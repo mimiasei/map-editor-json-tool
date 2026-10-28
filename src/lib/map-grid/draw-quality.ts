@@ -21,8 +21,6 @@ export interface DrawQuality {
   objects: {
     /** Icons of objects appear once a tile is at least this many screen pixels wide (below that only colour swatches are drawn). */
     iconFromPx: number
-    /** Extra rows and columns of icons mounted beyond the screen edge, so panning shows no gaps. */
-    overdrawTiles: number
   }
 }
 
@@ -34,26 +32,26 @@ export const DRAW_QUALITY_PRESETS: Record<DrawQualityPreset, DrawQuality> = {
     terrain: { pxPerTile: 16, maxSide: 2048 },
     cliffs: { pxPerTile: 16, maxSide: 2048 },
     lines: { pxPerTile: 24, maxSide: 2048 },
-    objects: { iconFromPx: 24, overdrawTiles: 1 },
+    objects: { iconFromPx: 24 },
   },
   medium: {
     terrain: { pxPerTile: 32, maxSide: 3072 },
     cliffs: { pxPerTile: 32, maxSide: 3072 },
     lines: { pxPerTile: 48, maxSide: 3072 },
-    objects: { iconFromPx: 16, overdrawTiles: 2 },
+    objects: { iconFromPx: 16 },
   },
   high: {
     terrain: { pxPerTile: 64, maxSide: 4096 },
     cliffs: { pxPerTile: 64, maxSide: 4096 },
     lines: { pxPerTile: 64, maxSide: 4096 },
-    objects: { iconFromPx: 16, overdrawTiles: 3 },
+    objects: { iconFromPx: 16 },
   },
   // 8192 x 8192 is 256 MB for one canvas, and there are three: for machines with plenty of RAM and a good GPU.
   ultra: {
     terrain: { pxPerTile: 128, maxSide: 8192 },
     cliffs: { pxPerTile: 128, maxSide: 8192 },
     lines: { pxPerTile: 80, maxSide: 8192 },
-    objects: { iconFromPx: 12, overdrawTiles: 5 },
+    objects: { iconFromPx: 12 },
   },
 }
 
@@ -62,7 +60,6 @@ export const DRAW_QUALITY_LIMITS = {
   pxPerTile: { min: 4, max: 256 },
   maxSide: { min: 1024, max: 16384 },
   iconFromPx: { min: 6, max: 48 },
-  overdrawTiles: { min: 0, max: 8 },
 } as const
 
 export function resolveDrawQuality(choice: DrawQualityChoice | undefined, custom: DrawQuality | undefined): DrawQuality {
