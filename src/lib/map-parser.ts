@@ -200,7 +200,7 @@ export interface RawMapBlock2 {
      *  random-city: `sids: ["squad_m5_mega_guard_3"]`. Also carries several
      *  other roll-config fields (requestedValue, fraction, tier, ...) this
      *  editor doesn't touch, left untouched on write. */
-    propRandomSquads?: Array<{ type?: string; id?: number; sids?: string[]; requestedValue?: number }>
+    propRandomSquads?: Array<{ type?: string; id?: number; sids?: string[]; requestedValue?: number; fraction?: string }>
     /** Generic per-instance active/inactive toggle — unrelated to
      *  propPortals' own isActive or propMarkers' isActivate below; a
      *  separate table, seen on plain objects (up to 208 uses in one map). */

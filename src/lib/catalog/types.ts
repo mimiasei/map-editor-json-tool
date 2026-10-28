@@ -186,6 +186,13 @@ export interface CatalogSquadTemplate {
   fraction: string
   tier: number
   unitSids: string[]
+  /** Weight when the game picks among the templates that fit (the file's `rollChance`). */
+  rollChance: number
+  /** Smallest army value the template is used for (`dynamicSquad.requiredValue`) and the largest (`randomSquad.maxValue`). */
+  requiredValue: number
+  maxValue: number
+  /** Per unit: the most army value that unit may take up (`randomSquad.units[].v`). */
+  unitMaxValues: { sid: string; maxValue: number }[]
 }
 
 /** An object behavior/logic definition (Core/DB/objects_logic/**\/*.json),
@@ -487,4 +494,5 @@ export interface GameCatalog {
 // per-template files use, is confirmed per-template data for the "Fair'n
 // Square" map). Nothing persists a built catalog across sessions, so this
 // bump is hygiene-only, not a migration, same as v3-v13.
-export const CATALOG_SCHEMA_VERSION = 14
+// v15: squad templates also carry rollChance, requiredValue, maxValue and per-unit max values (random-squad example preview).
+export const CATALOG_SCHEMA_VERSION = 15

@@ -23,9 +23,10 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, LinkPortal, PenLine, Tag, UnlinkPortal, UserCog, Wand2 } from '@/components/ui/icons'
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, LinkPortal, PenLine, Tag, UnlinkPortal, UserCog, Wand2, Dices } from '@/components/ui/icons'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import RandomSquadExampleDialog from './RandomSquadExampleDialog'
 import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
@@ -279,6 +280,7 @@ export default function MapGridCellContent({
   // keystroke would spam the edit history — this stays a local draft,
   // committed on blur instead.
   const [draftRandomSquadValue, setDraftRandomSquadValue] = useState<number | null>(null)
+  const [squadExampleOpen, setSquadExampleOpen] = useState(false)
 
   // A newly-clicked tile arrives as a new `items` array — default back to
   // the first row rather than keeping a stale selection from the old tile.
@@ -1011,6 +1013,25 @@ export default function MapGridCellContent({
                     <p className="text-xs tabular-nums">{shownValue}</p>
                   )}
                   <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(shownValue, squadDifficultyRanges)}</Badge>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Show an example squad for this value"
+                    aria-label="Show an example squad for this value"
+                    onClick={() => setSquadExampleOpen(true)}
+                  >
+                    <Dices className="h-3.5 w-3.5" />
+                  </Button>
+                  <RandomSquadExampleDialog
+                    open={squadExampleOpen}
+                    onOpenChange={setSquadExampleOpen}
+                    value={shownValue}
+                    fraction={selected.randomSquadFraction ?? ''}
+                    catalog={catalog}
+                    ranges={squadDifficultyRanges}
+                  />
                 </div>
                 {onSetRandomSquadValue && (
                   <div className="flex flex-wrap gap-1">
