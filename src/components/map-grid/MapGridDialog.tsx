@@ -467,7 +467,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const wheelTimerRef = useRef<number | null>(null)
   const quality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
   const iconLodPx = quality.objects.iconFromPx
-  const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
   const renderIndex = useObjectRenderStore((s) => s.index)
   const updateSettings = (next: typeof settings) => {
@@ -3264,15 +3263,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // as the grid-line/map-edge overlays below.
   const iconSize = Math.max(4, BASE_CELL_PX - (2 * settings.cellBorderThickness) / transform.scale)
 
+  // No margin beyond the screen edge: every extra mounted icon makes panning at far zoom-out (ultra) visibly choppier, and the edge shows no gaps.
   const visibleRange = useMemo(
     () => getVisibleRange(
       { translateX: transform.x, translateY: transform.y, scale: transform.scale },
       containerSize,
       { sizeX, sizeZ },
       BASE_CELL_PX,
-      overdrawCells,
+      0,
     ),
-    [transform, containerSize, sizeX, sizeZ, overdrawCells],
+    [transform, containerSize, sizeX, sizeZ],
   )
 
   // Every drawn single-tile object, not only the top of each stack: objects placed on top of each other all show, in stack order.
@@ -3304,7 +3304,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
   // box is found by its own extent-vs-viewport intersection regardless of
-  // where its anchor tile happens to sit (no overdrawCells bump needed for
+  // where its anchor tile happens to sit (no overdraw margin needed for
   // this, unlike the original plan's assumption — see MapGridDialog's commit
   // notes). Only objects that actually win the stacking pick at their own
   // anchor tile render here, so one 1x1 object sitting exactly on another

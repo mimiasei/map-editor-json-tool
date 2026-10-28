@@ -353,15 +353,6 @@ export default function MapGridSettingsDialog({
                   value={[quality.objects.iconFromPx]}
                   onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, iconFromPx: v } })}
                 />
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] text-muted-foreground">Extra tiles beyond the screen</Label>
-                  <span className="text-[11px] text-muted-foreground">{quality.objects.overdrawTiles}</span>
-                </div>
-                <Slider
-                  min={DRAW_QUALITY_LIMITS.overdrawTiles.min} max={DRAW_QUALITY_LIMITS.overdrawTiles.max} step={1}
-                  value={[quality.objects.overdrawTiles]}
-                  onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, overdrawTiles: v } })}
-                />
               </div>
             </div>
           )}
