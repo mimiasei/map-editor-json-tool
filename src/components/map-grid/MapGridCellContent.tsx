@@ -144,6 +144,7 @@ export interface MapGridCellContentProps {
   /** Set a random-squad's requestedValue ("army value" the game rolls a
    *  matching squad against) — docked-only, like the above. */
   onSetRandomSquadValue?: (item: PlacedObject, requestedValue: number) => void
+  onSetRandomSquadFraction?: (item: PlacedObject, fraction: string) => void
   /** Difficulty labels/min/max for the Value field's badge + quick-pick
    *  buttons — the (possibly user-customized, Map Grid settings' Advanced
    *  section) live ranges. Defaults to DEFAULT_SQUAD_DIFFICULTY_RANGES for
@@ -248,6 +249,7 @@ export default function MapGridCellContent({
   onSetGuardSquad,
   onSetCityGarrison,
   onSetRandomSquadValue,
+  onSetRandomSquadFraction,
   squadDifficultyRanges = DEFAULT_SQUAD_DIFFICULTY_RANGES,
   onSetRewardParams,
   moveTarget = null,
@@ -1032,6 +1034,24 @@ export default function MapGridCellContent({
                     catalog={catalog}
                     ranges={squadDifficultyRanges}
                   />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Faction</p>
+                  {(() => {
+                    const fraction = selected.randomSquadFraction ?? ''
+                    const label = (v: string) => (v === '' ? 'Random' : v === 'mix' ? 'Mix' : v === 'neutral' ? 'Neutral' : catalog?.factions.find((f) => f.id === v)?.name ?? v)
+                    return onSetRandomSquadFraction ? (
+                      <Select value={fraction || 'random'} onValueChange={(v) => onSetRandomSquadFraction(selected, v === 'random' ? '' : v)}>
+                        <SelectTrigger className="h-7 text-xs mt-0.5 w-40"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="random">Random</SelectItem>
+                          <SelectItem value="mix">Mix</SelectItem>
+                          {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>))}
+                          <SelectItem value="neutral">Neutral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (<p className="text-xs">{label(fraction)}</p>)
+                  })()}
                 </div>
                 {onSetRandomSquadValue && (
                   <div className="flex flex-wrap gap-1">

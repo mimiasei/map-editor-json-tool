@@ -957,6 +957,20 @@ export function setRandomSquadValue(chunk: Uint8Array, entityType: number, entit
   return new TextEncoder().encode(patchedText)
 }
 
+/** A random-squad's faction (propRandomSquads.fraction). Besides the seven factions the values seen are '' (any) and 'mix'; squads.map, made in
+ *  GME with one random-squad per option, holds 'mix', 'nature', '' and 'neutral'. */
+export function setRandomSquadFraction(chunk: Uint8Array, entityType: number, entityId: number, fraction: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+  const entries = JSON.parse(span) as PropRandomSquadEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propRandomSquads entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured random-squad`)
+  }
+  existing.fraction = fraction
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── Reward slots (objectsProperties.propRewardParams.parameters) ──────────
 // Each slot is "-" (unfilled), "resourceSid:amount", or a bare artifact/
 // skill sid — see src/lib/map-grid/reward-params.ts for the shared encode/

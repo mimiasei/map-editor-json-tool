@@ -55,7 +55,7 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
                 })}
               </ul>
               <p className="text-xs text-muted-foreground min-h-[3.75rem]">
-                Total value {example.totalValue} · {example.fraction}{fraction ? '' : ' (no faction set: picked at random)'}
+                Total value {example.totalValue} · {example.fraction}{fraction === '' || fraction === 'mix' ? ` (faction ${fraction === 'mix' ? 'mix' : 'not set'}: picked at random)` : ''}
                 {example.nearest && ' · no squad template covers this value, the nearest one is shown'}
               </p>
             </>
