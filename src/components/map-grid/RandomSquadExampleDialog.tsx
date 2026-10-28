@@ -41,7 +41,7 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
           </div>
           {example ? (
             <>
-              <ul className="space-y-1.5">
+              <ul className="space-y-1.5 min-h-[8.25rem]">
                 {example.units.map((u) => {
                   const creature = catalog?.creatures.find((c) => c.id === u.sid)
                   return (
@@ -54,13 +54,13 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
                   )
                 })}
               </ul>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground min-h-[3.75rem]">
                 Total value {example.totalValue} · {example.fraction}{fraction ? '' : ' (no faction set: picked at random)'}
                 {example.nearest && ' · no squad template covers this value, the nearest one is shown'}
               </p>
             </>
           ) : (
-            <p className="text-xs text-muted-foreground">No squad templates are loaded, so there is nothing to show. Extract the game data first.</p>
+            <p className="text-xs text-muted-foreground min-h-[12.75rem]">No squad templates are loaded, so there is nothing to show. Extract the game data first.</p>
           )}
           <div className="flex justify-end">
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setRoll((n) => n + 1)}>
