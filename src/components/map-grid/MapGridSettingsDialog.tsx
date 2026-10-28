@@ -39,6 +39,8 @@ export interface MapGridSettings {
   objectCountEnabled: boolean
   /** When true, a ground texture fades into the neighbouring biome's along land-to-land borders. */
   biomeEdgeFade: boolean
+  /** While the mouse wheel zooms, hide cliff edges, the water layer and road/river textures, and show them again a second after. */
+  fastZoom: boolean
   /** How finely each layer is drawn: a preset, or 'custom' with the numbers in drawQualityCustom (draw-quality.ts). */
   drawQuality: DrawQualityChoice
   drawQualityCustom: DrawQuality
@@ -120,6 +122,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   rotationNumberEnabled: true,
   objectCountEnabled: true,
   biomeEdgeFade: true,
+  fastZoom: true,
   drawQuality: 'high',
   drawQualityCustom: DRAW_QUALITY_PRESETS.high,
   showGridLines: false,
@@ -265,6 +268,18 @@ export default function MapGridSettingsDialog({
             />
           </div>
         )}
+
+        <div className="space-y-0.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-fast-zoom" className="text-xs cursor-pointer">Fast zoom</Label>
+            <Switch
+              id="grid-fast-zoom"
+              checked={settings.fastZoom}
+              onCheckedChange={(v) => update({ fastZoom: v })}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">Hides cliff edges, water and road/river textures while zooming with the wheel.</p>
+        </div>
 
         <div className="flex items-center justify-between">
           <Label htmlFor="grid-icon-images" className="text-xs cursor-pointer">Icon images</Label>

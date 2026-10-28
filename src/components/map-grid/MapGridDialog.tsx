@@ -164,9 +164,6 @@ const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
 const ZOOM_SETTLE_MS = 1000
-// Experiment switch: cap the draw quality at medium while zooming. Resizing a canvas reallocates it (an 8192x8192 one is 256 MB), and the cap
-// resizes the terrain and road/river canvases twice per zoom, so with it off those canvases are left alone.
-const CAP_QUALITY_WHILE_ZOOMING = false
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
@@ -464,19 +461,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const [settings, setSettings] = useState(loadMapGridSettings)
   // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
-  // While the wheel zooms (and for ZOOM_SETTLE_MS after), the costly layers (cliffs, water, roads/rivers) are hidden with CSS, not redrawn, so a big map
-  // zooms smoothly; the user's own settings come back when the wheel has been still that long.
+  // With the Fast zoom setting on, the costly layers (cliffs, water, roads/rivers) are hidden with CSS while the wheel zooms and for
+  // ZOOM_SETTLE_MS after. Their canvases are left as drawn (never resized or redrawn), so a big map zooms smoothly and they reappear at once.
   const [wheelZooming, setWheelZooming] = useState(false)
   const wheelTimerRef = useRef<number | null>(null)
-  const quality = useMemo(
-    () => resolveDrawQuality(CAP_QUALITY_WHILE_ZOOMING && wheelZooming && settings.drawQuality !== 'low' ? 'medium' : settings.drawQuality, settings.drawQualityCustom),
-    [wheelZooming, settings.drawQuality, settings.drawQualityCustom],
-  )
-  // The water layer is slow to rebuild, so it is hidden with CSS while zooming (its canvas stays as drawn) and never follows the capped quality.
-  const userQuality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
-  const showWaterSurface = settings.waterSurface
-  const showCliffs = settings.showCliffs
-  const showLineTextures = settings.lineFeatureTextures
+  const quality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
   const iconLodPx = quality.objects.iconFromPx
   const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
@@ -2522,9 +2511,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     e.preventDefault()
     const rect = e.currentTarget.getBoundingClientRect()
     const factor = Math.exp(-e.deltaY * 0.001)
-    setWheelZooming(true)
-    if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
-    wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; setWheelZooming(false) }, ZOOM_SETTLE_MS)
+    if (settings.fastZoom) {
+      setWheelZooming(true)
+      if (wheelTimerRef.current !== null) window.clearTimeout(wheelTimerRef.current)
+      wheelTimerRef.current = window.setTimeout(() => { wheelTimerRef.current = null; setWheelZooming(false) }, ZOOM_SETTLE_MS)
+    }
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
@@ -2601,11 +2592,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const cliffLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; key: unknown[]; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ, userQuality.cliffs)
+    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const out = cliffCanvasEl.getContext('2d')
-    if (!out || !showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
+    if (!out || !settings.showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
     // Baking every piece is slow, so the finished layer is kept and copied back when the layer is switched on again (wheel zoom, zooming
     // back in) with nothing it depends on changed. It is drawn on an offscreen canvas and copied to the visible one at the end.
     const cacheKey = [cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, levelsMap, climbsMap, paintLevelStaged, paintRampStaged]
@@ -2788,7 +2779,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
     out.drawImage(layer, 0, 0)
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, userQuality.cliffs])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2865,11 +2856,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const waterLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; waterMap: typeof waterMap; surface: HTMLCanvasElement; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
     if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ, userQuality.cliffs)
+    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     waterCanvasEl.width = sizeX * scale
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
-    if (!ctx || !showWaterSurface || !iconsVisibleForSwatch || !waterSurface) return
+    if (!ctx || !settings.waterSurface || !iconsVisibleForSwatch || !waterSurface) return
     // The shore fade (64 strips over every shore edge) is what makes this slow, so the finished layer is kept and only copied back when the
     // layer is switched on again or the canvas is remounted; it is rebuilt only when the water, its size or the texture changed.
     const cached = waterLayerCacheRef.current
@@ -2896,7 +2887,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
     waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
     ctx.drawImage(layer, 0, 0)
-  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, showWaterSurface, iconsVisibleForSwatch, userQuality.cliffs])
+  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
   // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
@@ -2920,7 +2911,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
-    const texturesOn = showLineTextures && iconsVisibleForSwatch
+    const texturesOn = settings.lineFeatureTextures && iconsVisibleForSwatch
     const textured = texturesOn && lineTextures.size > 0
     const strokedRoads = texturesOn && roadStrokes !== null
     const strokedRivers = texturesOn && riverSprites.size > 0 && renderIndex !== null
@@ -3065,7 +3056,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     // The game's river pieces: one render per tile, chosen by its connections (river-tiles.ts); the flat band where one is missing.
-    const riverLayer = strokedRivers && showWaterSurface && waterSurface ? document.createElement('canvas') : null
+    const riverLayer = strokedRivers && settings.waterSurface && waterSurface ? document.createElement('canvas') : null
     if (riverLayer) {
       riverLayer.width = canvas.width
       riverLayer.height = canvas.height
@@ -3104,7 +3095,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       ctx.drawImage(riverLayer, 0, 0)
     }
-  }, [lineFeatureCanvasEl, waterSurface, showWaterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, showLineTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
+  }, [lineFeatureCanvasEl, waterSurface, settings.waterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
