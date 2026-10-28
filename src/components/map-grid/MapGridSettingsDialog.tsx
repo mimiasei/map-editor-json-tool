@@ -278,7 +278,7 @@ export default function MapGridSettingsDialog({
               onCheckedChange={(v) => update({ fastZoom: v })}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground">Hides cliff edges, water and road/river textures while zooming with the wheel.</p>
+          <p className="text-[10px] text-muted-foreground">Hides GPU heavy layers while zooming.</p>
         </div>
 
         <div className="flex items-center justify-between">
