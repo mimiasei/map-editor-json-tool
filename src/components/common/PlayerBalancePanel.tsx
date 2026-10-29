@@ -1,5 +1,6 @@
 import type { PlayerBalance, BalanceDimension } from '@/lib/map-grid/player-balance'
 import type { DecorationBalance } from '@/lib/map-grid/decoration-balance'
+import { useTranslation, Trans } from 'react-i18next'
 
 /** Player balance table + score (issue #255) — shared by the Stats panel and
  *  the Generate Random Map result step so both show the same numbers. */
@@ -11,33 +12,37 @@ const VERDICT_CLASS: Record<PlayerBalance['verdict'], string> = {
 }
 
 export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance | null }) {
+  const { t } = useTranslation()
   if (!balance) {
-    return <p className="text-xs text-muted-foreground">Needs at least two player areas painted on the map (a randomly generated map has them) to compare players.</p>
+    return <p className="text-xs text-muted-foreground">{t('common.playerBalancePanel.needsAtLeastTwoPlayer')}</p>
   }
   const cell = (flagged: boolean) => `py-1 text-right ${flagged ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}`
   const flagged = (flags: Set<BalanceDimension>, d: BalanceDimension) => flags.has(d)
   return (
     <div className="space-y-2">
       <p className="text-sm">
-        Fairness <span className="font-semibold">{balance.score}/100</span>{' '}
-        <span className={`font-medium ${VERDICT_CLASS[balance.verdict]}`}>{balance.verdict}</span>
+        <Trans
+          i18nKey="common.playerBalancePanel.fairness"
+          values={{ score: balance.score, verdict: balance.verdict }}
+          components={{ b: <span className="font-semibold" />, v: <span className={`font-medium ${VERDICT_CLASS[balance.verdict]}`} /> }}
+        />
       </p>
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border text-muted-foreground">
-            <th className="pb-1 text-left font-medium">Player</th>
-            <th className="pb-1 text-right font-medium" title="Dry tiles in the player's own zone">Land</th>
-            <th className="pb-1 text-right font-medium" title="Mines in the zone, and their average distance from the start">Mines</th>
-            <th className="pb-1 text-right font-medium" title="Share of the zone that is hills or valleys">Hills</th>
-            <th className="pb-1 text-right font-medium" title="Mines, dwellings, resources, interactables and artifacts in the zone">Sites</th>
+            <th className="pb-1 text-left font-medium">{t('shared.player')}</th>
+            <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.dryTilesInThePlayers')}>{t('common.playerBalancePanel.land')}</th>
+            <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.minesInTheZoneAnd')}>{t('shared.mines')}</th>
+            <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.shareOfTheZoneThat')}>{t('common.playerBalancePanel.hills')}</th>
+            <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.minesDwellingsResourcesInteractablesAnd')}>{t('common.playerBalancePanel.sites')}</th>
           </tr>
         </thead>
         <tbody>
           {balance.rows.map((r) => (
             <tr key={r.zoneId} className="border-b border-border/50">
-              <td className="py-1">Player {r.owner} <span className="text-muted-foreground">{r.faction}</span></td>
+              <td className="py-1">{t('shared.player2', { owner: r.owner })} <span className="text-muted-foreground">{r.faction}</span></td>
               <td className={cell(flagged(r.flags, 'land'))}>{r.landTiles}</td>
-              <td className={cell(flagged(r.flags, 'mines'))}>{r.mineCount} · {r.meanMineDistance.toFixed(0)} tiles</td>
+              <td className={cell(flagged(r.flags, 'mines'))}>{t('common.playerBalancePanel.mineSummary', { mines: r.mineCount, distance: r.meanMineDistance.toFixed(0) })}</td>
               <td className={cell(flagged(r.flags, 'terrain'))}>{Math.round(r.elevatedPct)}%</td>
               <td className={cell(flagged(r.flags, 'sites'))}>{r.siteCount}</td>
             </tr>
@@ -46,7 +51,7 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
       </table>
       {balance.problems.length > 0 && (
         <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2 space-y-1">
-          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Not compared</p>
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">{t('common.playerBalancePanel.notCompared')}</p>
           <ul className="text-xs list-disc pl-4 space-y-0.5">
             {balance.problems.map((text) => <li key={text}>{text}</li>)}
           </ul>
@@ -59,16 +64,16 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
       )}
       {balance.recommendations.length > 0 ? (
         <div className="space-y-1">
-          <p className="text-xs font-semibold">Recommendations</p>
+          <p className="text-xs font-semibold">{t('common.playerBalancePanel.recommendations')}</p>
           <ul className="text-xs list-disc pl-4 space-y-0.5">
             {balance.recommendations.map((text) => <li key={text}>{text}</li>)}
           </ul>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">Nothing stands out: no player is more than 10% off the group on land, mines, sites or hills.</p>
+        <p className="text-xs text-muted-foreground">{t('common.playerBalancePanel.nothingStandsOutNoPlayer')}</p>
       )}
       <p className="text-[11px] text-muted-foreground">
-        Compares each player&apos;s own zone only — highlighted cells are over 10% off the group median. Guard strength and the neutral zones around each player are not compared.
+        {t('common.playerBalancePanel.comparesEachPlayersOwnZone')}
       </p>
     </div>
   )
@@ -76,16 +81,17 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
 
 /** Decorations per player area (Fairness dialog only; not part of the score). */
 export function DecorationBalanceSection({ decoration }: { decoration: DecorationBalance | null }) {
+  const { t } = useTranslation()
   if (!decoration) return null
   return (
     <div className="space-y-1">
-      <p className="text-xs font-semibold">Decorations</p>
+      <p className="text-xs font-semibold">{t('common.playerBalancePanel.decorations')}</p>
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border text-muted-foreground">
-            <th className="pb-1 text-left font-medium">Player</th>
-            <th className="pb-1 text-right font-medium" title="Mountains, trees, rocks and other decorations standing in the player's own area">Count</th>
-            <th className="pb-1 text-right font-medium" title="Share of the area's dry tiles that decorations block">Blocked</th>
+            <th className="pb-1 text-left font-medium">{t('shared.player')}</th>
+            <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.mountainsTreesRocksAndOther')}>{t('common.playerBalancePanel.count')}</th>
+            <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.shareOfTheAreasDry')}>{t('common.playerBalancePanel.blocked')}</th>
           </tr>
         </thead>
         <tbody>
@@ -93,9 +99,9 @@ export function DecorationBalanceSection({ decoration }: { decoration: Decoratio
             const tone = r.flagged ? 'text-amber-600 dark:text-amber-400 font-medium' : ''
             return (
               <tr key={r.zoneId} className="border-b border-border/50">
-                <td className="py-1">Player {r.owner}</td>
+                <td className="py-1">{t('shared.player2', { owner: r.owner })}</td>
                 <td className={`py-1 text-right ${tone}`}>{r.decorationCount}</td>
-                <td className={`py-1 text-right ${tone}`}>{Math.round(r.blockedPct)}% ({r.blockedTiles} tiles)</td>
+                <td className={`py-1 text-right ${tone}`}>{t('common.playerBalancePanel.blockedSummary', { percent: Math.round(r.blockedPct), tiles: r.blockedTiles })}</td>
               </tr>
             )
           })}
@@ -106,7 +112,7 @@ export function DecorationBalanceSection({ decoration }: { decoration: Decoratio
           {decoration.notes.map((text) => <li key={text}>{text}</li>)}
         </ul>
       ) : (
-        <p className="text-xs text-muted-foreground">Decorations are about even between the players.</p>
+        <p className="text-xs text-muted-foreground">{t('common.playerBalancePanel.decorationsAreAboutEvenBetween')}</p>
       )}
     </div>
   )

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Plus, X } from '@/components/ui/icons'
 import SidCombobox from './SidCombobox'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   value: string
@@ -19,6 +20,7 @@ interface Props {
  *  for a freshly-added slide (see defaultTextSid/addSlide in DialogEditor.tsx). This removes
  *  the need to open the full multi-slide editor just to author a one-line dialog. */
 export default function DialogSidField({ value, onChange, placeholder }: Props) {
+  const { t } = useTranslation()
   const [creating, setCreating] = useState(false)
   const [text, setText] = useState('')
   const dialogs = useScenarioStore((s) => s.dialogs)
@@ -66,7 +68,7 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
               }
               if (e.key === 'Escape') cancel()
             }}
-            placeholder="Type the dialog message…"
+            placeholder={t('common.dialogSidField.typeTheDialogMessage')}
             className="flex-1"
           />
           <Button
@@ -75,7 +77,7 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
             disabled={!text.trim()}
             onClick={create}
           >
-            Create
+            {t('shared.create')}
           </Button>
           <Button
             type="button"
@@ -83,7 +85,7 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
             size="icon"
             className="shrink-0 text-muted-foreground"
             onClick={cancel}
-            title="Cancel"
+            title={t('shared.cancel')}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -96,7 +98,7 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
           onClick={() => setCreating(true)}
         >
           <Plus className="h-4 w-4" />
-          Create new dialog
+          {t('common.dialogSidField.createNewDialog')}
         </Button>
       )}
     </div>

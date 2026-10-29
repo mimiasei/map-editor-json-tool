@@ -21,8 +21,10 @@ import { Button } from '@/components/ui/button'
 import { AlertTriangle } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import {describeMapValidationIssue} from '@/lib/map-grid/map-validation'
+import { useTranslation } from 'react-i18next'
 
 export default function MapValidationErrorDialog() {
+  const { t } = useTranslation()
   const issues = useMapDocumentStore((s) => s.mapValidationIssues)
   const clearMapValidationIssues = useMapDocumentStore((s) => s.clearMapValidationIssues)
   const autoFixMapValidationIssues = useMapDocumentStore((s) => s.autoFixMapValidationIssues)
@@ -38,11 +40,11 @@ export default function MapValidationErrorDialog() {
 
   const message = issues
     ? [
-        'The map was saved, but the following object(s) have problems:',
+        t('common.mapValidationErrorDialog.intro'),
         '',
         ...issues.map((v) => `• ${describeMapValidationIssue(v)}`),
         ...(lastFixed !== null
-          ? ['', `Auto-fix resolved ${lastFixed} issue(s) — ${issues.length} still couldn't be fixed automatically. Fix them manually.`]
+          ? ['', t('common.mapValidationErrorDialog.autoFixResult', { fixed: lastFixed, remaining: issues.length })]
           : []),
       ].join('\n')
     : ''
@@ -54,7 +56,7 @@ export default function MapValidationErrorDialog() {
     >
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Map Saved With Issues</DialogTitle>
+          <DialogTitle>{t('common.mapValidationErrorDialog.mapSavedWithIssues')}</DialogTitle>
         </DialogHeader>
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -62,9 +64,9 @@ export default function MapValidationErrorDialog() {
         </Alert>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" size="sm" onClick={() => { clearMapValidationIssues(); setLastFixed(null) }}>
-            Close
+            {t('ui.close')}
           </Button>
-          <Button size="sm" onClick={handleAutoFix}>Auto-fix</Button>
+          <Button size="sm" onClick={handleAutoFix}>{t('common.mapValidationErrorDialog.autoFix')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { readBundledGameTemplateJson } from '@/lib/rmg/rmg-template-catalog'
 import { parseTemplateDetails, type TemplateDetails, type TemplateZoneDetails } from '@/lib/rmg/rmg-template-details'
 import { logError } from '@/lib/logger'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -62,6 +63,7 @@ function ChipList({ label, items }: { label: string; items: string[] | undefined
 }
 
 function ZoneCard({ zone }: { zone: TemplateZoneDetails }) {
+  const { t } = useTranslation()
   const hasValueBudget = [
     zone.guardedContentValue, zone.guardedContentValuePerArea,
     zone.unguardedContentValue, zone.unguardedContentValuePerArea,
@@ -74,48 +76,48 @@ function ZoneCard({ zone }: { zone: TemplateZoneDetails }) {
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium">{zone.name}</span>
         <Badge variant={zone.kind === 'player' ? 'default' : 'secondary'}>
-          {zone.kind === 'player' ? `Player ${zone.playerIndex ?? '?'}` : 'Neutral'}
+          {zone.kind === 'player' ? `Player ${zone.playerIndex ?? '?'}` : t('common.templateDetailsDialog.neutral')}
         </Badge>
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-        <KV label="Size" value={zone.size} />
-        <KV label="Layout" value={zone.layout} />
-        <KV label="Biome" value={zone.biomeSummary} />
-        <KV label="Roads" value={zone.roadCount > 0 ? zone.roadCount : undefined} />
+        <KV label={t('shared.size')} value={zone.size} />
+        <KV label={t('shared.layout')} value={zone.layout} />
+        <KV label={t('common.templateDetailsDialog.biome')} value={zone.biomeSummary} />
+        <KV label={t('shared.roads')} value={zone.roadCount > 0 ? zone.roadCount : undefined} />
       </div>
       {hasGuardTuning && (
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 border-t border-border/60">
-          <KV label="Guard cutoff" value={fmt(zone.guardCutoffValue)} />
-          <KV label="Guard multiplier" value={zone.guardMultiplier} />
-          <KV label="Guard randomization" value={zone.guardRandomization} />
-          <KV label="Guard weekly increment" value={zone.guardWeeklyIncrement} />
+          <KV label={t('common.templateDetailsDialog.guardCutoff')} value={fmt(zone.guardCutoffValue)} />
+          <KV label={t('common.templateDetailsDialog.guardMultiplier')} value={zone.guardMultiplier} />
+          <KV label={t('common.templateDetailsDialog.guardRandomization')} value={zone.guardRandomization} />
+          <KV label={t('common.templateDetailsDialog.guardWeeklyIncrement')} value={zone.guardWeeklyIncrement} />
         </div>
       )}
       {hasValueBudget && (
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 border-t border-border/60">
-          <KV label="Guarded value" value={zone.guardedContentValue !== undefined ? `${fmt(zone.guardedContentValue)}${zone.guardedContentValuePerArea ? ` (+${fmt(zone.guardedContentValuePerArea)}/area)` : ''}` : undefined} />
-          <KV label="Unguarded value" value={zone.unguardedContentValue !== undefined ? `${fmt(zone.unguardedContentValue)}${zone.unguardedContentValuePerArea ? ` (+${fmt(zone.unguardedContentValuePerArea)}/area)` : ''}` : undefined} />
-          <KV label="Resources value" value={zone.resourcesValue !== undefined ? `${fmt(zone.resourcesValue)}${zone.resourcesValuePerArea ? ` (+${fmt(zone.resourcesValuePerArea)}/area)` : ''}` : undefined} />
+          <KV label={t('common.templateDetailsDialog.guardedValue')} value={zone.guardedContentValue !== undefined ? `${fmt(zone.guardedContentValue)}${zone.guardedContentValuePerArea ? ` (+${fmt(zone.guardedContentValuePerArea)}/area)` : ''}` : undefined} />
+          <KV label={t('common.templateDetailsDialog.unguardedValue')} value={zone.unguardedContentValue !== undefined ? `${fmt(zone.unguardedContentValue)}${zone.unguardedContentValuePerArea ? ` (+${fmt(zone.unguardedContentValuePerArea)}/area)` : ''}` : undefined} />
+          <KV label={t('common.templateDetailsDialog.resourcesValue')} value={zone.resourcesValue !== undefined ? `${fmt(zone.resourcesValue)}${zone.resourcesValuePerArea ? ` (+${fmt(zone.resourcesValuePerArea)}/area)` : ''}` : undefined} />
         </div>
       )}
       {(zone.contentCountLimitNames.length > 0 || zone.mandatoryContentNames.length > 0) && (
         <div className="pt-1 border-t border-border/60 space-y-1">
-          <KV label="Content limits" value={zone.contentCountLimitNames.join(', ')} />
-          <KV label="Mandatory content" value={zone.mandatoryContentNames.join(', ')} />
+          <KV label={t('common.templateDetailsDialog.contentLimits')} value={zone.contentCountLimitNames.join(', ')} />
+          <KV label={t('common.templateDetailsDialog.mandatoryContent')} value={zone.mandatoryContentNames.join(', ')} />
         </div>
       )}
       {zone.mainObjects.length > 0 && (
         <div className="pt-1 border-t border-border/60 space-y-1">
-          <p className="text-xs text-muted-foreground">Main objects</p>
+          <p className="text-xs text-muted-foreground">{t('common.templateDetailsDialog.mainObjects')}</p>
           {zone.mainObjects.map((mo, i) => (
             <div key={i} className="text-xs pl-2 border-l-2 border-border space-y-0.5 py-0.5">
               <div className="flex items-baseline gap-1.5 flex-wrap">
                 <span className="font-medium">{mo.type}</span>
                 {mo.spawn && <span className="text-muted-foreground">({mo.spawn})</span>}
-                {mo.placement && <span className="text-muted-foreground">· placement: {mo.placement}{mo.placementArgs?.length ? ` [${mo.placementArgs.join(', ')}]` : ''}</span>}
-                {mo.guardChance !== undefined && <span className="text-muted-foreground">· guard chance: {mo.guardChance}</span>}
-                {mo.guardValue !== undefined && <span className="text-muted-foreground">· guard value: {fmt(mo.guardValue)}</span>}
-                {mo.isKeyObject && <Badge variant="outline" className="text-[10px] py-0">key object</Badge>}
+                {mo.placement && <span className="text-muted-foreground">{t('common.templateDetailsDialog.placement', { value: `${mo.placement}${mo.placementArgs?.length ? ` [${mo.placementArgs.join(', ')}]` : ''}` })}</span>}
+                {mo.guardChance !== undefined && <span className="text-muted-foreground">{t('common.templateDetailsDialog.guardChance', { guardChance: mo.guardChance })}</span>}
+                {mo.guardValue !== undefined && <span className="text-muted-foreground">{t('common.templateDetailsDialog.guardValue', { value: fmt(mo.guardValue) })}</span>}
+                {mo.isKeyObject && <Badge variant="outline" className="text-[10px] py-0">{t('common.templateDetailsDialog.keyObject')}</Badge>}
               </div>
               {mo.factionSummary && <p className="text-muted-foreground">{mo.factionSummary}</p>}
             </div>
@@ -127,6 +129,7 @@ function ZoneCard({ zone }: { zone: TemplateZoneDetails }) {
 }
 
 export default function TemplateDetailsDialog({ open, onOpenChange, fileName, displayName }: Props) {
+  const { t } = useTranslation()
   const [details, setDetails] = useState<TemplateDetails | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [variantIndex, setVariantIndex] = useState(0)
@@ -167,33 +170,33 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {error && <p className="text-xs text-destructive text-center py-4">{error}</p>}
-          {!error && !details && <p className="text-xs text-muted-foreground text-center py-4">Loading…</p>}
+          {!error && !details && <p className="text-xs text-muted-foreground text-center py-4">{t('shared.loading')}</p>}
 
           {details && (
             <>
-              <Section title="Overview">
+              <Section title={t('common.templateDetailsDialog.overview')}>
                 <div className="flex flex-wrap gap-1.5">
                   {details.gameMode && <Badge variant="secondary">{details.gameMode}</Badge>}
                   {details.displayWinCondition && <Badge variant="outline" className="font-mono font-normal">{details.displayWinCondition}</Badge>}
                   {details.declaredSizeX && details.declaredSizeZ && (
-                    <Badge variant="outline">{details.declaredSizeX}×{details.declaredSizeZ} (as designed)</Badge>
+                    <Badge variant="outline">{t('common.templateDetailsDialog.asDesigned', { declaredSizeX: details.declaredSizeX, declaredSizeZ: details.declaredSizeZ })}</Badge>
                   )}
-                  <Badge variant="outline">{details.variants.length} variant{details.variants.length === 1 ? '' : 's'}</Badge>
+                  <Badge variant="outline">{t('common.templateDetailsDialog.variants', { count: details.variants.length })}</Badge>
                 </div>
               </Section>
 
               {hasGameRulesData && (
-                <Section title="Game Rules">
+                <Section title={t('common.templateDetailsDialog.gameRules')}>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-                    <KV label="Heroes" value={
+                    <KV label={t('common.templateDetailsDialog.heroes')} value={
                       details.gameRules.heroCountMin !== undefined || details.gameRules.heroCountMax !== undefined
                         ? `${details.gameRules.heroCountMin ?? '?'}–${details.gameRules.heroCountMax ?? '?'}${details.gameRules.heroCountIncrement ? ` (+${details.gameRules.heroCountIncrement}/week)` : ''}`
                         : undefined
                     } />
-                    <KV label="Hero hire ban" value={details.gameRules.heroHireBan !== undefined ? (details.gameRules.heroHireBan ? 'Yes' : 'No') : undefined} />
-                    <KV label="Encounter holes" value={details.gameRules.encounterHoles !== undefined ? (details.gameRules.encounterHoles ? 'Yes' : 'No') : undefined} />
-                    <KV label="Faction laws exp." value={details.gameRules.factionLawsExpModifier} />
-                    <KV label="Astrology exp." value={details.gameRules.astrologyExpModifier} />
+                    <KV label={t('common.templateDetailsDialog.heroHireBan')} value={details.gameRules.heroHireBan !== undefined ? (details.gameRules.heroHireBan ? 'Yes' : 'No') : undefined} />
+                    <KV label={t('common.templateDetailsDialog.encounterHoles')} value={details.gameRules.encounterHoles !== undefined ? (details.gameRules.encounterHoles ? 'Yes' : 'No') : undefined} />
+                    <KV label={t('common.templateDetailsDialog.factionLawsExp')} value={details.gameRules.factionLawsExpModifier} />
+                    <KV label={t('common.templateDetailsDialog.astrologyExp')} value={details.gameRules.astrologyExpModifier} />
                   </div>
                   {winConditionRows.length > 0 && (
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1.5 mt-1.5 border-t border-border/60">
@@ -206,17 +209,17 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
               )}
 
               {details.globalBans && (details.globalBans.items?.length || details.globalBans.magics?.length || details.globalBans.heroes?.length) ? (
-                <Section title="Global Bans">
+                <Section title={t('common.templateDetailsDialog.globalBans')}>
                   <div className="space-y-1.5">
-                    <ChipList label="Items" items={details.globalBans.items} />
-                    <ChipList label="Magics" items={details.globalBans.magics} />
-                    <ChipList label="Heroes" items={details.globalBans.heroes} />
+                    <ChipList label={t('common.templateDetailsDialog.items')} items={details.globalBans.items} />
+                    <ChipList label={t('common.templateDetailsDialog.magics')} items={details.globalBans.magics} />
+                    <ChipList label={t('common.templateDetailsDialog.heroes')} items={details.globalBans.heroes} />
                   </div>
                 </Section>
               ) : null}
 
               {details.valueOverrides.length > 0 && (
-                <Section title="Value Overrides">
+                <Section title={t('common.templateDetailsDialog.valueOverrides')}>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                     {details.valueOverrides.map((v, i) => (
                       <KV key={i} label={v.sid} value={fmt(v.guardValue)} />
@@ -226,19 +229,19 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
               )}
 
               {details.zoneLayouts.length > 0 && (
-                <Section title="Zone Layouts">
+                <Section title={t('common.templateDetailsDialog.zoneLayouts')}>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {details.zoneLayouts.map((zl) => (
                       <div key={zl.name} className="rounded border border-border p-2 space-y-0.5">
                         <p className="text-xs font-medium">{zl.name}</p>
-                        <KV label="Obstacles" value={zl.obstaclesFill} />
-                        <KV label="Lakes" value={zl.lakesFill} />
-                        <KV label="Min lake area" value={zl.minLakeArea} />
-                        <KV label="Road cluster area" value={zl.roadClusterArea} />
-                        <KV label="Elevation cluster scale" value={zl.elevationClusterScale} />
+                        <KV label={t('common.templateDetailsDialog.obstacles')} value={zl.obstaclesFill} />
+                        <KV label={t('common.templateDetailsDialog.lakes')} value={zl.lakesFill} />
+                        <KV label={t('common.templateDetailsDialog.minLakeArea')} value={zl.minLakeArea} />
+                        <KV label={t('common.templateDetailsDialog.roadClusterArea')} value={zl.roadClusterArea} />
+                        <KV label={t('common.templateDetailsDialog.elevationClusterScale')} value={zl.elevationClusterScale} />
                         {zl.ambientPickupDistribution && (
                           <KV
-                            label="Ambient pickups"
+                            label={t('common.templateDetailsDialog.ambientPickups')}
                             value={`repulsion ${zl.ambientPickupDistribution.repulsion ?? '?'}, noise ${zl.ambientPickupDistribution.noise ?? '?'}, road attr. ${zl.ambientPickupDistribution.roadAttraction ?? '?'}, obstacle attr. ${zl.ambientPickupDistribution.obstacleAttraction ?? '?'}`}
                           />
                         )}
@@ -249,7 +252,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
               )}
 
               {details.contentCountLimitSets.length > 0 && (
-                <Section title="Content Count Limit Sets">
+                <Section title={t('common.templateDetailsDialog.contentCountLimitSets')}>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {details.contentCountLimitSets.map((set) => (
                       <div key={set.name} className="rounded border border-border p-2">
@@ -264,7 +267,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
               )}
 
               {details.mandatoryContentSets.length > 0 && (
-                <Section title="Mandatory Content Sets">
+                <Section title={t('common.templateDetailsDialog.mandatoryContentSets')}>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {details.mandatoryContentSets.map((set) => (
                       <div key={set.name} className="rounded border border-border p-2">
@@ -286,7 +289,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
                         i === variantIndex ? 'bg-secondary text-secondary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      Variant {i + 1}
+                      {t('common.templateDetailsDialog.variantN', { n: i + 1 })}
                     </button>
                   ))}
                 </div>
@@ -309,8 +312,8 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
                         <span className="text-muted-foreground">→</span>
                         <span className="font-medium">{c.to}</span>
                         {c.connectionType && <Badge variant="outline" className="text-[10px] py-0">{c.connectionType}</Badge>}
-                        {c.road && <Badge variant="outline" className="text-[10px] py-0">road</Badge>}
-                        {c.guardValue !== undefined && <span className="text-muted-foreground">guard: {fmt(c.guardValue)}</span>}
+                        {c.road && <Badge variant="outline" className="text-[10px] py-0">{t('common.templateDetailsDialog.road')}</Badge>}
+                        {c.guardValue !== undefined && <span className="text-muted-foreground">{t('common.templateDetailsDialog.guardShort', { value: fmt(c.guardValue) })}</span>}
                       </div>
                     ))}
                   </div>
@@ -323,7 +326,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Close
+            {t('ui.close')}
           </Button>
         </div>
       </DraggableDialogContent>

@@ -10,6 +10,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { ChevronsUpDown, X } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 // ─── MapEntityCombobox ────────────────────────────────────────────────────────
 // Autocomplete input backed by user-placed entities from the loaded .map file.
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function MapEntityCombobox({ value, onChange, placeholder }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
@@ -60,7 +62,7 @@ export default function MapEntityCombobox({ value, onChange, placeholder }: Prop
               onChange('')
             }}
             className="absolute right-7 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            title="Clear"
+            title={t('shared.clear')}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -85,8 +87,8 @@ export default function MapEntityCombobox({ value, onChange, placeholder }: Prop
           <CommandList>
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
               {filtered.length === 0 && sids.length > 0
-                ? 'No matches'
-                : 'No map entities — load a .map file first'}
+                ? t('shared.noMatches')
+                : t('common.mapEntityCombobox.noMapEntitiesLoadA')}
             </CommandEmpty>
             <CommandGroup>
               {filtered.map((sid) => (

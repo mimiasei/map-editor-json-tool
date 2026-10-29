@@ -54,6 +54,7 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import { isRmgIneligibleInteractableSid } from '@/lib/rmg/object-variety'
+import { useTranslation } from 'react-i18next'
 
 /** Not part of the RMG's own discretionary interactable-choice roll (see this
  *  file's own header comment for the real-generation evidence behind each) —
@@ -71,6 +72,7 @@ interface Props {
 }
 
 export default function InteractableSelectorDialog({ open, onOpenChange, disabledSids, onChange }: Props) {
+  const { t } = useTranslation()
   useObjectRenderStore((s) => s.index) // redraw when a render job adds images
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
@@ -136,21 +138,21 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
         storageKey="rmg-interactable-selector"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">RMG interactables</DialogTitle>
+        <DialogTitle className="sr-only">{t('common.interactableSelectorDialog.rMGInteractables')}</DialogTitle>
 
         <DraggableDialogDragHandle className="flex items-center gap-2 px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <span className="text-sm font-semibold shrink-0">RMG interactables</span>
+          <span className="text-sm font-semibold shrink-0">{t('common.interactableSelectorDialog.rMGInteractables')}</span>
           <div className="relative flex-1 min-w-0" data-nodrag>
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or sid…"
+              placeholder={t('common.interactableSelectorDialog.searchNameOrSid')}
               className="pl-7 h-7 text-xs"
             />
           </div>
           <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
-            {enabledCount}/{allInteractables.length} enabled
+            {t('common.interactableSelectorDialog.enabled', { enabledCount, length: allInteractables.length })}
           </span>
         </DraggableDialogDragHandle>
 
@@ -158,7 +160,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
           <div className="flex items-center gap-1.5 shrink-0">
             <Checkbox id="rmg-interactables-select-all" checked={allEnabled} onCheckedChange={(v) => toggleAll(Boolean(v))} />
             <Label htmlFor="rmg-interactables-select-all" className="text-xs cursor-pointer font-medium">
-              Select all
+              {t('common.interactableSelectorDialog.selectAll')}
             </Label>
           </div>
           <div className="w-px self-stretch bg-border" />
@@ -171,7 +173,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
                   allSubShown ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:bg-accent/50'
                 }`}
               >
-                All categories
+                {t('common.interactableSelectorDialog.allCategories')}
               </button>
               {BROWSABLE_SUBCATEGORY_ORDER.map((c) => (
                 <button
@@ -193,12 +195,12 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
           <div className="p-3 space-y-4">
             {allInteractables.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No interactables to browse — load Core.zip via Game Data.
+                {t('common.interactableSelectorDialog.noInteractablesToBrowseLoad')}
               </p>
             )}
             {allInteractables.length > 0 && shownCount === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                Nothing matches the current search/category filter.
+                {t('common.interactableSelectorDialog.nothingMatchesTheCurrentSearch')}
               </p>
             )}
 
@@ -237,7 +239,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
         </ScrollArea>
 
         <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border shrink-0" data-nodrag>
-          <Button size="sm" onClick={() => onOpenChange(false)}>Done</Button>
+          <Button size="sm" onClick={() => onOpenChange(false)}>{t('shared.done')}</Button>
         </div>
       </DraggableDialogContent>
     </Dialog>

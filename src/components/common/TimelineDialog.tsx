@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Clock, Hash, Zap, Shuffle, Repeat2 } from '@/components/ui/icons'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
+import { useTranslation } from 'react-i18next'
 
 // ─── Category icons ───────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ interface EntryRowProps {
 }
 
 function EntryRow({ entry, onClick }: EntryRowProps) {
+  const { t } = useTranslation()
   const extraConditions = entry.conditions.length - 1
 
   return (
@@ -60,10 +62,10 @@ function EntryRow({ entry, onClick }: EntryRowProps) {
       {/* Location — breadcrumb + repeat icon */}
       <div className="flex items-center gap-1.5 justify-end overflow-hidden">
         {entry.repeat && (
-          <Repeat2 className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="repeating" />
+          <Repeat2 className="h-3 w-3 shrink-0 text-muted-foreground" aria-label={t('common.timelineDialog.repeating')} />
         )}
         <span className="truncate text-muted-foreground text-right">
-          {entry.questSid} › {entry.subQuestSid} › #{entry.triggerIndex + 1}
+          {[entry.questSid, entry.subQuestSid, `#${entry.triggerIndex + 1}`].join(' › ')}
         </span>
       </div>
     </button>
@@ -79,6 +81,7 @@ interface SectionProps {
 }
 
 function Section({ category, entries, onSelect }: SectionProps) {
+  const { t } = useTranslation()
   if (entries.length === 0) return null
   const meta = CATEGORY_META.find((m) => m.id === category)!
   const Icon = CATEGORY_ICONS[category]
@@ -98,9 +101,9 @@ function Section({ category, entries, onSelect }: SectionProps) {
 
       {/* Column headers */}
       <div className="grid grid-cols-[minmax(0,5fr)_minmax(0,5fr)_minmax(0,4fr)] gap-x-4 px-3 pb-1 text-xs text-muted-foreground/50 uppercase tracking-wide select-none">
-        <span>When</span>
-        <span>Then</span>
-        <span className="text-right">Location</span>
+        <span>{t('common.timelineDialog.when')}</span>
+        <span>{t('common.timelineDialog.then')}</span>
+        <span className="text-right">{t('common.timelineDialog.location')}</span>
       </div>
 
       {/* Entry rows */}
@@ -129,6 +132,7 @@ interface TimelineContentProps {
 }
 
 export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequested }: TimelineContentProps) {
+  const { t } = useTranslation()
   const [localCloseOnNav, setLocalCloseOnNav] = useState(false)
   const effectiveClose = closeOnNav !== undefined ? closeOnNav : localCloseOnNav
 
@@ -167,10 +171,12 @@ export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequest
           extra right padding here. */}
       <DraggableDialogDragHandle className="flex items-center justify-between gap-4 px-6 py-4 border-b shrink-0">
         <div>
-          <p className="text-base font-semibold leading-none">Event Timeline</p>
+          <p className="text-base font-semibold leading-none">{t('common.timelineDialog.eventTimeline')}</p>
           <p className="text-xs text-muted-foreground mt-1.5">
-            {allEntries.length} trigger{allEntries.length !== 1 ? 's' : ''} across{' '}
-            {scenario.quests.length} quest{scenario.quests.length !== 1 ? 's' : ''}
+            {t('common.timelineDialog.summary', {
+              triggers: t('common.timelineDialog.triggerCount', { count: allEntries.length }),
+              quests: t('common.timelineDialog.questCount', { count: scenario.quests.length }),
+            })}
           </p>
         </div>
         {/* Only show the toggle when we're docked (closeOnNav prop is undefined = self-managed) */}
@@ -182,7 +188,7 @@ export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequest
               onCheckedChange={setLocalCloseOnNav}
             />
             <Label htmlFor="close-on-nav" className="text-xs text-muted-foreground cursor-pointer">
-              Close on navigate
+              {t('common.timelineDialog.closeOnNavigate')}
             </Label>
           </div>
         )}
@@ -193,7 +199,7 @@ export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequest
         <div className="px-6 py-4">
           {allEntries.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
-              No triggers yet. Add quests with triggers to see them here.
+              {t('common.timelineDialog.noTriggersYetAddQuests')}
             </p>
           ) : (
             <div className="space-y-6">
@@ -225,6 +231,7 @@ interface TimelineDialogProps {
 }
 
 export default function TimelineDialog({ open, onOpenChange, onUndock, undocked }: TimelineDialogProps) {
+  const { t } = useTranslation()
   const { scenario, setSelection } = useScenarioStore()
 
   return (
@@ -238,7 +245,7 @@ export default function TimelineDialog({ open, onOpenChange, onUndock, undocked 
         storageKey="timeline"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Event Timeline</DialogTitle>
+        <DialogTitle className="sr-only">{t('common.timelineDialog.eventTimeline')}</DialogTitle>
 
         {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
         {onUndock && (

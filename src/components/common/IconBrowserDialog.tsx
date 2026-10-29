@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export interface IconBrowserOption {
   /** The icon SID this option resolves to when picked. */
@@ -35,11 +36,13 @@ interface Props {
 export default function IconBrowserDialog({
   open,
   onOpenChange,
-  title = 'Choose an icon',
+  title,
   options,
   currentIconId,
   onPick,
 }: Props) {
+  const { t } = useTranslation()
+  const dialogTitle = title ?? t('common.iconBrowserDialog.defaultTitle')
   const [search, setSearch] = useState('')
 
   // Multiple items can share the same icon (e.g. several magic scroll
@@ -72,13 +75,13 @@ export default function IconBrowserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search icons…"
+          placeholder={t('common.iconBrowserDialog.searchIcons')}
           className="shrink-0"
         />
 
@@ -104,7 +107,7 @@ export default function IconBrowserDialog({
           ))}
           {filtered.length === 0 && (
             <p className="col-span-6 py-6 text-center text-xs text-muted-foreground">
-              No matching icons.
+              {t('common.iconBrowserDialog.noMatchingIcons')}
             </p>
           )}
         </div>

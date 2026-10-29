@@ -19,6 +19,7 @@ import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/c
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import { humanizeFxId } from '@/lib/vfx-options'
+import { useTranslation } from 'react-i18next'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -221,6 +222,7 @@ function renderEntityItem(entry: EntityEntry, onChange: (value: string) => void,
  * Free-text entry is always accepted for forward-compatibility.
  */
 export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -338,7 +340,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                   onChange('')
                 }}
                 className={`absolute ${category === 'mapObject' ? 'right-12' : 'right-7'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}
-                title="Clear"
+                title={t('shared.clear')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -374,10 +376,10 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
               size="sm"
               className="h-7 shrink-0 gap-1 px-2 text-xs"
               onClick={() => setPickerOpen(true)}
-              title="Browse heroes grouped by faction"
+              title={t('common.entityCombobox.browseHeroesGroupedByFaction')}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              Browse
+              {t('common.entityCombobox.browse')}
             </Button>
           )}
 
@@ -423,7 +425,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                       className="flex items-center gap-1.5 text-xs py-1.5 font-medium"
                     >
                       <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      Browse heroes by faction…
+                      {t('common.entityCombobox.browseHeroesByFaction')}
                     </CommandItem>
                   </CommandGroup>
                 )}

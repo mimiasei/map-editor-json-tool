@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { openExternal } from '@/lib/native-fs'
 import notesMarkdown from '@/data/release-notes.md?raw'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -30,6 +31,7 @@ const markdownComponents: Components = {
 }
 
 export default function WhatsNewDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DraggableDialogContent
@@ -42,7 +44,7 @@ export default function WhatsNewDialog({ open, onOpenChange }: Props) {
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
-          <DialogTitle>What&apos;s new</DialogTitle>
+          <DialogTitle>{t('shared.whatsNew')}</DialogTitle>
         </DraggableDialogDragHandle>
         <ScrollArea className="flex-1 min-h-0 px-6">
           <div className="py-4 prose-sm max-w-none text-sm [&_a]:text-primary [&_code]:font-mono [&_code]:text-xs [&_h1]:text-base [&_h1]:font-semibold [&_h3]:text-sm [&_h3]:font-semibold [&_li]:my-0.5 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5">
@@ -50,7 +52,7 @@ export default function WhatsNewDialog({ open, onOpenChange }: Props) {
           </div>
         </ScrollArea>
         <div className="px-6 py-3 border-t border-border flex justify-end shrink-0">
-          <Button size="sm" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button size="sm" onClick={() => onOpenChange(false)}>{t('ui.close')}</Button>
         </div>
       </DraggableDialogContent>
     </Dialog>

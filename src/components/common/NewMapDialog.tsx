@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { createNewMap } from '@/lib/create-map'
 import { logError, logInfo } from '@/lib/logger'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -58,6 +59,7 @@ const DEFAULT_SIZE_KEY = presetKey({ sizeX: 64, sizeZ: 64 })
 const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
 export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
+  const { t } = useTranslation()
   const [mapName, setMapName] = useState('New Map')
   const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
   const [biomeId, setBiomeId] = useState<BiomeId>(1)
@@ -84,17 +86,17 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={340} minWidth={360} minHeight={300} storageKey="new-map">
         <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">Create New Map</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{t('common.newMapDialog.createNewMap')}</DialogTitle>
         </DraggableDialogDragHandle>
 
         <div className="p-4 space-y-4 overflow-y-auto">
           <div className="space-y-1.5">
-            <Label htmlFor="new-map-name" className="text-xs">Map name</Label>
+            <Label htmlFor="new-map-name" className="text-xs">{t('shared.mapName')}</Label>
             <Input id="new-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Size</Label>
+            <Label className="text-xs">{t('shared.size')}</Label>
             <Select value={sizeKey} onValueChange={setSizeKey}>
               <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -106,7 +108,7 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Terrain biome</Label>
+            <Label className="text-xs">{t('common.newMapDialog.terrainBiome')}</Label>
             <div className="flex flex-wrap gap-1.5">
               {BIOME_ORDER.map((b) => (
                 <button
@@ -124,18 +126,17 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Creates a blank map with no players. Add city/hero spawners afterward in the Map Grid —
-            each one automatically claims (or, when deleted, frees) a player slot.
+            {t('common.newMapDialog.createsABlankMapWith')}
           </p>
         </div>
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={creating}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button size="sm" onClick={handleCreate} disabled={creating || !mapName.trim()}>
-            {creating ? 'Creating…' : 'Create'}
+            {creating ? t('common.newMapDialog.creating') : t('shared.create')}
           </Button>
         </div>
       </DraggableDialogContent>

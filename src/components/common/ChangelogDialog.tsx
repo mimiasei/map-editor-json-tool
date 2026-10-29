@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { openExternal } from '@/lib/native-fs'
 import { AlertTriangle, ExternalLink, Loader2 } from '@/components/ui/icons'
 import about from '@/data/about.json'
+import { useTranslation } from 'react-i18next'
 
 const COMMITS_API = 'https://api.github.com/repos/mimiasei/map-editor-json-tool/commits?per_page=60'
 const COMMITS_WEB = `${about.repository}/commits/main`
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export default function ChangelogDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const [commits, setCommits] = useState<Commit[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,10 +83,10 @@ export default function ChangelogDialog({ open, onOpenChange }: Props) {
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DraggableDialogDragHandle className="flex items-center gap-3 px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">Changelog</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{t('shared.changelog')}</DialogTitle>
           {commits && (
             <span className="text-[10px] text-muted-foreground">
-              {commits.length} most recent commits
+              {t('common.changelogDialog.mostRecentCommits', { length: commits.length })}
             </span>
           )}
         </DraggableDialogDragHandle>
@@ -93,14 +95,14 @@ export default function ChangelogDialog({ open, onOpenChange }: Props) {
           <div className="p-3">
             {!commits && !error && (
               <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Fetching commits…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('common.changelogDialog.fetchingCommits')}
               </p>
             )}
 
             {error && (
               <div className="space-y-2 rounded border border-amber-600/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
                 <p className="flex items-center gap-1.5 font-medium">
-                  <AlertTriangle className="h-3 w-3" /> Could not load the changelog
+                  <AlertTriangle className="h-3 w-3" /> {t('common.changelogDialog.couldNotLoadTheChangelog')}
                 </p>
                 <p className="opacity-80">{error}</p>
                 <Button
@@ -109,13 +111,13 @@ export default function ChangelogDialog({ open, onOpenChange }: Props) {
                   className="gap-1.5"
                   onClick={() => openExternal(COMMITS_WEB)}
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> Open on GitHub
+                  <ExternalLink className="h-3.5 w-3.5" /> {t('common.changelogDialog.openOnGitHub')}
                 </Button>
               </div>
             )}
 
             {commits?.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">No commits returned.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">{t('common.changelogDialog.noCommitsReturned')}</p>
             )}
 
             {commits?.map((c) => (
@@ -140,11 +142,11 @@ export default function ChangelogDialog({ open, onOpenChange }: Props) {
             className="gap-1.5"
             onClick={() => openExternal(COMMITS_WEB)}
           >
-            <ExternalLink className="h-3.5 w-3.5" /> Open on GitHub
+            <ExternalLink className="h-3.5 w-3.5" /> {t('common.changelogDialog.openOnGitHub')}
           </Button>
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Close
+            {t('ui.close')}
           </Button>
         </div>
       </DraggableDialogContent>

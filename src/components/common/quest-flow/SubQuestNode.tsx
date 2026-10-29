@@ -1,10 +1,12 @@
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
 import { Zap } from '@/components/ui/icons'
 import type { SubQuestNodeData } from '@/lib/quest-flow'
+import { useTranslation } from 'react-i18next'
 
 export type SubQuestFlowNode = Node<SubQuestNodeData, 'subquest'>
 
 export function SubQuestNode({ data, selected }: NodeProps<SubQuestFlowNode>) {
+  const { t } = useTranslation()
   return (
     <div
       className="rounded-md border border-border bg-card text-card-foreground shadow-sm transition-shadow"
@@ -28,13 +30,13 @@ export function SubQuestNode({ data, selected }: NodeProps<SubQuestFlowNode>) {
               <Zap
                 className="h-3 w-3 shrink-0"
                 style={{ color: data.color }}
-                aria-label="entry point"
+                aria-label={t('common.questFlow.subQuestNode.entryPoint')}
               />
             )}
             <span className="font-mono text-xs font-semibold truncate">{data.sid}</span>
           </div>
           <span className="text-[10px] text-muted-foreground shrink-0 bg-muted rounded px-1 tabular-nums">
-            {data.triggerCount}▸
+            {data.triggerCount}{'▸'}
           </span>
         </div>
         <p className="text-[10px] text-muted-foreground truncate mt-0.5 pl-0.5">

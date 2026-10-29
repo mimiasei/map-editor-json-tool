@@ -21,6 +21,7 @@ import {
   GitBranch,
 } from '@/components/ui/icons'
 import type { SelectionType } from '@/types/scenario'
+import { useTranslation } from 'react-i18next'
 
 interface PaletteItem {
   key: string
@@ -39,6 +40,7 @@ interface CommandPaletteProps {
 }
 
 export default function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+  const { t } = useTranslation()
   const { scenario, setSelection } = useScenarioStore()
 
   const groups = useMemo(() => {
@@ -117,11 +119,11 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="overflow-hidden p-0 max-w-xl gap-0">
-        <DialogTitle className="sr-only">Search scenario</DialogTitle>
+        <DialogTitle className="sr-only">{t('common.commandPalette.searchScenario')}</DialogTitle>
         <Command>
-          <CommandInput autoFocus placeholder="Search counters, quests, triggers…" />
+          <CommandInput autoFocus placeholder={t('common.commandPalette.searchCountersQuestsTriggers')} />
           <CommandList className="max-h-96">
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{t('common.commandPalette.noResultsFound')}</CommandEmpty>
             {groups.map((group) => (
               <CommandGroup key={group.heading} heading={group.heading}>
                 {group.items.map((item) => (

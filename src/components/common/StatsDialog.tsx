@@ -17,6 +17,7 @@ import { computePlayerBalance } from '@/lib/map-grid/player-balance'
 import PlayerBalancePanel from '@/components/common/PlayerBalancePanel'
 import type { MapContext } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { useTranslation, Trans } from 'react-i18next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -175,6 +176,7 @@ function QuestTable({
   rows: QuestRow[]
   onNavigate: (questIndex: number) => void
 }) {
+  const { t } = useTranslation()
   const [sortKey, setSortKey] = useState<SortKey>('complexity')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -202,7 +204,7 @@ function QuestTable({
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border text-muted-foreground">
-            <th className="pb-2 pr-3 text-left font-medium">Quest SID</th>
+            <th className="pb-2 pr-3 text-left font-medium">{t('common.statsDialog.questSID')}</th>
             {COLUMNS.map((col) => (
               <th
                 key={col.key}
@@ -239,7 +241,7 @@ function QuestTable({
                     onNavigate(row.questIndex)
                   }
                 }}
-                title="Click to navigate to quest"
+                title={t('common.statsDialog.clickToNavigateToQuest')}
               >
                 <td className="py-1.5 pr-3 font-mono max-w-[200px] truncate">
                   <span
@@ -259,7 +261,7 @@ function QuestTable({
           {sorted.length === 0 && (
             <tr>
               <td colSpan={6} className="py-4 text-center text-muted-foreground">
-                No quests yet.
+                {t('common.statsDialog.noQuestsYet')}
               </td>
             </tr>
           )}
@@ -281,6 +283,7 @@ interface StatsContentProps {
 }
 
 export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequested }: StatsContentProps) {
+  const { t } = useTranslation()
   const [tab, setTab] = useState<Tab>('overview')
   const stats = useMemo(() => computeStats(scenario), [scenario])
 
@@ -296,15 +299,15 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
     <>
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-border pb-2 shrink-0 px-6 pt-4">
-        {(['overview', 'actions', 'conditions', 'perquest'] as Tab[]).map((t) => (
+        {(['overview', 'actions', 'conditions', 'perquest'] as Tab[]).map((tb) => (
           <Button
-            key={t}
-            variant={tab === t ? 'secondary' : 'ghost'}
+            key={tb}
+            variant={tab === tb ? 'secondary' : 'ghost'}
             size="sm"
             className="capitalize"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tb)}
           >
-            {t === 'perquest' ? 'Per Quest' : t.charAt(0).toUpperCase() + t.slice(1)}
+            {t(`common.statsDialog.tabs.${tb}`)}
           </Button>
         ))}
       </div>
@@ -316,14 +319,14 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
         {tab === 'overview' && (
           <div className="space-y-6 py-2">
             <div className="grid grid-cols-4 gap-3">
-              <StatCard label="Quests"        value={stats.counts.quests} />
-              <StatCard label="Subquests"     value={stats.counts.subquests} />
-              <StatCard label="Triggers"      value={stats.counts.triggers} />
-              <StatCard label="Actions"       value={stats.counts.actions} />
-              <StatCard label="Conditions"    value={stats.counts.conditions} />
-              <StatCard label="Counters"      value={stats.counts.counters} />
-              <StatCard label="Interruptions" value={stats.counts.interruptions} />
-              <StatCard label="Unique SIDs"   value={stats.counts.uniqueSids} />
+              <StatCard label={t('common.statsDialog.quests')}        value={stats.counts.quests} />
+              <StatCard label={t('common.statsDialog.subquests')}     value={stats.counts.subquests} />
+              <StatCard label={t('common.statsDialog.triggers')}      value={stats.counts.triggers} />
+              <StatCard label={t('common.statsDialog.actions')}       value={stats.counts.actions} />
+              <StatCard label={t('common.statsDialog.conditions')}    value={stats.counts.conditions} />
+              <StatCard label={t('common.statsDialog.counters')}      value={stats.counts.counters} />
+              <StatCard label={t('common.statsDialog.interruptions')} value={stats.counts.interruptions} />
+              <StatCard label={t('common.statsDialog.uniqueSIDs')}   value={stats.counts.uniqueSids} />
             </div>
 
             <div className="rounded-md border border-border bg-muted/30 px-5 py-4 space-y-1">
@@ -331,11 +334,10 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
                 <span className="text-3xl font-bold tabular-nums">
                   {stats.totalComplexity.toFixed(1)}
                 </span>
-                <span className="text-sm text-muted-foreground">total complexity score</span>
+                <span className="text-sm text-muted-foreground">{t('common.statsDialog.totalComplexityScore')}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Weighted sum across all quests: subquests × 0.5 + triggers × 1 + actions × 1 + conditions × 0.5.
-                Higher values indicate more elaborate scripting. Click <em>Per Quest</em> to identify hotspots.
+                <Trans i18nKey="common.statsDialog.complexityNote" values={{ perQuest: t('common.statsDialog.perQuest') }} components={{ e: <em /> }} />
               </p>
             </div>
 
@@ -345,13 +347,13 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
                   <div className="text-lg font-semibold text-foreground tabular-nums">
                     {(stats.counts.actions / stats.counts.triggers).toFixed(1)}
                   </div>
-                  avg actions / trigger
+                  {t('common.statsDialog.avgActionsPerTrigger')}
                 </div>
                 <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
                   <div className="text-lg font-semibold text-foreground tabular-nums">
                     {(stats.counts.conditions / stats.counts.triggers).toFixed(1)}
                   </div>
-                  avg conditions / trigger
+                  {t('common.statsDialog.avgConditionsPerTrigger')}
                 </div>
                 <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
                   <div className="text-lg font-semibold text-foreground tabular-nums">
@@ -359,7 +361,7 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
                       ? (stats.counts.subquests / stats.counts.quests).toFixed(1)
                       : '—'}
                   </div>
-                  avg subquests / quest
+                  {t('common.statsDialog.avgSubquestsPerQuest')}
                 </div>
               </div>
             )}
@@ -370,7 +372,7 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
         {tab === 'actions' && (
           <div className="py-2 space-y-1.5">
             {stats.topActions.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4 text-center">No actions yet.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('common.statsDialog.noActionsYet')}</p>
             )}
             {stats.topActions.map(([type, count]) => (
               <FreqBar
@@ -388,7 +390,7 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
         {tab === 'conditions' && (
           <div className="py-2 space-y-1.5">
             {stats.topConditions.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4 text-center">No conditions yet.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('common.statsDialog.noConditionsYet')}</p>
             )}
             {stats.topConditions.map(([type, count]) => (
               <FreqBar
@@ -406,7 +408,7 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
         {tab === 'perquest' && (
           <div className="py-2">
             <p className="text-xs text-muted-foreground mb-3">
-              Click a column header to sort. Click a row to navigate to that quest.
+              {t('common.statsDialog.clickAColumnHeaderTo')}
             </p>
             <QuestTable rows={stats.questRows} onNavigate={handleNavigate} />
           </div>
@@ -444,42 +446,43 @@ function CountList({ rows, emptyLabel }: { rows: [string, number][]; emptyLabel:
 }
 
 export function MapStatsContent({ context, catalog }: { context: MapContext; catalog: GameCatalog | null }) {
+  const { t } = useTranslation()
   const stats: MapStats = useMemo(() => computeMapStats(context, catalog), [context, catalog])
   const playerBalance = useMemo(() => computePlayerBalance(context, catalog), [context, catalog])
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">
       <div className="grid grid-cols-5 gap-3">
-        <StatCard label="Map Size Tiles" value={stats.totalTiles} />
-        <StatCard label="Player Cities" value={stats.playerCities.length} />
-        <StatCard label="Random Cities" value={stats.randomCityCount} />
-        <StatCard label="Hero Spawners" value={stats.playerHeroSpawnerCount} />
-        <StatCard label="Random Squads" value={stats.randomSquadCount} />
-        <StatCard label="Unit Squads" value={stats.unitSquadCount} />
-        <StatCard label="River Tiles" value={stats.riverLength} />
-        <StatCard label="Blocking Tiles %" value={Math.round(stats.blockingPct)} />
-        <StatCard label="Guarded Objects %" value={Math.round(stats.guardedPct)} />
+        <StatCard label={t('common.statsDialog.mapSizeTiles')} value={stats.totalTiles} />
+        <StatCard label={t('common.statsDialog.playerCities')} value={stats.playerCities.length} />
+        <StatCard label={t('common.statsDialog.randomCities')} value={stats.randomCityCount} />
+        <StatCard label={t('common.statsDialog.heroSpawners')} value={stats.playerHeroSpawnerCount} />
+        <StatCard label={t('common.statsDialog.randomSquads')} value={stats.randomSquadCount} />
+        <StatCard label={t('common.statsDialog.unitSquads')} value={stats.unitSquadCount} />
+        <StatCard label={t('common.statsDialog.riverTiles')} value={stats.riverLength} />
+        <StatCard label={t('common.statsDialog.blockingTiles')} value={Math.round(stats.blockingPct)} />
+        <StatCard label={t('common.statsDialog.guardedObjects')} value={Math.round(stats.guardedPct)} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Player Cities</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.playerCities')}</h3>
         {stats.playerCities.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No player city-spawners placed.</p>
+          <p className="text-xs text-muted-foreground">{t('common.statsDialog.noPlayerCitySpawnersPlaced')}</p>
         ) : (
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
-                <th className="pb-1 text-left font-medium">Player</th>
-                <th className="pb-1 text-left font-medium">Faction</th>
-                <th className="pb-1 text-right font-medium">Hero</th>
+                <th className="pb-1 text-left font-medium">{t('shared.player')}</th>
+                <th className="pb-1 text-left font-medium">{t('common.statsDialog.faction')}</th>
+                <th className="pb-1 text-right font-medium">{t('common.statsDialog.hero')}</th>
               </tr>
             </thead>
             <tbody>
               {stats.playerCities.map((c) => (
                 <tr key={c.owner} className="border-b border-border/50">
-                  <td className="py-1">Player {c.owner}</td>
+                  <td className="py-1">{t('shared.player2', { owner: c.owner })}</td>
                   <td className="py-1">{c.faction}</td>
-                  <td className="py-1 text-right">{c.hasHero ? 'Yes' : 'No'}</td>
+                  <td className="py-1 text-right">{c.hasHero ? t('common.statsDialog.yes') : 'No'}</td>
                 </tr>
               ))}
             </tbody>
@@ -488,57 +491,57 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Player Balance</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('shared.playerBalance')}</h3>
         <PlayerBalancePanel balance={playerBalance} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Terrain — Biomes</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.terrainBiomes')}</h3>
         <div className="space-y-1">
           {stats.biomePct.map((b) => <PctBar key={b.id} label={b.label} pct={b.pct} />)}
-          <PctBar label="Water" pct={stats.waterPct} />
+          <PctBar label={t('shared.water')} pct={stats.waterPct} />
         </div>
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Elevation Levels</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.elevationLevels')}</h3>
         <div className="space-y-1">
           {stats.levelPct.map((l) => (
-            <PctBar key={l.level} label={l.level === -1 ? 'Lowered' : l.level === 0 ? 'Ground' : 'Heightened'} pct={l.pct} />
+            <PctBar key={l.level} label={l.level === -1 ? t('common.statsDialog.lowered') : l.level === 0 ? t('common.statsDialog.ground') : t('common.statsDialog.heightened')} pct={l.pct} />
           ))}
         </div>
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Roads</h3>
-        <CountList rows={stats.roadTileCounts.map((r) => [r.label, r.tiles] as [string, number])} emptyLabel="No roads painted." />
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('shared.roads')}</h3>
+        <CountList rows={stats.roadTileCounts.map((r) => [r.label, r.tiles] as [string, number])} emptyLabel={t('common.statsDialog.noRoadsPainted')} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Resources & Storage</h3>
-        <CountList rows={stats.resourceCounts} emptyLabel="No resource/storage pickups placed." />
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.resourcesStorage')}</h3>
+        <CountList rows={stats.resourceCounts} emptyLabel={t('common.statsDialog.noResourceStoragePickupsPlaced')} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Mines</h3>
-        <CountList rows={stats.minesByType} emptyLabel="No mines placed." />
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('shared.mines')}</h3>
+        <CountList rows={stats.minesByType} emptyLabel={t('common.statsDialog.noMinesPlaced')} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Interactables by Category</h3>
-        <CountList rows={stats.interactableByCategory} emptyLabel="No interactables placed." />
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.interactablesByCategory')}</h3>
+        <CountList rows={stats.interactableByCategory} emptyLabel={t('common.statsDialog.noInteractablesPlaced')} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Decorations by Category</h3>
-        <CountList rows={stats.decorationByCategory} emptyLabel="No decorations placed." />
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.decorationsByCategory')}</h3>
+        <CountList rows={stats.decorationByCategory} emptyLabel={t('common.statsDialog.noDecorationsPlaced')} />
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Portals</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.portals')}</h3>
         <CountList
           rows={stats.portalLinkCounts.map((p) => [p.kind === 'two-way' ? '2-way' : p.kind === 'one-way' ? '1-way' : 'Unlinked', p.count] as [string, number])}
-          emptyLabel="No portals placed."
+          emptyLabel={t('common.statsDialog.noPortalsPlaced')}
         />
       </div>
     </div>
@@ -563,6 +566,7 @@ interface Props {
 }
 
 export default function StatsDialog({ open, onOpenChange, onUndock, undocked, mapGridOpen }: Props) {
+  const { t } = useTranslation()
   const scenario    = useScenarioStore((s) => s.scenario)
   const setSelection = useScenarioStore((s) => s.setSelection)
   const mapContext  = useMapContextStore((s) => s.context)
@@ -583,7 +587,7 @@ export default function StatsDialog({ open, onOpenChange, onUndock, undocked, ma
         {/* StatsContent has no header of its own, so the title bar is here and
             doubles as the drag handle. pr-10 clears the close button. */}
         <DraggableDialogDragHandle className="flex items-center px-6 py-3 pr-10 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">{showMapStats ? 'Map Statistics' : 'Scenario Statistics'}</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{showMapStats ? t('common.statsDialog.mapStatistics') : t('common.statsDialog.scenarioStatistics')}</DialogTitle>
 
           {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
           {onUndock && (

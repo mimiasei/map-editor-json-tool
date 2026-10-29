@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge'
 import { Maximize2, X, Zap } from '@/components/ui/icons'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
+import { useTranslation } from 'react-i18next'
 
 // ─── nodeTypes must be defined outside the component (React Flow requirement) ─
 
@@ -52,6 +53,7 @@ interface InfoPanelProps {
 }
 
 function InfoPanel({ data, onNavigate, onClose }: InfoPanelProps) {
+  const { t } = useTranslation()
   return (
     <div className="rounded-lg border border-border bg-card text-card-foreground shadow-lg p-3 w-56 text-xs">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -65,7 +67,7 @@ function InfoPanel({ data, onNavigate, onClose }: InfoPanelProps) {
         <button
           className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('ui.close')}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -73,11 +75,11 @@ function InfoPanel({ data, onNavigate, onClose }: InfoPanelProps) {
 
       <div className="flex items-center gap-2 mb-3">
         <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-          {data.triggerCount} trigger{data.triggerCount !== 1 ? 's' : ''}
+          {t('common.questFlowDialog.triggerCount', { count: data.triggerCount })}
         </Badge>
         {data.isEntry && (
           <Badge variant="outline" className="h-4 px-1.5 text-[10px]" style={{ borderColor: data.color, color: data.color }}>
-            entry
+            {t('common.questFlowDialog.entry')}
           </Badge>
         )}
       </div>
@@ -88,7 +90,7 @@ function InfoPanel({ data, onNavigate, onClose }: InfoPanelProps) {
         className="w-full h-7 text-xs"
         onClick={() => onNavigate(data.questIdx, data.subQuestIdx)}
       >
-        Open in editor
+        {t('common.questFlowDialog.openInEditor')}
       </Button>
     </div>
   )
@@ -108,6 +110,7 @@ interface QuestFlowContentProps {
 }
 
 export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequested }: QuestFlowContentProps) {
+  const { t } = useTranslation()
   const [showLabels, setShowLabels]     = useState(true)
   const [closeOnNav, setCloseOnNav]     = useState(true)
   const [selectedId, setSelectedId]     = useState<string | null>(null)
@@ -147,7 +150,7 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
     <>
       {/* ── Header — doubles as the drag handle when inside a draggable dialog ── */}
       <DraggableDialogDragHandle className="flex items-center gap-4 px-5 py-3 border-b shrink-0">
-        <p className="text-sm font-semibold leading-none">Quest Flow</p>
+        <p className="text-sm font-semibold leading-none">{t('common.questFlowDialog.questFlow')}</p>
 
         <div className="flex items-center gap-1.5">
           <Switch
@@ -157,7 +160,7 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
             className="scale-90"
           />
           <Label htmlFor="show-labels" className="text-xs text-muted-foreground cursor-pointer">
-            Labels
+            {t('common.questFlowDialog.labels')}
           </Label>
         </div>
 
@@ -171,7 +174,7 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
               className="scale-90"
             />
             <Label htmlFor="qf-close-on-nav" className="text-xs text-muted-foreground cursor-pointer">
-              Close on navigate
+              {t('common.questFlowDialog.closeOnNavigate')}
             </Label>
           </div>
         )}
@@ -184,7 +187,7 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
           disabled={isEmpty}
         >
           <Maximize2 className="h-3.5 w-3.5" />
-          Fit view
+          {t('common.questFlowDialog.fitView')}
         </Button>
       </DraggableDialogDragHandle>
 
@@ -192,7 +195,7 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
       <div className="flex-1 min-h-0">
         {isEmpty ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            No subquests yet. Add quests with subquests to see the flow diagram.
+            {t('common.questFlowDialog.noSubquestsYetAddQuests')}
           </div>
         ) : (
           <ReactFlow
@@ -241,6 +244,7 @@ interface QuestFlowDialogProps {
 }
 
 export default function QuestFlowDialog({ open, onOpenChange, onUndock, undocked }: QuestFlowDialogProps) {
+  const { t } = useTranslation()
   const { scenario, setSelection } = useScenarioStore()
 
   return (
@@ -254,7 +258,7 @@ export default function QuestFlowDialog({ open, onOpenChange, onUndock, undocked
         storageKey="quest-flow"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Quest Flow Diagram</DialogTitle>
+        <DialogTitle className="sr-only">{t('common.questFlowDialog.questFlowDiagram')}</DialogTitle>
 
         {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
         {onUndock && (

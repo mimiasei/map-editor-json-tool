@@ -17,6 +17,7 @@ import { Search, X } from '@/components/ui/icons'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import artifactData from '@/data/artifacts.json'
+import { useTranslation } from 'react-i18next'
 
 interface IndexedArtifact {
   sid: string
@@ -93,6 +94,7 @@ interface Props {
 }
 
 export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onChange }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
   const [activeKind, setActiveKind] = useState<string>(ALL_KINDS)
@@ -150,15 +152,15 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
         storageKey="rmg-artifact-ban-selector"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Banned artifacts</DialogTitle>
+        <DialogTitle className="sr-only">{t('shared.bannedArtifacts')}</DialogTitle>
 
         <DraggableDialogDragHandle className="flex items-center gap-2 px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <span className="text-sm font-semibold shrink-0">Banned artifacts</span>
+          <span className="text-sm font-semibold shrink-0">{t('shared.bannedArtifacts')}</span>
           <div className="relative flex-1 min-w-0" data-nodrag>
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search all artifacts by name or sid…" className="pl-7 h-7 text-xs" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common.artifactBanDialog.searchAllArtifactsByName')} className="pl-7 h-7 text-xs" />
           </div>
-          <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{bannedSids.size} banned</span>
+          <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{t('shared.banned', { size: bannedSids.size })}</span>
         </DraggableDialogDragHandle>
 
         <div role="tablist" className="flex items-end gap-0.5 px-4 pt-2 border-b border-border shrink-0 overflow-x-auto" data-nodrag>
@@ -169,7 +171,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
             onClick={() => { setActiveKind(ALL_KINDS); setSearch('') }}
             className={tabClass(!searching && activeKind === ALL_KINDS)}
           >
-            All
+            {t('shared.all')}
             {countBadge(ARTIFACTS.filter((a) => bannedSids.has(a.sid)).length, ARTIFACTS.length)}
           </button>
           {KINDS.map((kind) => {
@@ -185,12 +187,12 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
         </div>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
-          <ChipRow label="Rarity">
+          <ChipRow label={t('common.artifactBanDialog.rarity')}>
             {RARITIES.map((r) => (
               <Chip key={r} on={!hiddenRarities.has(r)} onClick={() => setHiddenRarities((p) => toggled(p, r))}>{r}</Chip>
             ))}
           </ChipRow>
-          <ChipRow label="Slot">
+          <ChipRow label={t('common.artifactBanDialog.slot')}>
             {slotChips.map((s) => (
               <Chip key={s} on={!hiddenSlots.has(s)} onClick={() => setHiddenSlots((p) => toggled(p, s))}>{s}</Chip>
             ))}
@@ -201,7 +203,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
             onClick={() => { setHiddenRarities(new Set()); setHiddenSlots(new Set()) }}
             className={`text-[11px] px-1 text-muted-foreground hover:text-foreground underline ${filtersActive ? '' : 'invisible'}`}
           >
-            Reset
+            {t('shared.reset')}
           </button>
         </div>
 
@@ -215,7 +217,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
             className="flex items-center gap-1.5 text-xs disabled:opacity-50"
           >
             <BanMark banned={allVisibleBanned} />
-            {searching ? 'Ban all matches' : activeKind === ALL_KINDS ? 'Ban all shown artifacts' : `Ban all shown ${activeKind.toLowerCase()}`}
+            {searching ? t('common.artifactBanDialog.banAllMatches') : activeKind === ALL_KINDS ? t('common.artifactBanDialog.banAllShownArtifacts') : `Ban all shown ${activeKind.toLowerCase()}`}
             <span className="text-[10px] text-muted-foreground tabular-nums">({visible.length})</span>
           </button>
         </div>
@@ -223,7 +225,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
         <ScrollArea className="flex-1 min-h-0">
           <div className="p-3 space-y-4">
             {visible.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">No artifact matches the search and filters.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t('common.artifactBanDialog.noArtifactMatchesTheSearch')}</p>
             )}
 
             {[...sections.entries()].map(([heading, items]) => (
@@ -266,8 +268,8 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
         </ScrollArea>
 
         <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-t border-border shrink-0" data-nodrag>
-          <Button size="sm" variant="outline" onClick={() => onChange(new Set())} disabled={bannedSids.size === 0}>Unban all</Button>
-          <Button size="sm" onClick={() => onOpenChange(false)}>Done</Button>
+          <Button size="sm" variant="outline" onClick={() => onChange(new Set())} disabled={bannedSids.size === 0}>{t('shared.unbanAll')}</Button>
+          <Button size="sm" onClick={() => onOpenChange(false)}>{t('shared.done')}</Button>
         </div>
       </DraggableDialogContent>
     </Dialog>

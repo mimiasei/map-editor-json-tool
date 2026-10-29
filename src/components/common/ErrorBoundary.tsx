@@ -13,6 +13,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
+import i18n from '@/lib/i18n'
 
 interface Props {
   children: ReactNode
@@ -43,14 +44,14 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-background p-8 text-center">
-        <h1 className="text-lg font-semibold">Something went wrong</h1>
+        <h1 className="text-lg font-semibold">{i18n.t('common.errorBoundary.somethingWentWrong')}</h1>
         <p className="max-w-md text-sm text-muted-foreground">
-          {error.message || 'An unexpected error occurred while rendering the editor.'}
+          {error.message || i18n.t('common.errorBoundary.anUnexpectedErrorOccurredWhile')}
         </p>
         <p className="max-w-md text-xs text-muted-foreground">
-          Reloading keeps your file on disk untouched — nothing has been saved since the last explicit save.
+          {i18n.t('common.errorBoundary.reloadingKeepsYourFileOn')}
         </p>
-        <Button onClick={this.handleReload}>Reload</Button>
+        <Button onClick={this.handleReload}>{i18n.t('common.errorBoundary.reload')}</Button>
       </div>
     )
   }

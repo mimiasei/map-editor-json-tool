@@ -19,6 +19,7 @@ import { Search, X } from '@/components/ui/icons'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import spellIndex from '@/data/spell-index.json'
+import { useTranslation } from 'react-i18next'
 
 interface IndexedSpell {
   sid: string
@@ -86,6 +87,7 @@ interface Props {
 }
 
 export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChange }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
   const [activeSchool, setActiveSchool] = useState<string>(ALL_SCHOOLS)
@@ -143,15 +145,15 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
         storageKey="rmg-spell-ban-selector"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Banned spells</DialogTitle>
+        <DialogTitle className="sr-only">{t('shared.bannedSpells')}</DialogTitle>
 
         <DraggableDialogDragHandle className="flex items-center gap-2 px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <span className="text-sm font-semibold shrink-0">Banned spells</span>
+          <span className="text-sm font-semibold shrink-0">{t('shared.bannedSpells')}</span>
           <div className="relative flex-1 min-w-0" data-nodrag>
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search all schools by name or sid…" className="pl-7 h-7 text-xs" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common.spellBanDialog.searchAllSchoolsByName')} className="pl-7 h-7 text-xs" />
           </div>
-          <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{bannedSids.size} banned</span>
+          <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">{t('shared.banned', { size: bannedSids.size })}</span>
         </DraggableDialogDragHandle>
 
         <div role="tablist" className="flex items-end gap-0.5 px-4 pt-2 border-b border-border shrink-0 overflow-x-auto" data-nodrag>
@@ -162,7 +164,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             onClick={() => { setActiveSchool(ALL_SCHOOLS); setSearch('') }}
             className={tabClass(!searching && activeSchool === ALL_SCHOOLS)}
           >
-            All
+            {t('shared.all')}
             {countBadge(SPELLS.filter((s) => bannedSids.has(s.sid)).length, SPELLS.length)}
           </button>
           {SCHOOLS.map((school) => {
@@ -179,18 +181,18 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
           {spansSchools && (
-            <ChipRow label="School">
+            <ChipRow label={t('common.spellBanDialog.school')}>
               {SCHOOLS.map((school) => (
                 <Chip key={school} on={!hiddenSchools.has(school)} onClick={() => setHiddenSchools((p) => toggled(p, school))}>{school}</Chip>
               ))}
             </ChipRow>
           )}
-          <ChipRow label="Type">
+          <ChipRow label={t('common.spellBanDialog.type')}>
             {TYPES.map((t) => (
               <Chip key={t.id} on={!hiddenTypes.has(t.id)} onClick={() => setHiddenTypes((p) => toggled(p, t.id))}>{t.label}</Chip>
             ))}
           </ChipRow>
-          <ChipRow label="Tier">
+          <ChipRow label={t('common.spellBanDialog.tier')}>
             {TIERS.map((tier) => (
               <Chip key={tier} on={!hiddenTiers.has(tier)} onClick={() => setHiddenTiers((p) => toggled(p, tier))}>{tier}</Chip>
             ))}
@@ -201,7 +203,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             onClick={() => { setHiddenSchools(new Set()); setHiddenTypes(new Set()); setHiddenTiers(new Set()) }}
             className={`text-[11px] px-1 text-muted-foreground hover:text-foreground underline ${filtersActive ? '' : 'invisible'}`}
           >
-            Reset
+            {t('shared.reset')}
           </button>
         </div>
 
@@ -215,7 +217,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             className="flex items-center gap-1.5 text-xs disabled:opacity-50"
           >
             <BanMark banned={allVisibleBanned} />
-            {searching ? 'Ban all matches' : activeSchool === ALL_SCHOOLS ? 'Ban all shown spells' : `Ban all shown ${activeSchool} spells`}
+            {searching ? t('common.spellBanDialog.banAllMatches') : activeSchool === ALL_SCHOOLS ? t('common.spellBanDialog.banAllShownSpells') : `Ban all shown ${activeSchool} spells`}
             <span className="text-[10px] text-muted-foreground tabular-nums">({visible.length})</span>
           </button>
         </div>
@@ -223,7 +225,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
         <ScrollArea className="flex-1 min-h-0">
           <div className="p-3 space-y-4">
             {visible.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">No spell matches the search and filters.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t('common.spellBanDialog.noSpellMatchesTheSearch')}</p>
             )}
 
             {[...sections.entries()].map(([heading, items]) => (
@@ -253,7 +255,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
                         <div className="flex-1 min-w-0">
                           <p className="text-[9px] font-medium">{s.name}</p>
                           <p className="text-[8px] text-muted-foreground">
-                            {s.type === 'world' ? 'World' : 'Battle'}{spansSchools ? ` · Tier ${s.tier}` : ''}
+                            {s.type === 'world' ? t('common.spellBanDialog.world') : t('common.spellBanDialog.battle')}{spansSchools ? ` · Tier ${s.tier}` : ''}
                           </p>
                         </div>
                       </button>
@@ -266,8 +268,8 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
         </ScrollArea>
 
         <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-t border-border shrink-0" data-nodrag>
-          <Button size="sm" variant="outline" onClick={() => onChange(new Set())} disabled={bannedSids.size === 0}>Unban all</Button>
-          <Button size="sm" onClick={() => onOpenChange(false)}>Done</Button>
+          <Button size="sm" variant="outline" onClick={() => onChange(new Set())} disabled={bannedSids.size === 0}>{t('shared.unbanAll')}</Button>
+          <Button size="sm" onClick={() => onOpenChange(false)}>{t('shared.done')}</Button>
         </div>
       </DraggableDialogContent>
     </Dialog>

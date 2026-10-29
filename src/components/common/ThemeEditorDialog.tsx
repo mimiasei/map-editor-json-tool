@@ -40,16 +40,8 @@ interface ThemeEditorDialogProps {
 
 // ─── Color field definitions ───────────────────────────────────────────────
 
-const COLOR_FIELDS: { key: keyof ThemeColors; label: string; description: string }[] = [
-  { key: 'appBackground',  label: 'App background',     description: 'Outermost app background (behind all panels)' },
-  { key: 'background',    label: 'Background',         description: 'Main page background color' },
-  { key: 'columnLeft',    label: 'Left column',        description: 'Tree/scenario panel background' },
-  { key: 'columnCenter',  label: 'Center column',      description: 'Editor panel background' },
-  { key: 'columnRight',   label: 'Right column',       description: 'JSON preview panel background' },
-  { key: 'popover',       label: 'Dropdowns',          description: 'Dropdown menus and popovers' },
-  { key: 'primary',       label: 'Primary button',     description: 'Accent color for primary actions' },
-  { key: 'secondary',     label: 'Secondary button',   description: 'Background for secondary actions' },
-]
+// Labels and descriptions live in en.json under common.themeEditorDialog.colorFields.<key>.
+const COLOR_FIELDS = ['appBackground', 'background', 'columnLeft', 'columnCenter', 'columnRight', 'popover', 'primary', 'secondary'] as const satisfies readonly (keyof ThemeColors)[]
 
 // ─── Group themes for the selector (Default, preset categories, Custom) ───
 
@@ -150,7 +142,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
   const [newThemeName, setNewThemeName] = useState('')
   const [showNewThemeInput, setShowNewThemeInput] = useState(false)
 
-  const activeTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
+  const activeTheme = themes.find((th) => th.id === activeThemeId) ?? themes[0]
   const isDesktop = isTauri()
   const isDefault = activeTheme.id === 'default-light'
   const themeGroups = groupThemesByCategory(themes)
@@ -207,7 +199,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Theme Editor</DialogTitle>
+          <DialogTitle>{t('common.themeEditorDialog.themeEditor')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -232,7 +224,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
 
           {/* ── Theme selector ── */}
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Active theme</Label>
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.activeTheme')}</Label>
             <div className="flex gap-2">
               <Select value={activeThemeId} onValueChange={setActiveTheme}>
                 <SelectTrigger className="flex-1 h-8 text-sm">
@@ -242,9 +234,9 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                   {themeGroups.map((group) => (
                     <SelectGroup key={group.label}>
                       <SelectLabel>{group.label}</SelectLabel>
-                      {group.themes.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
+                      {group.themes.map((th) => (
+                        <SelectItem key={th.id} value={th.id}>
+                          {th.name}
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -258,7 +250,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                   className="h-8 text-xs text-destructive hover:text-destructive"
                   onClick={() => deleteTheme(activeTheme.id)}
                 >
-                  Delete
+                  {t('common.themeEditorDialog.delete')}
                 </Button>
               )}
             </div>
@@ -268,22 +260,22 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
               <div className="flex gap-2">
                 <Input
                   className="h-8 text-sm flex-1"
-                  placeholder="Theme name"
+                  placeholder={t('common.themeEditorDialog.themeName')}
                   value={newThemeName}
                   onChange={(e) => setNewThemeName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
                   autoFocus
                 />
                 <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
-                  Create
+                  {t('shared.create')}
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
-                  Cancel
+                  {t('shared.cancel')}
                 </Button>
               </div>
             ) : (
               <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
-                + New theme
+                {t('common.themeEditorDialog.newTheme')}
               </Button>
             )}
           </div>
@@ -292,13 +284,13 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
 
           {/* ── Color pickers ── */}
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Colors</Label>
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.colors')}</Label>
             <div className="space-y-3 pt-1">
-              {COLOR_FIELDS.map(({ key, label, description }) => (
+              {COLOR_FIELDS.map((key) => (
                 <ColorRow
                   key={key}
-                  label={label}
-                  description={description}
+                  label={t(`common.themeEditorDialog.colorFields.${key}.label`)}
+                  description={t(`common.themeEditorDialog.colorFields.${key}.description`)}
                   value={activeTheme.colors[key]}
                   onChange={(hex) => handleColorChange(key, hex)}
                 />
@@ -310,7 +302,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
 
           {/* ── Font size ── */}
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Font size</Label>
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.fontSize')}</Label>
             <div className="flex items-center gap-3">
               <input
                 type="range"
@@ -322,7 +314,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 className="flex-1 accent-primary"
               />
               <span className="text-sm font-mono w-10 text-right tabular-nums">
-                {activeTheme.fontSize}px
+                {t('common.themeEditorDialog.px', { fontSize: activeTheme.fontSize })}
               </span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground px-0.5">
@@ -336,8 +328,8 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
           {/* ── 3D buttons ── */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium leading-none">3D buttons</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Raised style with shadow and press effect</p>
+              <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.3DButtons')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.raisedStyleWithShadowAnd')}</p>
             </div>
             <Switch
               checked={activeTheme.use3dButtons}
@@ -361,15 +353,15 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 })
               }}
             >
-              Revert to defaults
+              {t('common.themeEditorDialog.revertToDefaults')}
             </Button>
             {isDesktop && (
               <div className="flex gap-1.5">
                 <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleImport}>
-                  Import
+                  {t('common.themeEditorDialog.import')}
                 </Button>
                 <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleExport}>
-                  Export
+                  {t('common.themeEditorDialog.export')}
                 </Button>
               </div>
             )}

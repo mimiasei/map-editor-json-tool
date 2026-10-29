@@ -11,6 +11,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { ChevronsUpDown, X } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ interface Props {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function SidCombobox({ value, onChange, refType, placeholder }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const scenario = useScenarioStore((s) => s.scenario)
@@ -91,7 +93,7 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
               onChange('')
             }}
             className="absolute right-7 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            title="Clear"
+            title={t('shared.clear')}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -121,7 +123,7 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
         <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
-              {filtered.length === 0 && sids.length > 0 ? 'No matches' : `No ${REF_LABELS[refType]} defined yet`}
+              {filtered.length === 0 && sids.length > 0 ? t('shared.noMatches') : `No ${REF_LABELS[refType]} defined yet`}
             </CommandEmpty>
             <CommandGroup>
               {filtered.map((sid) => (

@@ -18,6 +18,7 @@ import { Loader2, FolderOpen, AlertTriangle } from '@/components/ui/icons'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
 import { buildIconRequests, onlyNewRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
+import { useTranslation } from 'react-i18next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ async function detectGameDir(): Promise<string | null> {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
 
   const [gameDir, setGameDir] = useState('')
@@ -170,25 +172,24 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Extract Game Thumbnails</DialogTitle>
+          <DialogTitle>{t('common.thumbnailExtractDialog.extractGameThumbnails')}</DialogTitle>
         </DialogHeader>
 
         {/* ── Idle ── */}
         {(phase === 'idle' || phase === 'error') && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Select your Heroes of Might and Magic: Olden Era installation folder.
-              Icons will be extracted to the app data directory and shown in all dropdowns.
+              {t('common.thumbnailExtractDialog.selectYourHeroesOfMight')}
             </p>
 
             {onlyNew && (
               <div className="space-y-2">
                 <p className="text-sm">
-                  {newCount} new image{newCount !== 1 ? 's' : ''} can be extracted. Only {newCount !== 1 ? 'those' : 'it'} will be extracted; what is already there is kept.
+                  {t('common.thumbnailExtractDialog.newImages', { count: newCount })}
                 </p>
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Checkbox checked={everything} onCheckedChange={(v) => setEverything(v === true)} />
-                  Extract everything again
+                  {t('common.thumbnailExtractDialog.extractEverythingAgain')}
                 </label>
               </div>
             )}
@@ -197,16 +198,16 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  Load Game Data first (More → Game Data) so the extractor knows which icons to look for.
+                  {t('common.thumbnailExtractDialog.loadGameDataFirstMore')}
                 </AlertDescription>
               </Alert>
             )}
 
             <div className="flex gap-2">
               <Input
-                value={detecting ? 'Detecting…' : gameDir}
+                value={detecting ? t('shared.detecting') : gameDir}
                 onChange={(e) => setGameDir(e.target.value)}
-                placeholder="Path to game installation folder"
+                placeholder={t('common.thumbnailExtractDialog.pathToGameInstallationFolder')}
                 disabled={detecting}
                 className="flex-1 text-xs font-mono"
               />
@@ -216,7 +217,7 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
                 disabled={detecting}
                 onClick={async () => {
                   const { open: openDialog } = await import('@tauri-apps/plugin-dialog')
-                  const path = await openDialog({ directory: true, title: 'Select game folder' })
+                  const path = await openDialog({ directory: true, title: t('common.thumbnailExtractDialog.selectGameFolder') })
                   if (typeof path === 'string') setGameDir(path)
                 }}
               >
@@ -239,7 +240,7 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin shrink-0" />
               <span className="min-w-0 truncate" title={progress.current || undefined}>
-                {progress.current ? `Extracting: ${progress.current}` : 'Starting…'}
+                {progress.current ? `Extracting: ${progress.current}` : t('common.thumbnailExtractDialog.starting')}
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
@@ -249,7 +250,7 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
               />
             </div>
             <p className="text-xs text-muted-foreground text-right">
-              {progress.done} / {progress.total || '?'} icons
+              {t('shared.iconProgress', { done: progress.done, total: progress.total || '?' })}
             </p>
           </div>
         )}
@@ -258,15 +259,15 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
         {phase === 'done' && done && (
           <div className="space-y-2 text-sm">
             <p className="text-green-600 dark:text-green-400 font-medium">
-              Extraction complete — {done.saved} icon{done.saved !== 1 ? 's' : ''} saved.
+              {t('common.thumbnailExtractDialog.complete', { count: done.saved })}
             </p>
             {done.missing.length > 0 && (
               <p className="text-muted-foreground text-xs">
-                {done.missing.length} icon{done.missing.length !== 1 ? 's' : ''} not found in game files.
+                {t('common.thumbnailExtractDialog.notFound', { count: done.missing.length })}
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              Icons will appear in dropdowns immediately.
+              {t('common.thumbnailExtractDialog.iconsWillAppearInDropdowns')}
             </p>
           </div>
         )}
@@ -274,20 +275,20 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
         <DialogFooter>
           {(phase === 'idle' || phase === 'error') && (
             <>
-              <Button variant="ghost" onClick={handleClose}>Cancel</Button>
+              <Button variant="ghost" onClick={handleClose}>{t('shared.cancel')}</Button>
               <Button onClick={handleExtract} disabled={!gameDir.trim() || !catalog}>
-                Extract
+                {t('common.thumbnailExtractDialog.extract')}
               </Button>
             </>
           )}
           {phase === 'running' && (
             <Button variant="ghost" disabled>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Extracting…
+              {t('common.thumbnailExtractDialog.extracting')}
             </Button>
           )}
           {phase === 'done' && (
-            <Button onClick={handleClose}>Close</Button>
+            <Button onClick={handleClose}>{t('ui.close')}</Button>
           )}
         </DialogFooter>
       </DialogContent>
