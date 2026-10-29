@@ -169,6 +169,7 @@ function SectionHeader({
   onAdd: () => void
   icon?: React.ReactNode
 }) {
+  const { t } = useTranslation()
   return (
     <div
       role="button"
@@ -192,7 +193,7 @@ function SectionHeader({
         size="icon"
         className="h-5 w-5 shrink-0 text-muted-foreground hover:text-primary"
         onClick={(e) => { e.stopPropagation(); onAdd() }}
-        title={`Add ${label}`}
+        title={t('tree.scenarioTree.addTitle', { label })}
       >
         <Plus className="h-3 w-3" />
       </Button>
@@ -238,11 +239,12 @@ function ReadOnlySectionHeader({
 
 // ─── Inline copy button ───────────────────────────────────────────────────────
 function CopySidButton({ sid }: { sid: string }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   return (
     <button
       className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
-      title={`Copy "${sid}"`}
+      title={t('shared.copyValue', { text: sid })}
       onClick={(e) => {
         e.stopPropagation()
         navigator.clipboard.writeText(sid).then(() => {
@@ -662,7 +664,7 @@ export default function ScenarioTree() {
                               {subQuest.triggers.map((trigger, ti) => (
                                 <TreeItem
                                   key={ti}
-                                  label={`Trigger ${ti + 1}`}
+                                  label={t('tree.scenarioTree.triggerN', { n: ti + 1 })}
                                   labelStyle={labelStyle}
                                   depth={4}
                                   selected={isSelected('trigger', qi, sqi, ti)}
@@ -1050,7 +1052,7 @@ export default function ScenarioTree() {
                           {canRenameSid && (
                             <button
                               className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
-                              title={`Rename "${sid}"`}
+                              title={t('tree.scenarioTree.renameTitle', { sid })}
                               onClick={(e) => { e.stopPropagation(); setRenameTarget(entity) }}
                             >
                               <PenLine className="h-3 w-3" />
@@ -1059,7 +1061,7 @@ export default function ScenarioTree() {
                           {canSetDisplayName && (
                             <button
                               className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
-                              title={`Set display name for "${sid}"`}
+                              title={t('tree.scenarioTree.setDisplayNameTitle', { sid })}
                               onClick={(e) => { e.stopPropagation(); setDisplayNameTarget(entity) }}
                             >
                               <Tag className="h-3 w-3" />
@@ -1068,7 +1070,7 @@ export default function ScenarioTree() {
                           {canEditFullHero && (
                             <button
                               className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
-                              title={`Edit full hero for "${sid}"`}
+                              title={t('tree.scenarioTree.editFullHeroTitle', { sid })}
                               onClick={(e) => { e.stopPropagation(); setHeroEditorTarget(entity) }}
                             >
                               <UserCog className="h-3 w-3" />

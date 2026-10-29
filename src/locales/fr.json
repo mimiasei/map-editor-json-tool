@@ -59,7 +59,9 @@
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Parcourir les héros groupés par faction",
       "browse": "Parcourir",
-      "browseHeroesByFaction": "Parcourir les héros par faction…"
+      "browseHeroesByFaction": "Parcourir les héros par faction…",
+      "filterMapObjects": "Filtrer les objets de carte",
+      "filterMapObjectsActive": "Filtrer les objets de carte ({{filter}})"
     },
     "errorBoundary": {
       "somethingWentWrong": "Une erreur s'est produite",
@@ -610,7 +612,9 @@
       "variants_many": "{{count}} variantes",
       "variants_other": "{{count}} variantes",
       "variantN": "Variante {{n}}",
-      "neutral": "Neutre"
+      "neutral": "Neutre",
+      "zonesCount": "Zones ({{count}})",
+      "connectionsCount": "Connexions ({{count}})"
     },
     "thumbnailExtractDialog": {
       "extractGameThumbnails": "Extraire les miniatures du jeu",
@@ -816,13 +820,23 @@
           "label": "Bouton secondaire",
           "description": "Arrière-plan des actions secondaires"
         }
-      }
+      },
+      "pickColorFor": "Choisir la couleur : {{label}}"
     },
     "mapEntityCombobox": {
       "noMapEntitiesLoadA": "Aucune entité de carte : chargez d'abord un fichier .map"
     },
     "playerSelect": {
       "selectPlayer": "Sélectionner un joueur…"
+    },
+    "durationField": {
+      "months": "Mois",
+      "weeks": "Semaines",
+      "days": "Jours",
+      "monthsShort": "M",
+      "weeksShort": "S",
+      "daysShort": "J",
+      "ariaLabel": "{{label}} : {{unit}}"
     }
   },
   "shared": {
@@ -965,7 +979,9 @@
       "artifacts": "Artefact",
       "test": "Test",
       "blocks": "Bloc"
-    }
+    },
+    "copyValue": "Copier « {{text}} »",
+    "paramN": "Paramètre {{n}}"
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -994,7 +1010,8 @@
       "terrainOption": "Terrain : {{name}}",
       "assetOption": "Élément : {{name}}",
       "cannotReadPixels": "Impossible de lire les pixels de l'image.",
-      "invalidMappingFile": "Fichier d'association Image2Map non valide."
+      "invalidMappingFile": "Fichier d'association Image2Map non valide.",
+      "quantizedAlt": "Quantifiée en {{colorLimit}} couleurs"
     },
     "mapGameSettingsDialog": {
       "mapSettings": "Paramètres de la carte",
@@ -1246,6 +1263,13 @@
         "interactable": "Réglages du pinceau d'objets interactifs",
         "squad": "Réglages du pinceau de rencontres",
         "resource": "Réglages du pinceau de ressources"
+      },
+      "biomeMixTooltip": {
+        "obstacles": "Dans quelle mesure les types d'obstacles varient selon les autres biomes, par rapport au seul biome peint.",
+        "trees": "Dans quelle mesure les types d'arbres varient selon les autres biomes, par rapport au seul biome peint.",
+        "flowers": "Dans quelle mesure les types franchissables varient selon les autres biomes, par rapport au seul biome peint.",
+        "squad": "Dans quelle mesure la faction d'une escouade varie selon les autres biomes, par rapport au seul biome peint.",
+        "other": "Dans quelle mesure les choix varient selon les autres biomes, par rapport au seul biome peint."
       }
     },
     "mapGridDialog": {
@@ -1709,7 +1733,8 @@
       "heroPortrait": "Portrait du héros"
     },
     "nodeGridEditor": {
-      "gridTooLargeToRender": "Grille trop grande pour être affichée : modifiez le champ brut des nœuds ci-dessous."
+      "gridTooLargeToRender": "Grille trop grande pour être affichée : modifiez le champ brut des nœuds ci-dessous.",
+      "nodeTitle": "Nœud {{i}} ({{v}}) — cliquez pour placer ici le visuel/bâtiment"
     },
     "renameEntitySidDialog": {
       "renameEntitySID": "Renommer le SID de l'entité",
@@ -1742,7 +1767,12 @@
       "noNamedEntitiesFoundIn": "Aucune entité nommée trouvée dans cette carte.",
       "mapSettings": "Paramètres de la carte",
       "subQuestRow": "sq : {{sid}}",
-      "unnamed": "(sans nom)"
+      "unnamed": "(sans nom)",
+      "addTitle": "Ajouter : {{label}}",
+      "triggerN": "Déclencheur {{n}}",
+      "renameTitle": "Renommer « {{sid}} »",
+      "setDisplayNameTitle": "Définir le nom affiché de « {{sid}} »",
+      "editFullHeroTitle": "Modifier le héros complet « {{sid}} »"
     },
     "setDisplayNameDialog": {
       "thisSpawnerHasNoHero": "Ce point d'apparition n'a pas encore de héros attribué : attribuez-en un d'abord, puis rouvrez cette boîte de dialogue.",
@@ -1888,7 +1918,9 @@
         "extractThumbnails": "Extraire les miniatures…",
         "renderObjectImages": "Générer les images d'objets…",
         "importH3Map": "Importer une carte H3…"
-      }
+      },
+      "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
+      "resavedBackupKept": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}} (existait déjà — non écrasée)"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} est ouvert dans une fenêtre séparée",
@@ -2043,7 +2075,8 @@
       "namingSid": "SID du nom → <m>{{sid}}</m>",
       "tokensShown_one": "{{count}} jeton affiché",
       "tokensShown_many": "{{count}} jetons affichés",
-      "tokensShown_other": "{{count}} jetons affichés"
+      "tokensShown_other": "{{count}} jetons affichés",
+      "deleteTokenTitle": "Supprimer le jeton « {{sid}} »"
     }
   },
   "editors": {
@@ -2066,7 +2099,8 @@
       "eGInteractionWithDemon": "ex. interaction_with_demon_hero_6",
       "customType": "Type personnalisé",
       "add": "Ajouter",
-      "noParameters": "Aucun paramètre."
+      "noParameters": "Aucun paramètre.",
+      "paramPlaceholder": "Paramètre {{n}} (p. ex. identifiant d'entité de héros)"
     },
     "questEditor": {
       "eGMainQuestLine": "ex. main_quest_line",
@@ -2168,7 +2202,8 @@
         "skills": "Compétences",
         "mapObjects": "Objets de la carte"
       },
-      "tierN": "Palier {{n}}"
+      "tierN": "Palier {{n}}",
+      "onlyNewTitle": "Afficher uniquement ce qui est nouveau depuis le Core.zip précédent : {{count}} au total ({{kinds}}), constaté le {{date}}"
     },
     "gameDatabaseFilter": {
       "filterItems": "Filtrer les éléments",
@@ -2179,7 +2214,8 @@
       "noPortraitsToBrowseLoad": "Aucun portrait à parcourir : chargez Core.zip via Données du jeu.",
       "nothingMatchesTheCurrentSearch": "Rien ne correspond à la recherche et au filtre actuels.",
       "choosePortrait": "Choisir un portrait",
-      "chooseHero": "Choisir un héros"
+      "chooseHero": "Choisir un héros",
+      "variantArt": " · illustration {{variant}}"
     },
     "heroPickerFilter": {
       "filterPortraits": "Filtrer les portraits",

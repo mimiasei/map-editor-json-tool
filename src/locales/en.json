@@ -59,7 +59,9 @@
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Browse heroes grouped by faction",
       "browse": "Browse",
-      "browseHeroesByFaction": "Browse heroes by faction…"
+      "browseHeroesByFaction": "Browse heroes by faction…",
+      "filterMapObjects": "Filter map objects",
+      "filterMapObjectsActive": "Filter map objects ({{filter}})"
     },
     "errorBoundary": {
       "somethingWentWrong": "Something went wrong",
@@ -588,7 +590,9 @@
       "variants_one": "{{count}} variant",
       "variants_other": "{{count}} variants",
       "variantN": "Variant {{n}}",
-      "neutral": "Neutral"
+      "neutral": "Neutral",
+      "zonesCount": "Zones ({{count}})",
+      "connectionsCount": "Connections ({{count}})"
     },
     "thumbnailExtractDialog": {
       "extractGameThumbnails": "Extract Game Thumbnails",
@@ -787,13 +791,23 @@
           "label": "Secondary button",
           "description": "Background for secondary actions"
         }
-      }
+      },
+      "pickColorFor": "Pick color for {{label}}"
     },
     "mapEntityCombobox": {
       "noMapEntitiesLoadA": "No map entities — load a .map file first"
     },
     "playerSelect": {
       "selectPlayer": "Select player…"
+    },
+    "durationField": {
+      "months": "Months",
+      "weeks": "Weeks",
+      "days": "Days",
+      "monthsShort": "M",
+      "weeksShort": "W",
+      "daysShort": "D",
+      "ariaLabel": "{{label}} {{unit}}"
     }
   },
   "shared": {
@@ -936,7 +950,9 @@
       "artifacts": "Artifact",
       "test": "Test",
       "blocks": "Block"
-    }
+    },
+    "copyValue": "Copy \"{{text}}\"",
+    "paramN": "Param {{n}}"
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -965,7 +981,8 @@
       "terrainOption": "Terrain: {{name}}",
       "assetOption": "Asset: {{name}}",
       "cannotReadPixels": "Could not read the image pixels.",
-      "invalidMappingFile": "Not a valid Image2Map mapping file."
+      "invalidMappingFile": "Not a valid Image2Map mapping file.",
+      "quantizedAlt": "Quantized to {{colorLimit}} colors"
     },
     "mapGameSettingsDialog": {
       "mapSettings": "Map settings",
@@ -1214,6 +1231,13 @@
         "interactable": "Interactable brush settings",
         "squad": "Encounter brush settings",
         "resource": "Resource brush settings"
+      },
+      "biomeMixTooltip": {
+        "obstacles": "How much obstacle types vary from other biomes vs. only the biome painted on.",
+        "trees": "How much tree types vary from other biomes vs. only the biome painted on.",
+        "flowers": "How much walkable types vary from other biomes vs. only the biome painted on.",
+        "squad": "How much a squad's faction varies from other biomes vs. only the biome painted on.",
+        "other": "How much picks vary from other biomes vs. only the biome painted on."
       }
     },
     "mapGridDialog": {
@@ -1677,7 +1701,8 @@
       "heroPortrait": "Hero portrait"
     },
     "nodeGridEditor": {
-      "gridTooLargeToRender": "Grid too large to render — edit the raw nodes field below."
+      "gridTooLargeToRender": "Grid too large to render — edit the raw nodes field below.",
+      "nodeTitle": "Node {{i}} ({{v}}) — click to place the visual/building here"
     },
     "renameEntitySidDialog": {
       "renameEntitySID": "Rename entity SID",
@@ -1709,7 +1734,12 @@
       "noNamedEntitiesFoundIn": "No named entities found in this map.",
       "mapSettings": "Map Settings",
       "subQuestRow": "sq: {{sid}}",
-      "unnamed": "(unnamed)"
+      "unnamed": "(unnamed)",
+      "addTitle": "Add {{label}}",
+      "triggerN": "Trigger {{n}}",
+      "renameTitle": "Rename \"{{sid}}\"",
+      "setDisplayNameTitle": "Set display name for \"{{sid}}\"",
+      "editFullHeroTitle": "Edit full hero for \"{{sid}}\""
     },
     "setDisplayNameDialog": {
       "thisSpawnerHasNoHero": "This spawner has no hero assigned yet — assign one first, then reopen this dialog.",
@@ -1853,7 +1883,9 @@
         "extractThumbnails": "Extract Thumbnails…",
         "renderObjectImages": "Render Object Images…",
         "importH3Map": "Import H3 Map…"
-      }
+      },
+      "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
+      "resavedBackupKept": "Re-saved {{bytes}} bytes.\nBackup: {{path}} (already existed — not overwritten)"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} is open in a separate window",
@@ -2004,7 +2036,8 @@
       "title": "Localization — {{language}}",
       "namingSid": "Naming SID → <m>{{sid}}</m>",
       "tokensShown_one": "{{count}} token shown",
-      "tokensShown_other": "{{count}} tokens shown"
+      "tokensShown_other": "{{count}} tokens shown",
+      "deleteTokenTitle": "Delete token \"{{sid}}\""
     }
   },
   "editors": {
@@ -2027,7 +2060,8 @@
       "eGInteractionWithDemon": "e.g. interaction_with_demon_hero_6",
       "customType": "Custom type",
       "add": "Add",
-      "noParameters": "No parameters."
+      "noParameters": "No parameters.",
+      "paramPlaceholder": "Param {{n}} (e.g. hero entity ID)"
     },
     "questEditor": {
       "eGMainQuestLine": "e.g. main_quest_line",
@@ -2128,7 +2162,8 @@
         "skills": "Skills",
         "mapObjects": "Map Objects"
       },
-      "tierN": "Tier {{n}}"
+      "tierN": "Tier {{n}}",
+      "onlyNewTitle": "Only show what is new since the previous Core.zip: {{count}} in all ({{kinds}}), noticed {{date}}"
     },
     "gameDatabaseFilter": {
       "filterItems": "Filter items",
@@ -2139,7 +2174,8 @@
       "noPortraitsToBrowseLoad": "No portraits to browse — load Core.zip via Game Data.",
       "nothingMatchesTheCurrentSearch": "Nothing matches the current search and filter.",
       "choosePortrait": "Choose a portrait",
-      "chooseHero": "Choose a hero"
+      "chooseHero": "Choose a hero",
+      "variantArt": " · {{variant}} art"
     },
     "heroPickerFilter": {
       "filterPortraits": "Filter portraits",

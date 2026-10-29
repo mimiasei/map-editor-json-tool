@@ -193,7 +193,7 @@ export default function ToolBrushSettingsPopover({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <LabelWithTooltip
-                  tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'flowers' ? 'walkable types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
+                  tooltip={t(`mapGrid.toolBrushSettingsPopover.biomeMixTooltip.${tool === 'obstacles' || tool === 'trees' || tool === 'flowers' || tool === 'squad' ? tool : 'other'}`)}
                 >
                   {t('mapGrid.toolBrushSettingsPopover.biomeMix')}
                 </LabelWithTooltip>

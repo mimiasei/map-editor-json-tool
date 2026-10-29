@@ -347,7 +347,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                     ? 'text-primary hover:text-primary/80'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
-                title={`Filter map objects${filterBadge ? ` (${filterBadge})` : ''}`}
+                title={filterBadge ? t('common.entityCombobox.filterMapObjectsActive', { filter: filterBadge }) : t('common.entityCombobox.filterMapObjects')}
                 onClick={(e) => { e.stopPropagation(); setFilterOpen(true) }}
               >
                 <SlidersHorizontal className="h-3 w-3" />

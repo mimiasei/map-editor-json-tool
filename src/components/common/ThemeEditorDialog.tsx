@@ -73,6 +73,7 @@ function ColorRow({
   value: string
   onChange: (hex: string) => void
 }) {
+  const { t } = useTranslation()
   const [hex, setHex] = useState(value)
 
   // Keep local state in sync when the store value changes externally
@@ -102,7 +103,7 @@ function ColorRow({
           <button
             className="h-7 w-7 rounded border border-border shadow-sm shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             style={{ backgroundColor: hex }}
-            aria-label={`Pick color for ${label}`}
+            aria-label={t('common.themeEditorDialog.pickColorFor', { label })}
           />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-3" side="right" align="start">

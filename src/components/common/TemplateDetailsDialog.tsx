@@ -296,7 +296,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
               )}
 
               {variant && (
-                <Section title={`Zones (${variant.zones.length})`}>
+                <Section title={t('common.templateDetailsDialog.zonesCount', { count: variant.zones.length })}>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {variant.zones.map((zone) => <ZoneCard key={zone.name} zone={zone} />)}
                   </div>
@@ -304,7 +304,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
               )}
 
               {variant && variant.connections.length > 0 && (
-                <Section title={`Connections (${variant.connections.length})`}>
+                <Section title={t('common.templateDetailsDialog.connectionsCount', { count: variant.connections.length })}>
                   <div className="space-y-1">
                     {variant.connections.map((c, i) => (
                       <div key={i} className="text-xs flex items-center gap-1.5 flex-wrap">

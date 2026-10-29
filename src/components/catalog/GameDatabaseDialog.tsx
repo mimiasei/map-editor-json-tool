@@ -94,6 +94,7 @@ const TABS: TabId[] = ['heroes', 'creatures', 'artifacts', 'spells', 'skills', '
 // ─── Copy button ──────────────────────────────────────────────────────────────
 
 function CopyButton({ text, className }: { text: string; className?: string }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   const handleCopy = () => {
     navigator.clipboard.writeText(text).then(() => {
@@ -105,7 +106,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
     <button
       onClick={handleCopy}
       className={`inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors ${className ?? ''}`}
-      title={`Copy "${text}"`}
+      title={t('shared.copyValue', { text })}
     >
       {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
     </button>
@@ -357,7 +358,7 @@ function DetailPane({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const rawCatalog = useCatalogStore((s) => s.catalog)
   const catalogChanges = useCatalogStore((s) => s.catalogChanges)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
@@ -693,7 +694,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
               variant={onlyNew ? 'secondary' : 'ghost'}
               size="icon"
               className="h-6 w-6 shrink-0"
-              title={`Only show what is new since the previous Core.zip: ${newCount} in all (${SNAPSHOT_KINDS.filter((k) => (catalogChanges?.added[k]?.length ?? 0) > 0).map((k) => `${catalogChanges?.added[k]?.length} ${k}`).join(', ')}), noticed ${new Date(catalogChanges?.detectedAt ?? '').toLocaleDateString()}`}
+              title={t('catalog.gameDatabaseDialog.onlyNewTitle', { count: newCount, kinds: SNAPSHOT_KINDS.filter((k) => (catalogChanges?.added[k]?.length ?? 0) > 0).map((k) => `${catalogChanges?.added[k]?.length} ${t(`catalog.gameDatabaseDialog.tabs.${k}`)}`).join(', '), date: new Date(catalogChanges?.detectedAt ?? '').toLocaleDateString(i18n.language) })}
               onClick={() => setOnlyNew((v) => !v)}
             >
               <Sparkles className="h-3.5 w-3.5" />

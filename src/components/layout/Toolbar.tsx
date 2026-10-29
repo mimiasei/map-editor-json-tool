@@ -140,7 +140,7 @@ export default function Toolbar({
   onGenerateMapOpen,
   onNew,
 }: ToolbarProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const {
     scenario,
     isDirty,
@@ -547,7 +547,7 @@ export default function Toolbar({
       logInfo(`Re-saved .map unchanged: ${mapFilePath} (backup ${result.backupCreated ? 'created' : 'already existed'} at ${result.backupPath})`)
       setMapResaveResult({
         ok: true,
-        message: `Re-saved ${result.bytesWritten.toLocaleString()} bytes.\nBackup: ${result.backupPath}${result.backupCreated ? '' : ' (already existed — not overwritten)'}`,
+        message: t(result.backupCreated ? 'layout.toolbar.resaved' : 'layout.toolbar.resavedBackupKept', { bytes: result.bytesWritten.toLocaleString(i18n.language), path: result.backupPath }),
       })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)

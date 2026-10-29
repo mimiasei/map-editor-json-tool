@@ -201,7 +201,7 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
               <Input
                 value={val}
                 onChange={(e) => updateParam(i, e.target.value)}
-                placeholder={`Param ${i + 1}`}
+                placeholder={t('shared.paramN', { n: i + 1 })}
                 className="flex-1"
               />
               <Button

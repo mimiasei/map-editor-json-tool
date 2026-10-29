@@ -112,15 +112,9 @@ type PreviewPhase = 'off' | 'terrain' | 'roads' | 'all'
  *  reachable regardless of live-preview stage (see NAV_STAGE_ALLOWED)
  *  since that's where the Live preview off-switch lives. */
 type Category = 'core' | 'terrain' | 'biomes' | 'roads' | 'scenery' | 'economy' | 'connectivity' | 'advanced'
-const CATEGORIES: { id: Category; label: string }[] = [
-  { id: 'core', label: 'Start' },
-  { id: 'terrain', label: 'Terrain & Elevation' },
-  { id: 'biomes', label: 'Biomes' },
-  { id: 'roads', label: 'Roads & Rivers' },
-  { id: 'scenery', label: 'Scenery & Decoration' },
-  { id: 'economy', label: 'Economy & Encounters' },
-  { id: 'connectivity', label: 'Connectivity & Portals' },
-  { id: 'advanced', label: 'Advanced' },
+const CATEGORIES: { id: Category }[] = [
+  { id: 'core' }, { id: 'terrain' }, { id: 'biomes' }, { id: 'roads' },
+  { id: 'scenery' }, { id: 'economy' }, { id: 'connectivity' }, { id: 'advanced' },
 ]
 /** During live preview, only these categories have anything to show (see
  *  the showXFields derivations below) — everything else's nav button is

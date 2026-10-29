@@ -117,7 +117,7 @@ function TokenRow({
         )}
         <button
           className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors"
-          title={`Delete token "${sid}"`}
+          title={t('dialogs.localizationDialog.deleteTokenTitle', { sid })}
           onClick={onDelete}
         >
           <Trash2 className="h-3 w-3" />

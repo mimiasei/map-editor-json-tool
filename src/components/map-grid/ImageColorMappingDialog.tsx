@@ -282,7 +282,7 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
           <div className="space-y-1 min-w-0">
             <p className="text-xs font-medium">{t('mapGrid.imageColorMappingDialog.quantizedPreviewColors', { colorLimit })}</p>
             {quantizedImageUrl && (
-              <img src={quantizedImageUrl} alt={`Quantized to ${colorLimit} colors`} className="block w-full h-28 rounded border border-border object-contain bg-background image-render-pixelated" />
+              <img src={quantizedImageUrl} alt={t('mapGrid.imageColorMappingDialog.quantizedAlt', { colorLimit })} className="block w-full h-28 rounded border border-border object-contain bg-background image-render-pixelated" />
             )}
           </div>
         </div>

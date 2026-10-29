@@ -215,7 +215,7 @@ export default function HeroPickerDialog({
                         key={entry.key}
                         type="button"
                         onClick={() => handlePick(entry)}
-                        title={`${entry.sublabel}${entry.variant ? ` · ${entry.variant} art` : ''}`}
+                        title={`${entry.sublabel}${entry.variant ? t('catalog.heroPickerDialog.variantArt', { variant: entry.variant }) : ''}`}
                         className={`flex flex-col items-center gap-1 rounded border p-2 text-center transition-colors ${
                           selected
                             ? 'border-primary bg-primary/10'

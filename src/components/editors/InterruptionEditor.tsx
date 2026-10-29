@@ -124,7 +124,7 @@ export default function InterruptionEditor({ index, interruption }: Props) {
             <Input
               value={val}
               onChange={(e) => updateParam(i, e.target.value)}
-              placeholder={`Param ${i + 1} (e.g. hero entity ID)`}
+              placeholder={t('editors.interruptionEditor.paramPlaceholder', { n: i + 1 })}
               className="flex-1"
             />
             <Button

@@ -49,7 +49,7 @@ export default function NodeGridEditor({ sizeX, sizeZ, nodes, onChange }: NodeGr
             key={i}
             type="button"
             onClick={() => handleClick(i)}
-            title={`Node ${i} (${v}) — click to place the visual/building here`}
+            title={t('tree.nodeGridEditor.nodeTitle', { i, v })}
             className={cn(
               'h-7 w-7 shrink-0 rounded border text-[10px] font-mono flex items-center justify-center transition-colors',
               v === 1 && 'bg-red-900 border-red-950 text-white hover:bg-red-800',
