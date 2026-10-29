@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "language": {
+      "label": "Interface language",
+      "hint": "Only affects the editor's own text. Quests, dialogs and other map content are not translated."
+    }
+  }
+}

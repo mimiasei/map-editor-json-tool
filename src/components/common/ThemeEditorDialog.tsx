@@ -26,6 +26,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { useThemeSettingsStore, DEFAULT_LIGHT_COLORS, DEFAULT_FONT_SIZE, type ThemeColors, type ThemeSettings } from '@/store/useThemeSettingsStore'
+import { useTranslation } from 'react-i18next'
+import { useLocaleStore } from '@/store/useLocaleStore'
+import { GAME_LANGUAGES } from '@/lib/languages'
+import { isUiLocaleAvailable } from '@/lib/i18n'
 import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
 
@@ -130,6 +134,9 @@ function ColorRow({
 // ─── Main dialog ──────────────────────────────────────────────────────────
 
 export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDialogProps) {
+  const { t } = useTranslation()
+  const uiLocale = useLocaleStore((s) => s.uiLocale)
+  const setUiLocale = useLocaleStore((s) => s.setUiLocale)
   const {
     themes,
     activeThemeId,
@@ -204,6 +211,24 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
         </DialogHeader>
 
         <div className="space-y-4">
+
+          {/* ── Interface language ── */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('settings.language.label')}</Label>
+            <Select value={uiLocale} onValueChange={setUiLocale}>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GAME_LANGUAGES.filter((l) => isUiLocaleAvailable(l.id)).map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('settings.language.hint')}</p>
+          </div>
+
+          <Separator />
 
           {/* ── Theme selector ── */}
           <div className="space-y-2">
