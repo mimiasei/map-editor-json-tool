@@ -905,6 +905,18 @@
     "roadTypes": {
       "1": "Chemin de terre",
       "2": "Route de pierre"
+    },
+    "fileFilters": {
+      "map": "Carte",
+      "mapFile": "Fichier de carte",
+      "h3Map": "Carte Heroes 3",
+      "image": "Image",
+      "text": "Texte",
+      "zipArchive": "Archive ZIP",
+      "imageMapping": "Correspondance Image2Map"
+    },
+    "fileDialogs": {
+      "saveMap": "Sauvegarder la carte"
     }
   },
   "mapGrid": {

@@ -11,6 +11,7 @@ import {
   shippedLanguages,
   type TranslationMap,
 } from '@/lib/languages'
+import i18n from '@/lib/i18n'
 
 /** UTF-8 BOM required by the game's localization loader */
 const BOM = '﻿'
@@ -332,7 +333,7 @@ export async function exportMapZip(
 
     const savePath = await save({
       defaultPath,
-      filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.zipArchive'), extensions: ['zip'] }],
     })
     if (!savePath) return null
     const arrayBuffer = await blob.arrayBuffer()

@@ -137,7 +137,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
   const chooseZip = useCallback(async () => {
     const picked = await pickSavePath(
       targets?.zip.path ?? mapZipFileName(mapName || 'map'),
-      { name: 'ZIP Archive', extensions: ['zip'] },
+      { name: t('shared.fileFilters.zipArchive'), extensions: ['zip'] },
       t('common.publishDialog.pickZipTitle'),
     )
     if (picked) {

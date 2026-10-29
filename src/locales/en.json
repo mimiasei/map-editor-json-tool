@@ -876,6 +876,18 @@
     "roadTypes": {
       "1": "Dirt Road",
       "2": "Stone Road"
+    },
+    "fileFilters": {
+      "map": "Map",
+      "mapFile": "Map file",
+      "h3Map": "Heroes 3 Map",
+      "image": "Image",
+      "text": "Text",
+      "zipArchive": "ZIP Archive",
+      "imageMapping": "Image2Map mapping"
+    },
+    "fileDialogs": {
+      "saveMap": "Save map"
     }
   },
   "mapGrid": {

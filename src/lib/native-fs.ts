@@ -139,7 +139,7 @@ export async function openMapFile(): Promise<{
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Map', extensions: ['map'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.map'), extensions: ['map'] }],
     })
     if (!selected || typeof selected !== 'string') return null
     const bytes = await readFile(selected)
@@ -201,7 +201,7 @@ export async function openH3mFile(): Promise<{
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Heroes 3 Map', extensions: ['h3m'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.h3Map'), extensions: ['h3m'] }],
     })
     if (!selected || typeof selected !== 'string') return null
     const bytes = await readFile(selected)
@@ -248,7 +248,7 @@ export async function openImageFile(): Promise<{
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Image', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.image'), extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }],
     })
     if (!selected || typeof selected !== 'string') return null
     const bytes = await readFile(selected)

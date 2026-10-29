@@ -13,6 +13,7 @@ import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { readMapContainer, gunzipBytes } from '@/lib/map-write'
 import { logInfo, logWarn } from '@/lib/logger'
 import { DEBUG } from '@/lib/debug'
+import i18n from '@/lib/i18n'
 
 export interface OpenMapResult {
   /** Display name, e.g. "my_map.map" */
@@ -273,7 +274,7 @@ export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean
   if (!mapPath || forceNewPath) {
     const suggested = scenarioState.mapName || 'New Map'
     const fileName = suggested.endsWith('.map') ? suggested : `${suggested}.map`
-    mapPath = await pickSavePath(fileName, { name: 'Map file', extensions: ['map'] }, 'Save map')
+    mapPath = await pickSavePath(fileName, { name: i18n.t('shared.fileFilters.mapFile'), extensions: ['map'] }, i18n.t('shared.fileDialogs.saveMap'))
     if (!mapPath) return 'cancelled' // user cancelled — leave the in-memory edits dirty
   }
   await commitToDisk(mapPath, scenarioState.scenario)

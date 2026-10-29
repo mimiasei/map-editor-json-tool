@@ -183,7 +183,7 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
 
   const saveMapping = async () => {
     const payload: SerializedImageMapping = { version: 1, name: image?.name ?? 'image', mappings: mapping }
-    await saveFile(JSON.stringify(payload, null, 2), 'image2map-mapping.json', { name: 'Image2Map mapping', extensions: ['json'] })
+    await saveFile(JSON.stringify(payload, null, 2), 'image2map-mapping.json', { name: t('shared.fileFilters.imageMapping'), extensions: ['json'] })
   }
 
   const loadMapping = async () => {

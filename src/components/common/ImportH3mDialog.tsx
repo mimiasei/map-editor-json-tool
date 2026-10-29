@@ -521,7 +521,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                     void saveFile(
                       buildReportText(result),
                       reportFileName(result),
-                      { name: 'Text', extensions: ['txt'] },
+                      { name: t('shared.fileFilters.text'), extensions: ['txt'] },
                       'text/plain',
                     )
                   }}
