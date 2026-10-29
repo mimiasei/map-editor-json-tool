@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 // ─── Map grid — terrain fill colors ──────────────────────────────────────────
 // Biome IDs and names come straight from Core/DB/map/tiles/tiles.json (issue
 // #122 follow-up: fill every grid cell with its terrain, not just occupied
@@ -133,9 +134,14 @@ export function terrainLabel(
 ): string {
   const tileId = tilesMap[node]
   const waterId = waterMap[node]
-  const biome = tileId !== undefined && isBiomeId(tileId) ? BIOME_NAMES[tileId] : 'Unknown'
-  const suffix = waterId ? ' (Water)' : ''
-  const levelSuffix = levelsMap ? `, Level ${levelsMap[node] ?? 0}` : ''
-  const rampSuffix = rampDirection ? `, Ramp (${rampDirection})` : ''
-  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)}) (${node}) ${levelSuffix}${rampSuffix}`
+  const biome = tileId !== undefined && isBiomeId(tileId) ? i18n.t(`shared.biomes.${tileId}`) : i18n.t('mapGrid.tileInfo.unknown')
+  return i18n.t('mapGrid.tileInfo.line', {
+    biome,
+    water: waterId ? i18n.t('mapGrid.tileInfo.water') : '',
+    x: node % sizeX,
+    y: Math.floor(node / sizeX),
+    node,
+    level: levelsMap ? i18n.t('mapGrid.tileInfo.level', { n: levelsMap[node] ?? 0 }) : '',
+    ramp: rampDirection ? i18n.t('mapGrid.tileInfo.ramp', { direction: rampDirection }) : '',
+  })
 }

@@ -161,12 +161,12 @@ function FreqBar({
 
 // ─── Per-quest table ──────────────────────────────────────────────────────────
 
-const COLUMNS: { key: SortKey; label: string; title?: string }[] = [
-  { key: 'subquests',  label: 'SQs',   title: 'Subquests' },
-  { key: 'triggers',   label: 'Trigs', title: 'Triggers' },
-  { key: 'actions',    label: 'Acts',  title: 'Actions' },
-  { key: 'conditions', label: 'Conds', title: 'Conditions' },
-  { key: 'complexity', label: 'Score', title: 'Complexity score (SQs×0.5 + Triggers + Actions + Conditions×0.5)' },
+const COLUMNS: { key: SortKey }[] = [
+  { key: 'subquests' },
+  { key: 'triggers' },
+  { key: 'actions' },
+  { key: 'conditions' },
+  { key: 'complexity' },
 ]
 
 function QuestTable({
@@ -211,7 +211,7 @@ function QuestTable({
                 role="button"
                 tabIndex={0}
                 className="pb-2 px-2 text-right font-medium cursor-pointer select-none hover:text-foreground transition-colors"
-                title={col.title}
+                title={col.key === 'complexity' ? t('common.statsDialog.complexityTitle') : t(`common.statsDialog.${col.key}`)}
                 onClick={() => handleSort(col.key)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -220,7 +220,7 @@ function QuestTable({
                   }
                 }}
               >
-                {col.label}{arrow(col.key)}
+                {t(`common.statsDialog.columnShort.${col.key}`)}{arrow(col.key)}
               </th>
             ))}
           </tr>

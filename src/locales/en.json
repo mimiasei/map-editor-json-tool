@@ -42,7 +42,15 @@
     "commandPalette": {
       "searchScenario": "Search scenario",
       "searchCountersQuestsTriggers": "Search counters, quests, triggers…",
-      "noResultsFound": "No results found."
+      "noResultsFound": "No results found.",
+      "groups": {
+        "counters": "Counters",
+        "interruptions": "Interruptions",
+        "quests": "Quests",
+        "subquests": "SubQuests",
+        "triggers": "Triggers"
+      },
+      "triggerN": "Trigger #{{n}}"
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Type the dialog message…",
@@ -528,7 +536,15 @@
         "actions": "Actions",
         "conditions": "Conditions",
         "perquest": "Per Quest"
-      }
+      },
+      "columnShort": {
+        "subquests": "SQs",
+        "triggers": "Trigs",
+        "actions": "Acts",
+        "conditions": "Conds",
+        "complexity": "Score"
+      },
+      "complexityTitle": "Complexity score (SQs×0.5 + Triggers + Actions + Conditions×0.5)"
     },
     "templateDetailsDialog": {
       "biome": "Biome",
@@ -1295,6 +1311,13 @@
       "Difficult": "Difficult",
       "Impossible": "Impossible",
       "Lethal": "Lethal"
+    },
+    "tileInfo": {
+      "unknown": "Unknown",
+      "water": " (Water)",
+      "level": ", Level {{n}}",
+      "ramp": ", Ramp ({{direction}})",
+      "line": "{{biome}}{{water}} - Tile ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
     }
   },
   "tree": {

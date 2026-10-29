@@ -42,7 +42,15 @@
     "commandPalette": {
       "searchScenario": "Rechercher dans le scénario",
       "searchCountersQuestsTriggers": "Rechercher des compteurs, quêtes, déclencheurs…",
-      "noResultsFound": "Aucun résultat trouvé."
+      "noResultsFound": "Aucun résultat trouvé.",
+      "groups": {
+        "counters": "Compteurs",
+        "interruptions": "Interruptions",
+        "quests": "Quêtes",
+        "subquests": "Sous-quêtes",
+        "triggers": "Déclencheurs"
+      },
+      "triggerN": "Déclencheur n° {{n}}"
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Saisissez le message du dialogue…",
@@ -549,7 +557,15 @@
         "actions": "Actions",
         "conditions": "Conditions",
         "perquest": "Par quête"
-      }
+      },
+      "columnShort": {
+        "subquests": "SQ",
+        "triggers": "Décl.",
+        "actions": "Act.",
+        "conditions": "Cond.",
+        "complexity": "Score"
+      },
+      "complexityTitle": "Score de complexité (SQ×0,5 + déclencheurs + actions + conditions×0,5)"
     },
     "templateDetailsDialog": {
       "biome": "Biome",
@@ -1327,6 +1343,13 @@
       "Difficult": "Difficile",
       "Impossible": "Impossible",
       "Lethal": "Létal"
+    },
+    "tileInfo": {
+      "unknown": "Inconnu",
+      "water": " (eau)",
+      "level": ", niveau {{n}}",
+      "ramp": ", rampe ({{direction}})",
+      "line": "{{biome}}{{water}} - Tuile ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
     }
   },
   "tree": {

@@ -32,7 +32,7 @@ const SPELLS = spellIndex as IndexedSpell[]
 
 /** Display order of the schools. */
 const SCHOOLS = ['Daylight', 'Nightshade', 'Primal', 'Arcane', 'Neutral'].filter((s) => SPELLS.some((sp) => sp.school === s))
-const TYPES: { id: IndexedSpell['type']; label: string }[] = [{ id: 'battle', label: 'Battle' }, { id: 'world', label: 'World' }]
+const TYPES: IndexedSpell['type'][] = ['battle', 'world']
 const TIERS = [...new Set(SPELLS.map((s) => s.tier))].sort((a, b) => a - b)
 /** The tab that lists every school at once. */
 const ALL_SCHOOLS = 'All'
@@ -188,8 +188,8 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             </ChipRow>
           )}
           <ChipRow label={t('common.spellBanDialog.type')}>
-            {TYPES.map((t) => (
-              <Chip key={t.id} on={!hiddenTypes.has(t.id)} onClick={() => setHiddenTypes((p) => toggled(p, t.id))}>{t.label}</Chip>
+            {TYPES.map((type) => (
+              <Chip key={type} on={!hiddenTypes.has(type)} onClick={() => setHiddenTypes((p) => toggled(p, type))}>{t(`common.spellBanDialog.${type}`)}</Chip>
             ))}
           </ChipRow>
           <ChipRow label={t('common.spellBanDialog.tier')}>

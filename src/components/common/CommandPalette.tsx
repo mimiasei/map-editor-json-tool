@@ -25,7 +25,6 @@ import { useTranslation } from 'react-i18next'
 
 interface PaletteItem {
   key: string
-  group: string
   label: string
   subtitle?: string
   searchValue: string
@@ -46,7 +45,6 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
   const groups = useMemo(() => {
     const counters: PaletteItem[] = scenario.counters.map((c, i) => ({
       key: `counter-${i}`,
-      group: 'Counters',
       label: c.sid,
       searchValue: c.sid,
       icon: Hash,
@@ -56,7 +54,6 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
 
     const interruptions: PaletteItem[] = scenario.interruptions.map((intr, i) => ({
       key: `interruption-${i}`,
-      group: 'Interruptions',
       label: intr.sid,
       searchValue: intr.sid,
       icon: Zap,
@@ -66,7 +63,6 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
 
     const quests: PaletteItem[] = scenario.quests.map((q, qi) => ({
       key: `quest-${qi}`,
-      group: 'Quests',
       label: q.sid,
       searchValue: q.sid,
       icon: ScrollText,
@@ -77,7 +73,6 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
     const subquests: PaletteItem[] = scenario.quests.flatMap((q, qi) =>
       q.subQuests.map((sq, sqi) => ({
         key: `subquest-${qi}-${sqi}`,
-        group: 'SubQuests',
         label: sq.sid,
         subtitle: q.sid,
         searchValue: `${sq.sid} ${q.sid}`,
@@ -91,8 +86,7 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
       q.subQuests.flatMap((sq, sqi) =>
         sq.triggers.map((_, ti) => ({
           key: `trigger-${qi}-${sqi}-${ti}`,
-          group: 'Triggers',
-          label: `Trigger #${ti + 1}`,
+          label: t('common.commandPalette.triggerN', { n: ti + 1 }),
           subtitle: `${q.sid} > ${sq.sid}`,
           searchValue: `trigger ${ti + 1} ${q.sid} ${sq.sid}`,
           icon: GitBranch,
@@ -103,13 +97,13 @@ export default function CommandPalette({ open, onOpenChange }: CommandPalettePro
     )
 
     return [
-      { heading: 'Counters', items: counters },
-      { heading: 'Interruptions', items: interruptions },
-      { heading: 'Quests', items: quests },
-      { heading: 'SubQuests', items: subquests },
-      { heading: 'Triggers', items: triggers },
+      { heading: t('common.commandPalette.groups.counters'), items: counters },
+      { heading: t('common.commandPalette.groups.interruptions'), items: interruptions },
+      { heading: t('common.commandPalette.groups.quests'), items: quests },
+      { heading: t('common.commandPalette.groups.subquests'), items: subquests },
+      { heading: t('common.commandPalette.groups.triggers'), items: triggers },
     ].filter((g) => g.items.length > 0)
-  }, [scenario])
+  }, [scenario, t])
 
   const handleSelect = (item: PaletteItem) => {
     setSelection(item.type, item.path)
