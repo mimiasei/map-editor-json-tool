@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Settings } from '@/components/ui/icons'
-import { DEFAULT_SQUAD_DIFFICULTY_RANGES, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, squadDifficultyName, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import { useTranslation } from 'react-i18next'
 
 interface Props {
@@ -166,7 +166,7 @@ export default function ToolBrushSettingsPopover({
                       : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
                   }`}
                 >
-                  {label}
+                  {squadDifficultyName(label)}
                 </button>
               ))}
             </div>

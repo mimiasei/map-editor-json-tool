@@ -30,7 +30,7 @@ import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import RandomSquadExampleDialog from './RandomSquadExampleDialog'
 import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
-import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, squadDifficultyName, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import { useTranslation } from 'react-i18next'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
@@ -1049,7 +1049,7 @@ export default function MapGridCellContent({
                         className="h-6 px-2 text-xs"
                         onClick={() => onSetRandomSquadValue(selected, randomInRange(min, max))}
                       >
-                        {label}
+                        {squadDifficultyName(label)}
                       </Button>
                     ))}
                   </div>

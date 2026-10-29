@@ -1269,6 +1269,14 @@
       "decorations": "Décorations",
       "zones": "Zones",
       "toggle": "Activer/désactiver {{group}}"
+    },
+    "squadDifficulty": {
+      "Random": "Aléatoire",
+      "Easy": "Facile",
+      "Normal": "Normal",
+      "Difficult": "Difficile",
+      "Impossible": "Impossible",
+      "Lethal": "Létal"
     }
   },
   "tree": {

@@ -22,7 +22,7 @@ import {
 } from '@/lib/map-grid/draw-quality'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
-import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, squadDifficultyName, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
 import { Settings, ChevronDown } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 
@@ -561,7 +561,7 @@ export default function MapGridSettingsDialog({
                 </p>
                 {settings.squadRandomWeights.map((w) => (
                   <div key={w.label} className="flex items-center gap-2">
-                    <Label className="text-xs w-20 shrink-0">{w.label}</Label>
+                    <Label className="text-xs w-20 shrink-0">{squadDifficultyName(w.label)}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -585,7 +585,7 @@ export default function MapGridSettingsDialog({
                 </p>
                 {settings.squadDifficultyRanges.map((r) => (
                   <div key={r.label} className="flex items-center gap-2">
-                    <Label className="text-xs w-16 shrink-0">{r.label}</Label>
+                    <Label className="text-xs w-16 shrink-0">{squadDifficultyName(r.label)}</Label>
                     <Input
                       type="number"
                       min={0}
