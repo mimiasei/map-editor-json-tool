@@ -4,6 +4,7 @@
 // file.ts) — extracted here once both call sites needed the exact same
 // sequence, not speculatively.
 
+import i18n from '@/lib/i18n'
 import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { applyMapEdit } from '@/lib/map-save'
@@ -174,9 +175,9 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
   const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
   const warnings: string[] = []
   const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length + guaranteeFixCount
-  if (fixedCount > 0) warnings.push(`Auto-fixed ${fixedCount} placement issue(s).`)
+  if (fixedCount > 0) warnings.push(i18n.t('validate.map.autoFixed', { count: fixedCount }))
   for (const issue of remaining) {
-    warnings.push(`Unresolved: ${describeMapValidationIssue(issue)}`)
+    warnings.push(i18n.t('validate.map.unresolved', { issue: describeMapValidationIssue(issue) }))
   }
 
   return { fixed, warnings }

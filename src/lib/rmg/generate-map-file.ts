@@ -10,6 +10,7 @@
 // Map) — Milestone 1's zone population places real catalog objects
 // (mines/dwellings) and needs their real footprints to avoid overlap.
 
+import i18n from '@/lib/i18n'
 import { isTauri, readBinaryFile } from '@/lib/native-fs'
 import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes, type MapContainer } from '@/lib/map-write'
 import { loadParsedMapFile, type OpenMapResult } from '@/lib/map-file'
@@ -102,21 +103,21 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
     computePlayerBalance(extractMapContext(containerToRawBlocks(result.container)), catalog)?.score ?? 100
   let best = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(0, 60, '') })
   let bestScore = fairnessOf(best)
-  options.onProgress?.(`Checking fairness of player zones (score ${bestScore}/100)`, 60)
+  options.onProgress?.(i18n.t('rmg.progress.checkingFairness', { score: bestScore }), 60)
   await yieldToUI()
   for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && bestScore < BALANCE_TARGET_SCORE; attempt++) {
     const lo = 60 + (attempt - 2) * 10
-    const prefix = `Rebalancing players (try ${attempt}/${MAX_BALANCE_ATTEMPTS}, best fairness ${bestScore}/100) — `
-    options.onProgress?.(`${prefix}starting over`, lo)
+    const prefix = i18n.t('rmg.progress.rebalancePrefix', { attempt, max: MAX_BALANCE_ATTEMPTS, score: bestScore })
+    options.onProgress?.(`${prefix}${i18n.t('rmg.progress.startingOver')}`, lo)
     await yieldToUI()
     const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, lo + 10, prefix) })
     const nextScore = fairnessOf(next)
     if (nextScore > bestScore) { best = next; bestScore = nextScore }
   }
-  options.onProgress?.('Player zones balanced', 90)
+  options.onProgress?.(i18n.t('rmg.progress.playerZonesBalanced'), 90)
   const { container, balanceReport } = best
 
-  options.onProgress?.('Auto-fixing overlaps and elevation', 92)
+  options.onProgress?.(i18n.t('rmg.progress.autoFixing'), 92)
   await yieldToUI()
   // On a mirrored map the auto-fix may nudge an object on one side only; the two sides stay alike enough
   // (every footprint it reads honours the mirrored flag, see computeFootprintTiles).
@@ -131,7 +132,7 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   // relocates the target itself as a last resort), so this final read-only
   // pass only ever reports what THAT couldn't safely resolve — a real,
   // disclosed gap in the generated map, not a pre-fix snapshot.
-  options.onProgress?.('Validating final reachability', 96)
+  options.onProgress?.(i18n.t('rmg.progress.validatingReachability'), 96)
   await yieldToUI()
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
   const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
@@ -144,14 +145,14 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   // runPlacementAutoFix.
   const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, catalog)
 
-  options.onProgress?.('Writing map file', 98)
+  options.onProgress?.(i18n.t('rmg.progress.writingMapFile'), 98)
   await yieldToUI()
   const gzipped = await gzipBytes(buildMapContainer(fixed))
 
-  options.onProgress?.('Done', 100)
+  options.onProgress?.(i18n.t('rmg.progress.done'), 100)
   const playerBalance = computePlayerBalance(finalContext, catalog)
   const balanceWarnings = playerBalance && playerBalance.score < BALANCE_TARGET_SCORE && !options.gameTemplateJson
-    ? [`Player fairness ${playerBalance.score}/100 (${playerBalance.verdict})${playerBalance.reasons.length > 0 ? ` — ${playerBalance.reasons.join('; ')}` : ''}`]
+    ? [i18n.t(playerBalance.reasons.length > 0 ? 'rmg.fairnessWarningReasons' : 'rmg.fairnessWarning', { score: playerBalance.score, verdict: i18n.t(`validate.balance.verdicts.${playerBalance.verdict}`), reasons: playerBalance.reasons.join('; ') })]
     : []
   return { bytes: gzipped, warnings: [...balanceWarnings, ...autoFixWarnings], balanceReport, playerBalance, unreachablePlacements, isolatedPlayerStarts }
 }

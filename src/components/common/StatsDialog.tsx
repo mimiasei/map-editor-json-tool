@@ -446,9 +446,9 @@ function CountList({ rows, emptyLabel }: { rows: [string, number][]; emptyLabel:
 }
 
 export function MapStatsContent({ context, catalog }: { context: MapContext; catalog: GameCatalog | null }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const stats: MapStats = useMemo(() => computeMapStats(context, catalog), [context, catalog])
-  const playerBalance = useMemo(() => computePlayerBalance(context, catalog), [context, catalog])
+  const playerBalance = useMemo(() => computePlayerBalance(context, catalog), [context, catalog, i18n.language])
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">

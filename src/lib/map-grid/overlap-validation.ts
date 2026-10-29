@@ -34,6 +34,7 @@
 // matching its real non-blocking nature) both fixes correctness and cuts the
 // fixer's real workload from ~358 pointless passes to the 1 that matters.
 
+import i18n from '@/lib/i18n'
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { resolveFootprintCells } from './tile-index'
@@ -96,5 +97,5 @@ export function findOverlappingPlacements(context: OverlapContext, catalog: Game
 }
 
 export function describeOverlappingPlacement(issue: OverlappingPlacement): string {
-  return `${issue.sid} (id ${issue.id}) overlaps ${issue.overlapsWith.sid} (id ${issue.overlapsWith.id}) at (${issue.x}, ${issue.z})`
+  return i18n.t('validate.map.overlap', { sid: issue.sid, id: issue.id, otherSid: issue.overlapsWith.sid, otherId: issue.overlapsWith.id, x: issue.x, z: issue.z })
 }

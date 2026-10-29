@@ -5,6 +5,7 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import { mapNameSnakeCase } from '@/lib/zip-export'
+import i18n from '@/lib/i18n'
 
 interface Msg {
   path: string
@@ -85,11 +86,11 @@ export function validateStoryState(
     if (read.has(counter.sid) && !written.has(counter.sid) && counter.value === 0) {
       warnings.push({
         path,
-        message: 'Counter is checked but nothing ever changes it from 0, so that check can never succeed past 0.',
+        message: i18n.t('validate.story.counterIsCheckedButNothing'),
       })
     }
     if (written.has(counter.sid) && !read.has(counter.sid)) {
-      warnings.push({ path, message: 'Counter is changed but never checked anywhere.' })
+      warnings.push({ path, message: i18n.t('validate.story.counterIsChangedButNever') })
     }
   }
 
@@ -102,9 +103,7 @@ export function validateStoryState(
       const sample = unprefixed.slice(0, 3).join(', ')
       warnings.push({
         path: 'Dialogs',
-        message:
-          `${unprefixed.length} dialog id(s) do not start with "${prefix}" (e.g. ${sample}). ` +
-          'Dialog ids are shared by every map and zip in the game; a repeated id overwrites the other one.',
+        message: i18n.t('validate.story.unprefixedDialogIds', { count: unprefixed.length, prefix, sample }),
       })
     }
   }

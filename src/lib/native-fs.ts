@@ -4,6 +4,7 @@
 // never import @tauri-apps/plugin-* directly in UI components.
 
 import { logInfo, logWarn } from '@/lib/logger'
+import i18n from '@/lib/i18n'
 
 /** True when running inside the Tauri desktop wrapper. */
 export function isTauri(): boolean {
@@ -396,7 +397,7 @@ export async function pickCoreZip(): Promise<string | null> {
   if (!isTauri()) return null
   const { open } = await import('@tauri-apps/plugin-dialog')
   const path = await open({
-    title: 'Select Core.zip',
+    title: i18n.t('common.setupDialog.selectCoreZip'),
     filters: [{ name: 'ZIP', extensions: ['zip'] }],
   })
   return typeof path === 'string' ? path : null

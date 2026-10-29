@@ -23,7 +23,7 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
       <p className="text-sm">
         <Trans
           i18nKey="common.playerBalancePanel.fairness"
-          values={{ score: balance.score, verdict: balance.verdict }}
+          values={{ score: balance.score, verdict: t(`validate.balance.verdicts.${balance.verdict}`) }}
           components={{ b: <span className="font-semibold" />, v: <span className={`font-medium ${VERDICT_CLASS[balance.verdict]}`} /> }}
         />
       </p>
