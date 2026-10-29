@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
-import { RESULT_DIALOG_VALUES, AVATAR_POSITIONS, POSITION_LABELS } from '@/types/dialog'
+import { RESULT_DIALOG_VALUES, AVATAR_POSITIONS } from '@/types/dialog'
 import type { Action } from '@/types/scenario'
 import type { DialogCondition } from '@/types/dialog'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -31,6 +31,7 @@ import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import FieldInfo from '@/components/common/FieldInfo'
 import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from '@/components/ui/icons'
 import { useTranslation, Trans } from 'react-i18next'
+import { avatarPositionName } from '@/lib/game-labels'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -734,7 +735,7 @@ function SlideEditor({
                     <SelectItem value="__unset__">{t('dialogs.dialogEditor.none')}</SelectItem>
                     {AVATAR_POSITIONS.map((position) => (
                       <SelectItem key={position} value={String(position)}>
-                        {POSITION_LABELS[position]}
+                        {avatarPositionName(position)}
                       </SelectItem>
                     ))}
                   </SelectContent>

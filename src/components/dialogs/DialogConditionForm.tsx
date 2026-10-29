@@ -41,7 +41,7 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
   const entityCoordsMap = useMemo(() => {
     const map = new Map<string, string>()
     for (const e of entities ?? []) {
-      if (e.x !== undefined && e.z !== undefined) map.set(e.sid, `Map Coords: ${e.x}, ${e.z}`)
+      if (e.x !== undefined && e.z !== undefined) map.set(e.sid, t('shared.mapCoords', { x: e.x, z: e.z }))
     }
     return map
   }, [entities])

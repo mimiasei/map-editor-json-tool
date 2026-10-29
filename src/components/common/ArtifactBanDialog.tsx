@@ -18,6 +18,8 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import artifactData from '@/data/artifacts.json'
 import { useTranslation } from 'react-i18next'
+import { artifactSlotName, rarityName, artifactKindName } from '@/lib/game-labels'
+import { localNameById } from '@/lib/catalog/local-name'
 
 interface IndexedArtifact {
   sid: string
@@ -102,6 +104,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
   const [hiddenRarities, setHiddenRarities] = useState<Set<string>>(() => new Set())
   const [hiddenSlots, setHiddenSlots] = useState<Set<string>>(() => new Set())
 
+  const nameOf = (a: IndexedArtifact): string => localNameById(catalog, 'artifacts', a.sid, a.name)
   const iconBySid = useMemo(() => new Map((catalog?.artifacts ?? []).map((a) => [a.id, a.icon])), [catalog])
 
   const q = search.trim().toLowerCase()
@@ -111,7 +114,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
   const visible = ARTIFACTS.filter((a) =>
     (spansKinds || a.kind === activeKind) &&
     !hiddenRarities.has(a.rarity ?? 'Unknown') && !hiddenSlots.has(a.slot) &&
-    (!searching || a.name.toLowerCase().includes(q) || a.sid.toLowerCase().includes(q)),
+    (!searching || a.name.toLowerCase().includes(q) || nameOf(a).toLowerCase().includes(q) || a.sid.toLowerCase().includes(q)),
   )
   // Slots offered as chips: those of the shown kind.
   const slotChips = SLOTS.filter((s) => spansKinds || kindOf(s) === activeKind)
@@ -179,7 +182,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
             const active = !searching && activeKind === kind
             return (
               <button key={kind} type="button" role="tab" aria-selected={active} onClick={() => { setActiveKind(kind); setSearch('') }} className={tabClass(active)}>
-                {kind}
+                {artifactKindName(kind)}
                 {countBadge(list.filter((a) => bannedSids.has(a.sid)).length, list.length)}
               </button>
             )
@@ -189,12 +192,12 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
           <ChipRow label={t('common.artifactBanDialog.rarity')}>
             {RARITIES.map((r) => (
-              <Chip key={r} on={!hiddenRarities.has(r)} onClick={() => setHiddenRarities((p) => toggled(p, r))}>{r}</Chip>
+              <Chip key={r} on={!hiddenRarities.has(r)} onClick={() => setHiddenRarities((p) => toggled(p, r))}>{rarityName(r)}</Chip>
             ))}
           </ChipRow>
           <ChipRow label={t('common.artifactBanDialog.slot')}>
             {slotChips.map((s) => (
-              <Chip key={s} on={!hiddenSlots.has(s)} onClick={() => setHiddenSlots((p) => toggled(p, s))}>{s}</Chip>
+              <Chip key={s} on={!hiddenSlots.has(s)} onClick={() => setHiddenSlots((p) => toggled(p, s))}>{artifactSlotName(s)}</Chip>
             ))}
           </ChipRow>
           {/* Always rendered (just invisible) so hiding a chip never changes the line's width. */}
@@ -217,7 +220,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
             className="flex items-center gap-1.5 text-xs disabled:opacity-50"
           >
             <BanMark banned={allVisibleBanned} />
-            {searching ? t('common.artifactBanDialog.banAllMatches') : activeKind === ALL_KINDS ? t('common.artifactBanDialog.banAllShownArtifacts') : `Ban all shown ${activeKind.toLowerCase()}`}
+            {searching ? t('common.artifactBanDialog.banAllMatches') : activeKind === ALL_KINDS ? t('common.artifactBanDialog.banAllShownArtifacts') : t('common.artifactBanDialog.banAllShownKind', { kind: artifactKindName(activeKind).toLowerCase() })}
             <span className="text-[10px] text-muted-foreground tabular-nums">({visible.length})</span>
           </button>
         </div>
@@ -231,7 +234,7 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
             {[...sections.entries()].map(([heading, items]) => (
               <div key={heading} className="space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{heading}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{spansKinds ? artifactKindName(heading) : artifactSlotName(heading)}</span>
                   <span className="text-[10px] text-muted-foreground/60">({items.length})</span>
                   <div className="flex-1 border-t border-border/60" />
                 </div>
@@ -251,11 +254,11 @@ export default function ArtifactBanDialog({ open, onOpenChange, bannedSids, onCh
                         }`}
                       >
                         <BanMark banned={banned} />
-                        <CatalogIcon iconId={iconBySid.get(a.sid) ?? a.sid} name={a.name} size={28} />
+                        <CatalogIcon iconId={iconBySid.get(a.sid) ?? a.sid} name={nameOf(a)} size={28} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[9px] font-medium">{a.name}</p>
+                          <p className="text-[9px] font-medium">{nameOf(a)}</p>
                           <p className="text-[8px] text-muted-foreground">
-                            {a.slot}{a.rarity ? ` · ${a.rarity}` : ''}
+                            {artifactSlotName(a.slot)}{a.rarity ? ` · ${rarityName(a.rarity)}` : ''}
                           </p>
                         </div>
                       </button>

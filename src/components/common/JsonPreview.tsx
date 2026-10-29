@@ -26,6 +26,7 @@ import type { ValidationMessage } from '@/lib/validate'
 import { BASE_LANGUAGE, type TranslationMap } from '@/lib/languages'
 import UndockButton from '@/components/panels/UndockButton'
 import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 /** Parses `{"array": [...]}`, the shape every batched/single-entry custom
  *  JSON doc (heroes, map objects, artifacts, their logic/ground clones)
@@ -486,13 +487,13 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
     for (const template of templates) {
       const id = typeof template.id === 'string' ? template.id : ''
       if (!id || !(id in existing)) {
-        unknownIds.push(id || '(missing id)')
+        unknownIds.push(id || i18n.t('common.jsonPreview.missingId'))
         continue
       }
       setOne(id, { ...existing[id], template })
     }
     if (unknownIds.length > 0) {
-      return `Unknown ${noun} id(s): ${unknownIds.join(', ')} — add new ones via the sidebar, not here.`
+      return i18n.t('common.jsonPreview.unknownIds', { noun, ids: unknownIds.join(', ') })
     }
   }
 
@@ -534,13 +535,13 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
         for (const template of templates) {
           const id = typeof template.id === 'string' ? template.id : ''
           if (!id || !(id in customArtifacts)) {
-            unknownIds.push(id || '(missing id)')
+            unknownIds.push(id || i18n.t('common.jsonPreview.missingId'))
             continue
           }
           setCustomArtifact(id, { ...customArtifacts[id], mapObjectTemplate: template })
         }
         if (unknownIds.length > 0) {
-          return `Unknown artifact id(s): ${unknownIds.join(', ')} — ground objects must match an existing custom artifact's id.`
+          return i18n.t('common.jsonPreview.unknownArtifactIds', { ids: unknownIds.join(', ') })
         }
       },
       onSaveCustomBuffTemplates: (templates) =>

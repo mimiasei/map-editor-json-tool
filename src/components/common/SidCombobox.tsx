@@ -17,14 +17,6 @@ import { useTranslation } from 'react-i18next'
 
 type RefType = NonNullable<ParamDef['ref']>
 
-const REF_LABELS: Record<RefType, string> = {
-  counter: 'counters',
-  quest: 'quests',
-  subquest: 'subquests',
-  interruption: 'interruptions',
-  dialog: 'dialogs',
-}
-
 interface Props {
   value: string
   onChange: (value: string) => void
@@ -123,7 +115,7 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
         <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
-              {filtered.length === 0 && sids.length > 0 ? t('shared.noMatches') : `No ${REF_LABELS[refType]} defined yet`}
+              {filtered.length === 0 && sids.length > 0 ? t('shared.noMatches') : t(`common.sidCombobox.noneDefined.${refType}`)}
             </CommandEmpty>
             <CommandGroup>
               {filtered.map((sid) => (

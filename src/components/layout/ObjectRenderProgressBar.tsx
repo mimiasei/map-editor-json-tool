@@ -39,9 +39,9 @@ export default function ObjectRenderProgressBar() {
       ) : (
         <>
           <span className="min-w-0 flex-1 truncate">
-            {job.phase === 'done' && `Finished rendering ${label}${job.failed > 0 ? ` (${job.failed} could not be drawn)` : ''}.`}
+            {job.phase === 'done' && (job.failed > 0 ? t('layout.objectRenderProgressBar.finishedWithFailures', { label, failed: job.failed }) : t('layout.objectRenderProgressBar.finished', { label }))}
             {job.phase === 'cancelled' && t('layout.objectRenderProgressBar.renderingStoppedWhatIsFinished')}
-            {job.phase === 'error' && `Rendering failed: ${job.error}`}
+            {job.phase === 'error' && t('layout.objectRenderProgressBar.failed', { error: job.error })}
           </span>
           <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={t('layout.objectRenderProgressBar.dismiss')} onClick={() => setDismissed(true)}>
             <X className="h-3.5 w-3.5" />

@@ -77,7 +77,7 @@ export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
 
         onOpenChange(false)
       } else {
-        setError('Failed to load template: ' + result.errors.join(', '))
+        setError(t('guides.templatePickerDialog.loadFailed', { errors: result.errors.join(', ') }))
       }
     } catch (e) {
       setError(String(e))

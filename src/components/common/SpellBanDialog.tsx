@@ -20,6 +20,8 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import spellIndex from '@/data/spell-index.json'
 import { useTranslation } from 'react-i18next'
+import { spellSchoolName } from '@/lib/game-labels'
+import { localNameById } from '@/lib/catalog/local-name'
 
 interface IndexedSpell {
   sid: string
@@ -96,6 +98,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(() => new Set())
   const [hiddenTiers, setHiddenTiers] = useState<Set<number>>(() => new Set())
 
+  const nameOf = (s: IndexedSpell): string => localNameById(catalog, 'spells', s.sid, s.name)
   const iconBySid = useMemo(() => new Map((catalog?.spells ?? []).map((s) => [s.id, s.icon])), [catalog])
 
   const q = search.trim().toLowerCase()
@@ -106,13 +109,13 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
   const visible = SPELLS.filter((s) =>
     (spansSchools ? !hiddenSchools.has(s.school) : s.school === activeSchool) &&
     !hiddenTypes.has(s.type) && !hiddenTiers.has(s.tier) &&
-    (!searching || s.name.toLowerCase().includes(q) || s.sid.toLowerCase().includes(q)),
+    (!searching || s.name.toLowerCase().includes(q) || nameOf(s).toLowerCase().includes(q) || s.sid.toLowerCase().includes(q)),
   )
 
   // Sections: by school on the All tab and in search, by tier inside one school.
   const sections = new Map<string, IndexedSpell[]>()
   for (const s of visible) {
-    const key = spansSchools ? s.school : `Tier ${s.tier}`
+    const key = spansSchools ? s.school : String(s.tier)
     if (!sections.has(key)) sections.set(key, [])
     sections.get(key)!.push(s)
   }
@@ -172,7 +175,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             const active = !searching && activeSchool === school
             return (
               <button key={school} type="button" role="tab" aria-selected={active} onClick={() => { setActiveSchool(school); setSearch('') }} className={tabClass(active)}>
-                {school}
+                {spellSchoolName(school)}
                 {countBadge(list.filter((s) => bannedSids.has(s.sid)).length, list.length)}
               </button>
             )
@@ -183,7 +186,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
           {spansSchools && (
             <ChipRow label={t('common.spellBanDialog.school')}>
               {SCHOOLS.map((school) => (
-                <Chip key={school} on={!hiddenSchools.has(school)} onClick={() => setHiddenSchools((p) => toggled(p, school))}>{school}</Chip>
+                <Chip key={school} on={!hiddenSchools.has(school)} onClick={() => setHiddenSchools((p) => toggled(p, school))}>{spellSchoolName(school)}</Chip>
               ))}
             </ChipRow>
           )}
@@ -217,7 +220,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             className="flex items-center gap-1.5 text-xs disabled:opacity-50"
           >
             <BanMark banned={allVisibleBanned} />
-            {searching ? t('common.spellBanDialog.banAllMatches') : activeSchool === ALL_SCHOOLS ? t('common.spellBanDialog.banAllShownSpells') : `Ban all shown ${activeSchool} spells`}
+            {searching ? t('common.spellBanDialog.banAllMatches') : activeSchool === ALL_SCHOOLS ? t('common.spellBanDialog.banAllShownSpells') : t('common.spellBanDialog.banAllShownSchool', { school: spellSchoolName(activeSchool) })}
             <span className="text-[10px] text-muted-foreground tabular-nums">({visible.length})</span>
           </button>
         </div>
@@ -231,7 +234,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
             {[...sections.entries()].map(([heading, items]) => (
               <div key={heading} className="space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{heading}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{spansSchools ? spellSchoolName(heading) : t('catalog.gameDatabaseDialog.tierN', { n: heading })}</span>
                   <span className="text-[10px] text-muted-foreground/60">({items.length})</span>
                   <div className="flex-1 border-t border-border/60" />
                 </div>
@@ -251,11 +254,11 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
                         }`}
                       >
                         <BanMark banned={banned} />
-                        <CatalogIcon iconId={iconBySid.get(s.sid) ?? s.sid} name={s.name} size={28} />
+                        <CatalogIcon iconId={iconBySid.get(s.sid) ?? s.sid} name={nameOf(s)} size={28} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[9px] font-medium">{s.name}</p>
+                          <p className="text-[9px] font-medium">{nameOf(s)}</p>
                           <p className="text-[8px] text-muted-foreground">
-                            {s.type === 'world' ? t('common.spellBanDialog.world') : t('common.spellBanDialog.battle')}{spansSchools ? ` · Tier ${s.tier}` : ''}
+                            {s.type === 'world' ? t('common.spellBanDialog.world') : t('common.spellBanDialog.battle')}{spansSchools ? ` · ${t('catalog.gameDatabaseDialog.tierN', { n: s.tier })}` : ''}
                           </p>
                         </div>
                       </button>

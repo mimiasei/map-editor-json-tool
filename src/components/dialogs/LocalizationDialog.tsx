@@ -239,14 +239,12 @@ export default function LocalizationDialog() {
 
   // ── Import from JSON paste ────────────────────────────────────────────────────
   const handleImportPaste = () => {
-    const raw = window.prompt(
-      `Paste the contents of a customMaps.json file for ${languageLabel(activeLang)} ({"tokens":[{"sid":"...","text":"..."},...]}):`,
-    )
+    const raw = window.prompt(t('dialogs.localizationDialog.importPrompt', { language: languageLabel(activeLang) }))
     if (!raw) return
     try {
       const obj = JSON.parse(raw.replace(/^﻿/, '')) // strip BOM
       if (!obj?.tokens || !Array.isArray(obj.tokens)) {
-        alert('Unexpected format. Expected {"tokens": [...]}')
+        alert(t('dialogs.localizationDialog.unexpectedFormat'))
         return
       }
       const batch: Record<string, string> = {}
@@ -258,12 +256,12 @@ export default function LocalizationDialog() {
       if (isBase) setLocalizationBatch(batch)
       else setTranslationBatch(activeLang, batch)
     } catch {
-      alert('Invalid JSON.')
+      alert(t('dialogs.localizationDialog.invalidJson'))
     }
   }
 
   const handleDeleteToken = (sid: string) => {
-    if (!window.confirm(`Delete token "${sid}"? This removes its text in every language.`)) return
+    if (!window.confirm(t('dialogs.localizationDialog.confirmDeleteToken', { sid }))) return
     removeLocalizationToken(sid)
   }
 
@@ -272,9 +270,7 @@ export default function LocalizationDialog() {
     const count = Object.values(translations[activeLang] ?? {}).filter((t) => t.trim()).length
     if (
       count > 0 &&
-      !window.confirm(
-        `Remove ${languageLabel(activeLang)} and discard its ${count} translated token${count !== 1 ? 's' : ''}?`,
-      )
+      !window.confirm(t('dialogs.localizationDialog.confirmRemoveLanguage', { language: languageLabel(activeLang), count }))
     ) {
       return
     }

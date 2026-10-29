@@ -355,7 +355,7 @@ export default function ScenarioTree() {
     const map = new Map<string, string>()
     for (const e of entities) {
       if (e.x !== undefined && e.z !== undefined) {
-        map.set(e.sid, `Map Coords: ${e.x}, ${e.z}`)
+        map.set(e.sid, t('shared.mapCoords', { x: e.x, z: e.z }))
       }
     }
     return map
@@ -995,7 +995,7 @@ export default function ScenarioTree() {
                       const titleText = [
                         name,
                         coords,
-                        usage ? `Go to ${usage.type} [${usage.path.join(', ')}]` : undefined,
+                        usage ? t('tree.scenarioTree.goTo', { type: usage.type, path: usage.path.join(', ') }) : undefined,
                       ].filter(Boolean).join(' · ')
                       // Hero-spawner SIDs are hero catalog IDs, not authored
                       // entity names — renaming them is out of scope (map-context.ts:36).

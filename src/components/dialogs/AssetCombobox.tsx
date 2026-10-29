@@ -48,7 +48,7 @@ export default function AssetCombobox({
   onChange,
   suggestions,
   placeholder,
-  emptyHint = 'No suggestions — load Core.zip via Game Data',
+  emptyHint,
   className = '',
   thumbnailFor,
 }: Props) {
@@ -115,7 +115,7 @@ export default function AssetCombobox({
         <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
-              {suggestions.length === 0 ? emptyHint : t('dialogs.assetCombobox.noMatchFreeTextIs')}
+              {suggestions.length === 0 ? (emptyHint ?? t('dialogs.assetCombobox.noSuggestions')) : t('dialogs.assetCombobox.noMatchFreeTextIs')}
             </CommandEmpty>
             <CommandGroup>
               {filtered.map((s) => (

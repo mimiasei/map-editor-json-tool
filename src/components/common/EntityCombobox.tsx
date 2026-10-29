@@ -1,6 +1,6 @@
 import { localName } from '@/lib/catalog/local-name'
 import { useState, useMemo, useRef } from 'react'
-import { ENTITY_REGISTRIES, ENTITY_LABELS } from '@/schema/entities'
+import { ENTITY_REGISTRIES } from '@/schema/entities'
 import type { EntityCategory, EntityEntry } from '@/schema/entities'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -424,8 +424,8 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
 
                 <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
                   {filtered.length === 0 && allEntries.length > 0
-                    ? `No matching ${ENTITY_LABELS[category]}`
-                    : `No ${ENTITY_LABELS[category]} — load Core.zip via Game Data`}
+                    ? t(`common.entityCombobox.noMatching.${category}`)
+                    : t(`common.entityCombobox.noneLoaded.${category}`)}
                 </CommandEmpty>
                 {groupedEntries ? (
                   groupedEntries.map(([group, entries]) => (

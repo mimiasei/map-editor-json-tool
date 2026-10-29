@@ -30,7 +30,13 @@
       "slot": "Emplacement",
       "noArtifactMatchesTheSearch": "Aucun artefact ne correspond à la recherche et aux filtres.",
       "banAllMatches": "Bannir toutes les correspondances",
-      "banAllShownArtifacts": "Bannir tous les artefacts affichés"
+      "banAllShownArtifacts": "Bannir tous les artefacts affichés",
+      "kinds": {
+        "Equipment": "Équipement",
+        "Artifacts": "Artefacts",
+        "Scrolls": "Parchemins"
+      },
+      "banAllShownKind": "Bannir tous les éléments affichés : {{kind}}"
     },
     "changelogDialog": {
       "mostRecentCommits": "{{length}} derniers commits",
@@ -61,7 +67,33 @@
       "browse": "Parcourir",
       "browseHeroesByFaction": "Parcourir les héros par faction…",
       "filterMapObjects": "Filtrer les objets de carte",
-      "filterMapObjectsActive": "Filtrer les objets de carte ({{filter}})"
+      "filterMapObjectsActive": "Filtrer les objets de carte ({{filter}})",
+      "noMatching": {
+        "hero": "Aucun héros correspondant",
+        "creature": "Aucune créature correspondante",
+        "artifact": "Aucun artefact correspondant",
+        "mapObject": "Aucun objet de carte correspondant",
+        "spell": "Aucun sort correspondant",
+        "skill": "Aucune compétence correspondante",
+        "buff": "Aucun effet correspondant",
+        "squadTemplate": "Aucun modèle d'escouade correspondant",
+        "vfx": "Aucun effet visuel correspondant",
+        "interactiveObject": "Aucun objet interactif correspondant",
+        "decoration": "Aucun objet de décor correspondant"
+      },
+      "noneLoaded": {
+        "hero": "Aucun héros — chargez Core.zip via Données du jeu",
+        "creature": "Aucune créature — chargez Core.zip via Données du jeu",
+        "artifact": "Aucun artefact — chargez Core.zip via Données du jeu",
+        "mapObject": "Aucun objet de carte — chargez Core.zip via Données du jeu",
+        "spell": "Aucun sort — chargez Core.zip via Données du jeu",
+        "skill": "Aucune compétence — chargez Core.zip via Données du jeu",
+        "buff": "Aucun effet — chargez Core.zip via Données du jeu",
+        "squadTemplate": "Aucun modèle d'escouade — chargez Core.zip via Données du jeu",
+        "vfx": "Aucun effet visuel — chargez Core.zip via Données du jeu",
+        "interactiveObject": "Aucun objet interactif — chargez Core.zip via Données du jeu",
+        "decoration": "Aucun objet de décor — chargez Core.zip via Données du jeu"
+      }
     },
     "errorBoundary": {
       "somethingWentWrong": "Une erreur s'est produite",
@@ -347,7 +379,10 @@
         "actionsBefore": "Carte : actions avant",
         "actionsAfter": "Carte : actions après",
         "dialog": "Dialogue : {{label}}"
-      }
+      },
+      "unknownIds": "Identifiant(s) de {{noun}} inconnu(s) : {{ids}} — ajoutez-en de nouveaux via la barre latérale, pas ici.",
+      "unknownArtifactIds": "Identifiant(s) d'artefact inconnu(s) : {{ids}} — les objets au sol doivent correspondre à l'identifiant d'un artefact personnalisé existant.",
+      "missingId": "(identifiant manquant)"
     },
     "localizedTextField": {
       "optional": "(facultatif)",
@@ -501,7 +536,8 @@
       "banAllMatches": "Bannir toutes les correspondances",
       "banAllShownSpells": "Bannir tous les sorts affichés",
       "world": "Monde",
-      "battle": "Combat"
+      "battle": "Combat",
+      "banAllShownSchool": "Bannir tous les sorts affichés : {{school}}"
     },
     "statsDialog": {
       "questSID": "SID de la quête",
@@ -837,6 +873,15 @@
       "weeksShort": "S",
       "daysShort": "J",
       "ariaLabel": "{{label}} : {{unit}}"
+    },
+    "sidCombobox": {
+      "noneDefined": {
+        "counter": "Aucun compteur défini pour l'instant",
+        "quest": "Aucune quête définie pour l'instant",
+        "subquest": "Aucune sous-quête définie pour l'instant",
+        "interruption": "Aucune interruption définie pour l'instant",
+        "dialog": "Aucun dialogue défini pour l'instant"
+      }
     }
   },
   "shared": {
@@ -981,7 +1026,39 @@
       "blocks": "Bloc"
     },
     "copyValue": "Copier « {{text}} »",
-    "paramN": "Paramètre {{n}}"
+    "paramN": "Paramètre {{n}}",
+    "artifactSlots": {
+      "Head": "Tête",
+      "Armor": "Armure",
+      "Back": "Dos",
+      "Belt": "Ceinture",
+      "Boots": "Bottes",
+      "Ring": "Anneau",
+      "MainHand": "Main principale",
+      "OffHand": "Main faible",
+      "Artifacts": "Artefacts",
+      "UnicSlot": "Emplacement unique",
+      "ScrollsPrimal": "Parchemins (primordiaux)",
+      "ScrollsDaylight": "Parchemins (lumière)",
+      "ScrollsArcane": "Parchemins (arcanes)",
+      "ScrollsNightshade": "Parchemins (belladone)",
+      "ScrollsOther": "Parchemins (autres)"
+    },
+    "rarities": {
+      "Common": "Commun",
+      "Rare": "Rare",
+      "Epic": "Épique",
+      "Legendary": "Légendaire",
+      "Unknown": "Inconnue"
+    },
+    "spellSchools": {
+      "Daylight": "Lumière",
+      "Nightshade": "Belladone",
+      "Primal": "Primordial",
+      "Arcane": "Arcanes",
+      "Neutral": "Neutre"
+    },
+    "mapCoords": "Coordonnées : {{x}}, {{z}}"
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -1204,7 +1281,8 @@
         "terrain": "Textures de terrain",
         "cliffs": "Bords de falaise",
         "lines": "Routes et rivières"
-      }
+      },
+      "canvasMemory": "Actuel : {{mb}} Mo de mémoire de canevas."
     },
     "objectActionsEditor": {
       "addAction": "Ajouter une action",
@@ -1380,7 +1458,12 @@
       "drawingActive": "Dessin…",
       "placingZone": "Placement de {{zone}}…",
       "zoneN": "Zone {{zone}}",
-      "portalLinkPrompt": "Cliquez sur le portail à relier à <b>{{name}}</b> (surligné)"
+      "portalLinkPrompt": "Cliquez sur le portail à relier à <b>{{name}}</b> (surligné)",
+      "pickHints": {
+        "clickObject": "Cliquez sur un objet de la grille.",
+        "noEntitySid": "Cet objet n'a pas encore de SID d'entité, et les entités ne peuvent pas être modifiées ici.",
+        "clickHeroSpawner": "Cliquez sur un point d'apparition de héros auquel un héros est assigné."
+      }
     },
     "objectBrowserPanel": {
       "units": "Unités",
@@ -1772,7 +1855,8 @@
       "triggerN": "Déclencheur {{n}}",
       "renameTitle": "Renommer « {{sid}} »",
       "setDisplayNameTitle": "Définir le nom affiché de « {{sid}} »",
-      "editFullHeroTitle": "Modifier le héros complet « {{sid}} »"
+      "editFullHeroTitle": "Modifier le héros complet « {{sid}} »",
+      "goTo": "Aller à : {{type}} [{{path}}]"
     },
     "setDisplayNameDialog": {
       "thisSpawnerHasNoHero": "Ce point d'apparition n'a pas encore de héros attribué : attribuez-en un d'abord, puis rouvrez cette boîte de dialogue.",
@@ -1991,7 +2075,10 @@
     "objectRenderProgressBar": {
       "rendering": "Rendu de {{label}}",
       "renderingStoppedWhatIsFinished": "Rendu arrêté. Ce qui est terminé est conservé ; reprenez depuis Plus > Générer les images d'objets.",
-      "dismiss": "Ignorer"
+      "dismiss": "Ignorer",
+      "finished": "Rendu terminé : {{label}}.",
+      "finishedWithFailures": "Rendu terminé : {{label}} ({{failed}} n'ont pas pu être dessinés).",
+      "failed": "Échec du rendu : {{error}}"
     },
     "toolbar": {
       "oEScenarioEditor": "Éditeur de scénarios OE",
@@ -2095,7 +2182,8 @@
   },
   "dialogs": {
     "assetCombobox": {
-      "noMatchFreeTextIs": "Aucune correspondance : le texte libre est accepté"
+      "noMatchFreeTextIs": "Aucune correspondance : le texte libre est accepté",
+      "noSuggestions": "Aucune suggestion — chargez Core.zip via Données du jeu"
     },
     "avatarStrip": {
       "noIcon": "(aucune icône)",
@@ -2111,7 +2199,15 @@
       "layer": "Calque",
       "foreground": "Premier plan",
       "widthOptional": "Largeur (facultatif)",
-      "animations": "Animations"
+      "animations": "Animations",
+      "positions": {
+        "1": "Tout à gauche",
+        "2": "Gauche",
+        "3": "Milieu",
+        "4": "Droite",
+        "5": "Tout à droite"
+      },
+      "addAvatarAt": "Ajouter un avatar : {{position}}"
     },
     "dialogConditionForm": {
       "dialogConditionType": "Type de condition de dialogue",
@@ -2241,7 +2337,14 @@
       "tokensShown_one": "{{count}} jeton affiché",
       "tokensShown_many": "{{count}} jetons affichés",
       "tokensShown_other": "{{count}} jetons affichés",
-      "deleteTokenTitle": "Supprimer le jeton « {{sid}} »"
+      "deleteTokenTitle": "Supprimer le jeton « {{sid}} »",
+      "importPrompt": "Collez le contenu d'un fichier customMaps.json pour {{language}} ({\"tokens\":[{\"sid\":\"...\",\"text\":\"...\"},...]}) :",
+      "unexpectedFormat": "Format inattendu. Attendu : {\"tokens\": [...]}",
+      "invalidJson": "JSON invalide.",
+      "confirmDeleteToken": "Supprimer le jeton « {{sid}} » ? Cela supprime son texte dans toutes les langues.",
+      "confirmRemoveLanguage_one": "Supprimer {{language}} et abandonner son jeton traduit ({{count}}) ?",
+      "confirmRemoveLanguage_other": "Supprimer {{language}} et abandonner ses {{count}} jetons traduits ?",
+      "confirmRemoveLanguage_many": "Supprimer {{language}} et abandonner ses {{count}} jetons traduits ?"
     }
   },
   "editors": {
@@ -2701,7 +2804,8 @@
     "templatePickerDialog": {
       "title": "Nouveau à partir d'un modèle",
       "load": "Charger le modèle",
-      "loading": "Chargement…"
+      "loading": "Chargement…",
+      "loadFailed": "Échec du chargement du modèle : {{errors}}"
     }
   },
   "panels": {

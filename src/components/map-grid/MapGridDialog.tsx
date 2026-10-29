@@ -1696,14 +1696,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             // (same naming as 'Create a rule for this'), so any placed object
             // can be picked. Zone markers (type 1) are not pickable objects.
             const target = itemsHere.find((it) => it.entitySid) ?? itemsHere.find((it) => it.type !== 1)
-            if (!target) setPickHint('Click an object on the grid.')
+            if (!target) setPickHint(t('mapGrid.mapGridDialog.pickHints.clickObject'))
             else if (target.entitySid) resolvePick(target.entitySid)
-            else if (!canEditEntities) setPickHint('This object has no entity SID yet, and entities cannot be edited here.')
+            else if (!canEditEntities) setPickHint(t('mapGrid.mapGridDialog.pickHints.noEntitySid'))
             else resolvePick(ensureEntitySid(target))
           } else {
             const spawner = itemsHere.find((it) => it.spawnerInfo?.spawnPointType === 1 && it.spawnerInfo.heroSid)
             if (spawner?.spawnerInfo?.heroSid) resolvePick(spawner.spawnerInfo.heroSid)
-            else setPickHint('Click a hero spawner with a hero assigned.')
+            else setPickHint(t('mapGrid.mapGridDialog.pickHints.clickHeroSpawner'))
           }
         }
       }

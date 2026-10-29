@@ -30,7 +30,13 @@
       "slot": "Slot",
       "noArtifactMatchesTheSearch": "No artifact matches the search and filters.",
       "banAllMatches": "Ban all matches",
-      "banAllShownArtifacts": "Ban all shown artifacts"
+      "banAllShownArtifacts": "Ban all shown artifacts",
+      "kinds": {
+        "Equipment": "Equipment",
+        "Artifacts": "Artifacts",
+        "Scrolls": "Scrolls"
+      },
+      "banAllShownKind": "Ban all shown {{kind}}"
     },
     "changelogDialog": {
       "mostRecentCommits": "{{length}} most recent commits",
@@ -61,7 +67,33 @@
       "browse": "Browse",
       "browseHeroesByFaction": "Browse heroes by faction…",
       "filterMapObjects": "Filter map objects",
-      "filterMapObjectsActive": "Filter map objects ({{filter}})"
+      "filterMapObjectsActive": "Filter map objects ({{filter}})",
+      "noMatching": {
+        "hero": "No matching heroes",
+        "creature": "No matching creatures",
+        "artifact": "No matching artifacts",
+        "mapObject": "No matching map objects",
+        "spell": "No matching spells",
+        "skill": "No matching skills",
+        "buff": "No matching buffs",
+        "squadTemplate": "No matching squad templates",
+        "vfx": "No matching VFX effects",
+        "interactiveObject": "No matching interactive objects",
+        "decoration": "No matching decoration objects"
+      },
+      "noneLoaded": {
+        "hero": "No heroes — load Core.zip via Game Data",
+        "creature": "No creatures — load Core.zip via Game Data",
+        "artifact": "No artifacts — load Core.zip via Game Data",
+        "mapObject": "No map objects — load Core.zip via Game Data",
+        "spell": "No spells — load Core.zip via Game Data",
+        "skill": "No skills — load Core.zip via Game Data",
+        "buff": "No buffs — load Core.zip via Game Data",
+        "squadTemplate": "No squad templates — load Core.zip via Game Data",
+        "vfx": "No VFX effects — load Core.zip via Game Data",
+        "interactiveObject": "No interactive objects — load Core.zip via Game Data",
+        "decoration": "No decoration objects — load Core.zip via Game Data"
+      }
     },
     "errorBoundary": {
       "somethingWentWrong": "Something went wrong",
@@ -334,7 +366,10 @@
         "actionsBefore": "Map: Actions Before",
         "actionsAfter": "Map: Actions After",
         "dialog": "Dialog: {{label}}"
-      }
+      },
+      "unknownIds": "Unknown {{noun}} id(s): {{ids}} — add new ones via the sidebar, not here.",
+      "unknownArtifactIds": "Unknown artifact id(s): {{ids}} — ground objects must match an existing custom artifact's id.",
+      "missingId": "(missing id)"
     },
     "localizedTextField": {
       "optional": "(optional)",
@@ -480,7 +515,8 @@
       "banAllMatches": "Ban all matches",
       "banAllShownSpells": "Ban all shown spells",
       "world": "World",
-      "battle": "Battle"
+      "battle": "Battle",
+      "banAllShownSchool": "Ban all shown {{school}} spells"
     },
     "statsDialog": {
       "questSID": "Quest SID",
@@ -808,6 +844,15 @@
       "weeksShort": "W",
       "daysShort": "D",
       "ariaLabel": "{{label}} {{unit}}"
+    },
+    "sidCombobox": {
+      "noneDefined": {
+        "counter": "No counters defined yet",
+        "quest": "No quests defined yet",
+        "subquest": "No subquests defined yet",
+        "interruption": "No interruptions defined yet",
+        "dialog": "No dialogs defined yet"
+      }
     }
   },
   "shared": {
@@ -952,7 +997,39 @@
       "blocks": "Block"
     },
     "copyValue": "Copy \"{{text}}\"",
-    "paramN": "Param {{n}}"
+    "paramN": "Param {{n}}",
+    "artifactSlots": {
+      "Head": "Head",
+      "Armor": "Armor",
+      "Back": "Back",
+      "Belt": "Belt",
+      "Boots": "Boots",
+      "Ring": "Ring",
+      "MainHand": "Main Hand",
+      "OffHand": "Off Hand",
+      "Artifacts": "Artifacts",
+      "UnicSlot": "Unique slot",
+      "ScrollsPrimal": "Scrolls (Primal)",
+      "ScrollsDaylight": "Scrolls (Daylight)",
+      "ScrollsArcane": "Scrolls (Arcane)",
+      "ScrollsNightshade": "Scrolls (Nightshade)",
+      "ScrollsOther": "Scrolls (Other)"
+    },
+    "rarities": {
+      "Common": "Common",
+      "Rare": "Rare",
+      "Epic": "Epic",
+      "Legendary": "Legendary",
+      "Unknown": "Unknown"
+    },
+    "spellSchools": {
+      "Daylight": "Daylight",
+      "Nightshade": "Nightshade",
+      "Primal": "Primal",
+      "Arcane": "Arcane",
+      "Neutral": "Neutral"
+    },
+    "mapCoords": "Map Coords: {{x}}, {{z}}"
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -1173,7 +1250,8 @@
         "terrain": "Terrain textures",
         "cliffs": "Cliff edges",
         "lines": "Roads and rivers"
-      }
+      },
+      "canvasMemory": "Current: {{mb}} MB of canvas memory."
     },
     "objectActionsEditor": {
       "addAction": "Add action",
@@ -1348,7 +1426,12 @@
       "drawingActive": "Drawing…",
       "placingZone": "Placing {{zone}}…",
       "zoneN": "Zone {{zone}}",
-      "portalLinkPrompt": "Click the portal to link <b>{{name}}</b> with (highlighted)"
+      "portalLinkPrompt": "Click the portal to link <b>{{name}}</b> with (highlighted)",
+      "pickHints": {
+        "clickObject": "Click an object on the grid.",
+        "noEntitySid": "This object has no entity SID yet, and entities cannot be edited here.",
+        "clickHeroSpawner": "Click a hero spawner with a hero assigned."
+      }
     },
     "objectBrowserPanel": {
       "units": "Units",
@@ -1739,7 +1822,8 @@
       "triggerN": "Trigger {{n}}",
       "renameTitle": "Rename \"{{sid}}\"",
       "setDisplayNameTitle": "Set display name for \"{{sid}}\"",
-      "editFullHeroTitle": "Edit full hero for \"{{sid}}\""
+      "editFullHeroTitle": "Edit full hero for \"{{sid}}\"",
+      "goTo": "Go to {{type}} [{{path}}]"
     },
     "setDisplayNameDialog": {
       "thisSpawnerHasNoHero": "This spawner has no hero assigned yet — assign one first, then reopen this dialog.",
@@ -1956,7 +2040,10 @@
     "objectRenderProgressBar": {
       "rendering": "Rendering {{label}}",
       "renderingStoppedWhatIsFinished": "Rendering stopped. What is finished is kept; continue from More > Render Object Images.",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "finished": "Finished rendering {{label}}.",
+      "finishedWithFailures": "Finished rendering {{label}} ({{failed}} could not be drawn).",
+      "failed": "Rendering failed: {{error}}"
     },
     "toolbar": {
       "oEScenarioEditor": "OE Scenario Editor",
@@ -2060,7 +2147,8 @@
   },
   "dialogs": {
     "assetCombobox": {
-      "noMatchFreeTextIs": "No match — free text is accepted"
+      "noMatchFreeTextIs": "No match — free text is accepted",
+      "noSuggestions": "No suggestions — load Core.zip via Game Data"
     },
     "avatarStrip": {
       "noIcon": "(no icon)",
@@ -2076,7 +2164,15 @@
       "layer": "Layer",
       "foreground": "Foreground",
       "widthOptional": "Width (optional)",
-      "animations": "Animations"
+      "animations": "Animations",
+      "positions": {
+        "1": "Left-most",
+        "2": "Left",
+        "3": "Middle",
+        "4": "Right",
+        "5": "Right-most"
+      },
+      "addAvatarAt": "Add avatar at {{position}}"
     },
     "dialogConditionForm": {
       "dialogConditionType": "Dialog condition type",
@@ -2202,7 +2298,14 @@
       "namingSid": "Naming SID → <m>{{sid}}</m>",
       "tokensShown_one": "{{count}} token shown",
       "tokensShown_other": "{{count}} tokens shown",
-      "deleteTokenTitle": "Delete token \"{{sid}}\""
+      "deleteTokenTitle": "Delete token \"{{sid}}\"",
+      "importPrompt": "Paste the contents of a customMaps.json file for {{language}} ({\"tokens\":[{\"sid\":\"...\",\"text\":\"...\"},...]}):",
+      "unexpectedFormat": "Unexpected format. Expected {\"tokens\": [...]}",
+      "invalidJson": "Invalid JSON.",
+      "confirmDeleteToken": "Delete token \"{{sid}}\"? This removes its text in every language.",
+      "confirmRemoveLanguage_one": "Remove {{language}} and discard its {{count}} translated token?",
+      "confirmRemoveLanguage_other": "Remove {{language}} and discard its {{count}} translated tokens?",
+      "confirmRemoveLanguage_many": "Remove {{language}} and discard its {{count}} translated tokens?"
     }
   },
   "editors": {
@@ -2657,7 +2760,8 @@
     "templatePickerDialog": {
       "title": "New from Template",
       "load": "Load Template",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "loadFailed": "Failed to load template: {{errors}}"
     }
   },
   "panels": {

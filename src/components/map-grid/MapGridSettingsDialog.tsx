@@ -333,7 +333,7 @@ export default function MapGridSettingsDialog({
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {mapSize && 'Current: ' + estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) + ' MB of canvas memory.'}
+            {mapSize && t('mapGrid.mapGridSettingsDialog.canvasMemory', { mb: estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) })}
           </p>
           {settings.drawQuality === 'custom' && customQualityOpen && (
             <div className="space-y-2">
