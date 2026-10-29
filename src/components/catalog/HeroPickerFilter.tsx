@@ -18,6 +18,7 @@ import FilterRows, {
   isGroupActive,
   groupAdmits,
 } from './FilterRows'
+import { useTranslation } from 'react-i18next'
 
 const STORAGE_KEY = 'oe-hero-picker-filter'
 
@@ -70,6 +71,7 @@ interface Props {
 }
 
 export default function HeroPickerFilter({ value, onChange, showKinds = true }: Props) {
+  const { t } = useTranslation()
   const update = (key: keyof PortraitFilterState) => (g: FilterGroup) => {
     const next = { ...value, [key]: g }
     onChange(next)
@@ -88,7 +90,7 @@ export default function HeroPickerFilter({ value, onChange, showKinds = true }: 
           variant="ghost"
           size="icon"
           className="relative h-7 w-7 shrink-0"
-          title="Filter portraits"
+          title={t('catalog.heroPickerFilter.filterPortraits')}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           {isPortraitFilterActive(value) && (
@@ -99,7 +101,7 @@ export default function HeroPickerFilter({ value, onChange, showKinds = true }: 
 
       <PopoverContent className="w-56 p-3 space-y-4 text-sm" align="end">
         <FilterRows
-          label="Faction"
+          label={t('common.statsDialog.faction')}
           group={value.factions}
           keys={FACTION_ORDER}
           labelFor={(k) => k}
@@ -108,7 +110,7 @@ export default function HeroPickerFilter({ value, onChange, showKinds = true }: 
 
         {showKinds && (
           <FilterRows
-            label="Kind"
+            label={t('catalog.heroPickerFilter.kind')}
             group={value.kinds}
             keys={PORTRAIT_KINDS}
             labelFor={(k) => PORTRAIT_KIND_LABELS[k as PortraitKind] ?? k}
@@ -118,7 +120,7 @@ export default function HeroPickerFilter({ value, onChange, showKinds = true }: 
 
         <div className="pt-1 border-t border-border">
           <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={reset}>
-            Reset filters
+            {t('shared.resetFilters')}
           </Button>
         </div>
       </PopoverContent>

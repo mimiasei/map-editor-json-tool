@@ -43,6 +43,7 @@ import type {
 
 import unitsData from '@/data/units.json'
 import { factionDisplayName, groupByFaction } from '@/lib/factions'
+import { useTranslation } from 'react-i18next'
 
 // ─── Faction display name normalizer ─────────────────────────────────────────
 // Kept as a thin re-export so existing call sites read unchanged; the table and
@@ -87,14 +88,7 @@ interface Props {
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'heroes',     label: 'Heroes' },
-  { id: 'creatures',  label: 'Creatures' },
-  { id: 'artifacts',  label: 'Artifacts' },
-  { id: 'spells',     label: 'Spells' },
-  { id: 'skills',     label: 'Skills' },
-  { id: 'mapObjects', label: 'Map Objects' },
-]
+const TABS: TabId[] = ['heroes', 'creatures', 'artifacts', 'spells', 'skills', 'mapObjects']
 
 // ─── Copy button ──────────────────────────────────────────────────────────────
 
@@ -139,6 +133,7 @@ function DetailPane({
   creaturePlacements: { unitSid: string; x: number; z: number }[]
   artifactPlacements: { sid: string; x: number; z: number }[]
 }) {
+  const { t } = useTranslation()
   const instancesOfType = mapEntities.filter((e) => e.type === item.id)
   const heroCoords = heroPlacements.filter((h) => h.heroSid === item.id)
   const creatureCoords = creaturePlacements.filter((c) => c.unitSid === item.id)
@@ -166,7 +161,7 @@ function DetailPane({
 
       {/* SID */}
       <div className="space-y-0.5">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">SID</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('shared.sID')}</p>
         <div className="flex items-center gap-1.5 font-mono text-xs bg-muted rounded px-2 py-1">
           <span className="flex-1 break-all">{item.id}</span>
           <CopyButton text={item.id} />
@@ -175,14 +170,14 @@ function DetailPane({
 
       {/* Instance counts */}
       <div className="space-y-0.5">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Usage</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('catalog.gameDatabaseDialog.usage')}</p>
         <div className="grid grid-cols-2 gap-1.5 text-xs">
           <div className="bg-muted rounded px-2 py-1">
-            <span className="text-muted-foreground">Map placements </span>
+            <span className="text-muted-foreground">{t('catalog.gameDatabaseDialog.mapPlacements')} </span>
             <span className="font-semibold">{mapCount}</span>
           </div>
           <div className="bg-muted rounded px-2 py-1">
-            <span className="text-muted-foreground">Script refs </span>
+            <span className="text-muted-foreground">{t('catalog.gameDatabaseDialog.scriptRefs')} </span>
             <span className="font-semibold">{scriptCount}</span>
           </div>
         </div>
@@ -194,7 +189,7 @@ function DetailPane({
       {/* Creature cost + misc */}
       {(creatureCost || item.squadValue !== undefined || item.nativeBiome != null || item.aiType != null || item.baseSid != null || item.upgradeSid != null) && (
         <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Info</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('catalog.gameDatabaseDialog.info')}</p>
           <div className="grid grid-cols-2 gap-1 text-xs">
             {creatureCost && creatureCost.map((c) => (
               <div key={c.resource} className="flex justify-between bg-muted rounded px-2 py-0.5">
@@ -204,19 +199,19 @@ function DetailPane({
             ))}
             {item.squadValue !== undefined && (
               <div className="flex justify-between bg-muted rounded px-2 py-0.5">
-                <span className="text-muted-foreground">Squad value</span>
+                <span className="text-muted-foreground">{t('catalog.gameDatabaseDialog.squadValue')}</span>
                 <span className="font-semibold tabular-nums">{String(item.squadValue)}</span>
               </div>
             )}
             {item.nativeBiome != null && (
               <div className="flex justify-between bg-muted rounded px-2 py-0.5">
-                <span className="text-muted-foreground">Native biome</span>
+                <span className="text-muted-foreground">{t('tree.heroEditorDialog.nativeBiome')}</span>
                 <span className="font-semibold">{String(item.nativeBiome)}</span>
               </div>
             )}
             {item.aiType != null && (
               <div className="flex justify-between bg-muted rounded px-2 py-0.5">
-                <span className="text-muted-foreground">AI type</span>
+                <span className="text-muted-foreground">{t('catalog.gameDatabaseDialog.aIType')}</span>
                 <span className="font-semibold">{String(item.aiType)}</span>
               </div>
             )}
@@ -225,7 +220,7 @@ function DetailPane({
             <div className="flex flex-col gap-0.5 text-xs mt-1">
               {item.baseSid != null && (
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-20 shrink-0">Upgrades from</span>
+                  <span className="text-muted-foreground w-20 shrink-0">{t('catalog.gameDatabaseDialog.upgradesFrom')}</span>
                   <span className="font-mono">
                     {UNIT_NAMES.get(String(item.baseSid)) ?? String(item.baseSid)}
                     {UNIT_NAMES.has(String(item.baseSid)) && (
@@ -236,7 +231,7 @@ function DetailPane({
               )}
               {item.upgradeSid != null && (
                 <div className="flex gap-2">
-                  <span className="text-muted-foreground w-20 shrink-0">Upgrades to</span>
+                  <span className="text-muted-foreground w-20 shrink-0">{t('catalog.gameDatabaseDialog.upgradesTo')}</span>
                   <span className="font-mono">
                     {UNIT_NAMES.get(String(item.upgradeSid)) ?? String(item.upgradeSid)}
                     {UNIT_NAMES.has(String(item.upgradeSid)) && (
@@ -253,7 +248,7 @@ function DetailPane({
       {/* Extra fields (generic — excludes creature-specific fields handled above) */}
       {item.description != null && (
         <div className="space-y-0.5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('mapGrid.mapGameSettingsDialog.description')}</p>
           <p className="text-xs bg-muted rounded px-2 py-1.5 leading-relaxed">{String(item.description)}</p>
         </div>
       )}
@@ -277,7 +272,7 @@ function DetailPane({
           (a plain object rendered via String() is literally "[object Object]"). */}
       {'raw' in item && item.raw != null && (
         <div className="space-y-0.5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Raw</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('catalog.gameDatabaseDialog.raw')}</p>
           <pre className="text-xs bg-muted rounded px-2 py-1.5 leading-relaxed whitespace-pre-wrap break-all">
             {JSON.stringify(item.raw, null, 2)}
           </pre>
@@ -288,7 +283,7 @@ function DetailPane({
       {instancesOfType.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Named instances ({instancesOfType.length})
+            {t('catalog.gameDatabaseDialog.namedInstances', { length: instancesOfType.length })}
           </p>
           <div className="flex flex-col gap-0.5">
             {instancesOfType.map((e) => (
@@ -308,12 +303,12 @@ function DetailPane({
       {heroCoords.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Map placement ({heroCoords.length})
+            {t('catalog.gameDatabaseDialog.mapPlacement', { length: heroCoords.length })}
           </p>
           <div className="flex flex-col gap-0.5">
             {heroCoords.map((h, i) => (
               <div key={i} className="flex items-center gap-1.5 text-xs bg-muted rounded px-2 py-0.5">
-                <span className="text-muted-foreground flex-1">Map Coords</span>
+                <span className="text-muted-foreground flex-1">{t('catalog.gameDatabaseDialog.mapCoords')}</span>
                 <span className="font-semibold tabular-nums">{h.x}, {h.z}</span>
               </div>
             ))}
@@ -325,12 +320,12 @@ function DetailPane({
       {creatureCoords.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Map placements ({creatureCoords.length})
+            {t('catalog.gameDatabaseDialog.mapPlacements2', { length: creatureCoords.length })}
           </p>
           <div className="grid grid-cols-2 gap-0.5">
             {creatureCoords.map((c, i) => (
               <div key={i} className="flex justify-between items-center text-xs bg-muted rounded px-2 py-0.5">
-                <span className="text-muted-foreground">Coords</span>
+                <span className="text-muted-foreground">{t('catalog.gameDatabaseDialog.coords')}</span>
                 <span className="font-semibold tabular-nums">{c.x}, {c.z}</span>
               </div>
             ))}
@@ -342,12 +337,12 @@ function DetailPane({
       {artifactCoords.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Map placements ({artifactCoords.length})
+            {t('catalog.gameDatabaseDialog.mapPlacements2', { length: artifactCoords.length })}
           </p>
           <div className="grid grid-cols-2 gap-0.5">
             {artifactCoords.map((a, i) => (
               <div key={i} className="flex justify-between items-center text-xs bg-muted rounded px-2 py-0.5">
-                <span className="text-muted-foreground">Coords</span>
+                <span className="text-muted-foreground">{t('catalog.gameDatabaseDialog.coords')}</span>
                 <span className="font-semibold tabular-nums">{a.x}, {a.z}</span>
               </div>
             ))}
@@ -361,6 +356,7 @@ function DetailPane({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }: Props) {
+  const { t } = useTranslation()
   const rawCatalog = useCatalogStore((s) => s.catalog)
   const catalogChanges = useCatalogStore((s) => s.catalogChanges)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
@@ -663,25 +659,25 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         minHeight={400}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Game Database</DialogTitle>
+        <DialogTitle className="sr-only">{t('layout.toolbar.gameDatabase')}</DialogTitle>
 
         {/* ── Header / drag handle ── */}
         <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0 gap-3">
-          <span className="text-sm font-semibold">Game Database</span>
+          <span className="text-sm font-semibold">{t('layout.toolbar.gameDatabase')}</span>
 
           {/* Tab bar */}
           <div className="flex flex-1 gap-0.5 overflow-x-auto">
-            {TABS.map((t) => (
+            {TABS.map((tab) => (
               <button
-                key={t.id}
-                onClick={() => handleTabChange(t.id)}
+                key={tab}
+                onClick={() => handleTabChange(tab)}
                 className={`h-6 px-2 text-xs rounded shrink-0 transition-colors ${
-                  activeTab === t.id
+                  activeTab === tab
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {t.label}
+                {t(`catalog.gameDatabaseDialog.tabs.${tab}`)}
               </button>
             ))}
           </div>
@@ -708,14 +704,14 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search…"
+                  placeholder={t('catalog.gameDatabaseDialog.search')}
                   className="h-7 text-xs"
                 />
                 <Button
                   variant={onlyUsed ? 'secondary' : 'ghost'}
                   size="icon"
                   className="h-7 w-7 shrink-0"
-                  title="Only show items placed or referenced on this map"
+                  title={t('catalog.gameDatabaseDialog.onlyShowItemsPlacedOr')}
                   onClick={() => setOnlyUsed((v) => !v)}
                 >
                   <Filter className="h-3.5 w-3.5" />
@@ -734,7 +730,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
               <ScrollArea className="flex-1 min-h-0">
                 {filtered.length === 0 && (
                   <p className="text-xs text-muted-foreground text-center py-6 px-3">
-                    {onlyUsed ? 'No items placed or used on this map.' : 'No matches.'}
+                    {onlyUsed ? t('catalog.gameDatabaseDialog.noItemsPlacedOrUsed') : t('catalog.gameDatabaseDialog.noMatches')}
                   </p>
                 )}
                 {/* Heroes are grouped by faction; every other tab stays flat. The
@@ -759,15 +755,15 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
 
               {/* Footer: item count + Core.zip hint when using built-in data */}
               <div className="px-2.5 py-1.5 border-t border-border text-[10px] text-muted-foreground">
-                {filtered.length} of {items.length} items
-                {onlyUsed && ' (filtered)'}
+                {t('catalog.gameDatabaseDialog.itemsCount', { shown: filtered.length, total: items.length })}
+                {onlyUsed && t('catalog.gameDatabaseDialog.filtered')}
                 {newOnly && (newIds?.size ?? 0) > filtered.length && activeTab === 'mapObjects' && (
-                  <> — {(newIds?.size ?? 0) - filtered.length} more new map objects are artifact pickups (see Artifacts) or hidden by the category filter</>
+                  t('catalog.gameDatabaseDialog.hiddenNewObjects', { count: (newIds?.size ?? 0) - filtered.length })
                 )}
               </div>
               {!rawCatalog && (
                 <div className="px-2.5 py-1.5 border-t border-border text-[10px] text-muted-foreground italic">
-                  Showing built-in data. Load Core.zip for the full catalog.
+                  {t('catalog.gameDatabaseDialog.showingBuiltInDataLoad')}
                 </div>
               )}
             </div>
@@ -786,7 +782,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                  Select an item to see details
+                  {t('catalog.gameDatabaseDialog.selectAnItemToSee')}
                 </div>
               )}
             </div>

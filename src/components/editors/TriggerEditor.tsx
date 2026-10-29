@@ -16,6 +16,7 @@ import ConditionList from '@/components/conditions/ConditionList'
 import ActionList from '@/components/actions/ActionList'
 import TriggerVisualBuilder from '@/components/triggers/TriggerVisualBuilder'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   questIndex: number
@@ -43,6 +44,7 @@ export default function TriggerEditor({
   triggerIndex,
   trigger,
 }: Props) {
+  const { t } = useTranslation()
   const {
     updateTrigger,
     addCondition,
@@ -73,7 +75,7 @@ export default function TriggerEditor({
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Trigger
+          {t('editors.triggerEditor.trigger')}
         </h2>
         <div className="inline-flex rounded-lg border border-border p-0.5">
           <Button
@@ -82,7 +84,7 @@ export default function TriggerEditor({
             className={cn('h-6 rounded-md px-2 text-xs', viewMode !== 'card' && 'text-muted-foreground')}
             onClick={() => setMode('card')}
           >
-            Card view
+            {t('editors.triggerEditor.cardView')}
           </Button>
           <Button
             variant={viewMode === 'form' ? 'secondary' : 'ghost'}
@@ -90,7 +92,7 @@ export default function TriggerEditor({
             className={cn('h-6 rounded-md px-2 text-xs', viewMode !== 'form' && 'text-muted-foreground')}
             onClick={() => setMode('form')}
           >
-            Form view
+            {t('editors.triggerEditor.formView')}
           </Button>
         </div>
       </div>
@@ -107,7 +109,7 @@ export default function TriggerEditor({
           {/* Logic + repeat */}
           <div className="flex items-center gap-4 flex-wrap">
             <div className="space-y-1">
-              <Label>Conditions logic</Label>
+              <Label>{t('editors.triggerEditor.conditionsLogic')}</Label>
               <Select
                 value={trigger.conditionsLogic ?? 'And'}
                 onValueChange={(v) =>
@@ -118,8 +120,8 @@ export default function TriggerEditor({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="And">And</SelectItem>
-                  <SelectItem value="Or">Or</SelectItem>
+                  <SelectItem value="And">{t('dialogs.dialogEditor.and')}</SelectItem>
+                  <SelectItem value="Or">{t('dialogs.dialogEditor.or')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -130,7 +132,7 @@ export default function TriggerEditor({
                 checked={trigger.repeat ?? false}
                 onCheckedChange={(v) => update({ repeat: !!v || undefined })}
               />
-              <Label htmlFor="trigger-repeat">Repeat (can fire multiple times)</Label>
+              <Label htmlFor="trigger-repeat">{t('editors.triggerEditor.repeatCanFireMultipleTimes')}</Label>
             </div>
           </div>
 
@@ -139,9 +141,9 @@ export default function TriggerEditor({
           {/* Conditions */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Conditions
+              {t('editors.triggerEditor.conditions')}
               <span className="ml-2 text-xs font-normal text-muted-foreground">
-                — when to fire
+                {t('editors.triggerEditor.whenToFire')}
               </span>
             </Label>
             <ConditionList
@@ -159,9 +161,9 @@ export default function TriggerEditor({
           {/* Actions */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
-              Actions
+              {t('editors.triggerEditor.actions')}
               <span className="ml-2 text-xs font-normal text-muted-foreground">
-                — what to do
+                {t('editors.triggerEditor.whatToDo')}
               </span>
             </Label>
             <ActionList

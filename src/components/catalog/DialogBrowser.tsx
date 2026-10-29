@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Search, Copy, ChevronDown, ChevronRight } from '@/components/ui/icons'
 import type { CatalogDialog } from '@/lib/catalog/types'
+import { useTranslation, Trans } from 'react-i18next'
 
 // ─── Dialog row ───────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ interface DialogRowProps {
 }
 
 function DialogRow({ item, onCopyId }: DialogRowProps) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const ChevronIcon = expanded ? ChevronDown : ChevronRight
 
@@ -40,12 +42,12 @@ function DialogRow({ item, onCopyId }: DialogRowProps) {
         <ChevronIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="font-mono text-xs truncate flex-1">{item.id}</span>
         <Badge variant="secondary" className="text-xs h-4 px-1 shrink-0">
-          {item.slideCount} slide{item.slideCount !== 1 ? 's' : ''}
+          {t('catalog.dialogBrowser.slideCount', { count: item.slideCount })}
         </Badge>
         <button
           type="button"
           className="text-muted-foreground hover:text-foreground shrink-0 p-0.5 rounded"
-          title="Copy dialog ID"
+          title={t('catalog.dialogBrowser.copyDialogID')}
           onClick={(e) => { e.stopPropagation(); onCopyId(item.id) }}
         >
           <Copy className="h-3 w-3" />
@@ -71,7 +73,7 @@ function DialogRow({ item, onCopyId }: DialogRowProps) {
                 <p className="text-xs text-muted-foreground">{slide.text}</p>
               ) : (
                 <p className="text-xs text-muted-foreground/50 italic">
-                  [no text — action-only slide]
+                  {t('catalog.dialogBrowser.noTextActionOnlySlide')}
                 </p>
               )}
             </div>
@@ -90,6 +92,7 @@ interface Props {
 }
 
 export default function DialogBrowser({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const [query, setQuery] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
@@ -125,16 +128,16 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
         storageKey="dialog-browser"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Game Dialog Browser</DialogTitle>
+        <DialogTitle className="sr-only">{t('catalog.dialogBrowser.gameDialogBrowser')}</DialogTitle>
 
         {/* Header — the drag handle. pr-10 clears the close button. */}
         <DraggableDialogDragHandle className="flex items-center justify-between px-4 py-3 pr-10 border-b border-border shrink-0">
           <div>
-            <p className="text-sm font-semibold">Game Dialog Browser</p>
+            <p className="text-sm font-semibold">{t('catalog.dialogBrowser.gameDialogBrowser')}</p>
             <p className="text-xs text-muted-foreground">
               {catalog
                 ? `${catalog.dialogs.length} dialog flows — ${results.length} shown`
-                : 'Load Core.zip to browse dialogs'}
+                : t('catalog.dialogBrowser.loadCoreZipToBrowse')}
             </p>
           </div>
         </DraggableDialogDragHandle>
@@ -145,7 +148,7 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               className="pl-7 h-8 text-xs"
-              placeholder="Search by ID, speaker, or text…"
+              placeholder={t('catalog.dialogBrowser.searchByIDSpeakerOr')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={!catalog}
@@ -157,7 +160,7 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
         {copied && (
           <div className="mx-4 mt-2 shrink-0">
             <div className="bg-accent rounded px-3 py-1 text-xs text-accent-foreground">
-              Copied: <span className="font-mono">{copied}</span>
+              <Trans i18nKey="catalog.dialogBrowser.copied" values={{ text: copied }} components={{ m: <span className="font-mono" /> }} />
             </div>
           </div>
         )}
@@ -167,12 +170,12 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
           <div className="p-4 space-y-2">
             {!catalog ? (
               <div className="py-12 text-center text-sm text-muted-foreground space-y-2">
-                <p>Game data not loaded.</p>
-                <p className="text-xs">Use Game Data → Load Core.zip in the toolbar.</p>
+                <p>{t('catalog.dialogBrowser.gameDataNotLoaded')}</p>
+                <p className="text-xs">{t('catalog.dialogBrowser.useGameDataLoadCore')}</p>
               </div>
             ) : results.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                No dialogs match your search.
+                {t('catalog.dialogBrowser.noDialogsMatchYourSearch')}
               </p>
             ) : (
               results.map((item) => (

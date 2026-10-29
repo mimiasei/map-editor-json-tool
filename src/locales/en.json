@@ -677,7 +677,13 @@
     "basedOnCustomized": "Based on: <v>{{name}}</v> (already customized)",
     "saveToMap": "Save to .map",
     "writesToMap": "Writes directly to the loaded <code>.map</code> file. A one-time backup is kept at <code>.map.bak</code> next to it.",
-    "writesToMapAndProject": "Writes directly to the loaded <code>.map</code> file and this map's project data. A one-time backup is kept at <code>.map.bak</code> next to it."
+    "writesToMapAndProject": "Writes directly to the loaded <code>.map</code> file and this map's project data. A one-time backup is kept at <code>.map.bak</code> next to it.",
+    "sID": "SID",
+    "sharing": "Sharing",
+    "developerComment": "Developer comment",
+    "custom": "Custom…",
+    "activeOnStart": "Active on start",
+    "resetFilters": "Reset filters"
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -1726,6 +1732,161 @@
       "namingSid": "Naming SID → <m>{{sid}}</m>",
       "tokensShown_one": "{{count}} token shown",
       "tokensShown_other": "{{count}} tokens shown"
+    }
+  },
+  "editors": {
+    "counterEditor": {
+      "counter": "Counter",
+      "eGMainQuestStage": "e.g. main_quest_stage",
+      "uniqueIdentifierReferencedByCounter": "Unique identifier. Referenced by Counter conditions and CounterPlus / CounterSetRandom actions.",
+      "initialValue": "Initial value",
+      "minValue": "Min value",
+      "noLowerBound": "No lower bound",
+      "maxValue": "Max value",
+      "noUpperBound": "No upper bound",
+      "assigningAValueOutsideThis": "Assigning a value outside this range clamps it to the bound instead.",
+      "eGClone": "e.g. Clone",
+      "visibilityScopeMakesTheCounter": "Visibility scope — makes the counter accessible to all quests with the same sharing value.",
+      "optionalNoteNotUsedBy": "Optional note (not used by game engine)"
+    },
+    "interruptionEditor": {
+      "interruption": "Interruption",
+      "eGInteractionWithDemon": "e.g. interaction_with_demon_hero_6",
+      "customType": "Custom type",
+      "add": "Add",
+      "noParameters": "No parameters."
+    },
+    "questEditor": {
+      "eGMainQuestLine": "e.g. main_quest_line",
+      "nameLocalizationKey": "Name (localization key)",
+      "eGMyQuestName": "e.g. my_quest_name",
+      "shownInTheInGame": "Shown in the in-game quest log.",
+      "descriptionLocalizationKey": "Description (localization key)",
+      "eGMyQuestDescription": "e.g. my_quest_description",
+      "additionalNarrativeGameplayTextShown": "Additional narrative/gameplay text shown in the quest log, separate from the name.",
+      "specificPlayerIndex": "Specific player index",
+      "customSharingValue": "Custom sharing value",
+      "optionalNoteNotUsedBy": "Optional note (not used by game engine)",
+      "mainQuestVisibleAsPrimary": "Main quest (visible as primary objective)",
+      "hiddenFromQuestLog": "Hidden from quest log",
+      "subquestGroups": "Subquest Groups",
+      "gateASubquestOrAnother": "Gate a subquest (or another group) on several subquests finishing together, via NextAfterGroup / NextQuestAfterGroup / NextSubGroupAfterGroup.",
+      "sharingHints": {
+        "Clone": "Cloned for every human player",
+        "Shared": "One shared quest for all human players",
+        "Ai": "Works for the first AI player in turn after the human player",
+        "All": "Shared for all players"
+      },
+      "sharingOption": "{{value}} — {{hint}}",
+      "sharingSide": "{{value}} — Only Player {{n}}"
+    },
+    "subQuestEditor": {
+      "subQuest": "SubQuest",
+      "eG1": "e.g. 1",
+      "referencedBySubQuestActivateSubQuestDeactivateActions": "Referenced by SubQuestActivate / SubQuestDeactivate actions.",
+      "nameLocalizationKey": "Name (localization key)",
+      "eGMyQuestSub": "e.g. my_quest_sub_1",
+      "optionalNoteNotUsedBy": "Optional note (not used by game engine)"
+    },
+    "subQuestGroupList": {
+      "noSubquestGroups": "No subquest groups.",
+      "eGLegendaryGearGroup": "e.g. legendary_gear_group",
+      "addSubquestsToThisQuest": "Add subquests to this quest first.",
+      "addSubquestGroup": "Add Subquest Group"
+    },
+    "triggerEditor": {
+      "trigger": "Trigger",
+      "cardView": "Card view",
+      "formView": "Form view",
+      "conditionsLogic": "Conditions logic",
+      "repeatCanFireMultipleTimes": "Repeat (can fire multiple times)",
+      "whenToFire": "— when to fire",
+      "whatToDo": "— what to do",
+      "conditions": "Conditions",
+      "actions": "Actions"
+    }
+  },
+  "catalog": {
+    "dialogBrowser": {
+      "copyDialogID": "Copy dialog ID",
+      "noTextActionOnlySlide": "[no text — action-only slide]",
+      "gameDialogBrowser": "Game Dialog Browser",
+      "loadCoreZipToBrowse": "Load Core.zip to browse dialogs",
+      "searchByIDSpeakerOr": "Search by ID, speaker, or text…",
+      "gameDataNotLoaded": "Game data not loaded.",
+      "useGameDataLoadCore": "Use Game Data → Load Core.zip in the toolbar.",
+      "noDialogsMatchYourSearch": "No dialogs match your search.",
+      "slideCount_one": "{{count}} slide",
+      "slideCount_other": "{{count}} slides",
+      "copied": "Copied: <m>{{text}}</m>"
+    },
+    "filterRows": {
+      "showAll": "Show all"
+    },
+    "gameDatabaseDialog": {
+      "usage": "Usage",
+      "mapPlacements": "Map placements",
+      "scriptRefs": "Script refs",
+      "info": "Info",
+      "squadValue": "Squad value",
+      "aIType": "AI type",
+      "upgradesFrom": "Upgrades from",
+      "upgradesTo": "Upgrades to",
+      "raw": "Raw",
+      "namedInstances": "Named instances ({{length}})",
+      "mapPlacement": "Map placement ({{length}})",
+      "mapCoords": "Map Coords",
+      "mapPlacements2": "Map placements ({{length}})",
+      "coords": "Coords",
+      "search": "Search…",
+      "onlyShowItemsPlacedOr": "Only show items placed or referenced on this map",
+      "noItemsPlacedOrUsed": "No items placed or used on this map.",
+      "noMatches": "No matches.",
+      "filtered": " (filtered)",
+      "showingBuiltInDataLoad": "Showing built-in data. Load Core.zip for the full catalog.",
+      "selectAnItemToSee": "Select an item to see details",
+      "itemsCount": "{{shown}} of {{total}} items",
+      "hiddenNewObjects": " — {{count}} more new map objects are artifact pickups (see Artifacts) or hidden by the category filter",
+      "tabs": {
+        "heroes": "Heroes",
+        "creatures": "Creatures",
+        "artifacts": "Artifacts",
+        "spells": "Spells",
+        "skills": "Skills",
+        "mapObjects": "Map Objects"
+      }
+    },
+    "gameDatabaseFilter": {
+      "filterItems": "Filter items",
+      "category": "Category"
+    },
+    "heroPickerDialog": {
+      "searchNameSIDOrIcon": "Search name, SID or icon…",
+      "noPortraitsToBrowseLoad": "No portraits to browse — load Core.zip via Game Data.",
+      "nothingMatchesTheCurrentSearch": "Nothing matches the current search and filter.",
+      "choosePortrait": "Choose a portrait",
+      "chooseHero": "Choose a hero"
+    },
+    "heroPickerFilter": {
+      "filterPortraits": "Filter portraits",
+      "kind": "Kind"
+    },
+    "mapObjectFilter": {
+      "filterMapObjects": "Filter Map Objects",
+      "interactableOnly": "Interactable only",
+      "categories": "Categories",
+      "showingApproximatelyOfObjects": "Showing approximately {{filteredCount}} of {{totalCount}} objects"
+    },
+    "mapCategories": {
+      "interactables": "Interactables",
+      "resources": "Resources",
+      "environments": "Environments",
+      "spawns": "Spawns",
+      "animals": "Animals",
+      "fxs": "FX",
+      "test": "Test (debug objects)",
+      "blocks": "Blocks",
+      "artifacts": "Artifact pickups"
     }
   }
 }

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, Trash2 } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   subQuests: SubQuest[]
@@ -24,6 +25,7 @@ function nextGroupSid(existing: SubQuestGroup[]): string {
 }
 
 export default function SubQuestGroupList({ subQuests, groups, onChange }: Props) {
+  const { t } = useTranslation()
   const addGroup = () => onChange([...groups, { sid: nextGroupSid(groups), subQuests: [] }])
 
   const updateGroup = (i: number, patch: Partial<SubQuestGroup>) => {
@@ -47,7 +49,7 @@ export default function SubQuestGroupList({ subQuests, groups, onChange }: Props
   return (
     <div className="space-y-2">
       {groups.length === 0 && (
-        <p className="text-xs text-muted-foreground">No subquest groups.</p>
+        <p className="text-xs text-muted-foreground">{t('editors.subQuestGroupList.noSubquestGroups')}</p>
       )}
 
       {groups.map((group, i) => (
@@ -56,7 +58,7 @@ export default function SubQuestGroupList({ subQuests, groups, onChange }: Props
             <Input
               value={group.sid}
               onChange={(e) => updateGroup(i, { sid: e.target.value })}
-              placeholder="e.g. legendary_gear_group"
+              placeholder={t('editors.subQuestGroupList.eGLegendaryGearGroup')}
               className="h-7 text-xs"
             />
             <Button
@@ -71,7 +73,7 @@ export default function SubQuestGroupList({ subQuests, groups, onChange }: Props
 
           {subQuests.length === 0 ? (
             <p className="text-[10px] text-muted-foreground">
-              Add subquests to this quest first.
+              {t('editors.subQuestGroupList.addSubquestsToThisQuest')}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
@@ -94,7 +96,7 @@ export default function SubQuestGroupList({ subQuests, groups, onChange }: Props
 
       <Button variant="outline" size="sm" onClick={addGroup} className="gap-1.5 text-xs">
         <Plus className="h-3 w-3" />
-        Add Subquest Group
+        {t('editors.subQuestGroupList.addSubquestGroup')}
       </Button>
     </div>
   )

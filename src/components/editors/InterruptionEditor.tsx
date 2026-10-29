@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from '@/components/ui/icons'
 import ActionList from '@/components/actions/ActionList'
+import { useTranslation } from 'react-i18next'
 
 // Matches the 5 interruption types the official guide documents.
 const KNOWN_INTERRUPTION_TYPES = [
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function InterruptionEditor({ index, interruption }: Props) {
+  const { t } = useTranslation()
   const {
     updateInterruption,
     addInterruptionAction,
@@ -55,20 +57,20 @@ export default function InterruptionEditor({ index, interruption }: Props) {
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Interruption
+        {t('editors.interruptionEditor.interruption')}
       </h2>
 
       <div className="space-y-1">
-        <Label>SID</Label>
+        <Label>{t('shared.sID')}</Label>
         <Input
           value={interruption.sid}
           onChange={(e) => update({ sid: e.target.value })}
-          placeholder="e.g. interaction_with_demon_hero_6"
+          placeholder={t('editors.interruptionEditor.eGInteractionWithDemon')}
         />
       </div>
 
       <div className="space-y-1">
-        <Label>Type</Label>
+        <Label>{t('common.spellBanDialog.type')}</Label>
         <div className="flex gap-2">
           <Select
             value={isCustomType ? '__custom__' : interruption.interruption}
@@ -85,14 +87,14 @@ export default function InterruptionEditor({ index, interruption }: Props) {
                   {t}
                 </SelectItem>
               ))}
-              <SelectItem value="__custom__">Custom…</SelectItem>
+              <SelectItem value="__custom__">{t('shared.custom')}</SelectItem>
             </SelectContent>
           </Select>
           {isCustomType && (
             <Input
               value={interruption.interruption}
               onChange={(e) => update({ interruption: e.target.value })}
-              placeholder="Custom type"
+              placeholder={t('editors.interruptionEditor.customType')}
               className="flex-1"
             />
           )}
@@ -105,16 +107,16 @@ export default function InterruptionEditor({ index, interruption }: Props) {
           checked={interruption.activeOnStart}
           onCheckedChange={(v) => update({ activeOnStart: !!v })}
         />
-        <Label htmlFor="intr-active">Active on start</Label>
+        <Label htmlFor="intr-active">{t('shared.activeOnStart')}</Label>
       </div>
 
       {/* Parameters */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Parameters (p)</Label>
+          <Label>{t('dialogs.dialogConditionForm.parametersP')}</Label>
           <Button variant="ghost" size="sm" onClick={addParam} className="h-6 gap-1 text-xs">
             <Plus className="h-3 w-3" />
-            Add
+            {t('editors.interruptionEditor.add')}
           </Button>
         </div>
         {interruption.p.map((val, i) => (
@@ -136,13 +138,13 @@ export default function InterruptionEditor({ index, interruption }: Props) {
           </div>
         ))}
         {interruption.p.length === 0 && (
-          <p className="text-xs text-muted-foreground">No parameters.</p>
+          <p className="text-xs text-muted-foreground">{t('editors.interruptionEditor.noParameters')}</p>
         )}
       </div>
 
       {/* Actions */}
       <div className="space-y-2">
-        <Label>Actions</Label>
+        <Label>{t('common.statsDialog.actions')}</Label>
         <ActionList
           actions={interruption.actions}
           onAdd={(action) => addInterruptionAction(index, action)}

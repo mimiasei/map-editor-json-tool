@@ -28,6 +28,7 @@ import HeroPickerFilter, {
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 export type PickerMode = 'hero' | 'portrait'
 
@@ -55,13 +56,14 @@ export default function HeroPickerDialog({
   title,
   lockedFaction,
 }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const customHeroes = useScenarioStore((s) => s.customHeroes)
   const localization = useScenarioStore((s) => s.localization)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PortraitFilterState>(loadPortraitFilter)
 
-  const heading = title ?? (mode === 'portrait' ? 'Choose a portrait' : 'Choose a hero')
+  const heading = title ?? (mode === 'portrait' ? t('catalog.heroPickerDialog.choosePortrait') : t('catalog.heroPickerDialog.chooseHero'))
 
   // Candidate entries for this mode.
   //
@@ -156,7 +158,7 @@ export default function HeroPickerDialog({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, SID or icon…"
+              placeholder={t('catalog.heroPickerDialog.searchNameSIDOrIcon')}
               className="pl-7 h-7 text-xs"
             />
           </div>
@@ -179,13 +181,13 @@ export default function HeroPickerDialog({
           <div className="p-3 space-y-4">
             {entries.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No portraits to browse — load Core.zip via Game Data.
+                {t('catalog.heroPickerDialog.noPortraitsToBrowseLoad')}
               </p>
             )}
 
             {entries.length > 0 && shown === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                Nothing matches the current search and filter.
+                {t('catalog.heroPickerDialog.nothingMatchesTheCurrentSearch')}
               </p>
             )}
 
