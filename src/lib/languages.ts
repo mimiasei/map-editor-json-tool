@@ -79,3 +79,27 @@ export function languagesWithContent(translations: TranslationMap): string[] {
 export function shippedLanguages(translations: TranslationMap): string[] {
   return [BASE_LANGUAGE, ...languagesWithContent(translations)]
 }
+
+/** Each language's name in itself, for the interface-language picker (a reader who cannot read the current UI language can still find theirs). */
+const NATIVE_LABELS: Record<string, string> = {
+  english: 'English',
+  BRportugese: 'Português (Brasil)',
+  czech: 'Čeština',
+  french: 'Français',
+  german: 'Deutsch',
+  hungarian: 'Magyar',
+  italian: 'Italiano',
+  japanese: '日本語',
+  korean: '한국어',
+  polish: 'Polski',
+  russian: 'Русский',
+  spanish: 'Español',
+  turkish: 'Türkçe',
+  ukrainian: 'Українська',
+  zhCN: '简体中文',
+  zhTW: '繁體中文',
+}
+
+export function nativeLanguageLabel(id: string): string {
+  return NATIVE_LABELS[id] ?? languageLabel(id)
+}

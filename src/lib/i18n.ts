@@ -1,28 +1,39 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import en from '@/locales/en.json'
+import fr from '@/locales/fr.json'
 import { BASE_LANGUAGE } from '@/lib/languages'
 import { useLocaleStore } from '@/store/useLocaleStore'
 
-// Locale ids are the game's Lang/<id> directory names (see languages.ts), so the
-// same setting can later pick the Core.zip texts for game names. Only English
-// has UI text so far; a locale without a bundle falls back to English per key.
+// The setting holds the game's Lang/<id> directory name (see languages.ts), so the same value also
+// picks the Core.zip texts for game names. i18next needs a real BCP 47 code, though: it derives the
+// plural rules from it ("fr" counts 0 as singular, an unknown id like "french" would fall back to
+// English rules). UI_LANG_CODES maps one to the other; a locale without a bundle, or a key missing
+// from one, falls back to English.
+const UI_LANG_CODES: Record<string, string> = {
+  [BASE_LANGUAGE]: 'en',
+  french: 'fr',
+}
+
+const BASE_CODE = UI_LANG_CODES[BASE_LANGUAGE]
+
 export const UI_RESOURCES = {
-  [BASE_LANGUAGE]: { translation: en },
+  en: { translation: en },
+  fr: { translation: fr },
 }
 
 export type UiResource = typeof en
 
 export function isUiLocaleAvailable(id: string): boolean {
-  return id in UI_RESOURCES
+  return id in UI_LANG_CODES
 }
+
+const codeFor = (id: string): string => UI_LANG_CODES[id] ?? BASE_CODE
 
 void i18n.use(initReactI18next).init({
   resources: UI_RESOURCES,
-  lng: isUiLocaleAvailable(useLocaleStore.getState().uiLocale)
-    ? useLocaleStore.getState().uiLocale
-    : BASE_LANGUAGE,
-  fallbackLng: BASE_LANGUAGE,
+  lng: codeFor(useLocaleStore.getState().uiLocale),
+  fallbackLng: BASE_CODE,
   // Key separator '.' with nested json; React already escapes output.
   interpolation: { escapeValue: false },
   // Resources are bundled, so init resolves synchronously and t() works on first render.
@@ -30,7 +41,7 @@ void i18n.use(initReactI18next).init({
 })
 
 useLocaleStore.subscribe((s) => {
-  const next = isUiLocaleAvailable(s.uiLocale) ? s.uiLocale : BASE_LANGUAGE
+  const next = codeFor(s.uiLocale)
   if (i18n.language !== next) void i18n.changeLanguage(next)
 })
 
