@@ -27,7 +27,7 @@ import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
 import { logError, logInfo } from '@/lib/logger'
 import { saveFile } from '@/lib/native-fs'
 import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
-import { useTranslation } from 'react-i18next'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -260,14 +260,15 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               {t('common.importH3mDialog.convertAHeroesOfMight')}
             </p>
             <hr />
-            <p className="text-sm text-muted-foreground">
-              <span>{t('common.importH3mDialog.creditGoesTo')} </span>
-              <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie">{t('common.importH3mDialog.leviRitchie')}</a>
-              <span> {t('common.importH3mDialog.forHisWorkOnThe')} </span>
-              <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie/homm3-olden-stock-translator">{t('common.importH3mDialog.homm3OldenStockTranslator')}</a>
-              <span> {t('common.importH3mDialog.whichHasBeenAGreat')}</span>
-            </p>
-            <p className="text-center">{t('common.importH3mDialog.thankYou')}</p>
+            <Trans
+              i18nKey="common.importH3mDialog.credit"
+              components={{
+                credit: <p className="text-sm text-muted-foreground" />,
+                author: <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie" />,
+                repo: <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie/homm3-olden-stock-translator" />,
+                thanks: <p className="text-center" />,
+              }}
+            />
             <hr />
 
             {!catalog && (

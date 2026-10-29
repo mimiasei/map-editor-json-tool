@@ -173,12 +173,6 @@
     "importH3mDialog": {
       "importHeroesOfMightMagic": "Import Heroes of Might & Magic III Map",
       "convertAHeroesOfMight": "Convert a Heroes of Might and Magic III (.h3m) map into a new Olden Era map: terrain, decoration (with randomized visual variety), towns, monsters, resources, and — where the source map's win condition is supported — a working victory quest. The result opens as a new, unsaved map here in TSE; save it wherever you like afterward.",
-      "creditGoesTo": "Credit goes to",
-      "leviRitchie": "Levi Ritchie",
-      "forHisWorkOnThe": "for his work on the",
-      "homm3OldenStockTranslator": "homm3-olden-stock-translator",
-      "whichHasBeenAGreat": "which has been a great reference and inspiration for this tool.",
-      "thankYou": "Thank you! 🙏",
       "loadGameDataFirstMore": "Load Game Data first (More → Game Data) so scenery and objects can be resolved.",
       "converting": "Converting…",
       "mapSize": "Map size",
@@ -225,7 +219,8 @@
       "sourceObjects_one": "Source objects ({{count}} kind found in the H3 map)",
       "sourceObjects_other": "Source objects ({{count}} kinds found in the H3 map)",
       "yesDefeatAllEnemies": "Yes (defeat all enemies)",
-      "noneUnsupportedWinCondition": "None (unsupported win condition)"
+      "noneUnsupportedWinCondition": "None (unsupported win condition)",
+      "credit": "<credit>Credit goes to <author>Levi Ritchie</author> for his work on the <repo>homm3-olden-stock-translator</repo>, which has been a great reference and inspiration for this tool.</credit><thanks>Thank you! 🙏</thanks>"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG interactables",
