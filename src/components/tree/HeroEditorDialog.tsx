@@ -44,6 +44,7 @@
 // same as objects/artifacts — never `saveMapFile`, which only makes sense
 // when repointing an actual placed spawner (`entity` present).
 
+import { localNameById } from '@/lib/catalog/local-name'
 import { useState } from 'react'
 import {
   Dialog,
@@ -249,7 +250,7 @@ export default function HeroEditorDialog({
   // Once true, the full form renders — either a base/definition to seed from
   // exists, or "Build from scratch" was explicitly chosen (which needs none).
   const readyToEdit = mode === 'scratch' || !!baseHeroSid || !!existingCustomHero
-  const heroDisplayName = (sid: string) => catalog?.heroes.find((h) => h.id === sid)?.name ?? sid
+  const heroDisplayName = (sid: string) => localNameById(catalog, 'heroes', sid, catalog?.heroes.find((h) => h.id === sid)?.name ?? sid)
 
   const previousSid = str(heroBaseDefinition?.name)
   const previousDescSid = str(heroBaseDefinition?.description)

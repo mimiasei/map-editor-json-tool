@@ -8,6 +8,7 @@
 // Master-detail layout per issue #125 item 3: a clickable row per item on
 // the tile, and a detail panel below for whichever row is selected.
 
+import { localName, localNameById } from '@/lib/catalog/local-name'
 import { useEffect, useState } from 'react'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import { groupOf } from '@/lib/map-grid/tile-index'
@@ -631,7 +632,8 @@ export default function MapGridCellContent({
                 const currentSpawnHero = info.spawnHero ?? false
                 const currentHeroSid = info.heroSid ?? 'random'
                 const factionName = (sid: string) => {
-                  const name = catalog?.factions.find((f) => f.id === sid)?.name
+                  const faction = catalog?.factions.find((f) => f.id === sid)
+                  const name = faction ? localName(catalog, 'factions', faction) : undefined
                   return name ? `${name} (${sid})` : sid
                 }
                 const canEditFaction = isCitySpawnerHere ? !!onSetCityFaction : !!onSetHeroSid
@@ -654,7 +656,7 @@ export default function MapGridCellContent({
                           <SelectContent>
                             <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
                             {(catalog?.factions ?? []).map((f) => (
-                              <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                              <SelectItem key={f.id} value={f.id}>{localName(catalog, 'factions', f)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -805,12 +807,12 @@ export default function MapGridCellContent({
                       <SelectContent>
                         <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
                         {(catalog?.factions ?? []).map((f) => (
-                          <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                          <SelectItem key={f.id} value={f.id}>{localName(catalog, 'factions', f)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-xs">{factionSid ? (catalog?.factions.find((f) => f.id === factionSid)?.name ?? factionSid) : t('common.generateRandomMapDialog.random')}</p>
+                    <p className="text-xs">{factionSid ? localNameById(catalog, 'factions', factionSid, catalog?.factions.find((f) => f.id === factionSid)?.name ?? factionSid) : t('common.generateRandomMapDialog.random')}</p>
                   )}
                 </div>
               </div>
@@ -927,7 +929,7 @@ export default function MapGridCellContent({
                   ) : (
                     <ul className="text-xs list-disc list-inside space-y-0.5">
                       {guardRows.map((u, i) => (
-                        <li key={i}>{t('mapGrid.mapGridCellContent.guardRow', { name: catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid, n: u.count })}</li>
+                        <li key={i}>{t('mapGrid.mapGridCellContent.guardRow', { name: localNameById(catalog, 'creatures', u.sid, catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid), n: u.count })}</li>
                       ))}
                     </ul>
                   )}
@@ -1023,13 +1025,13 @@ export default function MapGridCellContent({
                   <p className="text-xs text-muted-foreground">{t('common.statsDialog.faction')}</p>
                   {(() => {
                     const fraction = selected.randomSquadFraction ?? ''
-                    const label = (v: string) => (v === '' ? 'Random' : v === 'neutral' ? 'Neutral' : catalog?.factions.find((f) => f.id === v)?.name ?? v)
+                    const label = (v: string) => (v === '' ? 'Random' : v === 'neutral' ? 'Neutral' : localNameById(catalog, 'factions', v, catalog?.factions.find((f) => f.id === v)?.name ?? v))
                     return onSetRandomSquadFraction ? (
                       <Select value={fraction || 'random'} onValueChange={(v) => onSetRandomSquadFraction(selected, v === 'random' ? '' : v)}>
                         <SelectTrigger className="h-7 text-xs mt-0.5 w-40"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
-                          {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>))}
+                          {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{localName(catalog, 'factions', f)}</SelectItem>))}
                           <SelectItem value="neutral">{t('common.templateDetailsDialog.neutral')}</SelectItem>
                         </SelectContent>
                       </Select>

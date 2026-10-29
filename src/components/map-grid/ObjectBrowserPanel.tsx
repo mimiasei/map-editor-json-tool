@@ -21,6 +21,7 @@
 // multi-value dropdowns (default: everything selected) with no separate
 // master toggle.
 
+import { localName } from '@/lib/catalog/local-name'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Settings, FilterReset, Configuration, X, ChevronDown } from '@/components/ui/icons'
@@ -225,7 +226,8 @@ function templateForCreature(catalog: GameCatalog | null, creature: CatalogCreat
  *  NEUTRAL_FRACTION_ID above), so that one bucket is hardcoded. */
 function factionDisplayName(catalog: GameCatalog | null, fraction: string): string {
   if (fraction === NEUTRAL_FRACTION_ID) return 'Neutral'
-  return catalog?.factions.find((f) => f.id === fraction)?.name ?? fraction
+  const faction = catalog?.factions.find((f) => f.id === fraction)
+  return faction ? localName(catalog, 'factions', faction) : fraction
 }
 
 /** CatalogCreature.aiType is a free-form string from Core/DB's raw `ai`
@@ -475,7 +477,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       if (!sizeFilter[(SIZE_ORDER as readonly string[]).includes(size) ? (size as SizeKey) : 'other']) return false
       if (!showCampaign && o.id.includes('campaign')) return false
       if (!showCustom && o.id.includes('custom')) return false
-      if (q && !o.name.toLowerCase().includes(q) && !o.id.toLowerCase().includes(q)) return false
+      if (q && !o.name.toLowerCase().includes(q) && !localName(catalog, 'mapObjects', o).toLowerCase().includes(q) && !o.id.toLowerCase().includes(q)) return false
       return true
     })
   }, [catalog, typeFilter, plainTypeFilter, biomeFilter, sizeFilter, sizeLabels, decorationSubFilter, interactableSubFilter, showCampaign, showCustom, query])
@@ -492,7 +494,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       if (!showCustom && c.id.includes('custom')) return false
       if (!showNoTemplate && !templateForCreature(catalog, c)) return false
 
-      return !(q && !c.name.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q));
+      return !(q && !c.name.toLowerCase().includes(q) && !localName(catalog, 'creatures', c).toLowerCase().includes(q) && !c.id.toLowerCase().includes(q));
     })
   }, [catalog, fractionFilter, tierFilter, showCampaign, showCustom, showNoTemplate, query])
 
@@ -721,7 +723,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               <>
                 {(catalog?.factions ?? []).map((f) => (
                   <FilterPill key={f.id} active={fractionFilter.has(f.id)} onClick={() => toggleFraction(f.id)}>
-                    {f.name}
+                    {localName(catalog, 'factions', f)}
                   </FilterPill>
                 )).concat(
                   <FilterPill key={NEUTRAL_FRACTION_ID} active={fractionFilter.has(NEUTRAL_FRACTION_ID)} onClick={() => toggleFraction(NEUTRAL_FRACTION_ID)}>
@@ -809,9 +811,9 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
                   }`}
                 >
-                  <HoverZoomIcon sid={o.id} iconId={o.icon} name={o.name} size={24} />
+                  <HoverZoomIcon sid={o.id} iconId={o.icon} name={localName(catalog, 'mapObjects', o)} size={24} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{o.name} ({sizeLabels.get(o.id) ?? '1x1'})</p>
+                    <p className="text-sm truncate">{localName(catalog, 'mapObjects', o)} ({sizeLabels.get(o.id) ?? '1x1'})</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
                   </div>
                 </button>
@@ -824,7 +826,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 <Tooltip key={o.id}>
                   <TooltipTrigger asChild>{row}</TooltipTrigger>
                   <TooltipContent side="left" className="max-w-64 space-y-1 text-left">
-                    <p className="text-xs font-semibold">{o.name}</p>
+                    <p className="text-xs font-semibold">{localName(catalog, 'mapObjects', o)}</p>
                     <p className="text-xs leading-relaxed">{o.description}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -849,9 +851,9 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     !placeable ? 'opacity-40 cursor-not-allowed' : c.id === placingCreatureId ? 'bg-accent' : 'hover:bg-accent/50'
                   }`}
                 >
-                  <HoverZoomIcon iconId={c.icon} name={c.name} size={24} />
+                  <HoverZoomIcon iconId={c.icon} name={localName(catalog, 'creatures', c)} size={24} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{c.name}</p>
+                    <p className="text-sm truncate">{localName(catalog, 'creatures', c)}</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{c.id}</p>
                   </div>
                 </button>
@@ -863,7 +865,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     {portraitSrc && (
                       <img
                         src={portraitSrc}
-                        alt={c.name}
+                        alt={localName(catalog, 'creatures', c)}
                         className="block mx-auto"
                         style={{ maxWidth: 'min(160px, 90vw)', maxHeight: 'min(160px, 80vh)', objectFit: 'contain' }}
                       />

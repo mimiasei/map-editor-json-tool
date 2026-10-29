@@ -3,6 +3,7 @@
 // tabs. Shows live instance counts (map placements + script references) and
 // allows filtering to only placed/used items.
 
+import { localName } from '@/lib/catalog/local-name'
 import { useMemo, useState, useEffect } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -521,25 +522,29 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       case 'heroes':
         return catalog.heroes.map((h: CatalogHero) => ({
           ...h,
+          name: localName(catalog, 'heroes', h),
           subtitle: [normalizeFaction(h.fraction), h.classType].filter(Boolean).join(' · '),
         }))
       case 'creatures':
         return catalog.creatures.map((c: CatalogCreature) => ({
           ...c,
+          name: localName(catalog, 'creatures', c),
           subtitle: [normalizeFaction(c.fraction), c.tier ? `Tier ${c.tier}` : undefined].filter(Boolean).join(' · '),
         }))
       case 'artifacts':
         return catalog.artifacts.map((a: CatalogArtifact) => ({
           ...a,
+          name: localName(catalog, 'artifacts', a),
           subtitle: [a.slot, a.rarity].filter(Boolean).join(' · '),
         }))
       case 'spells':
         return catalog.spells.map((s: CatalogSpell) => ({
           ...s,
+          name: localName(catalog, 'spells', s),
           subtitle: [s.school, s.rank ? `Rank ${s.rank}` : undefined].filter(Boolean).join(' · '),
         }))
       case 'skills':
-        return catalog.skills.map((s: CatalogSkill) => ({ ...s }))
+        return catalog.skills.map((s: CatalogSkill) => ({ ...s, name: localName(catalog, 'skills', s) }))
       case 'mapObjects':
         // Excludes category 'artifacts' — those are DB/map/objects/6_artifacts.json's
         // ground-placement entries, already shown (with their real item data) under
@@ -548,6 +553,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
           .filter((o: CatalogMapObject) => o.category !== 'artifacts')
           .map((o: CatalogMapObject) => ({
             ...o,
+            name: localName(catalog, 'mapObjects', o),
             subtitle: [o.category, o.tag].filter(Boolean).join(' · '),
           }))
       default:

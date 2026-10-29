@@ -4,13 +4,25 @@
 
 import { create } from 'zustand'
 import { findCoreZip, loadZipFromFile, loadZipFromPath } from '@/lib/catalog/zip-loader'
-import { buildCatalog } from '@/lib/catalog/builder'
+import type JSZip from 'jszip'
+import { buildCatalog, buildLocalNames } from '@/lib/catalog/builder'
+import { useLocaleStore } from '@/store/useLocaleStore'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { countAdded, countRemoved, trackCatalogChanges, type CatalogChanges } from '@/lib/catalog/catalog-snapshot'
 import { loadRmgSchema } from '@/lib/rmg/rmg-schema'
 import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
 import { logInfo, logError } from '@/lib/logger'
 import { isTauri } from '@/lib/native-fs'
+
+// The zip the current catalog was built from, kept so a language change can re-read the names without asking for Core.zip again.
+let loadedZip: JSZip | null = null
+
+/** Adds the display names in the UI language (see local-name.ts). English needs none. */
+async function withLocalNames(catalog: GameCatalog, zip: JSZip): Promise<GameCatalog> {
+  loadedZip = zip
+  const localNames = await buildLocalNames(zip, useLocaleStore.getState().uiLocale, catalog)
+  return { ...catalog, localNames }
+}
 
 /** Attach the game's RMG schema (map_schemas/Default.mrmg.json, next to
  *  Core.zip) to a freshly built catalog. Without a known Core.zip path (a
@@ -95,7 +107,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
         try {
           const { loadZipFromPath: lp } = await import('@/lib/catalog/zip-loader')
           const { zip, sourceHint } = await lp(override)
-          const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), override)
+          const catalog = await withLocalNames(await withRmgSchema(await buildCatalog(zip, sourceHint), override), zip)
           logInfo(`Catalog loaded from override path: ${sourceHint} (${catalog.heroes.length} heroes, ${catalog.creatures.length} creatures)`)
           set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
           return
@@ -115,7 +127,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
         }
         return
       }
-      const catalog = await withRmgSchema(await buildCatalog(result.zip, result.sourceHint), result.path)
+      const catalog = await withLocalNames(await withRmgSchema(await buildCatalog(result.zip, result.sourceHint), result.path), result.zip)
       logInfo(`Catalog loaded (${catalog.heroes.length} heroes, ${catalog.spells.length} spells, ${catalog.dialogs.length} dialogs)`)
       set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
     } catch (e) {
@@ -129,7 +141,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const { zip, sourceHint } = await loadZipFromFile(file)
-      const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), null)
+      const catalog = await withLocalNames(await withRmgSchema(await buildCatalog(zip, sourceHint), null), zip)
       logInfo(`Catalog loaded from file (${catalog.heroes.length} heroes)`)
       set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
     } catch (e) {
@@ -144,7 +156,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
     saveOverridePath(filePath)
     try {
       const { zip, sourceHint } = await loadZipFromPath(filePath)
-      const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), filePath)
+      const catalog = await withLocalNames(await withRmgSchema(await buildCatalog(zip, sourceHint), filePath), zip)
       logInfo(`Catalog loaded from path: ${sourceHint}`)
       set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
     } catch (e) {
@@ -155,6 +167,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
   },
 
   clear(clearPath = false) {
+    loadedZip = null
     if (clearPath) {
       saveOverridePath(null)
       set({ catalog: null, catalogChanges: null, error: null, overridePath: null })
@@ -163,3 +176,17 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
     }
   },
 }))
+
+// Re-read the display names when the UI language changes; the catalog itself is not rebuilt.
+useLocaleStore.subscribe((state, prev) => {
+  if (state.uiLocale === prev.uiLocale || !loadedZip) return
+  const zip = loadedZip
+  const catalog = useCatalogStore.getState().catalog
+  if (!catalog) return
+  void buildLocalNames(zip, state.uiLocale, catalog).then((localNames) => {
+    // A newer load replaced the zip while this one was reading.
+    if (loadedZip === zip && useCatalogStore.getState().catalog === catalog) {
+      useCatalogStore.setState({ catalog: { ...catalog, localNames } })
+    }
+  })
+})

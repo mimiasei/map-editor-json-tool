@@ -54,6 +54,7 @@
 // name/description/motto fields — same mechanics, same visible copy, just
 // no longer duplicated.
 
+import { localNameById } from '@/lib/catalog/local-name'
 import { useEffect, useState } from 'react'
 import {
   Dialog,
@@ -130,7 +131,7 @@ export default function SetDisplayNameDialog({
   // hero slot is random/unset, which this dialog has nothing to clone.
   const heroHasNoBase = isHero && !currentHeroSid
   const heroCatalogMissing = isHero && !!currentHeroSid && !heroBaseDefinition
-  const heroDisplayName = (sid: string) => catalog?.heroes.find((h) => h.id === sid)?.name ?? sid
+  const heroDisplayName = (sid: string) => localNameById(catalog, 'heroes', sid, catalog?.heroes.find((h) => h.id === sid)?.name ?? sid)
 
   const previousSid = isHero ? str(heroBaseDefinition?.name) : (entity?.displayName ?? '')
   const previousDescSid = isHero ? str(heroBaseDefinition?.description) : (entity?.description ?? '')

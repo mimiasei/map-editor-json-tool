@@ -1,3 +1,4 @@
+import { localName } from '@/lib/catalog/local-name'
 import { useState, useMemo, useRef } from 'react'
 import { ENTITY_REGISTRIES, ENTITY_LABELS } from '@/schema/entities'
 import type { EntityCategory, EntityEntry } from '@/schema/entities'
@@ -94,11 +95,11 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
 
     switch (category) {
       case 'hero':
-        return [...catalog.heroes.map((h) => ({ id: h.id, label: `${h.name}`, icon: h.icon })), ...customHeroEntries()]
+        return [...catalog.heroes.map((h) => ({ id: h.id, label: localName(catalog, 'heroes', h), icon: h.icon })), ...customHeroEntries()]
       case 'creature':
-        return catalog.creatures.map((c) => ({ id: c.id, label: c.name, icon: c.icon }))
+        return catalog.creatures.map((c) => ({ id: c.id, label: localName(catalog, 'creatures', c), icon: c.icon }))
       case 'artifact': {
-        const real = catalog.artifacts.map((a) => ({ id: a.id, label: a.name, icon: a.icon }))
+        const real = catalog.artifacts.map((a) => ({ id: a.id, label: localName(catalog, 'artifacts', a), icon: a.icon }))
         const custom = Object.values(customArtifacts).map((def) => {
           const nameSid = typeof def.template.name === 'string' ? def.template.name : def.id
           const icon = typeof def.template.icon === 'string' ? def.template.icon : undefined
@@ -109,7 +110,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
       case 'mapObject':
         return catalog.mapObjects.map((o) => ({
           id: o.id,
-          label: o.name,
+          label: localName(catalog, 'mapObjects', o),
           icon: o.icon,
           group: MAP_OBJECT_CATEGORY_GROUP_LABELS[o.category],
         }))
@@ -125,7 +126,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         // this filters on that flag directly rather than by category.
         return catalog.mapObjects
           .filter((o) => o.isInteractable && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
-          .map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
+          .map((o) => ({ id: o.id, label: localName(catalog, 'mapObjects', o), icon: o.icon }))
       case 'decoration':
         // SpawnMapObject ("Spawn Decoration Object") is explicitly
         // non-interactive per its own description — DB/map/objects/
@@ -133,13 +134,13 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         // the one category file that's non-interactive for every entry.
         return catalog.mapObjects
           .filter((o) => o.category === 'environments' && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
-          .map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
+          .map((o) => ({ id: o.id, label: localName(catalog, 'mapObjects', o), icon: o.icon }))
       case 'spell':
-        return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
+        return catalog.spells.map((s) => ({ id: s.id, label: localName(catalog, 'spells', s), icon: s.icon }))
       case 'skill':
-        return catalog.skills.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
+        return catalog.skills.map((s) => ({ id: s.id, label: localName(catalog, 'skills', s), icon: s.icon }))
       case 'buff': {
-        const real = catalog.buffs.map((b) => ({ id: b.id, label: b.name, icon: b.icon }))
+        const real = catalog.buffs.map((b) => ({ id: b.id, label: localName(catalog, 'buffs', b), icon: b.icon }))
         const custom = Object.values(customBuffs).map((def) => {
           const nameSid = typeof def.template.name_ === 'string' ? def.template.name_ : def.id
           const icon = typeof def.template.icon === 'string' ? def.template.icon : undefined
@@ -152,7 +153,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         // from fraction/tier plus the real unit names inside it (issue #143),
         // resolved via a Map rather than a per-template .find() since there
         // are ~4200 templates.
-        const creatureNameById = new Map(catalog.creatures.map((c) => [c.id, c.name]))
+        const creatureNameById = new Map(catalog.creatures.map((c) => [c.id, localName(catalog, 'creatures', c)]))
         return catalog.squadTemplates.map((t) => {
           const units = t.unitSids.map((sid) => creatureNameById.get(sid) ?? sid).join(', ')
           const fraction = t.fraction ? t.fraction.charAt(0).toUpperCase() + t.fraction.slice(1) : 'Unknown'

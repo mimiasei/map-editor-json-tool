@@ -7,6 +7,7 @@
 //   'hero'     — one tile per hero, returns the hero SID (quest parameter fields).
 //   'portrait' — every portrait the game ships, returns the avatar icon path (Dialog Editor).
 
+import { localNameById } from '@/lib/catalog/local-name'
 import { useMemo, useState } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -110,6 +111,9 @@ export default function HeroPickerDialog({
     ]
   }, [catalog, mode, customHeroes, localization])
 
+  // Display only: picking still passes the entry with its English name on to the caller, which writes it into the map.
+  const shownName = (e: PortraitEntry) => (e.heroId ? localNameById(catalog, 'heroes', e.heroId, e.name) : e.name)
+
   const factionOf = (e: PortraitEntry) =>
     factionDisplayName(e.fraction, catalog?.factions) || 'Neutral'
 
@@ -118,7 +122,7 @@ export default function HeroPickerDialog({
     const matching = entries.filter((e) => {
       if (
         q &&
-        !e.name.toLowerCase().includes(q) &&
+        !e.name.toLowerCase().includes(q) && !shownName(e).toLowerCase().includes(q) &&
         !e.sublabel.toLowerCase().includes(q) &&
         !assetLeafName(e.icon).toLowerCase().includes(q)
       ) {
@@ -225,7 +229,7 @@ export default function HeroPickerDialog({
                         {mode === 'portrait' ? (
                           <PortraitThumb
                             iconId={entry.icon}
-                            name={entry.name}
+                            name={shownName(entry)}
                             size={72}
                             height={72}
                             previewSize={280}
@@ -234,7 +238,7 @@ export default function HeroPickerDialog({
                         ) : (
                           <PortraitThumb
                             iconId={entry.heroIcon}
-                            name={entry.name}
+                            name={shownName(entry)}
                             size={72}
                             height={72}
                             previewSize={280}
@@ -242,7 +246,7 @@ export default function HeroPickerDialog({
                           />
                         )}
                         <span className="w-full truncate text-xs font-medium leading-tight">
-                          {entry.name}
+                          {shownName(entry)}
                         </span>
                         <span className="w-full truncate font-mono text-[9px] text-muted-foreground">
                           {entry.variant ? `· ${entry.variant}` : entry.sublabel}

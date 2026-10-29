@@ -59,6 +59,7 @@
 // an already-saved definition's `logic` on re-edit); every other family
 // still ships as an exact, unedited clone.
 
+import { localNameById } from '@/lib/catalog/local-name'
 import { useState } from 'react'
 import {
   Dialog,
@@ -315,7 +316,7 @@ export default function CustomObjectEditorDialog({
     existingDefinition?.logic ?? baseCatalogLogic?.raw
   const logicSourcePathBase: string | undefined =
     existingDefinition?.logicSourcePath ?? baseCatalogLogic?.sourcePath
-  const baseDisplayName = catalog?.mapObjects.find((o) => o.id === sourceObjectId)?.name ?? sourceObjectId
+  const baseDisplayName = localNameById(catalog, 'mapObjects', sourceObjectId, catalog?.mapObjects.find((o) => o.id === sourceObjectId)?.name ?? sourceObjectId)
   const catalogMissing = !!sourceObjectId && !templateBase
 
   // "Build from scratch" mode: does the visual source need an interaction
@@ -334,7 +335,7 @@ export default function CustomObjectEditorDialog({
   const logicBearingIds = new Set((catalog?.objectLogics ?? []).map((l) => l.id))
   const scratchLogicSource = catalog?.objectLogics.find((l) => l.id === logicSourceObjectId)
   const scratchLogicDisplayName =
-    catalog?.mapObjects.find((o) => o.id === logicSourceObjectId)?.name ?? logicSourceObjectId
+    localNameById(catalog, 'mapObjects', logicSourceObjectId, catalog?.mapObjects.find((o) => o.id === logicSourceObjectId)?.name ?? logicSourceObjectId)
   const effectiveLogicBase = mode === 'scratch'
     ? (noNativeLogic ? undefined : (logicEdits ?? undefined))
     : logicBase

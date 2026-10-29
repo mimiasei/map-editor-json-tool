@@ -24,6 +24,7 @@
 // the long tail — same pattern ArtifactBonusesEditor/EventBankLogicEditor
 // already established.
 
+import { localName } from '@/lib/catalog/local-name'
 import { useState } from 'react'
 import {
   Dialog,
@@ -164,7 +165,7 @@ export default function CustomBuffEditorDialog({
 
   const templateBase: Record<string, unknown> | null =
     existingDefinition?.template ?? (mode === 'clone' ? baseCatalogBuff?.raw ?? null : SCRATCH_BUFF_BASE)
-  const baseDisplayName = baseCatalogBuff?.name ?? sourceBuffId
+  const baseDisplayName = baseCatalogBuff ? localName(catalog, 'buffs', baseCatalogBuff) : sourceBuffId
   const catalogMissing = mode === 'clone' && !!sourceBuffId && !existingDefinition && !baseCatalogBuff
   const readyToEdit = mode === 'scratch' || !!sourceBuffId || !!existingDefinition
 

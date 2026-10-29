@@ -30,6 +30,7 @@
 // picker lets the user borrow any real artifact's mesh — same "visual
 // decoupled from behavior" idea Custom Map Objects' from-scratch mode uses.
 
+import { localName, localNameById } from '@/lib/catalog/local-name'
 import { useState } from 'react'
 import {
   Dialog,
@@ -162,8 +163,8 @@ export default function CustomArtifactEditorDialog({
     existingDefinition?.template ?? (mode === 'clone' ? baseCatalogArtifact?.raw ?? null : SCRATCH_ARTIFACT_BASE)
   const mapObjectTemplateBase: Record<string, unknown> | undefined =
     existingDefinition?.mapObjectTemplate ?? (mode === 'clone' ? baseMapObject?.raw : groundVisualCatalogObject?.raw)
-  const baseDisplayName = baseCatalogArtifact?.name ?? sourceArtifactId
-  const groundVisualDisplayName = catalog?.mapObjects.find((o) => o.id === groundVisualId)?.name ?? groundVisualId
+  const baseDisplayName = baseCatalogArtifact ? localName(catalog, 'artifacts', baseCatalogArtifact) : sourceArtifactId
+  const groundVisualDisplayName = localNameById(catalog, 'mapObjects', groundVisualId, catalog?.mapObjects.find((o) => o.id === groundVisualId)?.name ?? groundVisualId)
   const catalogMissing = mode === 'clone' && !!sourceArtifactId && !existingDefinition && !baseCatalogArtifact
   // Once true, the full form renders — either a base/definition to seed from
   // exists, or "Build from scratch" was explicitly chosen (which needs none).
