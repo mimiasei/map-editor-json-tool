@@ -5,6 +5,7 @@
 import type { ScenarioFile, Condition, Action, Trigger } from '@/types/scenario'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
+import i18n from '@/lib/i18n'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -33,34 +34,7 @@ export interface TimelineEntry {
   sortKey: string | number
 }
 
-export interface CategoryMeta {
-  id: TimelineCategory
-  label: string
-  description: string
-}
-
-export const CATEGORY_META: CategoryMeta[] = [
-  {
-    id: 'turn-based',
-    label: 'Turn-based Events',
-    description: 'Triggers that fire at the start of a specific turn or week.',
-  },
-  {
-    id: 'counter-gated',
-    label: 'Counter-gated Events',
-    description: 'Triggers that fire when a counter or resource reaches a threshold.',
-  },
-  {
-    id: 'reactive',
-    label: 'Reactive Events',
-    description: 'Triggers that fire in response to combat, interactions, or captures.',
-  },
-  {
-    id: 'random-repeating',
-    label: 'Random / Repeating',
-    description: 'Repeating triggers, random dialogs, or uncategorized events.',
-  },
-]
+export const TIMELINE_CATEGORIES: TimelineCategory[] = ['turn-based', 'counter-gated', 'reactive', 'random-repeating']
 
 // ─── Condition sets (for categorization) ─────────────────────────────────────
 
@@ -125,36 +99,36 @@ export function formatCondition(condition: Condition): string {
   switch (condition.c) {
     case 'StartTurn': {
       if (p(condition, 0)) {
-        const player = p(condition, 1) ? ` (Player ${p(condition, 1)})` : ''
+        const player = p(condition, 1) ? i18n.t('common.timelineDialog.cond.turnPlayer', { n: p(condition, 1) }) : ''
         const week = parseInt(p(condition, 0), 10)
         const day = parseInt(p(condition, 1), 10) || 0
         const turn = (week - 1) * 7 + day //week * 7 + day = turn
-        return `Turn ${turn} (W:${p(condition, 0)}, D:${p(condition, 1)}) ${player}`
+        return i18n.t('common.timelineDialog.cond.turn', { turn, week: p(condition, 0), day: p(condition, 1), player })
       }
-      return 'Any turn'
+      return i18n.t('common.timelineDialog.cond.anyTurn')
     }
-    case 'StartWeek':    return 'Week start'
-    case 'AnyStartTurn': return 'Any turn'
+    case 'StartWeek':    return i18n.t('common.timelineDialog.cond.weekStart')
+    case 'AnyStartTurn': return i18n.t('common.timelineDialog.cond.anyTurn')
 
     case 'Counter':    return `${p(condition, 0)} ${p(condition, 1)} ${p(condition, 2)}`
     case 'ResCounter': return `${p(condition, 0)} ${p(condition, 1)} ${p(condition, 2)}`
-    case 'ItemOwnSide':return `Item ${p(condition, 0)} ${p(condition, 1)} ${p(condition, 2)}`
-    case 'UnitOwnSide':return `Unit ${p(condition, 0)} ${p(condition, 1)} ${p(condition, 2)}`
-    case 'UnitOwnHero':return `Unit ${p(condition, 1)} on ${p(condition, 0)} ${p(condition, 2)} ${p(condition, 3)}`
+    case 'ItemOwnSide':return i18n.t('common.timelineDialog.cond.item', { a: p(condition, 0), b: p(condition, 1), c: p(condition, 2) })
+    case 'UnitOwnSide':return i18n.t('common.timelineDialog.cond.unit', { a: p(condition, 0), b: p(condition, 1), c: p(condition, 2) })
+    case 'UnitOwnHero':return i18n.t('common.timelineDialog.cond.unitOnHero', { unit: p(condition, 1), hero: p(condition, 0), c: p(condition, 2), d: p(condition, 3) })
 
-    case 'HeroKill':   return `Hero killed: ${p(condition, 0)}`
-    case 'SquadKill':  return `Squad defeated: ${p(condition, 0)}`
-    case 'UnitKill':   return `Unit killed: ${p(condition, 0)}`
-    case 'UnitLose':   return `Unit lost: ${p(condition, 0)}`
-    case 'ObjectLose': return `Object lost: ${p(condition, 0)}`
-    case 'PlayerDefeated':          return `Player ${p(condition, 0)} defeated`
-    case 'SquadInteraction':        return `Interact: ${p(condition, 0)}`
-    case 'ObjectInteractionBefore': return `Interact (before): ${p(condition, 0)}`
-    case 'ObjectInteractionAfter':  return `Interact (after): ${p(condition, 0)}`
-    case 'ObjectCaptureEntity':     return `Captured: ${p(condition, 0)}`
-    case 'UnitHire':                return `Unit hired: ${p(condition, 0)}`
-    case 'NodeRevealed':            return `Node revealed: ${p(condition, 0)}`
-    case 'DifficultyCustomMap':     return `Difficulty: ${p(condition, 0)} ${p(condition, 1)}`
+    case 'HeroKill':   return i18n.t('common.timelineDialog.cond.heroKilled', { v: p(condition, 0) })
+    case 'SquadKill':  return i18n.t('common.timelineDialog.cond.squadDefeated', { v: p(condition, 0) })
+    case 'UnitKill':   return i18n.t('common.timelineDialog.cond.unitKilled', { v: p(condition, 0) })
+    case 'UnitLose':   return i18n.t('common.timelineDialog.cond.unitLost', { v: p(condition, 0) })
+    case 'ObjectLose': return i18n.t('common.timelineDialog.cond.objectLost', { v: p(condition, 0) })
+    case 'PlayerDefeated':          return i18n.t('common.timelineDialog.cond.playerDefeated', { n: p(condition, 0) })
+    case 'SquadInteraction':        return i18n.t('common.timelineDialog.cond.interact', { v: p(condition, 0) })
+    case 'ObjectInteractionBefore': return i18n.t('common.timelineDialog.cond.interactBefore', { v: p(condition, 0) })
+    case 'ObjectInteractionAfter':  return i18n.t('common.timelineDialog.cond.interactAfter', { v: p(condition, 0) })
+    case 'ObjectCaptureEntity':     return i18n.t('common.timelineDialog.cond.captured', { v: p(condition, 0) })
+    case 'UnitHire':                return i18n.t('common.timelineDialog.cond.unitHired', { v: p(condition, 0) })
+    case 'NodeRevealed':            return i18n.t('common.timelineDialog.cond.nodeRevealed', { v: p(condition, 0) })
+    case 'DifficultyCustomMap':     return i18n.t('common.timelineDialog.cond.difficulty', { a: p(condition, 0), b: p(condition, 1) })
 
     default: {
       const def = CONDITION_REGISTRY[condition.c]
@@ -169,7 +143,7 @@ export function formatActions(actions: Action[]): string {
   if (actions.length === 0) return '—'
   const labels = actions.map((a) => ACTION_REGISTRY[a.a]?.label ?? a.a)
   if (labels.length <= 2) return labels.join(' → ')
-  return `${labels[0]} → ${labels[1]} +${labels.length - 2} more`
+  return i18n.t('common.timelineDialog.cond.moreActions', { first: labels[0], second: labels[1], count: labels.length - 2 })
 }
 
 // ─── Main builder ─────────────────────────────────────────────────────────────

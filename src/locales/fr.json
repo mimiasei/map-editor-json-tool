@@ -324,7 +324,20 @@
       "warnings": "Avertissements",
       "copied": "Copié",
       "copy": "Copier",
-      "mapRejectedRows": "La carte a rejeté ces lignes"
+      "mapRejectedRows": "La carte a rejeté ces lignes",
+      "docs": {
+        "scenario": "Scénario de la carte",
+        "localization": "Localisation : {{language}}",
+        "hero": "Héros : {{sid}}",
+        "customObjects": "Objets de carte personnalisés",
+        "objectLogic": "Logique de l'objet : {{id}}",
+        "customArtifacts": "Artefacts personnalisés",
+        "artifactObjects": "Objets au sol des artefacts personnalisés",
+        "customBuffs": "Effets personnalisés",
+        "actionsBefore": "Carte : actions avant",
+        "actionsAfter": "Carte : actions après",
+        "dialog": "Dialogue : {{label}}"
+      }
     },
     "localizedTextField": {
       "optional": "(facultatif)",
@@ -433,7 +446,15 @@
       "questFlowDiagram": "Diagramme de flux des quêtes",
       "triggerCount_one": "{{count}} déclencheur",
       "triggerCount_many": "{{count}} déclencheurs",
-      "triggerCount_other": "{{count}} déclencheurs"
+      "triggerCount_other": "{{count}} déclencheurs",
+      "edges": {
+        "next": "Suivant",
+        "activate": "Activer",
+        "nextQuest": "Quête suivante",
+        "end": "Fin",
+        "done": "Terminé",
+        "afterGroup": "Après le groupe"
+      }
     },
     "setupDialog": {
       "welcomeToTheScenarioEditor": "Bienvenue dans l'éditeur de scénarios",
@@ -610,7 +631,36 @@
       "triggerCount_other": "{{count}} déclencheurs",
       "questCount_one": "{{count}} quête",
       "questCount_many": "{{count}} quêtes",
-      "questCount_other": "{{count}} quêtes"
+      "questCount_other": "{{count}} quêtes",
+      "categories": {
+        "turn-based": "Événements par tour",
+        "counter-gated": "Événements liés à un compteur",
+        "reactive": "Événements réactifs",
+        "random-repeating": "Aléatoires / Répétés"
+      },
+      "cond": {
+        "anyTurn": "N'importe quel tour",
+        "weekStart": "Début de semaine",
+        "turn": "Tour {{turn}} (S:{{week}}, J:{{day}}){{player}}",
+        "turnPlayer": " (Joueur {{n}})",
+        "item": "Objet {{a}} {{b}} {{c}}",
+        "unit": "Unité {{a}} {{b}} {{c}}",
+        "unitOnHero": "Unité {{unit}} avec {{hero}} {{c}} {{d}}",
+        "heroKilled": "Héros tué : {{v}}",
+        "squadDefeated": "Escouade vaincue : {{v}}",
+        "unitKilled": "Unité tuée : {{v}}",
+        "unitLost": "Unité perdue : {{v}}",
+        "objectLost": "Objet perdu : {{v}}",
+        "playerDefeated": "Joueur {{n}} vaincu",
+        "interact": "Interaction : {{v}}",
+        "interactBefore": "Interaction (avant) : {{v}}",
+        "interactAfter": "Interaction (après) : {{v}}",
+        "captured": "Capturé : {{v}}",
+        "unitHired": "Unité recrutée : {{v}}",
+        "nodeRevealed": "Nœud révélé : {{v}}",
+        "difficulty": "Difficulté : {{a}} {{b}}",
+        "moreActions": "{{first}} → {{second}} +{{count}} de plus"
+      }
     },
     "unsavedChangesDialog": {
       "unsavedChanges": "Modifications non enregistrées",
@@ -2072,7 +2122,9 @@
       "stopsHere": "S'arrête ici"
     },
     "addNodePopover": {
-      "recentlyUsed": "Récemment utilisés"
+      "recentlyUsed": "Récemment utilisés",
+      "searchConditions": "Rechercher des conditions…",
+      "searchActions": "Rechercher des actions…"
     },
     "conditionCard": {
       "needsSetupClickToConfigure": "Configuration requise : cliquez pour configurer"
@@ -2102,6 +2154,20 @@
     },
     "sentenceView": {
       "noLocalizedText": "Aucun texte localisé trouvé pour ce SID de dialogue."
+    },
+    "conditionCategories": {
+      "progress": "Progression et compteurs",
+      "time": "Temps et tours",
+      "economy": "Économie et bâtiments",
+      "army": "Armée, objets et héros",
+      "heroMap": "Événements de héros et de carte",
+      "tutorial": "Tutoriel et invites de l'interface"
+    },
+    "subjects": {
+      "object": "Cet objet",
+      "castle": "Cette ville",
+      "portal": "Ce portail",
+      "squad": "Cette escouade"
     }
   },
   "actions": {
@@ -2266,6 +2332,14 @@
     "undockButton": {
       "popOutIntoSeparateWindow": "Détacher dans une fenêtre séparée",
       "redock": "Rattacher"
+    },
+    "windowTitles": {
+      "preview": "Aperçu JSON",
+      "timeline": "Chronologie des événements",
+      "flow": "Diagramme de flux des quêtes",
+      "stats": "Statistiques du scénario",
+      "guides": "Guides",
+      "mapGridCell": "Grille de carte — Infos de la tuile"
     }
   },
   "validate": {

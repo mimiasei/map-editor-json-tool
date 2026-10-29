@@ -13,7 +13,7 @@ import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { clearRecentFiles, syncRecentMenu } from '@/lib/recent-files'
 import { logInfo, logError } from '@/lib/logger'
-import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
+import { createPanelSyncChannel, PANEL_META, panelTitle } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
 import { warmThumbnailDir } from '@/lib/catalog/thumbnails'
 import { loadThumbnailManifest, getThumbnailCount } from '@/hooks/useThumbnailManifest'
@@ -549,7 +549,7 @@ export default function AppShell() {
 
     const win = new WebviewWindow(`panel-${panelId}`, {
       url:       `/?panel=${panelId}`,
-      title:     meta?.title ?? panelId,
+      title:     panelTitle(panelId),
       width:     meta?.width  ?? 800,
       height:    meta?.height ?? 600,
       minWidth:  400,

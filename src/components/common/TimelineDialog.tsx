@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import {
   buildTimeline,
-  CATEGORY_META,
+  TIMELINE_CATEGORIES,
   type TimelineCategory,
   type TimelineEntry,
 } from '@/lib/timeline'
@@ -83,7 +83,6 @@ interface SectionProps {
 function Section({ category, entries, onSelect }: SectionProps) {
   const { t } = useTranslation()
   if (entries.length === 0) return null
-  const meta = CATEGORY_META.find((m) => m.id === category)!
   const Icon = CATEGORY_ICONS[category]
 
   return (
@@ -92,7 +91,7 @@ function Section({ category, entries, onSelect }: SectionProps) {
       <div className="flex items-center gap-2 mb-1">
         <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {meta.label}
+          {t(`common.timelineDialog.categories.${category}`)}
         </span>
         <Badge variant="secondary" className="h-4 px-1.5 text-xs">
           {entries.length}
@@ -132,11 +131,12 @@ interface TimelineContentProps {
 }
 
 export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequested }: TimelineContentProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [localCloseOnNav, setLocalCloseOnNav] = useState(false)
   const effectiveClose = closeOnNav !== undefined ? closeOnNav : localCloseOnNav
 
-  const allEntries = useMemo(() => buildTimeline(scenario), [scenario])
+  // The condition summaries are translated when built, so a language change has to rebuild them.
+  const allEntries = useMemo(() => buildTimeline(scenario), [scenario, i18n.language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const grouped = useMemo(() => {
     const result: Record<TimelineCategory, TimelineEntry[]> = {
@@ -203,11 +203,11 @@ export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequest
             </p>
           ) : (
             <div className="space-y-6">
-              {CATEGORY_META.map((cat) => (
+              {TIMELINE_CATEGORIES.map((cat) => (
                 <Section
-                  key={cat.id}
-                  category={cat.id}
-                  entries={grouped[cat.id]}
+                  key={cat}
+                  category={cat}
+                  entries={grouped[cat]}
                   onSelect={handleSelect}
                 />
               ))}

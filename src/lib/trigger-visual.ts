@@ -42,20 +42,22 @@ import {
 // including the Tutorial bucket, which stays defined (for icon lookups on
 // existing scenario data) even though the add-picker hides it by default.
 
+export type UiCategoryId = 'progress' | 'time' | 'economy' | 'army' | 'heroMap' | 'tutorial'
+
 export interface UiCategory {
-  label: string
+  id: UiCategoryId
   icon: AppIcon
   types: string[]
 }
 
 export const CONDITION_UI_CATEGORIES: UiCategory[] = [
   {
-    label: 'Progress & Counters',
+    id: 'progress',
     icon: Hash,
     types: ['Counter', 'CompareCounters', 'CounterEqualityInDays', 'StoryCounter', 'QuestCompleted'],
   },
   {
-    label: 'Time & Turns',
+    id: 'time',
     icon: Clock,
     types: [
       'StartTurn', 'AnyStartTurn', 'StartWeek', 'Difficulty', 'DifficultyCustomMap', 'NodeRevealed',
@@ -63,12 +65,12 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
   {
-    label: 'Economy & Buildings',
+    id: 'economy',
     icon: Coins,
     types: ['ResCounter', 'BuildingConstruct', 'BuildingOwn'],
   },
   {
-    label: 'Army, Items & Heroes',
+    id: 'army',
     icon: Crown,
     types: [
       'SpellCast', 'ItemOwnSide', 'ItemDestroyed', 'UnitOwnSide', 'UnitHire', 'UnitLose', 'UnitKill',
@@ -76,7 +78,7 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
   {
-    label: 'Hero & Map Events',
+    id: 'heroMap',
     icon: MapPin,
     types: [
       'HeroKill', 'ObjectInteractionBefore', 'ObjectInteractionAfter', 'ObjectCaptureEntity',
@@ -84,7 +86,7 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
   {
-    label: 'Tutorial & UI Prompts',
+    id: 'tutorial',
     icon: GraduationCap,
     types: [
       'TutorialMovePoints', 'TutorialOpenCity', 'TutorialShowTooltipSquad', 'TutorialShowTooltipWO',

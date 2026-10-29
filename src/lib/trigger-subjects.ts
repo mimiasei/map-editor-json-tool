@@ -22,7 +22,6 @@ export interface SubjectVerb {
 
 export interface SubjectDef {
   key: SubjectKey
-  label: string
   icon: AppIcon
   verbs: SubjectVerb[]
 }
@@ -30,7 +29,6 @@ export interface SubjectDef {
 export const SUBJECT_DEFS: Record<SubjectKey, SubjectDef> = {
   object: {
     key: 'object',
-    label: 'This object',
     icon: MapPin,
     verbs: [
       { type: 'ObjectInteractionBefore', kind: 'condition', paramIndex: 0 },
@@ -49,7 +47,6 @@ export const SUBJECT_DEFS: Record<SubjectKey, SubjectDef> = {
   },
   castle: {
     key: 'castle',
-    label: 'This castle',
     icon: Castle,
     verbs: [
       { type: 'ObjectCaptureEntity', kind: 'condition', paramIndex: 0 },
@@ -67,7 +64,6 @@ export const SUBJECT_DEFS: Record<SubjectKey, SubjectDef> = {
   },
   portal: {
     key: 'portal',
-    label: 'This portal',
     icon: DoorOpen,
     verbs: [
       { type: 'ObjectInteractionBefore', kind: 'condition', paramIndex: 0 },
@@ -78,7 +74,6 @@ export const SUBJECT_DEFS: Record<SubjectKey, SubjectDef> = {
   },
   squad: {
     key: 'squad',
-    label: 'This squad',
     icon: Users,
     verbs: [
       { type: 'SquadInteraction', kind: 'condition', paramIndex: 0 },

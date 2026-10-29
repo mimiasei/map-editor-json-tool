@@ -132,7 +132,7 @@ export function JsonPreviewContent({
   mapActions,
   handlers,
 }: JsonPreviewContentProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState('')
@@ -144,7 +144,9 @@ export function JsonPreviewContent({
 
   const docs = useMemo(
     () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions),
-    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions],
+    // i18n.language: the document labels are translated when built
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions, i18n.language],
   )
 
   // Fall back to the scenario if the selected dialog was renamed or deleted
@@ -339,7 +341,7 @@ export function JsonPreviewContent({
       <SelectContent>
         {docs.map((d) => (
           <SelectItem key={d.id} value={d.id} className="text-xs">
-            {d.kind === 'dialog' ? `Dialog: ${d.label}` : d.label}
+            {d.label}
           </SelectItem>
         ))}
       </SelectContent>

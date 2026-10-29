@@ -311,7 +311,20 @@
       "warnings": "Warnings",
       "copied": "Copied",
       "copy": "Copy",
-      "mapRejectedRows": "The map rejected these rows"
+      "mapRejectedRows": "The map rejected these rows",
+      "docs": {
+        "scenario": "Map scenario",
+        "localization": "Localization: {{language}}",
+        "hero": "Hero: {{sid}}",
+        "customObjects": "Custom map objects",
+        "objectLogic": "Object logic: {{id}}",
+        "customArtifacts": "Custom artifacts",
+        "artifactObjects": "Custom artifact ground objects",
+        "customBuffs": "Custom buffs",
+        "actionsBefore": "Map: Actions Before",
+        "actionsAfter": "Map: Actions After",
+        "dialog": "Dialog: {{label}}"
+      }
     },
     "localizedTextField": {
       "optional": "(optional)",
@@ -414,7 +427,15 @@
       "noSubquestsYetAddQuests": "No subquests yet. Add quests with subquests to see the flow diagram.",
       "questFlowDiagram": "Quest Flow Diagram",
       "triggerCount_one": "{{count}} trigger",
-      "triggerCount_other": "{{count}} triggers"
+      "triggerCount_other": "{{count}} triggers",
+      "edges": {
+        "next": "Next",
+        "activate": "Activate",
+        "nextQuest": "Next Quest",
+        "end": "End",
+        "done": "Done",
+        "afterGroup": "After Group"
+      }
     },
     "setupDialog": {
       "welcomeToTheScenarioEditor": "Welcome to the Scenario Editor",
@@ -583,7 +604,36 @@
       "triggerCount_one": "{{count}} trigger",
       "triggerCount_other": "{{count}} triggers",
       "questCount_one": "{{count}} quest",
-      "questCount_other": "{{count}} quests"
+      "questCount_other": "{{count}} quests",
+      "categories": {
+        "turn-based": "Turn-based Events",
+        "counter-gated": "Counter-gated Events",
+        "reactive": "Reactive Events",
+        "random-repeating": "Random / Repeating"
+      },
+      "cond": {
+        "anyTurn": "Any turn",
+        "weekStart": "Week start",
+        "turn": "Turn {{turn}} (W:{{week}}, D:{{day}}){{player}}",
+        "turnPlayer": " (Player {{n}})",
+        "item": "Item {{a}} {{b}} {{c}}",
+        "unit": "Unit {{a}} {{b}} {{c}}",
+        "unitOnHero": "Unit {{unit}} on {{hero}} {{c}} {{d}}",
+        "heroKilled": "Hero killed: {{v}}",
+        "squadDefeated": "Squad defeated: {{v}}",
+        "unitKilled": "Unit killed: {{v}}",
+        "unitLost": "Unit lost: {{v}}",
+        "objectLost": "Object lost: {{v}}",
+        "playerDefeated": "Player {{n}} defeated",
+        "interact": "Interact: {{v}}",
+        "interactBefore": "Interact (before): {{v}}",
+        "interactAfter": "Interact (after): {{v}}",
+        "captured": "Captured: {{v}}",
+        "unitHired": "Unit hired: {{v}}",
+        "nodeRevealed": "Node revealed: {{v}}",
+        "difficulty": "Difficulty: {{a}} {{b}}",
+        "moreActions": "{{first}} → {{second}} +{{count}} more"
+      }
     },
     "unsavedChangesDialog": {
       "unsavedChanges": "Unsaved Changes",
@@ -2032,7 +2082,9 @@
       "stopsHere": "Stops here"
     },
     "addNodePopover": {
-      "recentlyUsed": "Recently used"
+      "recentlyUsed": "Recently used",
+      "searchConditions": "Search conditions…",
+      "searchActions": "Search actions…"
     },
     "conditionCard": {
       "needsSetupClickToConfigure": "Needs setup — click to configure"
@@ -2062,6 +2114,20 @@
     },
     "sentenceView": {
       "noLocalizedText": "No localized text found for this dialog SID."
+    },
+    "conditionCategories": {
+      "progress": "Progress & Counters",
+      "time": "Time & Turns",
+      "economy": "Economy & Buildings",
+      "army": "Army, Items & Heroes",
+      "heroMap": "Hero & Map Events",
+      "tutorial": "Tutorial & UI Prompts"
+    },
+    "subjects": {
+      "object": "This object",
+      "castle": "This castle",
+      "portal": "This portal",
+      "squad": "This squad"
     }
   },
   "actions": {
@@ -2222,6 +2288,14 @@
     "undockButton": {
       "popOutIntoSeparateWindow": "Pop out into separate window",
       "redock": "Re-dock"
+    },
+    "windowTitles": {
+      "preview": "JSON Preview",
+      "timeline": "Event Timeline",
+      "flow": "Quest Flow Diagram",
+      "stats": "Scenario Statistics",
+      "guides": "Guides",
+      "mapGridCell": "Map Grid — Tile Info"
     }
   },
   "validate": {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createPanelSyncChannel, PANEL_META, type PanelState, type PanelAction } from '@/lib/panel-sync'
+import { createPanelSyncChannel, panelTitle, type PanelState, type PanelAction } from '@/lib/panel-sync'
 import PanelContent from './PanelContent'
 import { logInfo } from '@/lib/logger'
 import { useTranslation } from 'react-i18next'
@@ -29,8 +29,6 @@ export default function PanelShell({ panelId }: Props) {
   const [panelState, setPanelState] = useState<PanelState | null>(null)
   const [channel] = useState(() => createPanelSyncChannel(`panel-${panelId}`))
 
-  const meta = PANEL_META[panelId] ?? { title: panelId, width: 800, height: 600 }
-
   // Listen for state broadcasts from the main window
   useEffect(() => {
     const unlisten = channel.onState((state) => {
@@ -58,7 +56,7 @@ export default function PanelShell({ panelId }: Props) {
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* ── Window chrome ─────────────────────────────────────────────────── */}
       <div className="flex h-9 shrink-0 items-center justify-between border-b border-border px-3">
-        <span className="text-sm font-medium">{meta.title}</span>
+        <span className="text-sm font-medium">{panelTitle(panelId)}</span>
         <button
           onClick={handleRedock}
           className="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"

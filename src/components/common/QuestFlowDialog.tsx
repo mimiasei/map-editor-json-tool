@@ -110,13 +110,13 @@ interface QuestFlowContentProps {
 }
 
 export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequested }: QuestFlowContentProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [showLabels, setShowLabels]     = useState(true)
   const [closeOnNav, setCloseOnNav]     = useState(true)
   const [selectedId, setSelectedId]     = useState<string | null>(null)
   const [rfInstance, setRfInstance]     = useState<ReactFlowInstance<FlowNode> | null>(null)
 
-  const { nodes, edges } = useMemo(() => buildQuestFlow(scenario), [scenario])
+  const { nodes, edges } = useMemo(() => buildQuestFlow(scenario), [scenario, i18n.language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const displayEdges = useMemo(
     () => showLabels ? edges : edges.map((e) => ({ ...e, label: undefined })),
