@@ -65,6 +65,7 @@ import FieldInfo from '@/components/common/FieldInfo'
 import { mintCustomSid } from '@/lib/zip-export'
 import { isArtifactIdTaken } from '@/lib/custom-artifact-authoring'
 import { useTranslation, Trans } from 'react-i18next'
+import { rarityName } from '@/lib/game-labels'
 
 interface CustomArtifactEditorDialogProps {
   open: boolean
@@ -569,7 +570,7 @@ export default function CustomArtifactEditorDialog({
                     <Select value={rarity} onValueChange={setRarity}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+                        {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{rarityName(r.charAt(0).toUpperCase() + r.slice(1))}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

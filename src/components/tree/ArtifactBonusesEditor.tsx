@@ -46,6 +46,7 @@ import {
   type AttributeDef,
 } from '@/lib/artifact-bonus-catalog'
 import { useTranslation } from 'react-i18next'
+import { resourceName } from '@/lib/game-labels'
 
 type RawBonus = Record<string, unknown>
 
@@ -544,7 +545,7 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
           <Select value={p[0] ?? BASIC_RESOURCE_IDS[0]} onValueChange={(v) => setParamAt(0, v)}>
             <SelectTrigger className="h-7 text-xs w-28 shrink-0"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+              {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{resourceName(r)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Input type="number" className="h-7 w-24 text-xs" value={p[1] ?? '0'} onChange={(e) => setParamAt(1, e.target.value)} />

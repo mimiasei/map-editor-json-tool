@@ -17,6 +17,7 @@ import EntityCombobox from '@/components/common/EntityCombobox'
 import { classifyRewardParam, encodeRewardParam, type RewardParamClass } from '@/lib/map-grid/reward-params'
 import { BASIC_RESOURCE_IDS } from '@/lib/resources'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { resourceName } from '@/lib/game-labels'
 
 type SlotKind = RewardParamClass['kind']
 
@@ -68,7 +69,7 @@ export default function RewardSlotEditor({ parameters, onChange, catalog }: Rewa
                   <SelectTrigger className="h-7 text-xs w-24 shrink-0"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {BASIC_RESOURCE_IDS.map((r) => (
-                      <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>
+                      <SelectItem key={r} value={r}>{resourceName(r)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

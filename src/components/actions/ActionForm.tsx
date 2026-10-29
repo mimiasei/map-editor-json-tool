@@ -29,6 +29,7 @@ import HelpTooltip from '@/components/ui/HelpTooltip'
 import { duplicateAction, definedEntityNames } from '@/lib/action-duplicate'
 import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
 import { useTranslation } from 'react-i18next'
+import { enumOptionLabel } from '@/lib/game-labels'
 
 /** Short values (node index, player, number, enum) keep their width; SID fields take the spare room. */
 const FIXED_WIDTH = (p: ParamDef) => !!(p.nodeIndex || p.player || p.type === 'number' || p.type === 'enum')
@@ -250,7 +251,7 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
                   <SelectContent>
                     {param.options.map((o) => (
                       <SelectItem key={o} value={o}>
-                        {o}
+                        {enumOptionLabel(o)}
                       </SelectItem>
                     ))}
                   </SelectContent>

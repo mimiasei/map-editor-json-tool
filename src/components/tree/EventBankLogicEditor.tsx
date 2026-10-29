@@ -43,6 +43,7 @@ import EntityCombobox from '@/components/common/EntityCombobox'
 import StringListEditor from '@/components/common/StringListEditor'
 import { BASIC_RESOURCE_IDS } from '@/lib/resources'
 import { useTranslation } from 'react-i18next'
+import { resourceName, rarityName } from '@/lib/game-labels'
 
 // ─── Shape detection ───────────────────────────────────────────────────────────
 
@@ -224,7 +225,7 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
               <Select value={resource} onValueChange={(v) => updatePairs(pairs.map((p, idx) => (idx === i ? [v, p[1]] : p)))}>
                 <SelectTrigger className="h-7 text-xs w-28 shrink-0"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+                  {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{resourceName(r)}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Input type="number" className="h-7 w-24 text-xs" value={amount} onChange={(e) => updatePairs(pairs.map((p, idx) => (idx === i ? [p[0], e.target.value] : p)))} />
@@ -262,7 +263,7 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
         <Select value={parameters[0] ?? RARITY_OPTIONS[0]} onValueChange={(v) => set(0, v)}>
           <SelectTrigger className="h-7 text-xs w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+            {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{rarityName(r.charAt(0).toUpperCase() + r.slice(1))}</SelectItem>)}
           </SelectContent>
         </Select>
       )

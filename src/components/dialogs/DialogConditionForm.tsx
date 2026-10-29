@@ -26,6 +26,7 @@ import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard } from '@/lib/clipboard'
 import { useTranslation } from 'react-i18next'
+import { enumOptionLabel } from '@/lib/game-labels'
 
 interface Props {
   condition: DialogCondition
@@ -138,7 +139,7 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
                   <SelectContent>
                     {param.options.map((o) => (
                       <SelectItem key={o} value={o}>
-                        {o}
+                        {enumOptionLabel(o)}
                       </SelectItem>
                     ))}
                   </SelectContent>

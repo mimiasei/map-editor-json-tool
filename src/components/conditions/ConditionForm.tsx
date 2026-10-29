@@ -21,6 +21,7 @@ import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
 import { useTranslation } from 'react-i18next'
+import { enumOptionLabel } from '@/lib/game-labels'
 
 interface Props {
   condition: Condition
@@ -192,7 +193,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                   <SelectContent>
                     {param.options.map((o) => (
                       <SelectItem key={o} value={o}>
-                        {o}
+                        {enumOptionLabel(o)}
                       </SelectItem>
                     ))}
                   </SelectContent>
