@@ -374,7 +374,7 @@ export default function LocalizationDialog() {
                       }}
                       className="text-xs"
                     >
-                      {l.label}
+                      {languageLabel(l.id)}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

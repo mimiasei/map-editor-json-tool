@@ -27,6 +27,7 @@
 import type { ZoneGraph } from './zone-graph'
 import { zoneDistanceMatrix } from './zone-graph'
 import type { ZonePlacement } from './zone-population'
+import i18n from '@/lib/i18n'
 
 export type BalanceSeverity = 'ok' | 'warn' | 'bad'
 export interface BalanceFinding {
@@ -132,7 +133,7 @@ export function analyzeBalance(
   if (players.length === 0) {
     return {
       score: null,
-      findings: [{ severity: 'warn', message: 'No player zones to judge.' }],
+      findings: [{ severity: 'warn', message: i18n.t('rmg.balance.noPlayerZones') }],
       summary: { zones: graph.zones.length, players: 0, totalWealth, wealthPerPlayer: 0, wealthSpread: 0 },
     }
   }
@@ -177,43 +178,43 @@ export function analyzeBalance(
     score -= Math.min(45, Math.round(wealthSpread * 180))
     if (wealthSpread > 0.25) {
       const poorest = perPlayer.reduce((a, b) => (a.gravity < b.gravity ? a : b))
-      findings.push({ severity: 'bad', message: `Wealth spread ${Math.round(wealthSpread * 100)}% — player ${poorest.player.playerIndex} has meaningfully less accessible wealth than the others.` })
+      findings.push({ severity: 'bad', message: i18n.t('rmg.balance.wealthBad', { pct: Math.round(wealthSpread * 100), player: poorest.player.playerIndex }) })
     } else if (wealthSpread > 0.1) {
-      findings.push({ severity: 'warn', message: `Wealth spread ${Math.round(wealthSpread * 100)}% — noticeable but not severe.` })
+      findings.push({ severity: 'warn', message: i18n.t('rmg.balance.wealthWarn', { pct: Math.round(wealthSpread * 100) }) })
     } else {
-      findings.push({ severity: 'ok', message: `Wealth spread ${Math.round(wealthSpread * 100)}% — players have comparable accessible wealth.` })
+      findings.push({ severity: 'ok', message: i18n.t('rmg.balance.wealthOk', { pct: Math.round(wealthSpread * 100) }) })
     }
 
     const distanceSpread = spread(perPlayer.map((p) => p.averageOpponentDistance))
     score -= Math.min(25, Math.round(distanceSpread * 100))
     if (distanceSpread > 0.25) {
-      findings.push({ severity: 'bad', message: `Distance spread ${Math.round(distanceSpread * 100)}% — some players are much closer to the action than others.` })
+      findings.push({ severity: 'bad', message: i18n.t('rmg.balance.distanceBad', { pct: Math.round(distanceSpread * 100) }) })
     } else if (distanceSpread > 0.1) {
-      findings.push({ severity: 'warn', message: `Distance spread ${Math.round(distanceSpread * 100)}%.` })
+      findings.push({ severity: 'warn', message: i18n.t('rmg.balance.distanceWarn', { pct: Math.round(distanceSpread * 100) }) })
     } else {
-      findings.push({ severity: 'ok', message: 'Players are roughly equidistant from each other.' })
+      findings.push({ severity: 'ok', message: i18n.t('rmg.balance.distanceOk') })
     }
 
     const guardSpread = spread(perPlayer.map((p) => p.minExitGuard))
     score -= Math.min(15, Math.round(guardSpread * 50))
     if (guardSpread > 0.3) {
-      findings.push({ severity: 'warn', message: `Exit-guard spread ${Math.round(guardSpread * 100)}% — some players have a much cheaper way out than others.` })
+      findings.push({ severity: 'warn', message: i18n.t('rmg.balance.guardWarn', { pct: Math.round(guardSpread * 100) }) })
     }
 
     if (playerStats.length > 1) {
       const areaSpread = spread(playerStats.map((p) => p.area))
       score -= Math.min(15, Math.round(areaSpread * 100))
-      if (areaSpread > 0.15) findings.push({ severity: 'bad', message: `Zone size spread ${Math.round(areaSpread * 100)}% — some players own much more land than others.` })
-      else if (areaSpread > 0.07) findings.push({ severity: 'warn', message: `Zone size spread ${Math.round(areaSpread * 100)}%.` })
+      if (areaSpread > 0.15) findings.push({ severity: 'bad', message: i18n.t('rmg.balance.areaBad', { pct: Math.round(areaSpread * 100) }) })
+      else if (areaSpread > 0.07) findings.push({ severity: 'warn', message: i18n.t('rmg.balance.areaWarn', { pct: Math.round(areaSpread * 100) }) })
 
       const mineSpread = spread(playerStats.map((p) => p.meanMineDistance))
       score -= Math.min(10, Math.round(mineSpread * 50))
-      if (mineSpread > 0.3) findings.push({ severity: 'warn', message: `Start-mine distance spread ${Math.round(mineSpread * 100)}% — some players have to travel much further to their mines.` })
+      if (mineSpread > 0.3) findings.push({ severity: 'warn', message: i18n.t('rmg.balance.mineWarn', { pct: Math.round(mineSpread * 100) }) })
 
       const elevations = playerStats.map((p) => p.elevatedFraction)
       const elevationRange = Math.max(...elevations) - Math.min(...elevations)
       score -= Math.min(10, Math.round(elevationRange * 50))
-      if (elevationRange > 0.15) findings.push({ severity: 'warn', message: `Terrain differs around the starts — elevated share ranges ${Math.round(elevationRange * 100)} points between players.` })
+      if (elevationRange > 0.15) findings.push({ severity: 'warn', message: i18n.t('rmg.balance.terrainWarn', { points: Math.round(elevationRange * 100) }) })
     }
 
     const pairDistances: number[] = []
@@ -225,19 +226,19 @@ export function analyzeBalance(
     const minPair = pairDistances.length ? Math.min(...pairDistances) : 0
     if (minPair === 1) {
       score -= 10
-      findings.push({ severity: 'warn', message: 'Two players spawn directly adjacent to each other (an early-rush risk).' })
+      findings.push({ severity: 'warn', message: i18n.t('rmg.balance.adjacentWarn') })
     }
   }
 
   for (const p of perPlayer) {
     if (p.exitCount === 1) {
-      findings.push({ severity: 'warn', message: `Player ${p.player.playerIndex} has only a single way out of their zone.` })
+      findings.push({ severity: 'warn', message: i18n.t('rmg.balance.singleExitWarn', { player: p.player.playerIndex }) })
     }
   }
 
   score = Math.max(0, Math.min(100, score))
   if (findings.every((f) => f.severity === 'ok')) {
-    findings.push({ severity: 'ok', message: 'No balance concerns found.' })
+    findings.push({ severity: 'ok', message: i18n.t('rmg.balance.noConcerns') })
   }
 
   return {

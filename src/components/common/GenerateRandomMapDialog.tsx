@@ -824,7 +824,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <Label htmlFor="rmg-limit-cities" className="text-xs">{t('common.generateRandomMapDialog.setNumberOfRandomCities')}</Label>
-                        <FieldInfo text={`Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets the default of 1. On: you choose the total for the whole map, from 0 up to ${MAX_CITIES_PER_ZONE} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with ${playerCount} players the map has ${neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones, so up to ${maxCities} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones.`} />
+                        <FieldInfo text={t('common.generateRandomMapDialog.randomCitiesInfo', { perZone: MAX_CITIES_PER_ZONE, players: playerCount, zones: neutralZones.min === neutralZones.max ? String(neutralZones.min) : `${neutralZones.min}-${neutralZones.max}`, maxCities })} />
                       </div>
                       <Switch id="rmg-limit-cities" checked={limitCities} onCheckedChange={setLimitCities} disabled={terrainLocked} />
                     </div>

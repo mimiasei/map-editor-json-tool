@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, ChevronRight } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { guideCategoryLabel } from '@/lib/guideLoader'
 
 /**
  * The inner content of the Guides panel.
@@ -74,7 +75,7 @@ export function GuidesContent() {
               return (
                 <div key={cat.id}>
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-2 mb-1">
-                    {cat.label}
+                    {guideCategoryLabel(cat.id, cat.label)}
                   </p>
                   {visible.map((a) => (
                     <button

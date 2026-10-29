@@ -2,7 +2,7 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import en from '@/locales/en.json'
 import fr from '@/locales/fr.json'
-import { BASE_LANGUAGE } from '@/lib/languages'
+import { BASE_LANGUAGE } from '@/lib/base-language'
 import { useLocaleStore } from '@/store/useLocaleStore'
 
 // The setting holds the game's Lang/<id> directory name (see languages.ts), so the same value also

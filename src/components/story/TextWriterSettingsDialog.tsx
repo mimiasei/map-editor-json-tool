@@ -182,7 +182,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
           <div className="space-y-1.5">
             <Label htmlFor="text-writer-key">{t('story.textWriterSettingsDialog.key')}</Label>
             <p className="text-xs text-muted-foreground">
-              {info.keyHelp}{' '}
+              {t(`story.textWriterSettingsDialog.keyHelp.${info.id}`)}{' '}
               <button type="button" className="inline-flex items-center gap-1 text-primary hover:underline" onClick={openKeyPage}>
                 {t('story.textWriterSettingsDialog.openPage')} <ExternalLink className="h-3 w-3" />
               </button>

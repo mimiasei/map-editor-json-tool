@@ -13,6 +13,7 @@ import { loadRmgSchema } from '@/lib/rmg/rmg-schema'
 import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
 import { logInfo, logError } from '@/lib/logger'
 import { isTauri } from '@/lib/native-fs'
+import i18n from '@/lib/i18n'
 
 // The zip the current catalog was built from, kept so a language change can re-read the names without asking for Core.zip again.
 let loadedZip: JSZip | null = null
@@ -121,7 +122,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
       const result = await findCoreZip()
       if (!result) {
         if (isTauri()) {
-          set({ loading: false, error: 'Core.zip not found. Load it manually via Game Data → Load Core.zip.' })
+          set({ loading: false, error: i18n.t('catalog.coreZipNotFound') })
         } else {
           set({ loading: false })
         }

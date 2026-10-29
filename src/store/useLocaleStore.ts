@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { BASE_LANGUAGE } from '@/lib/languages'
+import { BASE_LANGUAGE } from '@/lib/base-language'
 
 // Named uiLocale (not "language") so it is not confused with the per-map content
 // languages edited in LocalizationDialog. Values are the game's Lang/<id> names.

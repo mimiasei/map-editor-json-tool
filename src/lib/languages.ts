@@ -14,7 +14,9 @@ export interface GameLanguage {
   label: string
 }
 
-export const BASE_LANGUAGE = 'english'
+import { BASE_LANGUAGE } from './base-language'
+import i18n from '@/lib/i18n'
+export { BASE_LANGUAGE }
 
 /** All 16 languages shipped in Core.zip, English first, then alphabetical. */
 export const GAME_LANGUAGES: GameLanguage[] = [
@@ -39,8 +41,23 @@ export const GAME_LANGUAGES: GameLanguage[] = [
 /** Languages the user can add beside English. */
 export const TRANSLATABLE_LANGUAGES = GAME_LANGUAGES.filter((l) => l.id !== BASE_LANGUAGE)
 
+/** BCP 47 codes for Intl.DisplayNames; the game's ids are directory names, not language tags. */
+const BCP47: Record<string, string> = {
+  english: 'en', BRportugese: 'pt-BR', czech: 'cs', french: 'fr', german: 'de', hungarian: 'hu', italian: 'it', japanese: 'ja',
+  korean: 'ko', polish: 'pl', russian: 'ru', spanish: 'es', turkish: 'tr', ukrainian: 'uk', zhCN: 'zh-Hans', zhTW: 'zh-Hant',
+}
+
+/** The language's name in the UI language ("Allemand" in French). Falls back to the English label. */
 export function languageLabel(id: string): string {
-  return GAME_LANGUAGES.find((l) => l.id === id)?.label ?? id
+  const english = GAME_LANGUAGES.find((l) => l.id === id)?.label ?? id
+  const code = BCP47[id]
+  if (!code || i18n.language === 'en') return english
+  try {
+    const name = new Intl.DisplayNames([i18n.language], { type: 'language' }).of(code)
+    return name ? name.charAt(0).toLocaleUpperCase(i18n.language) + name.slice(1) : english
+  } catch {
+    return english
+  }
 }
 
 /** Per-language token maps, keyed by language id. Excludes English. */

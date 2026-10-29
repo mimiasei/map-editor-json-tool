@@ -459,7 +459,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 >
                   {GAME_LANGUAGES.map((l) => (
                     <option key={l.id} value={l.id} disabled={l.id !== 'english' && !ready}>
-                      {l.label}
+                      {languageLabel(l.id)}
                     </option>
                   ))}
                 </select>
@@ -721,7 +721,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                           setExtraLangs((cur) => (cur.includes(l.id) ? cur.filter((x) => x !== l.id) : [...cur, l.id]))
                         }
                       >
-                        {l.label}
+                        {languageLabel(l.id)}
                       </Button>
                     ))}
                   </div>

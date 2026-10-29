@@ -278,7 +278,8 @@
           "description": "Un rayon de chaque joueur vers un centre commun ; aucun anneau direct entre les joueurs.",
           "details": "Comme le moyeu d'une roue : chaque joueur a une seule zone neutre vers le milieu, et toutes sont reliées à une grande zone centrale avec des trésors supplémentaires. Il n'y a pas d'anneau entre les joueurs : le seul chemin vers un rival passe par votre zone neutre et le centre. Proposé jusqu'à 4 joueurs."
         }
-      }
+      },
+      "randomCitiesInfo": "Les villes aléatoires sont des villes neutres que n’importe qui peut capturer. Elles n’apparaissent que dans les zones neutres, jamais dans la zone d’un joueur (chaque joueur commence déjà avec une ville). Désactivé : la carte reçoit la valeur par défaut, 1. Activé : vous choisissez le total pour toute la carte, de 0 jusqu’à {{perZone}} par zone neutre. Elles sont d’abord réparties dans des zones différentes, et une zone n’obtient une deuxième ou une troisième ville que lorsque chaque zone neutre en a une. Le nombre de zones neutres dépend du nombre de joueurs et de la disposition de zones choisie par le générateur : avec {{players}} joueurs, la carte compte {{zones}} zones neutres, donc jusqu’à {{maxCities}} villes tiennent. Si la disposition choisie compte moins de zones, les villes en trop ne sont simplement pas placées. Un modèle du jeu utilise ses propres zones."
     },
     "iconBrowserDialog": {
       "searchIcons": "Rechercher des icônes…",
@@ -473,7 +474,12 @@
       "change": "Modifier…",
       "choose": "Choisir…",
       "pickJsonTitle": "Emplacement d'écriture du JSON du scénario",
-      "pickZipTitle": "Emplacement d'écriture du ZIP de la carte"
+      "pickZipTitle": "Emplacement d'écriture du ZIP de la carte",
+      "reasons": {
+        "noFilePath": "Pas encore de chemin de fichier : ouvrez un fichier .map ou sauvegardez le scénario une fois.",
+        "mapNameRequired": "Le nom de la carte est nécessaire pour nommer le ZIP.",
+        "streamingAssetsUnknown": "Dossier StreamingAssets inconnu : chargez d’abord Core.zip via Données du jeu."
+      }
     },
     "questFlow": {
       "subQuestNode": {
@@ -650,7 +656,12 @@
       "variantN": "Variante {{n}}",
       "neutral": "Neutre",
       "zonesCount": "Zones ({{count}})",
-      "connectionsCount": "Connexions ({{count}})"
+      "connectionsCount": "Connexions ({{count}})",
+      "summaries": {
+        "mustDifferFrom": "Doit différer de : {{list}}",
+        "fromList": "Dans la liste",
+        "matchesMainObject": "Correspond à l’objet principal n° {{n}} de cette zone"
+      }
     },
     "thumbnailExtractDialog": {
       "extractGameThumbnails": "Extraire les miniatures du jeu",
@@ -1058,7 +1069,11 @@
       "Arcane": "Arcanes",
       "Neutral": "Neutre"
     },
-    "mapCoords": "Coordonnées : {{x}}, {{z}}"
+    "mapCoords": "Coordonnées : {{x}}, {{z}}",
+    "buildingNames": {
+      "townHall": "Hôtel de ville",
+      "garrison": "Garnison de palier {{tier}}"
+    }
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -2345,6 +2360,18 @@
       "confirmRemoveLanguage_one": "Supprimer {{language}} et abandonner son jeton traduit ({{count}}) ?",
       "confirmRemoveLanguage_other": "Supprimer {{language}} et abandonner ses {{count}} jetons traduits ?",
       "confirmRemoveLanguage_many": "Supprimer {{language}} et abandonner ses {{count}} jetons traduits ?"
+    },
+    "cascade": {
+      "heading": "La suppression de cette action supprimera aussi :",
+      "dialogs": "• Dialogue(s) : {{ids}}",
+      "tokensOnlyThisDialog_one": "• {{count}} jeton de localisation utilisé uniquement par lui",
+      "tokensOnlyThisDialog_many": "• {{count}} jetons de localisation utilisés uniquement par lui",
+      "tokensOnlyThisDialog_other": "• {{count}} jetons de localisation utilisés uniquement par lui",
+      "tokensOnlyTheseDialogs_one": "• {{count}} jeton de localisation utilisé uniquement par ces dialogues",
+      "tokensOnlyTheseDialogs_many": "• {{count}} jetons de localisation utilisés uniquement par ces dialogues",
+      "tokensOnlyTheseDialogs_other": "• {{count}} jetons de localisation utilisés uniquement par ces dialogues",
+      "noUndo": "Cette action ne peut pas être annulée avec Ctrl+Z.",
+      "noMap": "(Aucune carte n’est chargée dans cette session : les noms et descriptions des objets de carte n’ont donc pas été vérifiés.)"
     }
   },
   "editors": {
@@ -2505,7 +2532,8 @@
       "test": "Test (objets de débogage)",
       "blocks": "Blocs",
       "artifacts": "Artefacts à ramasser"
-    }
+    },
+    "coreZipNotFound": "Core.zip introuvable. Chargez-le manuellement via Données du jeu → Charger Core.zip."
   },
   "triggers": {
     "actionCard": {
@@ -2701,6 +2729,10 @@
         "savedModel": "Enregistré. Le rédacteur de texte est prêt (modèle : {{model}}).",
         "connected": "Connecté à {{name}}. La clé enregistrée fonctionne.",
         "connectedModel": "Connecté à {{name}} (modèle : {{model}}). La clé enregistrée fonctionne."
+      },
+      "keyHelp": {
+        "gemini": "Créez une clé gratuite dans Google AI Studio.",
+        "groq": "Créez une clé gratuite dans la console Groq."
       }
     },
     "tones": {
@@ -2806,6 +2838,12 @@
       "load": "Charger le modèle",
       "loading": "Chargement…",
       "loadFailed": "Échec du chargement du modèle : {{errors}}"
+    },
+    "categories": {
+      "getting-started": "Premiers pas",
+      "concepts": "Concepts clés",
+      "recipes": "Recettes et modèles",
+      "troubleshooting": "Pièges et solutions de contournement"
     }
   },
   "panels": {
@@ -2908,6 +2946,10 @@
       "terrainMore": "La zone du joueur {{owner}} est à {{pct}} % en collines ou vallées, contre {{median}} % pour le joueur typique : aplanissez-en une partie.",
       "terrainLess": "La zone du joueur {{owner}} n'est qu'à {{pct}} % en collines ou vallées, contre {{median}} % pour le joueur typique : surélevez ou abaissez du terrain pour égaler les autres.",
       "listSeparator": " et "
+    },
+    "decorationBalance": {
+      "tooBlocked": "La zone du joueur {{owner}} est bloquée à {{pct}} % par des décors, contre {{typical}} % pour le joueur typique : retirez-y des montagnes, des arbres ou des rochers, ou ajoutez-en pour les autres.",
+      "tooOpen": "La zone du joueur {{owner}} n’est bloquée qu’à {{pct}} % par des décors, contre {{typical}} % pour le joueur typique : ajoutez-en, ou éclaircissez ceux des autres."
     }
   },
   "rmg": {
@@ -2936,6 +2978,23 @@
       "startingOver": "nouveau départ"
     },
     "fairnessWarning": "Équité des joueurs {{score}}/100 ({{verdict}})",
-    "fairnessWarningReasons": "Équité des joueurs {{score}}/100 ({{verdict}}) — {{reasons}}"
+    "fairnessWarningReasons": "Équité des joueurs {{score}}/100 ({{verdict}}) — {{reasons}}",
+    "balance": {
+      "noPlayerZones": "Aucune zone de joueur à évaluer.",
+      "wealthBad": "Écart de richesse : {{pct}} % — le joueur {{player}} a nettement moins de richesses accessibles que les autres.",
+      "wealthWarn": "Écart de richesse : {{pct}} % — perceptible mais pas sévère.",
+      "wealthOk": "Écart de richesse : {{pct}} % — les joueurs ont des richesses accessibles comparables.",
+      "distanceBad": "Écart de distance : {{pct}} % — certains joueurs sont bien plus proches de l’action que les autres.",
+      "distanceWarn": "Écart de distance : {{pct}} %.",
+      "distanceOk": "Les joueurs sont à peu près équidistants les uns des autres.",
+      "guardWarn": "Écart de gardes de sortie : {{pct}} % — certains joueurs ont une sortie bien moins coûteuse que les autres.",
+      "areaBad": "Écart de taille de zone : {{pct}} % — certains joueurs possèdent bien plus de terres que les autres.",
+      "areaWarn": "Écart de taille de zone : {{pct}} %.",
+      "mineWarn": "Écart de distance aux mines de départ : {{pct}} % — certains joueurs doivent aller bien plus loin pour atteindre leurs mines.",
+      "terrainWarn": "Le terrain diffère autour des points de départ : la part en hauteur varie de {{points}} points entre les joueurs.",
+      "adjacentWarn": "Deux joueurs apparaissent directement côte à côte (risque de rush précoce).",
+      "singleExitWarn": "Le joueur {{player}} n’a qu’une seule sortie hors de sa zone.",
+      "noConcerns": "Aucun problème d’équilibre détecté."
+    }
   }
 }

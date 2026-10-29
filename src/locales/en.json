@@ -278,7 +278,8 @@
           "description": "A spoke from every player to a shared center; no direct ring between players.",
           "details": "Like the hub of a wheel: each player has a single neutral zone towards the middle, and all of these connect to one large central zone with extra treasure. There is no ring between players, so the only way to a rival is through your neutral zone and the centre. Offered for up to 4 players."
         }
-      }
+      },
+      "randomCitiesInfo": "Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets the default of 1. On: you choose the total for the whole map, from 0 up to {{perZone}} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with {{players}} players the map has {{zones}} neutral zones, so up to {{maxCities}} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones."
     },
     "iconBrowserDialog": {
       "searchIcons": "Search icons…",
@@ -455,7 +456,12 @@
       "change": "Change…",
       "choose": "Choose…",
       "pickJsonTitle": "Where to write the scenario JSON",
-      "pickZipTitle": "Where to write the map ZIP"
+      "pickZipTitle": "Where to write the map ZIP",
+      "reasons": {
+        "noFilePath": "No file path yet — open a .map file or save the scenario once.",
+        "mapNameRequired": "Map name is required to name the ZIP.",
+        "streamingAssetsUnknown": "StreamingAssets folder unknown — load Core.zip via Game Data first."
+      }
     },
     "questFlow": {
       "subQuestNode": {
@@ -628,7 +634,12 @@
       "variantN": "Variant {{n}}",
       "neutral": "Neutral",
       "zonesCount": "Zones ({{count}})",
-      "connectionsCount": "Connections ({{count}})"
+      "connectionsCount": "Connections ({{count}})",
+      "summaries": {
+        "mustDifferFrom": "Must differ from: {{list}}",
+        "fromList": "From list",
+        "matchesMainObject": "Matches this zone's own main object #{{n}}"
+      }
     },
     "thumbnailExtractDialog": {
       "extractGameThumbnails": "Extract Game Thumbnails",
@@ -1029,7 +1040,11 @@
       "Arcane": "Arcane",
       "Neutral": "Neutral"
     },
-    "mapCoords": "Map Coords: {{x}}, {{z}}"
+    "mapCoords": "Map Coords: {{x}}, {{z}}",
+    "buildingNames": {
+      "townHall": "Town Hall",
+      "garrison": "Tier {{tier}} Garrison"
+    }
   },
   "mapGrid": {
     "imageColorMappingDialog": {
@@ -2306,6 +2321,16 @@
       "confirmRemoveLanguage_one": "Remove {{language}} and discard its {{count}} translated token?",
       "confirmRemoveLanguage_other": "Remove {{language}} and discard its {{count}} translated tokens?",
       "confirmRemoveLanguage_many": "Remove {{language}} and discard its {{count}} translated tokens?"
+    },
+    "cascade": {
+      "heading": "Deleting this action will also delete:",
+      "dialogs": "• Dialog(s): {{ids}}",
+      "tokensOnlyThisDialog_one": "• {{count}} localization token used only by it",
+      "tokensOnlyThisDialog_other": "• {{count}} localization tokens used only by it",
+      "tokensOnlyTheseDialogs_one": "• {{count}} localization token used only by these dialogs",
+      "tokensOnlyTheseDialogs_other": "• {{count}} localization tokens used only by these dialogs",
+      "noUndo": "This cannot be undone with Ctrl+Z.",
+      "noMap": "(No map is loaded this session, so map object names/descriptions weren’t checked.)"
     }
   },
   "editors": {
@@ -2465,7 +2490,8 @@
       "test": "Test (debug objects)",
       "blocks": "Blocks",
       "artifacts": "Artifact pickups"
-    }
+    },
+    "coreZipNotFound": "Core.zip not found. Load it manually via Game Data → Load Core.zip."
   },
   "triggers": {
     "actionCard": {
@@ -2657,6 +2683,10 @@
         "savedModel": "Saved. The text writer is ready (model: {{model}}).",
         "connected": "Connected to {{name}}. The saved key works.",
         "connectedModel": "Connected to {{name}} (model: {{model}}). The saved key works."
+      },
+      "keyHelp": {
+        "gemini": "Create a free key in Google AI Studio.",
+        "groq": "Create a free key in the Groq console."
       }
     },
     "tones": {
@@ -2762,6 +2792,12 @@
       "load": "Load Template",
       "loading": "Loading…",
       "loadFailed": "Failed to load template: {{errors}}"
+    },
+    "categories": {
+      "getting-started": "Getting Started",
+      "concepts": "Core Concepts",
+      "recipes": "Recipes & Patterns",
+      "troubleshooting": "Gotchas & Workarounds"
     }
   },
   "panels": {
@@ -2864,6 +2900,10 @@
       "terrainMore": "Player {{owner}}'s area is {{pct}}% hills or valleys against the typical player's {{median}}%: flatten some of it.",
       "terrainLess": "Player {{owner}}'s area is only {{pct}}% hills or valleys against the typical player's {{median}}%: raise or lower some ground to match the others.",
       "listSeparator": " and "
+    },
+    "decorationBalance": {
+      "tooBlocked": "Player {{owner}}'s area is {{pct}}% blocked by decorations, the typical player's {{typical}}%: remove some mountains, trees or rocks there, or add some for the others.",
+      "tooOpen": "Player {{owner}}'s area is only {{pct}}% blocked by decorations, the typical player's {{typical}}%: add some there, or thin out the others."
     }
   },
   "rmg": {
@@ -2892,6 +2932,23 @@
       "startingOver": "starting over"
     },
     "fairnessWarning": "Player fairness {{score}}/100 ({{verdict}})",
-    "fairnessWarningReasons": "Player fairness {{score}}/100 ({{verdict}}) — {{reasons}}"
+    "fairnessWarningReasons": "Player fairness {{score}}/100 ({{verdict}}) — {{reasons}}",
+    "balance": {
+      "noPlayerZones": "No player zones to judge.",
+      "wealthBad": "Wealth spread {{pct}}% — player {{player}} has meaningfully less accessible wealth than the others.",
+      "wealthWarn": "Wealth spread {{pct}}% — noticeable but not severe.",
+      "wealthOk": "Wealth spread {{pct}}% — players have comparable accessible wealth.",
+      "distanceBad": "Distance spread {{pct}}% — some players are much closer to the action than others.",
+      "distanceWarn": "Distance spread {{pct}}%.",
+      "distanceOk": "Players are roughly equidistant from each other.",
+      "guardWarn": "Exit-guard spread {{pct}}% — some players have a much cheaper way out than others.",
+      "areaBad": "Zone size spread {{pct}}% — some players own much more land than others.",
+      "areaWarn": "Zone size spread {{pct}}%.",
+      "mineWarn": "Start-mine distance spread {{pct}}% — some players have to travel much further to their mines.",
+      "terrainWarn": "Terrain differs around the starts — elevated share ranges {{points}} points between players.",
+      "adjacentWarn": "Two players spawn directly adjacent to each other (an early-rush risk).",
+      "singleExitWarn": "Player {{player}} has only a single way out of their zone.",
+      "noConcerns": "No balance concerns found."
+    }
   }
 }

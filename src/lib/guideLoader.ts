@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 // ─── Guide Markdown loader ────────────────────────────────────────────────────
 // Loads all .md files in src/data/guides/ at build time via Vite glob.
 // Each file has YAML frontmatter (title, category, order) followed by
@@ -47,6 +48,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   'concepts':        'Core Concepts',
   'recipes':         'Recipes & Patterns',
   'troubleshooting': 'Gotchas & Workarounds',
+}
+
+/** UI-language name of a category; an unknown id is shown as is. */
+export function guideCategoryLabel(id: string, fallback: string): string {
+  const key = `guides.categories.${id}`
+  return i18n.exists(key) ? i18n.t(key as 'guides.categories.recipes') : fallback
 }
 
 // ─── Raw file glob ────────────────────────────────────────────────────────────
