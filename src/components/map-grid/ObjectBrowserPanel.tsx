@@ -21,6 +21,7 @@
 // multi-value dropdowns (default: everything selected) with no separate
 // master toggle.
 
+import { biomeName } from '@/lib/map-grid/terrain-names'
 import { localName } from '@/lib/catalog/local-name'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -35,7 +36,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { CatalogIcon, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { objectRender } from '@/lib/object-render/render-index'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
-import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {
   DECORATION_SUBCATEGORY_ORDER,
   DECORATION_SUBCATEGORY_LABELS,
@@ -593,7 +594,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                             checked={biomeFilter[b]}
                             onCheckedChange={() => toggleBiome(b)}
                           />
-                          <Label htmlFor={`obj-browser-biome-${b}`} className="text-xs cursor-pointer">{BIOME_NAMES[b]}</Label>
+                          <Label htmlFor={`obj-browser-biome-${b}`} className="text-xs cursor-pointer">{biomeName(b)}</Label>
                         </div>
                       ))}
                     </div>

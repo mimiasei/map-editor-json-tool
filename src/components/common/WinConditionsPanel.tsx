@@ -38,10 +38,10 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
         const on = active.includes(wc.id)
         return (
           <div key={wc.id} className="space-y-2">
-            <div className="flex items-center justify-between" title={wc.description}>
+            <div className="flex items-center justify-between" title={t(`common.winConditionsPanel.conditions.${wc.id}.description`)}>
               <div className="flex items-center gap-1">
-                <Label htmlFor={`rmg-win-${wc.id}`} className="text-xs">{wc.label}</Label>
-                <FieldInfo text={wc.details} />
+                <Label htmlFor={`rmg-win-${wc.id}`} className="text-xs">{t(`common.winConditionsPanel.conditions.${wc.id}.label`)}</Label>
+                <FieldInfo text={t(`common.winConditionsPanel.conditions.${wc.id}.details`)} />
               </div>
               <Switch id={`rmg-win-${wc.id}`} checked={on} onCheckedChange={(v) => toggle(wc.id, v)} disabled={disabled || (on && active.length === 1)} />
             </div>

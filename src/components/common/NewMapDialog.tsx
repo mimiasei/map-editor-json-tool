@@ -14,6 +14,7 @@
 // small maps with several players; letting the user place each one by hand
 // via the existing Add flow sidesteps that whole class of bug entirely.
 
+import { biomeName } from '@/lib/map-grid/terrain-names'
 import { useState } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
@@ -21,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { createNewMap } from '@/lib/create-map'
 import { logError, logInfo } from '@/lib/logger'
 import { useTranslation } from 'react-i18next'
@@ -119,7 +120,7 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
                   }`}
                 >
                   <span className="inline-block w-2.5 h-2.5 rounded-full border border-border/50" style={{ backgroundColor: BIOME_BASE_COLORS[b] }} />
-                  {BIOME_NAMES[b]}
+                  {biomeName(b)}
                 </button>
               ))}
             </div>

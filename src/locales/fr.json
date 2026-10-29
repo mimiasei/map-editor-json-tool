@@ -163,7 +163,80 @@
       "complexityInfo": "À quel point la carte est chargée : agit ensemble sur le décor, les objets interactifs, les tas de trésors et les escouades de garde.",
       "difficultyInfo": "La force des escouades de garde et la vitesse à laquelle elles croissent chaque semaine, selon les six niveaux de difficulté du jeu. Les villes neutres reçoivent des gardes aux niveaux supérieurs, et la difficulté du salon de la carte est réglée en conséquence.",
       "water": "Eau",
-      "waterInfo": "Quantité d'eau : aucune, de quelques lacs à beaucoup, ou des îles atteintes par des portails."
+      "waterInfo": "Quantité d'eau : aucune, de quelques lacs à beaucoup, ou des îles atteintes par des portails.",
+      "categories": {
+        "core": "Démarrage",
+        "terrain": "Terrain et altitude",
+        "biomes": "Biomes",
+        "roads": "Routes et rivières",
+        "scenery": "Paysage et décoration",
+        "economy": "Économie et rencontres",
+        "connectivity": "Connectivité et portails",
+        "advanced": "Avancé"
+      },
+      "levels": {
+        "richness": {
+          "poor": "Pauvre",
+          "modest": "Modeste",
+          "medium": "Moyenne",
+          "rich": "Riche",
+          "very_rich": "Très riche"
+        },
+        "complexity": {
+          "sparse": "Clairsemée",
+          "light": "Légère",
+          "medium": "Moyenne",
+          "dense": "Dense",
+          "very_dense": "Très dense"
+        },
+        "difficulty": {
+          "easy": "Facile",
+          "normal": "Normal",
+          "hard": "Difficile",
+          "impossible": "Injuste",
+          "deadly": "Impossible",
+          "hell": "Apocalyptique"
+        },
+        "water": {
+          "none": "Aucune",
+          "few": "Quelques lacs",
+          "some": "Des lacs",
+          "many": "Beaucoup de lacs",
+          "islands": "Îles"
+        }
+      },
+      "layouts": {
+        "ring": {
+          "label": "Anneau",
+          "description": "Les zones de joueurs et les zones neutres alternent sur un seul anneau.",
+          "details": "Un anneau autour de la carte : une zone de joueur, une zone neutre, la zone de joueur suivante, et ainsi de suite, avec donc autant de zones neutres que de joueurs. Chaque zone ne touche que les deux zones voisines. Chaque joueur a une zone neutre de chaque côté, et l'on ne peut atteindre un rival qu'en traversant les zones neutres de l'anneau."
+        },
+        "ringCenter": {
+          "label": "Anneau avec centre",
+          "description": "L'anneau plus une zone de trésors au milieu, accessible depuis chaque zone neutre.",
+          "details": "Le même anneau de zones de joueurs et de zones neutres que Anneau, plus une grande zone de trésors au milieu de la carte. Chaque zone neutre de l'anneau est reliée à la zone centrale, qui contient des trésors supplémentaires : il y a donc des raccourcis à travers la carte. Les zones de joueurs ne sont pas reliées directement au centre."
+        },
+        "innerRing": {
+          "label": "Anneau intérieur",
+          "description": "Les joueurs à l'extérieur ; les zones neutres forment leur propre anneau intérieur.",
+          "details": "Les joueurs se placent au bord de la carte et les zones neutres forment un anneau plus petit au milieu. Chaque zone de joueur est reliée aux deux zones intérieures les plus proches, et les zones intérieures sont reliées entre elles autour de l'anneau. Les zones de joueurs ne se touchent jamais : tout trajet entre joueurs passe donc par le milieu. Proposé jusqu'à 7 joueurs."
+        },
+        "doubleNeutral": {
+          "label": "Double neutre",
+          "description": "Deux zones neutres entre joueurs voisins.",
+          "details": "Un anneau où chaque paire de zones de joueurs voisines a deux zones neutres consécutives entre elles (joueur, neutre, neutre, joueur…). Les rivaux sont plus éloignés et la carte a deux fois plus de zones neutres que de joueurs. Chaque zone ne touche que les deux voisines. Proposé jusqu'à 4 joueurs."
+        },
+        "pockets": {
+          "label": "Poches",
+          "description": "Un anneau intérieur, plus une poche de trésors en cul-de-sac derrière chaque zone neutre.",
+          "details": "Un anneau plus serré de zones de joueurs et de zones neutres au milieu de la carte, comme dans Anneau. Derrière chaque zone neutre, vers le bord de la carte, se trouve une petite poche de trésors en cul-de-sac, avec des trésors plus riches, accessible uniquement par cette zone neutre. Proposé jusqu'à 4 joueurs."
+        },
+        "hub": {
+          "label": "Moyeu",
+          "description": "Un rayon de chaque joueur vers un centre commun ; aucun anneau direct entre les joueurs.",
+          "details": "Comme le moyeu d'une roue : chaque joueur a une seule zone neutre vers le milieu, et toutes sont reliées à une grande zone centrale avec des trésors supplémentaires. Il n'y a pas d'anneau entre les joueurs : le seul chemin vers un rival passe par votre zone neutre et le centre. Proposé jusqu'à 4 joueurs."
+        }
+      }
     },
     "iconBrowserDialog": {
       "searchIcons": "Rechercher des icônes…",
@@ -580,7 +653,39 @@
       "add2MoreBattles": "Ajouter 2 batailles",
       "remove2": "Retirer 2",
       "battleN": "Bataille {{n}}",
-      "whichWaysTheGeneratedMap": "Les façons de gagner la carte générée. Plusieurs peuvent être actives en même temps ; au moins une reste active. Par défaut : Classique uniquement."
+      "whichWaysTheGeneratedMap": "Les façons de gagner la carte générée. Plusieurs peuvent être actives en même temps ; au moins une reste active. Par défaut : Classique uniquement.",
+      "conditions": {
+        "classic": {
+          "label": "Classique",
+          "description": "Vaincre tous les ennemis.",
+          "details": "La règle normale : un joueur gagne en éliminant tous les joueurs ennemis. Elle reste disponible à côté des autres, ce qui permet de la combiner avec des moyens de victoire supplémentaires."
+        },
+        "capital-hold": {
+          "label": "Préservation de la capitale",
+          "description": "Capturer la ville de départ de l'adversaire et la conserver un nombre de jours de jeu défini pour gagner.",
+          "details": "Capturez la ville de départ de l'adversaire et conservez-la un nombre de jours de jeu défini pour gagner. Réglez le nombre de jours ci-dessous."
+        },
+        "city-hold": {
+          "label": "Possession de ville",
+          "description": "Capturer la ville neutre marquée et la conserver un nombre de jours de jeu défini pour gagner.",
+          "details": "Capturez la ville neutre marquée et conservez-la un nombre de jours de jeu défini pour gagner. Le générateur marque une ville neutre près du milieu de la carte. Sans ville neutre sur la carte, cette condition est abandonnée (activez les villes aléatoires)."
+        },
+        "guardians-demise": {
+          "label": "Chute du gardien",
+          "description": "Vaincre ou bannir le héros principal de l'adversaire pour gagner.",
+          "details": "Vainquez ou bannissez le héros principal de l'adversaire pour gagner. Le jeu n'indique pas au joueur de quel adversaire ou héros il s'agit : il semble choisi au hasard. Aucun réglage."
+        },
+        "final-battle": {
+          "label": "Bataille finale",
+          "description": "Affronter le héros de l'adversaire lors d'une bataille finale. Le vainqueur remporte la partie.",
+          "details": "Affrontez le héros de l'adversaire lors d'une bataille finale. Le vainqueur remporte la partie. Réglez la date de la bataille ci-dessous."
+        },
+        "tournament": {
+          "label": "Tournoi",
+          "description": "Affronter le héros de l'adversaire en une série de batailles. Le vainqueur de la série remporte la partie.",
+          "details": "Affrontez le héros de l'adversaire en une série de batailles. Le vainqueur de la série remporte la partie. Le nombre de batailles est toujours impair (au meilleur de 1, 3, 5…), ajouté deux par deux."
+        }
+      }
     },
     "questFlowEndNode": {
       "end": "FIN · {{sid}}"
@@ -712,7 +817,29 @@
     "developerComment": "Commentaire du développeur",
     "custom": "Personnalisé…",
     "activeOnStart": "Actif au démarrage",
-    "resetFilters": "Réinitialiser les filtres"
+    "resetFilters": "Réinitialiser les filtres",
+    "biomes": {
+      "1": "Herbe",
+      "2": "Sable",
+      "3": "Terre morte",
+      "4": "Neige",
+      "5": "Automne",
+      "6": "Lave",
+      "7": "Terre"
+    },
+    "waterTypes": {
+      "1": "Eau (Terre)",
+      "2": "Eau (Sable)",
+      "3": "Eau (Terre morte)",
+      "4": "Eau (Neige)",
+      "5": "Eau (Automne)",
+      "6": "Lave",
+      "7": "Eau (Herbe)"
+    },
+    "roadTypes": {
+      "1": "Chemin de terre",
+      "2": "Route de pierre"
+    }
   },
   "mapGrid": {
     "imageColorMappingDialog": {

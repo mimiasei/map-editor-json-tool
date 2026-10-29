@@ -44,6 +44,7 @@
 // same as objects/artifacts — never `saveMapFile`, which only makes sense
 // when repointing an actual placed spawner (`entity` present).
 
+import { biomeNameFromEnglish } from '@/lib/map-grid/terrain-names'
 import { localNameById } from '@/lib/catalog/local-name'
 import { useState } from 'react'
 import {
@@ -731,7 +732,7 @@ export default function HeroEditorDialog({
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={t('tree.heroEditorDialog.selectBiome')} /></SelectTrigger>
                     <SelectContent>
                       {Object.values(BIOME_NAMES).map((b) => (
-                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                        <SelectItem key={b} value={b}>{biomeNameFromEnglish(b)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

@@ -36,6 +36,7 @@
 // cosmetic tuning aid, not a forecast) while the terrain phase IS
 // guaranteed identical for the same seed (one shared implementation).
 
+import { biomeName } from '@/lib/map-grid/terrain-names'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,7 +47,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dices, LayoutGrid, X } from '@/components/ui/icons'
 import FieldInfo from '@/components/common/FieldInfo'
 import { loadRmgDialogSettings, saveRmgDialogSettings } from '@/lib/rmg/dialog-persist'
-import { neutralZoneRange, availableArchetypes, LAYOUT_LABELS, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
+import { neutralZoneRange, availableArchetypes, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
 import { MAX_CITIES_PER_ZONE } from '@/lib/rmg/rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
@@ -57,7 +58,7 @@ import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
 import WinConditionsPanel from '@/components/common/WinConditionsPanel'
-import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import SpellBanDialog from '@/components/common/SpellBanDialog'
@@ -735,7 +736,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   onClick={() => setActiveCategory(cat.id)}
                   className={`w-full text-left text-sm px-3 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
                 >
-                  {cat.label}
+                  {t(`common.generateRandomMapDialog.categories.${cat.id}`)}
                 </button>
               )
             })}
@@ -910,7 +911,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {/* A mirrored map has no islands (they are joined by portals that are not mirrored). */}
-                              {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                              {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{t(`common.generateRandomMapDialog.levels.${key}.${o.id}` as never)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
@@ -921,7 +922,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             <Label className="text-xs">{t('shared.layout')}</Label>
                             <FieldInfo text={t('common.generateRandomMapDialog.howTheZonesAreArranged')} />
                             {classic.layout && availableLayouts.includes(classic.layout) && (
-                              <FieldInfo icon={LayoutGrid} text={`${LAYOUT_LABELS[classic.layout].label}: ${LAYOUT_LABELS[classic.layout].details}`} />
+                              <FieldInfo icon={LayoutGrid} text={`${t(`common.generateRandomMapDialog.layouts.${classic.layout}.label`)}: ${t(`common.generateRandomMapDialog.layouts.${classic.layout}.details`)}`} />
                             )}
                           </div>
                           <Select
@@ -933,7 +934,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             <SelectContent>
                               <SelectItem value={RANDOM_LAYOUT}>{t('common.generateRandomMapDialog.random')}</SelectItem>
                               {availableLayouts.map((name) => (
-                                <SelectItem key={name} value={name} title={LAYOUT_LABELS[name].description}>{LAYOUT_LABELS[name].label}</SelectItem>
+                                <SelectItem key={name} value={name} title={t(`common.generateRandomMapDialog.layouts.${name}.description`)}>{t(`common.generateRandomMapDialog.layouts.${name}.label`)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1020,7 +1021,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             })
                           }}
                         />
-                        <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
+                        <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{biomeName(biomeId)}</Label>
                       </div>
                     ))}
                   </div>

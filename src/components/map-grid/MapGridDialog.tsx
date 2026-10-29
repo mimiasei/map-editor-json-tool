@@ -11,6 +11,7 @@
 // pan/zoom transform and the same pixel-per-cell coordinate space, so they
 // never drift out of alignment.
 
+import { biomeName, waterTypeName, roadTypeName } from '@/lib/map-grid/terrain-names'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { findMapObject } from '@/lib/catalog/map-object-lookup'
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent, MouseEvent as ReactMouseEvent } from 'react'
@@ -58,7 +59,7 @@ import {
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
-import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainLabel, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { enclosedBlockedTiles } from '@/lib/map-grid/zone-fill'
 import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
@@ -4480,7 +4481,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
                           style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
                         />
-                        {BIOME_NAMES[paintBiome]}
+                        {biomeName(paintBiome)}
                         <ChevronDown className="h-3 w-3" />
                       </Button>
                     </PopoverTrigger>
@@ -4495,7 +4496,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
                             style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
                           />
-                          {BIOME_NAMES[b]}
+                          {biomeName(b)}
                         </button>
                       ))}
                     </PopoverContent>
@@ -4788,7 +4789,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                        {WATER_TYPE_NAMES[waterBrush]}
+                        {waterTypeName(waterBrush)}
                         <ChevronDown className="h-3 w-3" />
                       </Button>
                     </PopoverTrigger>
@@ -4799,7 +4800,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
                           onClick={() => setWaterBrush(w)}
                         >
-                          {WATER_TYPE_NAMES[w]}
+                          {waterTypeName(w)}
                         </button>
                       ))}
                     </PopoverContent>
@@ -4861,7 +4862,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           className="inline-block w-2.5 h-2.5 rounded-full border border-border/50 mr-1 align-middle"
                           style={{ backgroundColor: ROAD_BASE_COLORS[r] }}
                         />
-                        {ROAD_TYPE_NAMES[r]}
+                        {roadTypeName(r)}
                       </button>
                     ))}
                   </div>

@@ -1,10 +1,11 @@
+import { biomeName, waterTypeName } from '@/lib/map-grid/terrain-names'
 import { useEffect, useMemo, useState } from 'react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { openFile, saveFile } from '@/lib/native-fs'
-import { BIOME_NAMES, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
 
@@ -319,10 +320,10 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
                 <SelectContent>
                   <SelectItem value="skip">{t('mapGrid.imageColorMappingDialog.ignoreThisColor')}</SelectItem>
                   {BIOMES.map((biome) => (
-                    <SelectItem key={`terrain:${biome}`} value={`terrain:${biome}`}>{t('mapGrid.imageColorMappingDialog.terrainOption', { name: BIOME_NAMES[biome] })}</SelectItem>
+                    <SelectItem key={`terrain:${biome}`} value={`terrain:${biome}`}>{t('mapGrid.imageColorMappingDialog.terrainOption', { name: biomeName(biome) })}</SelectItem>
                   ))}
-                  {Object.entries(WATER_TYPE_NAMES).map(([id, name]) => (
-                    <SelectItem key={`water:${id}`} value={`water:${id}`}>{t('mapGrid.imageColorMappingDialog.water', { name })}</SelectItem>
+                  {Object.keys(WATER_TYPE_NAMES).map((id) => (
+                    <SelectItem key={`water:${id}`} value={`water:${id}`}>{t('mapGrid.imageColorMappingDialog.water', { name: waterTypeName(Number(id)) })}</SelectItem>
                   ))}
                   <SelectGroup>
                     <SelectLabel>{family === 'forest' ? t('mapGrid.imageColorMappingDialog.forestAssets') : t('mapGrid.imageColorMappingDialog.mountainAssets')}</SelectLabel>
