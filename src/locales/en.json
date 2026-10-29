@@ -4,5 +4,11 @@
       "label": "Interface language",
       "hint": "Only affects the editor's own text. Quests, dialogs and other map content are not translated."
     }
+  },
+  "ui": {
+    "close": "Close",
+    "help": "Help",
+    "parameterHelp": "Parameter help",
+    "parameters": "Parameters"
   }
 }

@@ -28,7 +28,6 @@ export default tseslint.config(
   {
     ...i18next.configs['flat/recommended'],
     files: ['src/components/**/*.tsx', 'src/App.tsx'],
-    ignores: ['src/components/ui/**'],
     rules: { 'i18next/no-literal-string': ['warn', { mode: 'jsx-text-only' }] },
   },
 )
