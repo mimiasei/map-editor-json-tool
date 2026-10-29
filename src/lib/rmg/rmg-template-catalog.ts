@@ -7,6 +7,7 @@
 
 import { isTauri, readTextFileAt } from '@/lib/native-fs'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { localNameById } from '@/lib/catalog/local-name'
 
 export interface BundledGameTemplateInfo {
   fileName: string
@@ -66,7 +67,10 @@ export async function listBundledGameTemplates(catalog: GameCatalog): Promise<Bu
       // human-readable string there instead. Falling back to the raw field
       // itself (rather than '') when the sid lookup misses lets that literal
       // text show up as a real description instead of going blank forever.
-      const description = catalog.rmgTemplateStrings[descriptionSid] ?? (typeof data.description === 'string' ? data.description : '')
+      const englishDescription = catalog.rmgTemplateStrings[descriptionSid]
+      const description = englishDescription !== undefined
+        ? localNameById(catalog, 'templateStrings', descriptionSid, englishDescription)
+        : typeof data.description === 'string' ? data.description : ''
       infos.push({
         fileName: entry.name,
         name: typeof data.name === 'string' && data.name ? data.name : entry.name.replace(/\.rmg\.json$/, ''),

@@ -378,7 +378,7 @@ export interface CatalogRmgZoneLayout {
 }
 
 /** Entity kinds whose display name can differ per UI language. */
-export type LocalNameKind = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'buffs' | 'mapObjects' | 'factions'
+export type LocalNameKind = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'buffs' | 'mapObjects' | 'factions' | 'templateStrings'
 
 export interface GameCatalog {
   /** Schema version — bump on breaking changes */

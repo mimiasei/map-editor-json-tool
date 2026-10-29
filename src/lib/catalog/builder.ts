@@ -1032,7 +1032,8 @@ export async function buildCatalog(
  */
 export async function buildLocalNames(zip: JSZip, language: string, catalog: GameCatalog): Promise<GameCatalog['localNames']> {
   if (language === 'english') return undefined
-  const locMap = await loadLocalization(zip, language, await loadLocalization(zip))
+  const english = await loadLocalization(zip)
+  const locMap = await loadLocalization(zip, language, new Map(english))
   const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions] = await Promise.all([
     collectHeroes(zip, locMap),
     collectCreatures(zip, locMap),
@@ -1058,5 +1059,7 @@ export async function buildLocalNames(zip: JSZip, language: string, catalog: Gam
     buffs: diff(buffs, catalog.buffs),
     mapObjects: diff(mapObjects, catalog.mapObjects),
     factions: diff(factions, catalog.factions),
+    // RMG template descriptions: keyed by localization sid, not by entity id. The template names are not localized in the game.
+    templateStrings: Object.fromEntries([...locMap].filter(([sid, text]) => sid.startsWith('templates_') && english.get(sid) !== text)),
   }
 }
