@@ -754,7 +754,6 @@
       }
     },
     "mapGridCellContent": {
-      "topOfTheListIs": " · top of the list is drawn in front",
       "nothingOnThisTile": "Nothing on this tile.",
       "bringForward": "Bring forward",
       "sendBackward": "Send backward",
@@ -847,7 +846,8 @@
         "unknown": "Unknown"
       },
       "addUnit": "Add unit",
-      "addSquad": "Add squad"
+      "addSquad": "Add squad",
+      "itemCountStacked": "{{count}} items · top of the list is drawn in front"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Map Grid settings",
@@ -920,11 +920,12 @@
       "exampleSquad": "Example squad",
       "oneSquadThisRandomSquad": "One squad this random-squad could turn into. It is an approximation of the game's own roll.",
       "basedOnValue": "Based on value",
-      "noFactionSetPickedAt": " (no faction set: picked at random)",
-      "noSquadTemplateCoversThis": " · no squad template covers this value, the nearest one is shown",
       "noSquadTemplatesAreLoaded": "No squad templates are loaded, so there is nothing to show. Extract the game data first.",
       "rollAgain": "Roll again",
-      "totalValue": "Total value {{value}} · {{fraction}}"
+      "totalValue": "Total value {{value}} · {{fraction}}",
+      "totalValueNoFaction": "Total value {{value}} · {{fraction}} (no faction set: picked at random)",
+      "totalValueNearest": "Total value {{value}} · {{fraction}} · no squad template covers this value, the nearest one is shown",
+      "totalValueNoFactionNearest": "Total value {{value}} · {{fraction}} (no faction set: picked at random) · no squad template covers this value, the nearest one is shown"
     },
     "spawnerSelectorPanel": {
       "playerSpawners": "Player Spawners",

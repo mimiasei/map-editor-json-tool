@@ -28,6 +28,10 @@ export default tseslint.config(
   {
     ...i18next.configs['flat/recommended'],
     files: ['src/components/**/*.tsx', 'src/App.tsx'],
-    rules: { 'i18next/no-literal-string': ['warn', { mode: 'jsx-text-only' }] },
+    rules: {
+      // Replacing `words.exclude` drops the plugin defaults, so they are repeated here:
+      // punctuation/digits and ALL_CAPS. Added: symbols (●, ×) and the `p[0]` parameter index in the hint list.
+      'i18next/no-literal-string': ['error', { mode: 'jsx-text-only', words: { exclude: ['[0-9!-/:-@[-`{-~]+', '[A-Z_-]+', '^[●×•–—·→←]+$', '^p[[]$'] } }],
+    },
   },
 )

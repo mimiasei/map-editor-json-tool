@@ -327,8 +327,7 @@ export default function MapGridCellContent({
       <div className="px-3 py-2 border-b border-border shrink-0">
         <p className="text-sm font-semibold">{terrainLabel}</p>
         <p className="text-xs text-muted-foreground">
-          {t('mapGrid.mapGridCellContent.itemCount', { count: items.length })}
-          {items.length > 1 && t('mapGrid.mapGridCellContent.topOfTheListIs')}
+          {t(items.length > 1 ? 'mapGrid.mapGridCellContent.itemCountStacked' : 'mapGrid.mapGridCellContent.itemCount', { count: items.length })}
         </p>
       </div>
 

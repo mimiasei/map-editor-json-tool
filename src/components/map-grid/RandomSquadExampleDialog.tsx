@@ -57,8 +57,7 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
                 })}
               </ul>
               <p className="text-xs text-muted-foreground min-h-[3.75rem]">
-                {t('mapGrid.randomSquadExampleDialog.totalValue', { value: example.totalValue, fraction: example.fraction })}{fraction === '' ? t('mapGrid.randomSquadExampleDialog.noFactionSetPickedAt') : ''}
-                {example.nearest && t('mapGrid.randomSquadExampleDialog.noSquadTemplateCoversThis')}
+                {t(`mapGrid.randomSquadExampleDialog.${fraction === '' ? (example.nearest ? 'totalValueNoFactionNearest' : 'totalValueNoFaction') : example.nearest ? 'totalValueNearest' : 'totalValue'}`, { value: example.totalValue, fraction: example.fraction })}
               </p>
             </>
           ) : (
