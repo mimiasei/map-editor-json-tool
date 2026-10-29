@@ -4,6 +4,8 @@
 // variables; dialog flows (with multi-answer choices); English text tokens from
 // the offline phrase banks, plus a TextSpec per token for the text writer.
 
+import i18n from '@/lib/i18n'
+import { slotLabel } from './story-display'
 import type { Quest, Counter, Trigger, Action, Condition, SubQuest } from '@/types/scenario'
 import type { DialogFlow, DialogAnswer, DialogSlide } from '@/types/dialog'
 import type {
@@ -80,11 +82,11 @@ export function validateStoryInput(def: StoryDef, input: StoryInput): string[] {
     if (picks.length < slot.min) {
       errors.push(
         slot.min === 1
-          ? `Pick ${slot.label.toLowerCase()}.`
-          : `Pick at least ${slot.min} for ${slot.label.toLowerCase()}.`,
+          ? i18n.t('story.validation.pickOne', { what: slotLabel(slot).toLowerCase() })
+          : i18n.t('story.validation.pickMin', { min: slot.min, what: slotLabel(slot).toLowerCase() }),
       )
     }
-    if (slot.cardinality === 'one' && picks.length > 1) errors.push(`${slot.label}: pick only one.`)
+    if (slot.cardinality === 'one' && picks.length > 1) errors.push(i18n.t('story.validation.pickOnlyOne', { label: slotLabel(slot) }))
   }
   return errors
 }

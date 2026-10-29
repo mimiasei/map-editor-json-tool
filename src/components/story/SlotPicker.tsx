@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import MapEntityPickField from '@/components/common/MapEntityPickField'
 import type { StorySlotDef } from '@/types/story'
 import { useTranslation } from 'react-i18next'
+import { slotLabel } from '@/lib/stories/story-display'
 
 interface Props {
   slot: StorySlotDef
@@ -20,7 +21,7 @@ export default function SlotPicker({ slot, values, onChange, requestMapPick }: P
 
   return (
     <div className="space-y-1.5">
-      <Label>{slot.label}</Label>
+      <Label>{slotLabel(slot)}</Label>
       <p className="text-xs text-muted-foreground">
         {slot.cardinality === 'one'
           ? t('story.slotPicker.pickOne', { what: t(`story.slotPicker.kinds.${slot.entityKind}`) })
@@ -33,7 +34,7 @@ export default function SlotPicker({ slot, values, onChange, requestMapPick }: P
               value={value}
               onChange={(v) => setAt(i, v)}
               placeholder={t('tree.scriptTemplateDialog.searchPlacedObjects')}
-              label={slot.label}
+              label={slotLabel(slot)}
               requestMapPick={requestMapPick}
             />
           </div>

@@ -27,7 +27,8 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import type { MapContext } from '@/types/map-context'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
-import { TONES, TONE_LABELS, type Tone } from '@/lib/script-templates/text-gen/phrases'
+import { TONES, toneLabel, type Tone } from '@/lib/script-templates/text-gen/phrases'
+import { beatHint, beatLabel, presetLabel, storyBlurb, storyTitle } from '@/lib/stories/story-display'
 import { GAME_LANGUAGES, TRANSLATABLE_LANGUAGES, languageLabel } from '@/lib/languages'
 import type { StoryDef, StoryInput, TextLength, TextSpec } from '@/types/story'
 import { STORY_LIBRARY } from '@/lib/stories/library'
@@ -37,8 +38,7 @@ import { draftToStoryDef } from '@/lib/stories/import'
 import {
   buildCustomStory,
   CHOICE_PRESETS,
-  CHOICE_PRESET_LABELS,
-  CUSTOM_BEAT_LABELS,
+  CUSTOM_BEAT_KINDS,
   DEFAULT_AMOUNTS,
   type ChoicePreset,
   type CustomBeat,
@@ -344,9 +344,9 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
     pick: t('story.storyBuilderDialog.steps.pick'),
     import: t('story.storyBuilderDialog.steps.import'),
     build: t('story.storyBuilderDialog.steps.build'),
-    bind: def?.title ?? t('story.storyBuilderDialog.steps.story'),
-    style: def?.title ?? t('story.storyBuilderDialog.steps.story'),
-    preview: def?.title ?? t('story.storyBuilderDialog.steps.story'),
+    bind: def ? storyTitle(def) : t('story.storyBuilderDialog.steps.story'),
+    style: def ? storyTitle(def) : t('story.storyBuilderDialog.steps.story'),
+    preview: def ? storyTitle(def) : t('story.storyBuilderDialog.steps.story'),
     done: t('story.storyBuilderDialog.steps.done'),
   }
 
@@ -490,10 +490,10 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{s.title}</p>
-                      <Badge variant="secondary">{TONE_LABELS[s.tone]}</Badge>
+                      <p className="text-sm font-medium">{storyTitle(s)}</p>
+                      <Badge variant="secondary">{toneLabel(s.tone)}</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{s.blurb}</p>
+                    <p className="text-xs text-muted-foreground">{storyBlurb(s)}</p>
                     <p className="text-xs text-muted-foreground">
                       {t(s.beats.some((b) => b.kind === 'choice') ? 'story.storyBuilderDialog.questsWithChoices' : 'story.storyBuilderDialog.questCount', { count: s.beats.length })}
                     </p>
@@ -566,8 +566,8 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                   <div key={i} className="flex flex-wrap items-center gap-2 rounded-md border border-border p-2">
                     <span className="w-5 text-xs text-muted-foreground">{i + 1}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm">{CUSTOM_BEAT_LABELS[b.kind].label}</p>
-                      <p className="text-xs text-muted-foreground">{CUSTOM_BEAT_LABELS[b.kind].hint}</p>
+                      <p className="text-sm">{beatLabel(b.kind)}</p>
+                      <p className="text-xs text-muted-foreground">{beatHint(b.kind)}</p>
                     </div>
                     {isAmountKind(b.kind) && (
                       <div className="flex items-center gap-1.5">
@@ -597,7 +597,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                       >
                         {CHOICE_PRESETS.map((p) => (
                           <option key={p} value={p}>
-                            {CHOICE_PRESET_LABELS[p]}
+                            {presetLabel(p)}
                           </option>
                         ))}
                       </select>
@@ -630,9 +630,9 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 ))}
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {(Object.keys(CUSTOM_BEAT_LABELS) as CustomBeatKind[]).map((k) => (
+                {CUSTOM_BEAT_KINDS.map((k) => (
                   <Button key={k} type="button" variant="outline" size="sm" className="gap-1" onClick={() => addBeat(k)}>
-                    <Plus className="h-3 w-3" /> {CUSTOM_BEAT_LABELS[k].label}
+                    <Plus className="h-3 w-3" /> {beatLabel(k)}
                   </Button>
                 ))}
               </div>
@@ -641,7 +641,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
 
           {step === 'bind' && def && (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">{def.blurb}</p>
+              <p className="text-xs text-muted-foreground">{storyBlurb(def)}</p>
               {!mapContext && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
@@ -681,15 +681,15 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
               <div className="space-y-1.5">
                 <Label>{t('story.storyBuilderDialog.tone')}</Label>
                 <div className="flex flex-wrap gap-1.5">
-                  {TONES.map((t) => (
+                  {TONES.map((tn) => (
                     <Button
-                      key={t}
+                      key={tn}
                       type="button"
                       size="sm"
-                      aria-pressed={tone === t} variant={tone === t ? 'default' : 'outline'}
-                      onClick={() => setTone(t)}
+                      aria-pressed={tone === tn} variant={tone === tn ? 'default' : 'outline'}
+                      onClick={() => setTone(tn)}
                     >
-                      {TONE_LABELS[t]}
+                      {toneLabel(tn)}
                     </Button>
                   ))}
                 </div>

@@ -107,7 +107,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
       setKeyInput('')
       setConsent(true)
       const model = await testKey(provider)
-      setMessage({ ok: true, text: `Saved. The text writer is ready${model ? ` (model: ${model})` : ''}.` })
+      setMessage({ ok: true, text: model ? t('story.textWriterSettingsDialog.messages.savedModel', { model }) : t('story.textWriterSettingsDialog.messages.saved') })
     } catch (e) {
       setMessage({ ok: false, text: failure(e) })
     } finally {
@@ -123,7 +123,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
     setMessage(null)
     try {
       const model = await testKey(provider)
-      setMessage({ ok: true, text: `Connected to ${info.label}${model ? ` (model: ${model})` : ''}. The saved key works.` })
+      setMessage({ ok: true, text: model ? t('story.textWriterSettingsDialog.messages.connectedModel', { name: info.label, model }) : t('story.textWriterSettingsDialog.messages.connected', { name: info.label }) })
     } catch (e) {
       setMessage({ ok: false, text: failure(e) })
     } finally {

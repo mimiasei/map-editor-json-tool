@@ -2338,7 +2338,101 @@
       "starting": "Démarrage…",
       "somethingWentWrong": "Une erreur s'est produite.",
       "keyRemoved": "La clé a été supprimée.",
-      "keySaved": "Une clé est enregistrée pour {{name}}."
+      "keySaved": "Une clé est enregistrée pour {{name}}.",
+      "messages": {
+        "saved": "Enregistré. Le rédacteur de texte est prêt.",
+        "savedModel": "Enregistré. Le rédacteur de texte est prêt (modèle : {{model}}).",
+        "connected": "Connecté à {{name}}. La clé enregistrée fonctionne.",
+        "connectedModel": "Connecté à {{name}} (modèle : {{model}}). La clé enregistrée fonctionne."
+      }
+    },
+    "tones": {
+      "heroic": "Héroïque",
+      "grim": "Sombre",
+      "humorous": "Humoristique",
+      "mysterious": "Mystérieux"
+    },
+    "customBeats": {
+      "intro": {
+        "label": "Introduction",
+        "hint": "Un dialogue qui plante le décor"
+      },
+      "visit": {
+        "label": "Visiter des lieux",
+        "hint": "Visiter quelques objets, un indice chacun"
+      },
+      "capture": {
+        "label": "Capturer une ville",
+        "hint": "Prendre une ville pour continuer"
+      },
+      "defeat": {
+        "label": "Vaincre une armée",
+        "hint": "Battre une armée choisie pour continuer"
+      },
+      "resources": {
+        "label": "Amasser de l'or",
+        "hint": "Atteindre une quantité d'or"
+      },
+      "timer": {
+        "label": "Survivre / attendre",
+        "hint": "Tenir bon pendant un nombre de jours"
+      },
+      "reward": {
+        "label": "Récompense",
+        "hint": "Un dialogue qui verse de l'or"
+      },
+      "choice": {
+        "label": "Choix du joueur",
+        "hint": "Le joueur choisit une option qui compte plus tard"
+      }
+    },
+    "choicePresets": {
+      "mercy": "Clémence ou force",
+      "trade": "Payer ou profiter",
+      "approach": "Audacieux, prudent ou rusé"
+    },
+    "display": {
+      "titles": {
+        "cursed_moor": "La Lande maudite",
+        "long_siege": "Le Long Siège",
+        "border_oath": "Le Serment de la frontière",
+        "my_story": "Mon histoire"
+      },
+      "blurbs": {
+        "cursed_moor": "Des lueurs étranges et un héritier disparu. Suivez les indices, puis désignez le coupable.",
+        "long_siege": "Un ennemi approche. Décidez comment vous préparer, puis tenez bon jusqu'à l'arrivée des renforts.",
+        "border_oath": "Prenez une ville frontalière, choisissez comment traiter ses habitants, puis affrontez le seigneur de guerre au-delà.",
+        "my_story": "Une histoire que vous assemblez à partir d'étapes."
+      },
+      "slots": {
+        "clue_sites": "Lieux d'indices",
+        "showdown": "Lieu de l'affrontement",
+        "stronghold": "Votre forteresse",
+        "border_town": "Ville frontalière",
+        "warlord": "Armée du seigneur de guerre"
+      },
+      "customSlots": {
+        "visit": "Lieux à visiter (partie {{n}})",
+        "capture": "Ville à capturer",
+        "captureN": "Ville à capturer {{n}}",
+        "defeat": "Armée à vaincre",
+        "defeatN": "Armée à vaincre {{n}}"
+      }
+    },
+    "validation": {
+      "pickOne": "Choisissez : {{what}}.",
+      "pickMin": "Choisissez au moins {{min}} pour : {{what}}.",
+      "pickOnlyOne": "{{label}} : n'en choisissez qu'un seul."
+    },
+    "writerErrors": {
+      "auth": "La clé du rédacteur de texte a été refusée. Vérifiez-la dans les paramètres du rédacteur de texte.",
+      "rateLimitedDefault": "Le rédacteur de texte a atteint sa limite d'utilisation pour le moment.",
+      "networkDefault": "Le service de texte est injoignable.",
+      "builtInUsed": "{{message}} Le texte intégré est utilisé.",
+      "badResponse": "Le service de texte a répondu, mais sans texte exploitable ({{details}}). Le texte intégré est utilisé.",
+      "store": "La clé enregistrée n'a pas pu être lue ({{details}}). Saisissez-la à nouveau dans les paramètres du rédacteur de texte.",
+      "noDetails": "aucun détail",
+      "fallback": "Le rédacteur de texte n'a pas pu être utilisé : le texte intégré est donc utilisé."
     }
   },
   "guides": {

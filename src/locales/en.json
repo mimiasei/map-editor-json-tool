@@ -2294,7 +2294,101 @@
       "starting": "Starting…",
       "somethingWentWrong": "Something went wrong.",
       "keyRemoved": "The key was removed.",
-      "keySaved": "A key is saved for {{name}}."
+      "keySaved": "A key is saved for {{name}}.",
+      "messages": {
+        "saved": "Saved. The text writer is ready.",
+        "savedModel": "Saved. The text writer is ready (model: {{model}}).",
+        "connected": "Connected to {{name}}. The saved key works.",
+        "connectedModel": "Connected to {{name}} (model: {{model}}). The saved key works."
+      }
+    },
+    "tones": {
+      "heroic": "Heroic",
+      "grim": "Grim",
+      "humorous": "Humorous",
+      "mysterious": "Mysterious"
+    },
+    "customBeats": {
+      "intro": {
+        "label": "Introduction",
+        "hint": "A dialog that sets the scene"
+      },
+      "visit": {
+        "label": "Visit places",
+        "hint": "Visit a few objects, one clue each"
+      },
+      "capture": {
+        "label": "Capture a town",
+        "hint": "Take a town to move on"
+      },
+      "defeat": {
+        "label": "Defeat an army",
+        "hint": "Beat a chosen army to move on"
+      },
+      "resources": {
+        "label": "Gather gold",
+        "hint": "Reach an amount of gold"
+      },
+      "timer": {
+        "label": "Survive / wait",
+        "hint": "Hold out for a number of days"
+      },
+      "reward": {
+        "label": "Reward",
+        "hint": "A dialog that pays out gold"
+      },
+      "choice": {
+        "label": "Player choice",
+        "hint": "The player picks an option that matters later"
+      }
+    },
+    "choicePresets": {
+      "mercy": "Mercy or might",
+      "trade": "Pay or profit",
+      "approach": "Bold, careful or clever"
+    },
+    "display": {
+      "titles": {
+        "cursed_moor": "The Cursed Moor",
+        "long_siege": "The Long Siege",
+        "border_oath": "The Border Oath",
+        "my_story": "My story"
+      },
+      "blurbs": {
+        "cursed_moor": "Strange lights and a missing heir. Follow the clues, then name the culprit.",
+        "long_siege": "An enemy is coming. Decide how to prepare, then hold out until help arrives.",
+        "border_oath": "Take a border town, choose how to treat its people, and face the warlord beyond.",
+        "my_story": "A story you put together from beats."
+      },
+      "slots": {
+        "clue_sites": "Clue sites",
+        "showdown": "Showdown location",
+        "stronghold": "Your stronghold",
+        "border_town": "Border town",
+        "warlord": "Warlord's army"
+      },
+      "customSlots": {
+        "visit": "Places to visit (part {{n}})",
+        "capture": "Town to capture",
+        "captureN": "Town to capture {{n}}",
+        "defeat": "Army to defeat",
+        "defeatN": "Army to defeat {{n}}"
+      }
+    },
+    "validation": {
+      "pickOne": "Pick {{what}}.",
+      "pickMin": "Pick at least {{min}} for {{what}}.",
+      "pickOnlyOne": "{{label}}: pick only one."
+    },
+    "writerErrors": {
+      "auth": "The text writer key was rejected. Check it in the text writer settings.",
+      "rateLimitedDefault": "The text writer has reached its usage limit for now.",
+      "networkDefault": "The text service could not be reached.",
+      "builtInUsed": "{{message}} Built-in text is used.",
+      "badResponse": "The text service answered, but not with usable text ({{details}}). Built-in text is used.",
+      "store": "The saved key could not be read ({{details}}). Enter it again in the text writer settings.",
+      "noDetails": "no details",
+      "fallback": "The text writer could not be used, so built-in text is used."
     }
   },
   "guides": {
