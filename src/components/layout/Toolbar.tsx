@@ -960,7 +960,7 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1.5">
-                    {t('layout.toolbar.more')}
+                    {t('layout.toolbar.menu.more')}
                     <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -971,14 +971,14 @@ export default function Toolbar({
             <DropdownMenuContent align="start" className="w-52">
               <DropdownMenuItem onClick={() => setTimeout(() => setLocalizationDialogOpen(true), 0)}>
                 <Languages className="h-4 w-4 mr-2" />
-                {t('layout.toolbar.localization')}
+                {t('layout.toolbar.menu.localization')}
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
               <DropdownMenuItem onClick={handleExportZip}>
                 <Package className="h-4 w-4 mr-2" />
-                {t('layout.toolbar.exportZIP')}
+                {t('layout.toolbar.menu.exportZip')}
               </DropdownMenuItem>
 
               {/* Desktop only test feature (issue #120) — needs a .map file loaded */}
@@ -989,7 +989,7 @@ export default function Toolbar({
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  {t('layout.toolbar.resaveMap')}
+                  {t('layout.toolbar.menu.resaveMap')}
                 </DropdownMenuItem>
               )}
 
@@ -1000,7 +1000,7 @@ export default function Toolbar({
                   ) : (
                     <RefreshCw className="h-4 w-4 mr-2" />
                   )}
-                  {t('layout.toolbar.checkForUpdates')}
+                  {t('layout.toolbar.menu.checkForUpdates')}
                 </DropdownMenuItem>
               )}
 
@@ -1016,7 +1016,7 @@ export default function Toolbar({
                 ) : (
                   <Database className="h-4 w-4 mr-2 text-muted-foreground" />
                 )}
-                {t('layout.toolbar.gameData')}
+                {t('layout.toolbar.menu.gameData')}
               </DropdownMenuItem>
 
               {isTauri() && (
@@ -1024,7 +1024,7 @@ export default function Toolbar({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setTimeout(() => setThumbnailDialogOpen(true), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    {t('layout.toolbar.extractThumbnails')}
+                    {t('layout.toolbar.menu.extractThumbnails')}
                     {/* Stays visible after the banner is dismissed, so the cue remains
                         findable without nagging. */}
                     {pendingIcons > 0 && (
@@ -1035,11 +1035,11 @@ export default function Toolbar({
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTimeout(() => window.dispatchEvent(new Event('oe:render-objects-open')), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    {t('layout.toolbar.renderObjectImages')}
+                    {t('layout.toolbar.menu.renderObjectImages')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTimeout(handleImportH3mClick, 0)}>
                     <FileInput className="h-4 w-4 mr-2" />
-                    {t('layout.toolbar.importH3Map')}
+                    {t('layout.toolbar.menu.importH3Map')}
                   </DropdownMenuItem>
                 </>
               )}
@@ -1450,7 +1450,7 @@ export default function Toolbar({
       <Dialog open={!!updateMessage} onOpenChange={(o) => !o && setUpdateMessage(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t('layout.toolbar.checkForUpdates')}</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.updateDialogTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">{updateMessage}</p>
         </DialogContent>
