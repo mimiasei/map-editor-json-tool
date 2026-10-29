@@ -5,7 +5,9 @@
  * Tooltips and templates remain statically imported JSON.
  */
 
+import { useTranslation } from 'react-i18next'
 import tooltipsData from '@/data/tooltips.json'
+import tooltipsFr from '@/data/tooltips.fr.json'
 import templateIndexData from '@/data/templates/index.json'
 import {
   buildGuideIndex,
@@ -58,9 +60,13 @@ const templateImporters: Record<string, () => Promise<unknown>> = {
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
-/** Returns the full tooltip dataset (actions, conditions, fields). */
+/** The tooltip text per UI language code; the ids (action/condition types, field keys) are the same in every file. English is the fallback. */
+const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData }
+
+/** Returns the full tooltip dataset (actions, conditions, fields) in the UI language. */
 export function useTooltips(): TooltipData {
-  return tooltipsData as TooltipData
+  const { i18n } = useTranslation()
+  return TOOLTIPS_BY_LANGUAGE[i18n.language] ?? TOOLTIPS_BY_LANGUAGE.en
 }
 
 /** Returns the guide table of contents (categories + article metadata). */
