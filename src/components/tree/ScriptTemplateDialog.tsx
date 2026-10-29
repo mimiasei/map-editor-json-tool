@@ -29,6 +29,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import EntityPickerList from '@/components/common/EntityPickerList'
 import { useTranslation } from 'react-i18next'
+import { templateName, templateDescription, templateSlotLabel, templateSlotDescription, templateParamLabel, templateParamPlaceholder } from '@/lib/script-templates/template-display'
 
 interface Props {
   open: boolean
@@ -44,7 +45,7 @@ function emptyInput(template: ScriptTemplateDef): ScriptTemplateInput {
 }
 
 export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [input, setInput] = useState<ScriptTemplateInput>({ slots: {}, params: {}, fields: {} })
 
@@ -112,7 +113,9 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
   const errors = useMemo(
     () => (selectedTemplate ? selectedTemplate.validate(cleanedInput, mapContext, existingSids) : []),
-    [selectedTemplate, cleanedInput, mapContext, existingSids],
+    // i18n.language: the messages are translated when they are made
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedTemplate, cleanedInput, mapContext, existingSids, i18n.language],
   )
 
   const previewResult = useMemo(() => {
@@ -146,7 +149,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {selectedTemplate ? selectedTemplate.name : t('tree.scriptTemplateDialog.scriptTemplates')}
+            {selectedTemplate ? templateName(selectedTemplate) : t('tree.scriptTemplateDialog.scriptTemplates')}
           </DialogTitle>
         </DialogHeader>
 
@@ -166,8 +169,8 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
                     'border-border hover:border-primary/50 hover:bg-accent/50',
                   )}
                 >
-                  <p className="text-sm font-medium">{tpl.name}</p>
-                  <p className="text-xs text-muted-foreground">{tpl.description}</p>
+                  <p className="text-sm font-medium">{templateName(tpl)}</p>
+                  <p className="text-xs text-muted-foreground">{templateDescription(tpl)}</p>
                 </button>
               ))}
             </div>
@@ -176,7 +179,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
         {selectedTemplate && (
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
+            <p className="text-xs text-muted-foreground">{templateDescription(selectedTemplate)}</p>
 
             {selectedTemplate.renderFields ? (
               selectedTemplate.renderFields({
@@ -189,16 +192,16 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
               <>
                 {selectedTemplate.slots.map((slot) => (
                   <div key={slot.id} className="space-y-1.5">
-                    <Label>{slot.label}</Label>
+                    <Label>{templateSlotLabel(selectedTemplate, slot)}</Label>
                     {slot.description && (
-                      <p className="text-xs text-muted-foreground">{slot.description}</p>
+                      <p className="text-xs text-muted-foreground">{templateSlotDescription(selectedTemplate, slot)}</p>
                     )}
                     <EntityPickerList
                       values={input.slots[slot.id] ?? ['']}
                       onChange={(values) =>
                         setInput((s) => ({ ...s, slots: { ...s.slots, [slot.id]: values } }))
                       }
-                      addLabel={`+ Add ${slot.label.toLowerCase()}`}
+                      addLabel={t('tree.scriptTemplateDialog.addSlot', { what: templateSlotLabel(selectedTemplate, slot).toLowerCase() })}
                       placeholder={t('tree.scriptTemplateDialog.searchPlacedObjects')}
                     />
                   </div>
@@ -206,7 +209,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
                 {(selectedTemplate.params ?? []).map((param) => (
                   <div key={param.id} className="space-y-1.5">
-                    <Label htmlFor={`script-template-param-${param.id}`}>{param.label}</Label>
+                    <Label htmlFor={`script-template-param-${param.id}`}>{templateParamLabel(selectedTemplate, param)}</Label>
                     <Input
                       id={`script-template-param-${param.id}`}
                       type="number"
@@ -226,11 +229,11 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
                 {(selectedTemplate.stringParams ?? []).map((param) => (
                   <div key={param.id} className="space-y-1.5">
-                    <Label htmlFor={`script-template-field-${param.id}`}>{param.label}</Label>
+                    <Label htmlFor={`script-template-field-${param.id}`}>{templateParamLabel(selectedTemplate, param)}</Label>
                     <Input
                       id={`script-template-field-${param.id}`}
                       value={input.fields[param.id] ?? ''}
-                      placeholder={param.placeholder}
+                      placeholder={templateParamPlaceholder(selectedTemplate, param)}
                       onChange={(e) =>
                         setInput((s) => ({
                           ...s,

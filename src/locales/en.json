@@ -1771,7 +1771,8 @@
       "back": "Back",
       "addToProject": "Add to Project",
       "scriptTemplates": "Script Templates",
-      "searchPlacedObjects": "Search placed objects…"
+      "searchPlacedObjects": "Search placed objects…",
+      "addSlot": "+ Add {{what}}"
     },
     "rewardSlotEditor": {
       "kinds": {
@@ -1779,6 +1780,170 @@
         "resource": "Resource",
         "artifact": "Artifact",
         "skill": "Skill"
+      }
+    },
+    "scriptTemplateForms": {
+      "seersHut": {
+        "amountRequired": "Amount required",
+        "artifactToBring": "Artifact to bring",
+        "searchArtifacts": "Search artifacts…",
+        "neutralSquadToDefeat": "Neutral squad to defeat",
+        "searchPlacedSquads": "Search placed squads…",
+        "heroToDefeat": "Hero to defeat",
+        "searchHeroes": "Search heroes…",
+        "primarySkill": "Primary skill",
+        "levelRequired": "Level required",
+        "amountGiven": "Amount given",
+        "artifactReward": "Artifact reward",
+        "pointsGiven": "Points given",
+        "seersHutObject": "Seer's Hut object",
+        "requirement": "Requirement",
+        "offerDialogOptional": "Offer dialog (optional)",
+        "existingDialogSIDShownOn": "Existing dialog SID shown on first visit",
+        "rewardDialogOptional": "Reward dialog (optional)",
+        "existingDialogSIDShownWhen": "Existing dialog SID shown when the reward is granted"
+      },
+      "sphinx": {
+        "amountLost": "Amount lost",
+        "neutralSquadTemplate": "Neutral squad template",
+        "searchSquadTemplates": "Search squad templates…",
+        "squadStrength": "Squad strength",
+        "requiresExactlyOneSphinxObject": "Requires exactly one Sphinx object — the squad's spawn location is fixed at generation time, so multiple Sphinxes sharing this riddle would all spawn it in the same place.",
+        "sphinxObjects": "Sphinx objects",
+        "addSphinxObject": "+ Add sphinx object",
+        "riddleText": "Riddle text",
+        "whatHasAVoiceBut": "What has a voice but no mouth, and speaks only when spoken to?",
+        "correctAnswer": "Correct answer",
+        "eGAnEcho": "e.g. An echo",
+        "wrongAnswersDecoys": "Wrong answers (decoys)",
+        "addWrongAnswer": "+ Add wrong answer",
+        "aPlausibleSoundingWrongAnswer": "A plausible-sounding wrong answer",
+        "penalty": "Penalty"
+      },
+      "questGiver": {
+        "questGiverObject": "Quest giver object",
+        "questGiverNameUsedIn": "Quest giver name (used in the text)",
+        "eGTheHermit": "e.g. The Hermit",
+        "generatedTextPreview": "Generated text (preview)",
+        "reRoll": "Re-roll",
+        "onFirstVisit": "On first visit",
+        "onReward": "On reward",
+        "theTextIsSavedAs": "The text is saved as localization tokens, so you can still edit it in the Localization editor."
+      },
+      "options": {
+        "requirement": {
+          "resources": "Bring Resources",
+          "artifact": "Bring Artifact",
+          "defeatMonster": "Defeat a Monster",
+          "defeatHero": "Defeat a Hero",
+          "skill": "Reach a Primary Skill Level"
+        },
+        "reward": {
+          "resources": "Give Resources",
+          "artifact": "Give Artifact",
+          "skill": "Boost a Primary Skill"
+        },
+        "penalty": {
+          "resources": "Lose Resources",
+          "combat": "Combat vs. Neutral Monsters"
+        }
+      },
+      "errors": {
+        "reqResourceAmount": "Set a positive required resource amount.",
+        "reqArtifact": "Pick the artifact the hero must bring.",
+        "reqSquad": "Pick the neutral squad that must be defeated.",
+        "reqHero": "Pick the hero that must be defeated.",
+        "reqSkill": "Set a positive required skill level.",
+        "rewardResourceAmount": "Set a positive reward resource amount.",
+        "rewardArtifact": "Pick the artifact reward.",
+        "rewardSkill": "Set a positive reward skill amount.",
+        "hut": "Pick the object acting as the Seer's Hut.",
+        "sphinxObject": "Pick at least one Sphinx object.",
+        "riddleText": "Write the riddle text.",
+        "correctAnswer": "Write the correct answer.",
+        "wrongAnswer": "Add at least one wrong-answer decoy.",
+        "penaltyResourceAmount": "Set a positive penalty resource amount.",
+        "penaltySquad": "Pick the neutral squad template for the combat penalty.",
+        "squadStrength": "Set a positive squad strength.",
+        "oneSphinxOnly": "The combat penalty only supports exactly one Sphinx object — remove extra Sphinxes or switch to the resource-loss penalty.",
+        "loadMapSphinx": "Load a .map file to resolve the Sphinx position for the combat penalty.",
+        "sphinxPosition": "Could not resolve a map position for Sphinx object \"{{sid}}\".",
+        "giver": "Pick the object that gives the quest.",
+        "tent": "Pick at least one Tent object.",
+        "guard": "Pick at least one Guard object.",
+        "keyName": "Name the key (this becomes a new counter tracking whether it has been found).",
+        "keyUsed": "\"{{sid}}\" is already used by another counter — pick a different key name.",
+        "loadMapTent": "Load a .map file to resolve Tent positions for the visual effect (or clear the VFX field to skip it).",
+        "tentPosition": "Could not resolve a map position for Tent object \"{{sid}}\" — needed to place the visual effect.",
+        "hutPick": "Pick at least one Hut of the Magi object.",
+        "eyePick": "Pick at least one Eye of the Magi object.",
+        "loadMapPositions": "Load a .map file to resolve object positions before generating.",
+        "eyePosition": "Could not resolve a map position for Eye object \"{{sid}}\" — is it placed and named on the loaded map?"
+      },
+      "defs": {
+        "seersHut": {
+          "name": "Seer's Hut",
+          "description": "Offers a quest at a chosen object: bring resources/an artifact, or defeat a monster/hero, or reach a skill level — then grants a reward once a hero returns having met it."
+        },
+        "sphinx": {
+          "name": "The Sphinx",
+          "description": "A multiple-choice riddle — pick a correct answer and decoys, then the reward and penalty. True free-text input isn't possible in this engine (verified exhaustively); this is the closest faithful equivalent, using the dialog system's own answer branching."
+        },
+        "questGiver": {
+          "name": "Quest Giver (generated text)",
+          "description": "A visible quest handed out at an object, with the quest log title, description and the intro/reward dialogs written for you in a tone you pick (heroic, grim, humorous, mysterious). Re-roll until you like the wording; edit it later in the Localization editor."
+        },
+        "keyLock": {
+          "name": "Keymaster's Tent / Border Guard",
+          "description": "Visiting any Tent unlocks every Guard sharing its key, permanently — the classic HoMM3 colored gate mechanic, generalized to as many independent keys as you need.",
+          "slots": {
+            "tents": {
+              "label": "Tent objects",
+              "description": "Visiting any of these sets the key as found."
+            },
+            "guards": {
+              "label": "Guard objects",
+              "description": "Blocks passage until the key is found, then is removed permanently."
+            }
+          },
+          "params": {
+            "keyCounterSid": {
+              "label": "Key name (new counter)",
+              "placeholder": "e.g. red_key_found"
+            },
+            "tentDialogSid": {
+              "label": "Tent visit dialog (optional)",
+              "placeholder": "Existing dialog SID"
+            },
+            "guardBlockDialogSid": {
+              "label": "Guard block dialog (optional)",
+              "placeholder": "Existing dialog SID"
+            },
+            "vfxSid": {
+              "label": "Tent activation VFX (optional)",
+              "placeholder": "e.g. fx_map_fire"
+            }
+          }
+        },
+        "hutOfTheMagi": {
+          "name": "Hut of the Magi / Eye of the Magi",
+          "description": "Visiting any Hut reveals the fog of war around every Eye on the map — the classic HoMM3 scouting pair.",
+          "slots": {
+            "huts": {
+              "label": "Huts of the Magi",
+              "description": "Objects that, when visited, reveal the area around every Eye below."
+            },
+            "eyes": {
+              "label": "Eyes of the Magi",
+              "description": "Objects whose surrounding fog of war gets revealed. Never interacted with directly."
+            }
+          },
+          "params": {
+            "radius": {
+              "label": "Reveal radius"
+            }
+          }
+        }
       }
     }
   },

@@ -1806,7 +1806,8 @@
       "back": "Retour",
       "addToProject": "Ajouter au projet",
       "scriptTemplates": "Modèles de script",
-      "searchPlacedObjects": "Rechercher parmi les objets placés…"
+      "searchPlacedObjects": "Rechercher parmi les objets placés…",
+      "addSlot": "+ Ajouter : {{what}}"
     },
     "rewardSlotEditor": {
       "kinds": {
@@ -1814,6 +1815,170 @@
         "resource": "Ressource",
         "artifact": "Artefact",
         "skill": "Compétence"
+      }
+    },
+    "scriptTemplateForms": {
+      "options": {
+        "requirement": {
+          "resources": "Apporter des ressources",
+          "artifact": "Apporter un artefact",
+          "defeatMonster": "Vaincre un monstre",
+          "defeatHero": "Vaincre un héros",
+          "skill": "Atteindre un niveau de caractéristique principale"
+        },
+        "reward": {
+          "resources": "Donner des ressources",
+          "artifact": "Donner un artefact",
+          "skill": "Augmenter une caractéristique principale"
+        },
+        "penalty": {
+          "resources": "Perdre des ressources",
+          "combat": "Combat contre des monstres neutres"
+        }
+      },
+      "errors": {
+        "reqResourceAmount": "Définissez une quantité de ressources requise positive.",
+        "reqArtifact": "Choisissez l'artefact que le héros doit apporter.",
+        "reqSquad": "Choisissez l'escouade neutre à vaincre.",
+        "reqHero": "Choisissez le héros à vaincre.",
+        "reqSkill": "Définissez un niveau de caractéristique requis positif.",
+        "rewardResourceAmount": "Définissez une quantité de ressources de récompense positive.",
+        "rewardArtifact": "Choisissez l'artefact en récompense.",
+        "rewardSkill": "Définissez un nombre de points de caractéristique en récompense positif.",
+        "hut": "Choisissez l'objet qui fait office de hutte du devin.",
+        "sphinxObject": "Choisissez au moins un objet Sphinx.",
+        "riddleText": "Écrivez le texte de l'énigme.",
+        "correctAnswer": "Écrivez la bonne réponse.",
+        "wrongAnswer": "Ajoutez au moins une mauvaise réponse en leurre.",
+        "penaltyResourceAmount": "Définissez une quantité de ressources de pénalité positive.",
+        "penaltySquad": "Choisissez le modèle d'escouade neutre pour la pénalité de combat.",
+        "squadStrength": "Définissez une force d'escouade positive.",
+        "oneSphinxOnly": "La pénalité de combat ne prend en charge qu'un seul objet Sphinx : retirez les Sphinx en trop ou passez à la pénalité de perte de ressources.",
+        "loadMapSphinx": "Chargez un fichier .map pour déterminer la position du Sphinx pour la pénalité de combat.",
+        "sphinxPosition": "Impossible de déterminer la position sur la carte de l'objet Sphinx « {{sid}} ».",
+        "giver": "Choisissez l'objet qui donne la quête.",
+        "tent": "Choisissez au moins un objet Tente.",
+        "guard": "Choisissez au moins un objet Garde.",
+        "keyName": "Nommez la clé (cela crée un nouveau compteur indiquant si elle a été trouvée).",
+        "keyUsed": "« {{sid}} » est déjà utilisé par un autre compteur : choisissez un autre nom de clé.",
+        "loadMapTent": "Chargez un fichier .map pour déterminer les positions des tentes pour l'effet visuel (ou videz le champ d'effet visuel pour l'ignorer).",
+        "tentPosition": "Impossible de déterminer la position sur la carte de l'objet Tente « {{sid}} » : elle est nécessaire pour placer l'effet visuel.",
+        "hutPick": "Choisissez au moins un objet Hutte des mages.",
+        "eyePick": "Choisissez au moins un objet Œil des mages.",
+        "loadMapPositions": "Chargez un fichier .map pour déterminer les positions des objets avant de générer.",
+        "eyePosition": "Impossible de déterminer la position sur la carte de l'objet Œil « {{sid}} » : est-il placé et nommé sur la carte chargée ?"
+      },
+      "defs": {
+        "seersHut": {
+          "name": "Hutte du devin",
+          "description": "Propose une quête sur un objet choisi : apporter des ressources ou un artefact, vaincre un monstre ou un héros, ou atteindre un niveau de caractéristique, puis accorde une récompense quand un héros revient l'ayant accomplie."
+        },
+        "sphinx": {
+          "name": "Le Sphinx",
+          "description": "Une énigme à choix multiples : choisissez la bonne réponse et des leurres, puis la récompense et la pénalité. Une vraie saisie de texte libre est impossible avec ce moteur (vérifié de façon exhaustive) ; ceci en est l'équivalent le plus fidèle, grâce au branchement des réponses du système de dialogues."
+        },
+        "questGiver": {
+          "name": "Donneur de quête (texte généré)",
+          "description": "Une quête visible confiée par un objet, avec le titre du journal de quêtes, la description et les dialogues d'introduction et de récompense rédigés pour vous dans le ton de votre choix (héroïque, sombre, humoristique, mystérieux). Relancez jusqu'à ce que la formulation vous plaise ; modifiez-la ensuite dans l'éditeur de localisation."
+        },
+        "keyLock": {
+          "name": "Tente du maître des clés / Garde-frontière",
+          "description": "Visiter une Tente débloque définitivement tous les Gardes qui partagent sa clé : le mécanisme classique des portails colorés de HoMM3, généralisé à autant de clés indépendantes que nécessaire.",
+          "slots": {
+            "tents": {
+              "label": "Objets Tente",
+              "description": "Visiter l'un d'eux marque la clé comme trouvée."
+            },
+            "guards": {
+              "label": "Objets Garde",
+              "description": "Bloque le passage jusqu'à ce que la clé soit trouvée, puis est retiré définitivement."
+            }
+          },
+          "params": {
+            "keyCounterSid": {
+              "label": "Nom de la clé (nouveau compteur)",
+              "placeholder": "p. ex. red_key_found"
+            },
+            "tentDialogSid": {
+              "label": "Dialogue de visite de la tente (facultatif)",
+              "placeholder": "SID d'un dialogue existant"
+            },
+            "guardBlockDialogSid": {
+              "label": "Dialogue de blocage du garde (facultatif)",
+              "placeholder": "SID d'un dialogue existant"
+            },
+            "vfxSid": {
+              "label": "Effet visuel d'activation de la tente (facultatif)",
+              "placeholder": "p. ex. fx_map_fire"
+            }
+          }
+        },
+        "hutOfTheMagi": {
+          "name": "Hutte des mages / Œil des mages",
+          "description": "Visiter une Hutte révèle le brouillard de guerre autour de chaque Œil de la carte : le duo d'exploration classique de HoMM3.",
+          "slots": {
+            "huts": {
+              "label": "Huttes des mages",
+              "description": "Objets qui, une fois visités, révèlent la zone autour de chaque Œil ci-dessous."
+            },
+            "eyes": {
+              "label": "Yeux des mages",
+              "description": "Objets dont le brouillard de guerre environnant est révélé. Jamais utilisés directement."
+            }
+          },
+          "params": {
+            "radius": {
+              "label": "Rayon de révélation"
+            }
+          }
+        }
+      },
+      "seersHut": {
+        "amountRequired": "Quantité requise",
+        "artifactToBring": "Artefact à apporter",
+        "searchArtifacts": "Rechercher des artefacts…",
+        "neutralSquadToDefeat": "Escouade neutre à vaincre",
+        "searchPlacedSquads": "Rechercher parmi les escouades placées…",
+        "heroToDefeat": "Héros à vaincre",
+        "searchHeroes": "Rechercher des héros…",
+        "primarySkill": "Caractéristique principale",
+        "levelRequired": "Niveau requis",
+        "amountGiven": "Quantité donnée",
+        "artifactReward": "Artefact en récompense",
+        "pointsGiven": "Points donnés",
+        "seersHutObject": "Objet Hutte du devin",
+        "requirement": "Condition",
+        "offerDialogOptional": "Dialogue de proposition (facultatif)",
+        "existingDialogSIDShownOn": "SID d'un dialogue existant, affiché à la première visite",
+        "rewardDialogOptional": "Dialogue de récompense (facultatif)",
+        "existingDialogSIDShownWhen": "SID d'un dialogue existant, affiché lorsque la récompense est accordée"
+      },
+      "sphinx": {
+        "amountLost": "Quantité perdue",
+        "neutralSquadTemplate": "Modèle d'escouade neutre",
+        "searchSquadTemplates": "Rechercher des modèles d'escouade…",
+        "squadStrength": "Force de l'escouade",
+        "requiresExactlyOneSphinxObject": "Nécessite exactement un objet Sphinx : l'emplacement d'apparition de l'escouade est fixé à la génération, donc plusieurs Sphinx partageant cette énigme la feraient tous apparaître au même endroit.",
+        "sphinxObjects": "Objets Sphinx",
+        "addSphinxObject": "+ Ajouter un objet Sphinx",
+        "riddleText": "Texte de l'énigme",
+        "whatHasAVoiceBut": "Qu'est-ce qui a une voix mais pas de bouche, et ne parle que lorsqu'on lui parle ?",
+        "correctAnswer": "Bonne réponse",
+        "eGAnEcho": "p. ex. Un écho",
+        "wrongAnswersDecoys": "Mauvaises réponses (leurres)",
+        "addWrongAnswer": "+ Ajouter une mauvaise réponse",
+        "aPlausibleSoundingWrongAnswer": "Une mauvaise réponse plausible",
+        "penalty": "Pénalité"
+      },
+      "questGiver": {
+        "questGiverObject": "Objet donneur de quête",
+        "questGiverNameUsedIn": "Nom du donneur de quête (utilisé dans le texte)",
+        "eGTheHermit": "p. ex. L'Ermite",
+        "generatedTextPreview": "Texte généré (aperçu)",
+        "reRoll": "Relancer",
+        "onFirstVisit": "À la première visite",
+        "onReward": "À la récompense",
+        "theTextIsSavedAs": "Le texte est enregistré sous forme de jetons de localisation ; vous pouvez donc encore le modifier dans l'éditeur de localisation."
       }
     }
   },
