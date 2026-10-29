@@ -21,6 +21,7 @@ import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thum
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import { humanizeFxId } from '@/lib/vfx-options'
 import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -54,20 +55,10 @@ interface Props {
 // HIDDEN_ACTION_TYPES elsewhere in this codebase.
 const CAMPAIGN_OR_TUTORIAL_ID = /campaign|tutorial/i
 
-// Friendly labels for CatalogMapObject.category, used only when a caller
-// opts into `groupByCategory` — confirmed exhaustive against
+// Friendly labels for CatalogMapObject.category (shared.mapObjectCategories), used only when a caller
+// opts into `groupByCategory` — the keys are exhaustive against
 // CatalogMapObject['category'] in src/lib/catalog/types.ts.
-const MAP_OBJECT_CATEGORY_GROUP_LABELS: Record<CatalogMapObject['category'], string> = {
-  interactables: 'Interactive',
-  environments: 'Decoration',
-  resources: 'Resource',
-  spawns: 'Spawn',
-  animals: 'Animal',
-  fxs: 'Effect',
-  artifacts: 'Artifact',
-  test: 'Test',
-  blocks: 'Block',
-}
+const mapObjectCategoryLabel = (category: CatalogMapObject['category']): string => i18n.t(`shared.mapObjectCategories.${category}`)
 
 // ─── Hook: build the entry list from catalog or static fallback ───────────────
 
@@ -112,7 +103,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
           id: o.id,
           label: localName(catalog, 'mapObjects', o),
           icon: o.icon,
-          group: MAP_OBJECT_CATEGORY_GROUP_LABELS[o.category],
+          group: mapObjectCategoryLabel(o.category),
         }))
       case 'vfx':
         return catalog.mapObjects

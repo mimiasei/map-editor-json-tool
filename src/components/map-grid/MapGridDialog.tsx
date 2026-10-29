@@ -48,13 +48,13 @@ import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
-  INTERACTABLE_SUBCATEGORY_LABELS,
+  interactableSubcategoryName,
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import {
   DECORATION_SUBCATEGORY_ORDER,
-  DECORATION_SUBCATEGORY_LABELS,
+  decorationSubcategoryName,
   resolveDecorationSubcategory,
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
@@ -5308,7 +5308,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                               onCheckedChange={() => toggleInteractableSubcategory(c)}
                             />
                             <Label htmlFor={`interactable-subcat-${c}`} className="text-xs cursor-pointer">
-                              {INTERACTABLE_SUBCATEGORY_LABELS[c]}
+                              {interactableSubcategoryName(c)}
                             </Label>
                           </div>
                         ))}
@@ -5361,7 +5361,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                               onCheckedChange={() => toggleDecorationSubcategory(c)}
                             />
                             <Label htmlFor={`decoration-subcat-${c}`} className="text-xs cursor-pointer">
-                              {DECORATION_SUBCATEGORY_LABELS[c]}
+                              {decorationSubcategoryName(c)}
                             </Label>
                           </div>
                         ))}

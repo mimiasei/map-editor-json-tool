@@ -888,6 +888,54 @@
     },
     "fileDialogs": {
       "saveMap": "Save map"
+    },
+    "factions": {
+      "Temple": "Temple",
+      "Necropolis": "Necropolis",
+      "Dungeon": "Dungeon",
+      "Grove": "Grove",
+      "Hive": "Hive",
+      "Schism": "Schism",
+      "Neutral": "Neutral"
+    },
+    "interactableSubcategories": {
+      "dwellings": "Dwellings",
+      "portals": "Portals",
+      "resourceStorage": "Resource Storage",
+      "mines": "Mines",
+      "altarsOfMagic": "Altars of Magic",
+      "magicAmplifiers": "Magic Amplifiers",
+      "shrines": "Shrines",
+      "unitTrade": "Unit Trade",
+      "campaignOnly": "Campaign-only",
+      "adventureSites": "Adventure Sites",
+      "treasureAwards": "Treasures & Awards",
+      "marketsTrade": "Markets & Trade",
+      "special": "Special",
+      "other": "Other"
+    },
+    "decorationSubcategories": {
+      "animals": "Animals",
+      "fx": "FX",
+      "mountains": "Mountains",
+      "trees": "Trees",
+      "rocks": "Rocks",
+      "pools": "Pools",
+      "hills": "Hills",
+      "walkable": "Walkable",
+      "campaignRelated": "Campaign related",
+      "other": "Other decorations"
+    },
+    "mapObjectCategories": {
+      "interactables": "Interactive",
+      "environments": "Decoration",
+      "resources": "Resource",
+      "spawns": "Spawn",
+      "animals": "Animal",
+      "fxs": "Effect",
+      "artifacts": "Artifact",
+      "test": "Test",
+      "blocks": "Block"
     }
   },
   "mapGrid": {
@@ -2075,7 +2123,8 @@
         "spells": "Spells",
         "skills": "Skills",
         "mapObjects": "Map Objects"
-      }
+      },
+      "tierN": "Tier {{n}}"
     },
     "gameDatabaseFilter": {
       "filterItems": "Filter items",

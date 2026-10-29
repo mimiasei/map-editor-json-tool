@@ -18,7 +18,7 @@
 import i18n from '@/lib/i18n'
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
-import { factionDisplayName } from '@/lib/factions'
+import { factionDisplayName, factionLabel } from '@/lib/factions'
 import { collectArtifactSids } from '@/lib/rmg/object-variety'
 import { isGuardCandidate } from '@/lib/rmg/zone-guard-scatter'
 import { groupPlayerStartsByZone } from './zone-ownership'
@@ -127,7 +127,7 @@ export function computePlayerBalance(context: MapContext, catalog: GameCatalog |
     const landTiles = land.get(zoneId) ?? 0
     return {
       owner: start.spawnerInfo?.owner ?? zoneId,
-      faction: start.spawnerInfo?.factionSid ? factionDisplayName(start.spawnerInfo.factionSid, catalog?.factions) : i18n.t('validate.balance.randomFaction'),
+      faction: start.spawnerInfo?.factionSid ? factionLabel(factionDisplayName(start.spawnerInfo.factionSid, catalog?.factions), catalog) : i18n.t('validate.balance.randomFaction'),
       zoneId,
       landTiles,
       mineCount: mines.length,

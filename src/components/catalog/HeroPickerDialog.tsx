@@ -18,7 +18,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { STATIC_HEROES } from '@/lib/catalog/static-catalog'
 import { PortraitThumb, thumbnailPath, heroPortraitPath } from '@/lib/catalog/thumbnails'
-import { factionDisplayName, groupByFaction } from '@/lib/factions'
+import { factionDisplayName, factionLabel, groupByFaction } from '@/lib/factions'
 import { buildPortraitEntries, type PortraitEntry } from '@/lib/catalog/portraits'
 import { assetLeafName, heroAvatarIcon } from '@/lib/catalog/icon-requests'
 import HeroPickerFilter, {
@@ -199,7 +199,7 @@ export default function HeroPickerDialog({
               <div key={faction} className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {faction}
+                    {factionLabel(faction, catalog)}
                   </span>
                   <span className="text-[10px] text-muted-foreground/60">({items.length})</span>
                   <div className="flex-1 border-t border-border/60" />

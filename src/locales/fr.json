@@ -917,6 +917,54 @@
     },
     "fileDialogs": {
       "saveMap": "Sauvegarder la carte"
+    },
+    "factions": {
+      "Temple": "Temple",
+      "Necropolis": "Nécropole",
+      "Dungeon": "Donjon",
+      "Grove": "Bosquet",
+      "Hive": "Ruche",
+      "Schism": "Schisme",
+      "Neutral": "Neutre"
+    },
+    "interactableSubcategories": {
+      "dwellings": "Habitations",
+      "portals": "Portails",
+      "resourceStorage": "Stocks de ressources",
+      "mines": "Mines",
+      "altarsOfMagic": "Autels de magie",
+      "magicAmplifiers": "Amplificateurs de magie",
+      "shrines": "Sanctuaires",
+      "unitTrade": "Échange d'unités",
+      "campaignOnly": "Campagne uniquement",
+      "adventureSites": "Sites d'aventure",
+      "treasureAwards": "Trésors et récompenses",
+      "marketsTrade": "Marchés et commerce",
+      "special": "Spécial",
+      "other": "Autre"
+    },
+    "decorationSubcategories": {
+      "animals": "Animaux",
+      "fx": "Effets",
+      "mountains": "Montagnes",
+      "trees": "Arbres",
+      "rocks": "Rochers",
+      "pools": "Mares",
+      "hills": "Collines",
+      "walkable": "Franchissable",
+      "campaignRelated": "Liés à la campagne",
+      "other": "Autres décorations"
+    },
+    "mapObjectCategories": {
+      "interactables": "Interactif",
+      "environments": "Décor",
+      "resources": "Ressource",
+      "spawns": "Point d'apparition",
+      "animals": "Animal",
+      "fxs": "Effet",
+      "artifacts": "Artefact",
+      "test": "Test",
+      "blocks": "Bloc"
     }
   },
   "mapGrid": {
@@ -2115,7 +2163,8 @@
         "spells": "Sorts",
         "skills": "Compétences",
         "mapObjects": "Objets de la carte"
-      }
+      },
+      "tierN": "Palier {{n}}"
     },
     "gameDatabaseFilter": {
       "filterItems": "Filtrer les éléments",

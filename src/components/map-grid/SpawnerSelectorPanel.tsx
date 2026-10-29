@@ -10,7 +10,7 @@
 import { Crown, Landmark, X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
-import { factionDisplayName } from '@/lib/factions'
+import { factionDisplayName, factionLabel } from '@/lib/factions'
 import type { GameCatalog } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
 import { useTranslation } from 'react-i18next'
@@ -52,7 +52,7 @@ export default function SpawnerSelectorPanel({ spawners, catalog, selectedNode, 
           // heroSid, per map-context.ts: undefined spawnHero for hero rows).
           const factionText = isCity
             ? item.spawnerInfo?.factionSid
-              ? factionDisplayName(item.spawnerInfo.factionSid, catalog?.factions)
+              ? factionLabel(factionDisplayName(item.spawnerInfo.factionSid, catalog?.factions), catalog)
               : t('mapGrid.spawnerSelectorPanel.randomFaction')
             : null
           const spawnHeroText = isCity ? (item.spawnerInfo?.spawnHero ? t('mapGrid.spawnerSelectorPanel.spawnsWithHero') : t('mapGrid.spawnerSelectorPanel.noHero')) : null

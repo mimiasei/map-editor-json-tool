@@ -39,19 +39,20 @@ import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import { type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {
   DECORATION_SUBCATEGORY_ORDER,
-  DECORATION_SUBCATEGORY_LABELS,
+  decorationSubcategoryName,
   resolveDecorationSubcategory,
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
-  INTERACTABLE_SUBCATEGORY_LABELS,
+  interactableSubcategoryName,
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import { computeFootprintTiles, footprintIconBounds } from '@/lib/map-grid/footprint'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
+import { factionLabel } from '@/lib/factions'
 
 // The 6 object-type filters requested — a different grouping from the
 // placed-object GridGroup system (tile-index.ts): this browses catalog
@@ -226,7 +227,7 @@ function templateForCreature(catalog: GameCatalog | null, creature: CatalogCreat
  *  there's no real "neutral" faction entry in Core/DB/fractions (see
  *  NEUTRAL_FRACTION_ID above), so that one bucket is hardcoded. */
 function factionDisplayName(catalog: GameCatalog | null, fraction: string): string {
-  if (fraction === NEUTRAL_FRACTION_ID) return 'Neutral'
+  if (fraction === NEUTRAL_FRACTION_ID) return factionLabel('Neutral')
   const faction = catalog?.factions.find((f) => f.id === fraction)
   return faction ? localName(catalog, 'factions', faction) : fraction
 }
@@ -667,7 +668,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                               onCheckedChange={() => toggleDecorationSub(c)}
                             />
                             <Label htmlFor={`obj-browser-decoration-subcat-${c}`} className="text-xs cursor-pointer">
-                              {DECORATION_SUBCATEGORY_LABELS[c]}
+                              {decorationSubcategoryName(c)}
                             </Label>
                           </div>
                         ))}
@@ -711,7 +712,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                               onCheckedChange={() => toggleInteractableSub(c)}
                             />
                             <Label htmlFor={`obj-browser-interactable-subcat-${c}`} className="text-xs cursor-pointer">
-                              {INTERACTABLE_SUBCATEGORY_LABELS[c]}
+                              {interactableSubcategoryName(c)}
                             </Label>
                           </div>
                         ))}

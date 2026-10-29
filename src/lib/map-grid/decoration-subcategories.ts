@@ -11,6 +11,7 @@
 
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import i18n from '@/lib/i18n'
 
 export type DecorationSubcategory =
   | 'animals'
@@ -37,17 +38,9 @@ export const DECORATION_SUBCATEGORY_ORDER: DecorationSubcategory[] = [
   'other',
 ]
 
-export const DECORATION_SUBCATEGORY_LABELS: Record<DecorationSubcategory, string> = {
-  animals: 'Animals',
-  fx: 'FX',
-  mountains: 'Mountains',
-  trees: 'Trees',
-  rocks: 'Rocks',
-  pools: 'Pools',
-  hills: 'Hills',
-  walkable: 'Walkable',
-  campaignRelated: 'Campaign related',
-  other: 'Other decorations',
+/** Display name of a subcategory in the UI language. */
+export function decorationSubcategoryName(sub: DecorationSubcategory): string {
+  return i18n.t(`shared.decorationSubcategories.${sub}`)
 }
 
 const WALKABLE_BIOMES = ['death', 'snow', 'desert', 'autumn', 'dirt']

@@ -49,7 +49,7 @@ import { objectRender } from '@/lib/object-render/render-index'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
-  INTERACTABLE_SUBCATEGORY_LABELS,
+  interactableSubcategoryName,
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
@@ -184,7 +184,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
                     displayFilter[c] ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:bg-accent/50'
                   }`}
                 >
-                  {INTERACTABLE_SUBCATEGORY_LABELS[c]}
+                  {interactableSubcategoryName(c)}
                 </button>
               ))}
             </div>
@@ -208,7 +208,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
               <div key={sub} className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {INTERACTABLE_SUBCATEGORY_LABELS[sub]}
+                    {interactableSubcategoryName(sub)}
                   </span>
                   <span className="text-[10px] text-muted-foreground/60">({items.length})</span>
                   <div className="flex-1 border-t border-border/60" />

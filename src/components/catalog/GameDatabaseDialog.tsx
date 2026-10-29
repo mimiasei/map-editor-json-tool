@@ -43,7 +43,7 @@ import type {
 } from '@/lib/catalog/types'
 
 import unitsData from '@/data/units.json'
-import { factionDisplayName, groupByFaction } from '@/lib/factions'
+import { factionDisplayName, factionLabel, groupByFaction } from '@/lib/factions'
 import { useTranslation } from 'react-i18next'
 
 // ─── Faction display name normalizer ─────────────────────────────────────────
@@ -523,13 +523,13 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         return catalog.heroes.map((h: CatalogHero) => ({
           ...h,
           name: localName(catalog, 'heroes', h),
-          subtitle: [normalizeFaction(h.fraction), h.classType].filter(Boolean).join(' · '),
+          subtitle: [factionLabel(normalizeFaction(h.fraction), catalog), h.classType].filter(Boolean).join(' · '),
         }))
       case 'creatures':
         return catalog.creatures.map((c: CatalogCreature) => ({
           ...c,
           name: localName(catalog, 'creatures', c),
-          subtitle: [normalizeFaction(c.fraction), c.tier ? `Tier ${c.tier}` : undefined].filter(Boolean).join(' · '),
+          subtitle: [factionLabel(normalizeFaction(c.fraction), catalog), c.tier ? t('catalog.gameDatabaseDialog.tierN', { n: c.tier }) : undefined].filter(Boolean).join(' · '),
         }))
       case 'artifacts':
         return catalog.artifacts.map((a: CatalogArtifact) => ({
@@ -747,7 +747,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
                       <div key={faction}>
                         <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-border/60 bg-card px-2.5 py-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            {faction}
+                            {factionLabel(faction, catalog)}
                           </span>
                           <span className="text-[10px] text-muted-foreground/60">
                             ({groupItems.length})
