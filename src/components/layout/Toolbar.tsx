@@ -95,6 +95,7 @@ import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-
 import { ImageIcon } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
+import { useTranslation } from 'react-i18next'
 
 interface ToolbarProps {
   onSearchOpen?: () => void
@@ -139,6 +140,7 @@ export default function Toolbar({
   onGenerateMapOpen,
   onNew,
 }: ToolbarProps) {
+  const { t } = useTranslation()
   const {
     scenario,
     isDirty,
@@ -245,8 +247,8 @@ export default function Toolbar({
         case 'unsupported':
           setUpdateMessage(
             import.meta.env.DEV
-              ? 'Update checks are disabled in development builds.'
-              : 'Updates are only available in the desktop app.',
+              ? t('layout.toolbar.updatesDisabledDev')
+              : t('layout.toolbar.updatesDesktopOnly'),
           )
           break
         case 'error':
@@ -358,8 +360,8 @@ export default function Toolbar({
   const handleNewMapClick = async () => {
     if (isDirty || mapIsDirty) {
       const ok = await confirmDialog(
-        'You have unsaved changes. Create a new map anyway?',
-        'New Map',
+        t('layout.toolbar.confirmNewMap'),
+        t('layout.toolbar.confirmNewMapTitle'),
       )
       if (!ok) return
     }
@@ -373,8 +375,8 @@ export default function Toolbar({
   const handleImportH3mClick = async () => {
     if (isDirty || mapIsDirty) {
       const ok = await confirmDialog(
-        'You have unsaved changes. Import a Heroes 3 map anyway?',
-        'Import H3 Map',
+        t('layout.toolbar.confirmImportH3'),
+        t('layout.toolbar.confirmImportH3Title'),
       )
       if (!ok) return
     }
@@ -388,8 +390,8 @@ export default function Toolbar({
   const handleGenerateMapClick = async () => {
     if (isDirty || mapIsDirty) {
       const ok = await confirmDialog(
-        'You have unsaved changes. Generate a random map anyway?',
-        'Generate Random Map',
+        t('layout.toolbar.confirmGenerate'),
+        t('layout.toolbar.confirmGenerateTitle'),
       )
       if (!ok) return
     }
@@ -399,7 +401,7 @@ export default function Toolbar({
   // ── File > Open Recent... — same unsaved-changes guard as New Map above, since opening replaces what is loaded.
   const handleOpenRecentEntry = async (entry: RecentFile) => {
     if (isDirty || mapIsDirty) {
-      const ok = await confirmDialog(`You have unsaved changes. Open ${entry.name} anyway?`, 'Open Recent')
+      const ok = await confirmDialog(t('layout.toolbar.confirmOpenRecent', { name: entry.name }), t('layout.toolbar.confirmOpenRecentTitle'))
       if (!ok) return
     }
     try {
@@ -664,7 +666,7 @@ export default function Toolbar({
       <header className="flex h-10 items-center gap-2 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
         {/* Left: app title */}
         <span className="mr-3 text-sm font-semibold text-primary tracking-wide">
-          OE Scenario Editor
+          {t('layout.toolbar.oEScenarioEditor')}
         </span>
 
         {/* Main actions */}
@@ -678,10 +680,10 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={onNew} className="gap-1.5">
                   <FilePlus className="h-4 w-4" />
-                  New
+                  {t('layout.toolbar.new')}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>New scenario (Ctrl+N)</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.newScenarioCtrlN')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -695,10 +697,10 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleNewMapClick} className="gap-1.5">
                   <FilePlus className="h-4 w-4" />
-                  New Map
+                  {t('layout.toolbar.newMap')}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Create a new blank .map file</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.createANewBlankMap')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -706,30 +708,30 @@ export default function Toolbar({
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" onClick={onTemplateOpen} className="gap-1.5 text-muted-foreground">
                 <FilePlus className="h-4 w-4" />
-                Template
+                {t('layout.toolbar.template')}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>New from template</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.newFromTemplate')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" onClick={onScriptTemplatesOpen} className="gap-1.5 text-muted-foreground">
                 <Wand2 className="h-4 w-4" />
-                Script Templates
+                {t('tree.scriptTemplateDialog.scriptTemplates')}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Generate scripting for classic HoMM3 objects Olden Era is missing</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.generateScriptingForClassicHoMM3')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" onClick={onStoryBuilderOpen} className="gap-1.5 text-muted-foreground">
                 <BookOpen className="h-4 w-4" />
-                Story
+                {t('layout.toolbar.story')}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Add a ready-made or custom story with quests, dialogs and player choices</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.addAReadyMadeOr')}</TooltipContent>
           </Tooltip>
 
           {!isTauri() && (
@@ -737,10 +739,10 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleImport} className="gap-1.5">
                   <Upload className="h-4 w-4" />
-                  Import
+                  {t('common.themeEditorDialog.import')}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Import JSON file</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.importJSONFile')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -749,10 +751,10 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
                   <Upload className="h-4 w-4" />
-                  Import Map
+                  {t('layout.toolbar.importMap')}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Import .map file</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.importMapFile')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -761,10 +763,10 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5">
                   <Download className="h-4 w-4" />
-                  Export
+                  {t('common.themeEditorDialog.export')}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Export scenario JSON</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.exportScenarioJSON')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -772,7 +774,7 @@ export default function Toolbar({
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="relative gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
-                Validate
+                {t('layout.toolbar.validate')}
                 {/* Sits on the button's corner, so it adds no width: the gap to the next button is the same as to the one before. */}
                 {(validation.errors.length > 0 || validation.warnings.length > 0) && (
                   <Badge
@@ -784,7 +786,7 @@ export default function Toolbar({
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Validate scenario</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.validateScenario')}</TooltipContent>
           </Tooltip>
 
           {hasMap && (
@@ -792,10 +794,10 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleOpenFairness} className="gap-1.5">
                   <BalanceScale className="h-4 w-4" />
-                  Fairness
+                  {t('layout.toolbar.fairness')}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Check how even the map is between players</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.checkHowEvenTheMap')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -804,16 +806,16 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={() => setPublishOpen(true)} className="gap-1.5">
                   <UploadCloud className="h-4 w-4" />
-                  Publish
+                  {t('layout.toolbar.publish')}
                   {zipDirty && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title="Unpublished changes" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title={t('layout.toolbar.unpublishedChanges')} />
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
                 {zipDirty
-                  ? 'Publish map — you have changes not yet written to the game (custom heroes/objects/artifacts, dialogs, localization)'
-                  : 'Publish map'}
+                  ? t('layout.toolbar.publishMapYouHaveChanges')
+                  : t('common.publishDialog.publishMap')}
               </TooltipContent>
             </Tooltip>
           )}
@@ -824,7 +826,7 @@ export default function Toolbar({
                 <BookOpen className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Guides</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.guides')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -833,7 +835,7 @@ export default function Toolbar({
                 <Database className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Game Database</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.gameDatabase')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -848,7 +850,7 @@ export default function Toolbar({
                 <Undo2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.undoCtrlZ')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -863,7 +865,7 @@ export default function Toolbar({
                 <Redo2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Redo (Ctrl+Shift+Z)</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.redoCtrlShiftZ')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -877,7 +879,7 @@ export default function Toolbar({
                 <Search className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Search (Ctrl+K)</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.searchCtrlK')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -891,7 +893,7 @@ export default function Toolbar({
                 <CalendarClock className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Event Timeline</TooltipContent>
+            <TooltipContent>{t('common.timelineDialog.eventTimeline')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -905,7 +907,7 @@ export default function Toolbar({
                 <Workflow className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Quest Flow Diagram</TooltipContent>
+            <TooltipContent>{t('common.questFlowDialog.questFlowDiagram')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -919,7 +921,7 @@ export default function Toolbar({
                 <BarChart2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{mapGridOpen ? 'Map' : 'Scenario'} Statistics</TooltipContent>
+            <TooltipContent>{mapGridOpen ? t('layout.toolbar.statisticsMap') : t('layout.toolbar.statisticsScenario')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -933,7 +935,7 @@ export default function Toolbar({
                 <Dices className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Generate Random Map</TooltipContent>
+            <TooltipContent>{t('common.generateRandomMapDialog.generateRandomMap')}</TooltipContent>
           </Tooltip>
 
           {/* Needs a loaded .map for anything to show (issue #122) */}
@@ -949,7 +951,7 @@ export default function Toolbar({
                   <LayoutGrid className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Map Grid</TooltipContent>
+              <TooltipContent>{t('mapGrid.mapGridDialog.titlePlain')}</TooltipContent>
             </Tooltip>
           )}
 
@@ -958,25 +960,25 @@ export default function Toolbar({
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1.5">
-                    More
+                    {t('layout.toolbar.more')}
                     <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Localization, Export ZIP, Game Data</TooltipContent>
+              <TooltipContent>{t('layout.toolbar.localizationExportZIPGameData')}</TooltipContent>
             </Tooltip>
 
             <DropdownMenuContent align="start" className="w-52">
               <DropdownMenuItem onClick={() => setTimeout(() => setLocalizationDialogOpen(true), 0)}>
                 <Languages className="h-4 w-4 mr-2" />
-                Localization
+                {t('layout.toolbar.localization')}
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
               <DropdownMenuItem onClick={handleExportZip}>
                 <Package className="h-4 w-4 mr-2" />
-                Export ZIP
+                {t('layout.toolbar.exportZIP')}
               </DropdownMenuItem>
 
               {/* Desktop only test feature (issue #120) — needs a .map file loaded */}
@@ -987,7 +989,7 @@ export default function Toolbar({
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  Re-save map (no changes)
+                  {t('layout.toolbar.resaveMap')}
                 </DropdownMenuItem>
               )}
 
@@ -998,7 +1000,7 @@ export default function Toolbar({
                   ) : (
                     <RefreshCw className="h-4 w-4 mr-2" />
                   )}
-                  Check for updates…
+                  {t('layout.toolbar.checkForUpdates')}
                 </DropdownMenuItem>
               )}
 
@@ -1014,7 +1016,7 @@ export default function Toolbar({
                 ) : (
                   <Database className="h-4 w-4 mr-2 text-muted-foreground" />
                 )}
-                Game Data
+                {t('layout.toolbar.gameData')}
               </DropdownMenuItem>
 
               {isTauri() && (
@@ -1022,7 +1024,7 @@ export default function Toolbar({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setTimeout(() => setThumbnailDialogOpen(true), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    Extract Thumbnails…
+                    {t('layout.toolbar.extractThumbnails')}
                     {/* Stays visible after the banner is dismissed, so the cue remains
                         findable without nagging. */}
                     {pendingIcons > 0 && (
@@ -1033,11 +1035,11 @@ export default function Toolbar({
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTimeout(() => window.dispatchEvent(new Event('oe:render-objects-open')), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    Render Object Images…
+                    {t('layout.toolbar.renderObjectImages')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTimeout(handleImportH3mClick, 0)}>
                     <FileInput className="h-4 w-4 mr-2" />
-                    Import H3 Map…
+                    {t('layout.toolbar.importH3Map')}
                   </DropdownMenuItem>
                 </>
               )}
@@ -1046,7 +1048,7 @@ export default function Toolbar({
 
               <DropdownMenuItem onClick={() => setTimeout(() => setAboutOpen(true), 0)}>
                 <Info className="h-4 w-4 mr-2" />
-                About
+                {t('common.aboutDialog.about')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1069,7 +1071,7 @@ export default function Toolbar({
         {(currentFileName || isDirty || mapIsDirty) && (
           <span className="text-xs text-muted-foreground ml-1 truncate max-w-48">
             {(isDirty || mapIsDirty) && <span className="mr-1 text-primary">●</span>}
-            {currentFileName ?? 'unsaved'}
+            {currentFileName ?? t('layout.toolbar.unsaved')}
           </span>
         )}
 
@@ -1089,7 +1091,7 @@ export default function Toolbar({
                 <PanelLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Toggle sidebar</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.toggleSidebar')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -1103,7 +1105,7 @@ export default function Toolbar({
                 <PenLine className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Toggle editor</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.toggleEditor')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -1117,7 +1119,7 @@ export default function Toolbar({
                 <Braces className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Toggle JSON preview</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.toggleJSONPreview')}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -1127,7 +1129,7 @@ export default function Toolbar({
                 size="icon"
                 className="h-8 w-8"
                 onClick={toggleTheme}
-                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                aria-label={theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
                 aria-pressed={theme === 'dark'}
               >
                 {theme === 'dark' ? (
@@ -1138,7 +1140,7 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+              {theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
             </TooltipContent>
           </Tooltip>
 
@@ -1149,12 +1151,12 @@ export default function Toolbar({
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setThemeEditorOpen(true)}
-                aria-label="Open theme editor"
+                aria-label={t('layout.toolbar.openThemeEditor')}
               >
                 <Palette className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Theme editor</TooltipContent>
+            <TooltipContent>{t('layout.toolbar.themeEditor')}</TooltipContent>
           </Tooltip>
         </div>
       </header>
@@ -1163,12 +1165,12 @@ export default function Toolbar({
       <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Map fairness</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.mapFairness')}</DialogTitle>
           </DialogHeader>
           <PlayerBalancePanel balance={fairness} />
           <DecorationBalanceSection decoration={decorationBalance} />
           <p className="text-xs text-muted-foreground">
-            The same score the random map generator uses. It compares each player's own area (land, mines, hills, sites), not the neutral zones between them.
+            {t('layout.toolbar.theSameScoreTheRandom')}
           </p>
         </DialogContent>
       </Dialog>
@@ -1177,7 +1179,7 @@ export default function Toolbar({
       <Dialog open={validateOpen} onOpenChange={setValidateOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Validation Results</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.validationResults')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <button
@@ -1186,14 +1188,14 @@ export default function Toolbar({
               onClick={() => setScenarioSectionOpen((v) => !v)}
             >
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${scenarioSectionOpen ? '' : '-rotate-90'}`} />
-              Scenario
+              {t('layout.toolbar.scenario')}
             </button>
             {scenarioSectionOpen && (
                 <>
                 {validation.errors.length === 0 && validation.warnings.length === 0 && (
                   <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle className="h-4 w-4" />
-                    No issues found.
+                    {t('layout.toolbar.noIssuesFound')}
                   </div>
                 )}
                 {validation.errors.map((e, i) => (
@@ -1225,18 +1227,18 @@ export default function Toolbar({
                 onClick={() => setPlacementSectionOpen((v) => !v)}
               >
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${placementSectionOpen ? '' : '-rotate-90'}`} />
-                Map placement &amp; reachability
+                {t('layout.toolbar.mapPlacementReachability')}
               </button>
               {mapPlacementCheck && (mapPlacementCheck.issues.length > 0 || mapPlacementCheck.unreachable.length > 0) && (
                 <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={handleAutoFixPlacement} disabled={placementAutoFixing}>
-                  {placementAutoFixing ? 'Fixing…' : 'Auto-fix'}
+                  {placementAutoFixing ? t('layout.toolbar.fixing') : t('common.mapValidationErrorDialog.autoFix')}
                 </Button>
               )}
             </div>
             {placementSectionOpen && (
               <>
             {!mapPlacementCheck && (
-              <p className="text-xs text-muted-foreground">Open a .map file to also check placement/reachability issues.</p>
+              <p className="text-xs text-muted-foreground">{t('layout.toolbar.openAMapFileTo')}</p>
             )}
             {mapPlacementCheck
               && mapPlacementCheck.issues.length === 0
@@ -1244,7 +1246,7 @@ export default function Toolbar({
               && mapPlacementCheck.isolated.length === 0 && (
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
-                No map placement issues found.
+                {t('layout.toolbar.noMapPlacementIssuesFound')}
               </div>
             )}
             {mapPlacementCheck?.issues.map((issue, i) => (
@@ -1264,7 +1266,7 @@ export default function Toolbar({
             ))}
               {mapPlacementCheck && mapPlacementCheck.isolated.length > 0 && (
                   <>
-                      <p className="text-xs text-muted-foreground">Not auto-fixable — reconnecting isolated players needs a manual road/bridge/portal, a real map-design decision.</p>
+                      <p className="text-xs text-muted-foreground">{t('layout.toolbar.notAutoFixableReconnectingIsolated')}</p>
                       {mapPlacementCheck.isolated.map((issue, i) => (
                           <Alert
                               key={`isolated-${i}`}
@@ -1288,7 +1290,7 @@ export default function Toolbar({
       <Dialog open={importFeedbackOpen} onOpenChange={setImportFeedbackOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Import Issues</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.importIssues')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-80 overflow-y-auto text-sm">
             {importErrors.map((e, i) => (
@@ -1309,7 +1311,7 @@ export default function Toolbar({
       <Dialog open={zipErrorOpen} onOpenChange={setZipErrorOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Export ZIP Failed</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.exportZIPFailed')}</DialogTitle>
           </DialogHeader>
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -1322,7 +1324,7 @@ export default function Toolbar({
       <Dialog open={mapResaveResult !== null} onOpenChange={(o) => { if (!o) setMapResaveResult(null) }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{mapResaveResult?.ok ? 'Map Re-saved' : 'Re-save Failed'}</DialogTitle>
+            <DialogTitle>{mapResaveResult?.ok ? t('layout.toolbar.mapReSaved') : t('layout.toolbar.reSaveFailed')}</DialogTitle>
           </DialogHeader>
           <Alert variant={mapResaveResult?.ok ? undefined : 'destructive'} className={mapResaveResult?.ok ? 'border-green-600/50 bg-green-50 dark:bg-green-950/30' : undefined}>
             {mapResaveResult?.ok ? (
@@ -1339,14 +1341,14 @@ export default function Toolbar({
       <Dialog open={catalogDialogOpen} onOpenChange={setCatalogDialogOpen}>
         <DialogContent className="max-w-sm" onCloseAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Game Data Catalog</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.gameDataCatalog')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             {/* Status */}
             {catalogLoading && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Building catalog from Core.zip…
+                {t('layout.toolbar.buildingCatalogFromCoreZip')}
               </div>
             )}
             {catalogError && !catalogLoading && (
@@ -1356,43 +1358,43 @@ export default function Toolbar({
             )}
             {catalog && !catalogLoading && (
               <div className="text-xs space-y-1 text-muted-foreground">
-                <p className="text-foreground font-medium">Loaded ✓</p>
-                <p>Source: {catalog.sourceHint}</p>
+                <p className="text-foreground font-medium">{t('layout.toolbar.loaded')}</p>
+                <p>{t('layout.toolbar.source', { sourceHint: catalog.sourceHint })}</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
-                  <span>{catalog.heroes.length} heroes</span>
-                  <span>{catalog.creatures.length} creatures</span>
-                  <span>{catalog.artifacts.length} artifacts</span>
-                  <span>{catalog.spells.length} spells</span>
-                  <span>{catalog.skills.length} skills</span>
-                  <span>{catalog.buffs.length} buffs</span>
-                  <span>{catalog.mapObjects.length} map objects</span>
-                  <span>{catalog.dialogs.length} dialogs</span>
+                  <span>{t('layout.toolbar.heroes', { length: catalog.heroes.length })}</span>
+                  <span>{t('layout.toolbar.creatures', { length: catalog.creatures.length })}</span>
+                  <span>{t('layout.toolbar.artifacts', { length: catalog.artifacts.length })}</span>
+                  <span>{t('layout.toolbar.spells', { length: catalog.spells.length })}</span>
+                  <span>{t('layout.toolbar.skills', { length: catalog.skills.length })}</span>
+                  <span>{t('layout.toolbar.buffs', { length: catalog.buffs.length })}</span>
+                  <span>{t('layout.toolbar.mapObjects', { length: catalog.mapObjects.length })}</span>
+                  <span>{t('layout.toolbar.dialogs', { length: catalog.dialogs.length })}</span>
                 </div>
               </div>
             )}
             {!catalog && !catalogLoading && !catalogError && (
               <p className="text-xs text-muted-foreground">
-                Game data not loaded. Dropdowns show SIDs only.
+                {t('layout.toolbar.gameDataNotLoadedDropdowns')}
               </p>
             )}
 
             {/* Actions */}
             <div className="flex flex-wrap gap-1.5 pt-1">
               <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => { loadCatalog(); setCatalogDialogOpen(false) }} disabled={catalogLoading}>
-                {catalog ? 'Rebuild' : 'Auto-detect'}
+                {catalog ? t('layout.toolbar.rebuild') : t('layout.toolbar.autoDetect')}
               </Button>
               <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleCatalogPickFile} disabled={catalogLoading}>
-                Load Core.zip…
+                {t('layout.toolbar.loadCoreZip')}
               </Button>
               {catalog && (
                 <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => clearCatalog()} disabled={catalogLoading}>
-                  Clear
+                  {t('shared.clear')}
                 </Button>
               )}
               {onDialogBrowserOpen && catalog && (
                 <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => { onDialogBrowserOpen(); setCatalogDialogOpen(false) }}>
                   <MessageSquare className="h-3 w-3" />
-                  Browse Dialogs
+                  {t('layout.toolbar.browseDialogs')}
                 </Button>
               )}
             </div>
@@ -1448,7 +1450,7 @@ export default function Toolbar({
       <Dialog open={!!updateMessage} onOpenChange={(o) => !o && setUpdateMessage(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Check for updates</DialogTitle>
+            <DialogTitle>{t('layout.toolbar.checkForUpdates')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">{updateMessage}</p>
         </DialogContent>

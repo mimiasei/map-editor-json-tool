@@ -1,6 +1,8 @@
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useTranslation, Trans } from 'react-i18next'
 
 export default function MapMetaForm() {
+  const { t } = useTranslation()
   const { mapName } = useScenarioStore()
 
   const sidPrefix = mapName
@@ -11,17 +13,16 @@ export default function MapMetaForm() {
   return (
     <div className="p-4 space-y-4 text-sm text-muted-foreground">
       <p>
-        Select an item in the sidebar to edit it.
+        {t('layout.mapMetaForm.selectAnItemInThe')}
       </p>
       {sidPrefix ? (
         <p>
-          Suggested SID prefix:{' '}
+          {t('layout.mapMetaForm.suggestedSidPrefix')}{' '}
           <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">{sidPrefix}_</code>
         </p>
       ) : (
         <p className="border border-border rounded p-2 bg-muted/30 text-xs">
-          Enter a <strong>Map Name</strong> in the sidebar to get a suggested SID prefix and
-          enable ZIP export.
+          <Trans i18nKey="layout.mapMetaForm.enterMapName" components={{ b: <strong /> }} />
         </p>
       )}
     </div>

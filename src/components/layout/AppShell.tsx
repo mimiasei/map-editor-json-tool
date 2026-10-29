@@ -52,16 +52,18 @@ import ObjectRenderProgressBar from '@/components/layout/ObjectRenderProgressBar
 import { loadRenderIndex } from '@/lib/object-render/render-index'
 import { refreshPendingCounts } from '@/lib/object-render/render-job'
 import { SquareArrowOutUpRight } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 const SETUP_SHOWN_KEY = 'oe-setup-shown'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
 
 function UndockedPlaceholder({ label }: { label: string }) {
+  const { t } = useTranslation()
   return (
     <div className="flex h-full items-center justify-center text-sm text-muted-foreground gap-2">
       <SquareArrowOutUpRight className="h-4 w-4 opacity-40" />
-      {label} is open in a separate window
+      {t('layout.appShell.undockedPlaceholder', { label })}
     </div>
   )
 }
@@ -92,6 +94,7 @@ function buildPanelState(): PanelState {
 // ─── AppShell ─────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
+  const { t } = useTranslation()
   const {
     scenario,
     isDirty,
@@ -435,14 +438,14 @@ export default function AppShell() {
   const handleNew = useCallback(async () => {
     if (isDirtyRef.current || useMapDocumentStore.getState().mapIsDirty) {
       const ok = await confirmDialog(
-        'You have unsaved changes. Start a new scenario anyway?',
-        'New Scenario',
+        t('layout.appShell.confirmNew'),
+        t('layout.appShell.confirmNewTitle'),
       )
       if (!ok) return
     }
     resetScenario()
     useMapDocumentStore.getState().clear()
-  }, [resetScenario])
+  }, [resetScenario, t])
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -899,7 +902,7 @@ export default function AppShell() {
         >
           <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[var(--column-right)] dark:bg-card">
             {isUndocked('preview') ? (
-              <UndockedPlaceholder label="JSON Preview" />
+              <UndockedPlaceholder label={t('common.jsonPreview.jSONPreview')} />
             ) : (
               <JsonPreview
                 onUndock={() => handleUndock('preview')}
