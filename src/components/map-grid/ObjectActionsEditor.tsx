@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Plus } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 /** Actions that only exist in the quest file (guide, "Restrictions in usage"): they do nothing on an object or zone. */
 const QUEST_FILE_ONLY = new Set([
@@ -38,6 +39,7 @@ interface Props {
 const EMPTY: ObjectActions = { repeat: false, sides: '', actions: [] }
 
 export default function ObjectActionsEditor({ title, hint, value, playersCount, onApply }: Props) {
+  const { t } = useTranslation()
   const counters = useScenarioStore((s) => s.scenario.counters)
   const customHeroes = useScenarioStore((s) => s.customHeroes)
   const requestPick = useViewBridgeStore((s) => s.requestPick)
@@ -118,29 +120,29 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
         onClick={() => setDraft({ ...draft, actions: [...draft.actions, { a: 'CounterSet', p: ['', ''] }] })}
       >
         <Plus className="h-3 w-3" />
-        Add action
+        {t('mapGrid.objectActionsEditor.addAction')}
       </Button>
 
       {draft.actions.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Switch id={`oa-repeat-${title}`} checked={draft.repeat} onCheckedChange={(repeat) => setDraft({ ...draft, repeat })} />
-            <Label htmlFor={`oa-repeat-${title}`} className="text-xs">Repeat</Label>
+            <Label htmlFor={`oa-repeat-${title}`} className="text-xs">{t('mapGrid.objectActionsEditor.repeat')}</Label>
           </div>
           <p className="text-xs text-muted-foreground">
-            Off: the actions run only the first time. On: every time a hero interacts (zones: every time one enters from outside).
+            {t('mapGrid.objectActionsEditor.offTheActionsRunOnly')}
           </p>
           <div className="flex items-center gap-2">
-            <Label className="text-xs">For player</Label>
+            <Label className="text-xs">{t('mapGrid.objectActionsEditor.forPlayer')}</Label>
             <Select value={draft.sides === '' ? 'any' : draft.sides} onValueChange={(v) => setDraft({ ...draft, sides: v === 'any' ? '' : v })}>
               <SelectTrigger className="h-7 w-32 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Any player</SelectItem>
+                <SelectItem value="any">{t('mapGrid.objectActionsEditor.anyPlayer')}</SelectItem>
                 {sidesOptions.map((s) => (
                   <SelectItem key={s} value={s}>
-                    Player {Number(s) + 1}
+                    {t('shared.player2', { owner: Number(s) + 1 })}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -149,9 +151,9 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
         </div>
       )}
 
-      {incomplete && <p className="text-xs text-amber-600">Fill in every required field of every action before applying.</p>}
+      {incomplete && <p className="text-xs text-amber-600">{t('mapGrid.objectActionsEditor.fillInEveryRequiredField')}</p>}
       {unknownCounter && (
-        <p className="text-xs text-amber-600">A counter used here is not in the quest file's counters; the game cannot use an unknown counter.</p>
+        <p className="text-xs text-amber-600">{t('mapGrid.objectActionsEditor.aCounterUsedHereIs')}</p>
       )}
 
       {dirty && (
@@ -162,10 +164,10 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
             disabled={incomplete}
             onClick={() => onApply(draft.actions.length === 0 ? null : { ...draft, actions: withSpawnItems(draft.actions.map((a) => ({ a: a.a, p: (cleanAction(a).p ?? []).map(String), comment: a.comment })), customHeroes) })}
           >
-            Apply
+            {t('mapGrid.objectActionsEditor.apply')}
           </Button>
           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setDraft(saved)}>
-            Revert
+            {t('mapGrid.objectActionsEditor.revert')}
           </Button>
         </div>
       )}

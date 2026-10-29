@@ -24,6 +24,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
 import { Settings, ChevronDown } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */
@@ -184,6 +185,7 @@ interface Props {
 export default function MapGridSettingsDialog({
   settings, onChange, hasBackgroundImage, onLoadBackgroundImage, onRemoveBackgroundImage,
 }: Props) {
+  const { t } = useTranslation()
   const update = (patch: Partial<MapGridSettings>) => onChange({ ...settings, ...patch })
   // Not persisted — purely a "did the user open this section" UI state,
   // same as every other popover's own open/closed state.
@@ -201,9 +203,9 @@ export default function MapGridSettingsDialog({
   }
   const updateCustom = (patch: Partial<DrawQuality>) => update({ drawQuality: 'custom', drawQualityCustom: { ...quality, ...patch } })
   const layerRows: { key: 'terrain' | 'cliffs' | 'lines'; label: string }[] = [
-    { key: 'terrain', label: 'Terrain textures' },
-    { key: 'cliffs', label: 'Cliff edges' },
-    { key: 'lines', label: 'Roads and rivers' },
+    { key: 'terrain', label: t('mapGrid.mapGridSettingsDialog.layers.terrain') },
+    { key: 'cliffs', label: t('mapGrid.mapGridSettingsDialog.layers.cliffs') },
+    { key: 'lines', label: t('mapGrid.mapGridSettingsDialog.layers.lines') },
   ]
 
   const updateRange = (label: string, patch: Partial<Pick<DifficultyRange, 'min' | 'max'>>) => {
@@ -221,7 +223,7 @@ export default function MapGridSettingsDialog({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" title="Map Grid settings">
+        <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.mapGridSettingsDialog.mapGridSettings')}>
           <Settings className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
@@ -232,7 +234,7 @@ export default function MapGridSettingsDialog({
       >
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="grid-terrain-texture" className="text-xs cursor-pointer">Terrain texture</Label>
+            <Label htmlFor="grid-terrain-texture" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.terrainTexture')}</Label>
             <Switch
               id="grid-terrain-texture"
               checked={settings.terrainTextureEnabled}
@@ -241,14 +243,14 @@ export default function MapGridSettingsDialog({
             />
           </div>
           {!biomeTexturesAvailable() && (
-            <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
+            <p className="text-[10px] text-muted-foreground">{t('mapGrid.mapGridSettingsDialog.extractTheGameImagesDesktop')}</p>
           )}
         </div>
 
         {!(settings.terrainTextureEnabled && biomeTexturesAvailable()) && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Terrain opacity</Label>
+              <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.terrainOpacity')}</Label>
               <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
             </div>
             <Slider
@@ -262,7 +264,7 @@ export default function MapGridSettingsDialog({
         {/* Only drawn on the ground textures, so it has nothing to do while they are off. */}
         {settings.terrainTextureEnabled && biomeTexturesAvailable() && (
           <div className="flex items-center justify-between">
-            <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
+            <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.fadeBetweenBiomes')}</Label>
             <Switch
               id="grid-biome-fade"
               checked={settings.biomeEdgeFade}
@@ -273,18 +275,18 @@ export default function MapGridSettingsDialog({
 
         <div className="space-y-0.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="grid-fast-zoom" className="text-xs cursor-pointer">Fast zoom</Label>
+            <Label htmlFor="grid-fast-zoom" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.fastZoom')}</Label>
             <Switch
               id="grid-fast-zoom"
               checked={settings.fastZoom}
               onCheckedChange={(v) => update({ fastZoom: v })}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground">Hides GPU heavy layers while zooming.</p>
+          <p className="text-[10px] text-muted-foreground">{t('mapGrid.mapGridSettingsDialog.hidesGPUHeavyLayersWhile')}</p>
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-icon-images" className="text-xs cursor-pointer">Icon images</Label>
+          <Label htmlFor="grid-icon-images" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.iconImages')}</Label>
           <Switch
             id="grid-icon-images"
             checked={settings.iconImagesEnabled}
@@ -293,7 +295,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-rotation-numbers" className="text-xs cursor-pointer">Rotation numbers</Label>
+          <Label htmlFor="grid-rotation-numbers" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.rotationNumbers')}</Label>
           <Switch
             id="grid-rotation-numbers"
             checked={settings.rotationNumberEnabled}
@@ -303,14 +305,14 @@ export default function MapGridSettingsDialog({
 
         <div className="space-y-2 rounded-md border border-border p-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Drawing quality</Label>
+            <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.drawingQuality')}</Label>
             <div className="flex items-center gap-1">
               {settings.drawQuality === 'custom' && (
                 <button
                   type="button"
                   className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  title={customQualityOpen ? 'Hide the custom sliders' : 'Show the custom sliders'}
-                  aria-label={customQualityOpen ? 'Hide the custom sliders' : 'Show the custom sliders'}
+                  title={customQualityOpen ? t('mapGrid.mapGridSettingsDialog.hideTheCustomSliders') : t('mapGrid.mapGridSettingsDialog.showTheCustomSliders')}
+                  aria-label={customQualityOpen ? t('mapGrid.mapGridSettingsDialog.hideTheCustomSliders') : t('mapGrid.mapGridSettingsDialog.showTheCustomSliders')}
                   aria-expanded={customQualityOpen}
                   onClick={() => setCustomQualityOpen((v) => !v)}
                 >
@@ -322,11 +324,11 @@ export default function MapGridSettingsDialog({
                 value={settings.drawQuality}
                 onChange={(e) => setQualityChoice(e.target.value as DrawQualityChoice)}
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="ultra">Ultra</option>
-                <option value="custom">Custom</option>
+                <option value="low">{t('mapGrid.mapGridSettingsDialog.low')}</option>
+                <option value="medium">{t('mapGrid.mapGridSettingsDialog.medium')}</option>
+                <option value="high">{t('mapGrid.mapGridSettingsDialog.high')}</option>
+                <option value="ultra">{t('mapGrid.mapGridSettingsDialog.ultra')}</option>
+                <option value="custom">{t('mapGrid.mapGridSettingsDialog.custom')}</option>
               </select>
             </div>
           </div>
@@ -340,7 +342,7 @@ export default function MapGridSettingsDialog({
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">{label}</Label>
                     <span className="text-xs text-muted-foreground">
-                      {quality[key].pxPerTile} px/tile{mapSize ? ` (now ${layerPxPerTile(quality[key], mapSize.x, mapSize.z)})` : ''}
+                      {mapSize ? t('mapGrid.mapGridSettingsDialog.pxPerTileNow', { px: quality[key].pxPerTile, now: layerPxPerTile(quality[key], mapSize.x, mapSize.z) }) : t('mapGrid.mapGridSettingsDialog.pxPerTile', { px: quality[key].pxPerTile })}
                     </span>
                   </div>
                   <Slider
@@ -349,8 +351,8 @@ export default function MapGridSettingsDialog({
                     onValueChange={([v]) => updateCustom({ [key]: { ...quality[key], pxPerTile: v } as CanvasLayerQuality })}
                   />
                   <div className="flex items-center justify-between">
-                    <Label className="text-[11px] text-muted-foreground">Largest canvas side</Label>
-                    <span className="text-[11px] text-muted-foreground">{quality[key].maxSide} px</span>
+                    <Label className="text-[11px] text-muted-foreground">{t('mapGrid.mapGridSettingsDialog.largestCanvasSide')}</Label>
+                    <span className="text-[11px] text-muted-foreground">{t('mapGrid.mapGridSettingsDialog.px', { n: quality[key].maxSide })}</span>
                   </div>
                   <Slider
                     min={DRAW_QUALITY_LIMITS.maxSide.min} max={DRAW_QUALITY_LIMITS.maxSide.max} step={512}
@@ -361,8 +363,8 @@ export default function MapGridSettingsDialog({
               ))}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Object icons from</Label>
-                  <span className="text-xs text-muted-foreground">{quality.objects.iconFromPx} px per tile on screen</span>
+                  <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.objectIconsFrom')}</Label>
+                  <span className="text-xs text-muted-foreground">{t('mapGrid.mapGridSettingsDialog.pxPerTileOnScreen', { iconFromPx: quality.objects.iconFromPx })}</span>
                 </div>
                 <Slider
                   min={DRAW_QUALITY_LIMITS.iconFromPx.min} max={DRAW_QUALITY_LIMITS.iconFromPx.max} step={2}
@@ -375,7 +377,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-object-count" className="text-xs cursor-pointer">Object count per tile</Label>
+          <Label htmlFor="grid-object-count" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.objectCountPerTile')}</Label>
           <Switch
             id="grid-object-count"
             checked={settings.objectCountEnabled}
@@ -384,7 +386,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-lines" className="text-xs cursor-pointer">Grid lines</Label>
+          <Label htmlFor="grid-show-lines" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.gridLines')}</Label>
           <Switch
             id="grid-show-lines"
             checked={settings.showGridLines}
@@ -393,7 +395,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-numbers" className="text-xs cursor-pointer">Grid numbers</Label>
+          <Label htmlFor="grid-show-numbers" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.gridNumbers')}</Label>
           <Switch
               id="grid-show-numbers"
               checked={settings.showGridNumbers}
@@ -402,7 +404,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-hover" className="text-xs cursor-pointer">Grid hover border</Label>
+          <Label htmlFor="grid-show-hover" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.gridHoverBorder')}</Label>
           <Switch
               id="grid-show-hover"
               checked={settings.showGridHover}
@@ -411,7 +413,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">Elevation shading</Label>
+          <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.elevationShading')}</Label>
           <Switch
               id="grid-show-elevation"
               checked={settings.showElevationShading}
@@ -420,7 +422,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges</Label>
+          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.cliffEdges')}</Label>
           <Switch
               id="grid-show-cliffs"
               checked={settings.showCliffs}
@@ -429,7 +431,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-player-areas" className="text-xs cursor-pointer">Player Areas fill</Label>
+          <Label htmlFor="grid-show-player-areas" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.playerAreasFill')}</Label>
           <Switch
               id="grid-show-player-areas"
               checked={settings.showPlayerAreas}
@@ -438,7 +440,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-line-feature-textures" className="text-xs cursor-pointer">Textured roads and rivers</Label>
+          <Label htmlFor="grid-line-feature-textures" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.texturedRoadsAndRivers')}</Label>
           <Switch
               id="grid-line-feature-textures"
               checked={settings.lineFeatureTextures}
@@ -447,7 +449,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-water-surface" className="text-xs cursor-pointer">Water ripples and surface</Label>
+          <Label htmlFor="grid-water-surface" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.waterRipplesAndSurface')}</Label>
           <Switch
               id="grid-water-surface"
               checked={settings.waterSurface}
@@ -457,7 +459,7 @@ export default function MapGridSettingsDialog({
 
         {!settings.lineFeatureTextures && (
           <div className="flex items-center justify-between">
-            <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">Road/river edge shading</Label>
+            <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.roadRiverEdgeShading')}</Label>
             <Switch
                 id="grid-line-feature-shading"
                 checked={settings.lineFeatureShading}
@@ -468,9 +470,9 @@ export default function MapGridSettingsDialog({
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Cell border thickness</Label>
+            <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.cellBorderThickness')}</Label>
             <span className="text-xs text-muted-foreground">
-              {settings.cellBorderThickness === 0 ? 'Off' : `${settings.cellBorderThickness}px`}
+              {settings.cellBorderThickness === 0 ? t('mapGrid.mapGridSettingsDialog.off') : `${settings.cellBorderThickness}px`}
             </span>
           </div>
           <Slider
@@ -481,7 +483,7 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-confirm-delete" className="text-xs cursor-pointer">Confirm before deleting</Label>
+          <Label htmlFor="grid-confirm-delete" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.confirmBeforeDeleting')}</Label>
           <Switch
             id="grid-confirm-delete"
             checked={settings.confirmBeforeDelete}
@@ -491,21 +493,21 @@ export default function MapGridSettingsDialog({
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Background image</Label>
+            <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.backgroundImage')}</Label>
             <Button
               variant="outline"
               size="sm"
               className="h-6 text-xs px-2"
               onClick={hasBackgroundImage ? onRemoveBackgroundImage : onLoadBackgroundImage}
             >
-              {hasBackgroundImage ? 'Remove' : 'Load…'}
+              {hasBackgroundImage ? t('mapGrid.mapGridSettingsDialog.remove') : t('mapGrid.mapGridSettingsDialog.load')}
             </Button>
           </div>
 
           {hasBackgroundImage && (
             <>
               <div className="flex items-center justify-between">
-                <Label htmlFor="grid-bg-image-visible" className="text-xs cursor-pointer">Show background image</Label>
+                <Label htmlFor="grid-bg-image-visible" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.showBackgroundImage')}</Label>
                 <Switch
                   id="grid-bg-image-visible"
                   checked={settings.backgroundImageVisible}
@@ -515,7 +517,7 @@ export default function MapGridSettingsDialog({
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Background image opacity</Label>
+                  <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.backgroundImageOpacity')}</Label>
                   <span className="text-xs text-muted-foreground">{Math.round(settings.backgroundImageOpacity * 100)}%</span>
                 </div>
                 <Slider
@@ -535,14 +537,14 @@ export default function MapGridSettingsDialog({
             className="w-full h-7 text-xs justify-between mt-3"
             onClick={() => setAdvancedOpen((v) => !v)}
           >
-            Advanced
+            {t('common.generateRandomMapDialog.advanced')}
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
           </Button>
 
           {advancedOpen && (
             <div className="space-y-4 pt-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="grid-bucket-objects-boundary" className="text-xs cursor-pointer">Terrain bucket-fill stops at objects</Label>
+                <Label htmlFor="grid-bucket-objects-boundary" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.terrainBucketFillStopsAt')}</Label>
                 <Switch
                     id="grid-bucket-objects-boundary"
                     checked={settings.bucketFillObjectsAsBoundary}
@@ -552,10 +554,10 @@ export default function MapGridSettingsDialog({
 
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Encounter — Random weights
+                  {t('mapGrid.mapGridSettingsDialog.encounterRandomWeights')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  How often the Encounter tool's Random difficulty picks each bucket. Shown as a share of the total — doesn't need to add up to 100.
+                  {t('mapGrid.mapGridSettingsDialog.howOftenTheEncounterTools')}
                 </p>
                 {settings.squadRandomWeights.map((w) => (
                   <div key={w.label} className="flex items-center gap-2">
@@ -576,10 +578,10 @@ export default function MapGridSettingsDialog({
 
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Encounter — value ranges
+                  {t('mapGrid.mapGridSettingsDialog.encounterValueRanges')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  Total army value rolled for each difficulty (Random included — used by the Browse-mode Value field's own quick-pick button).
+                  {t('mapGrid.mapGridSettingsDialog.totalArmyValueRolledFor')}
                 </p>
                 {settings.squadDifficultyRanges.map((r) => (
                   <div key={r.label} className="flex items-center gap-2">
@@ -588,7 +590,7 @@ export default function MapGridSettingsDialog({
                       type="number"
                       min={0}
                       value={r.min}
-                      title="Min"
+                      title={t('mapGrid.mapGridSettingsDialog.min')}
                       onChange={(e) => updateRange(r.label, { min: Math.max(0, Number(e.target.value) || 0) })}
                       className="h-7 text-xs w-20"
                     />
@@ -597,7 +599,7 @@ export default function MapGridSettingsDialog({
                       type="number"
                       min={0}
                       value={r.max}
-                      title="Max"
+                      title={t('mapGrid.mapGridSettingsDialog.max')}
                       onChange={(e) => updateRange(r.label, { max: Math.max(0, Number(e.target.value) || 0) })}
                       className="h-7 text-xs w-20"
                     />
@@ -611,7 +613,7 @@ export default function MapGridSettingsDialog({
                 className="w-full h-6 text-xs"
                 onClick={() => update({ squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES, squadRandomWeights: DEFAULT_SQUAD_RANDOM_WEIGHTS })}
               >
-                Reset to defaults
+                {t('mapGrid.mapGridSettingsDialog.resetToDefaults')}
               </Button>
             </div>
           )}

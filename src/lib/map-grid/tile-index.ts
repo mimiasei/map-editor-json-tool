@@ -23,16 +23,6 @@ export const GRID_GROUP_ORDER: GridGroup[] = [
   'units', 'artifacts', 'spawners', 'interactables', 'resources', 'decorations', 'zones',
 ]
 
-export const GRID_GROUP_LABELS: Record<GridGroup, string> = {
-  units: 'Units',
-  artifacts: 'Artifact pickups',
-  spawners: 'Spawners',
-  interactables: 'Interactables',
-  resources: 'Resource piles',
-  decorations: 'Decorations',
-  zones: 'Zones',
-}
-
 const CATEGORY_TO_GROUP: Record<CatalogMapObject['category'], GridGroup> = {
   artifacts: 'artifacts',
   spawns: 'spawners',

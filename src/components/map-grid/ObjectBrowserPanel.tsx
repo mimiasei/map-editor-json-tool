@@ -49,6 +49,7 @@ import {
 } from '@/lib/map-grid/interactable-subcategories'
 import { computeFootprintTiles, footprintIconBounds } from '@/lib/map-grid/footprint'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
+import { useTranslation } from 'react-i18next'
 
 // The 6 object-type filters requested — a different grouping from the
 // placed-object GridGroup system (tile-index.ts): this browses catalog
@@ -60,16 +61,6 @@ import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catal
 // Test/blocks have no dedicated button — they still show up whenever no
 // type filter is active.
 type TypeFilterKey = 'environments' | 'interactables' | 'animals' | 'fxs' | 'spawns' | 'resources' | 'artifacts'
-
-const TYPE_FILTER_LABELS: Record<TypeFilterKey, string> = {
-  environments: 'Decorations',
-  interactables: 'Interactables',
-  animals: 'Animals',
-  fxs: 'F/X',
-  spawns: 'Spawners',
-  resources: 'Resources',
-  artifacts: 'Artifacts',
-}
 
 // Decorations/Interactables get the split-button (pill + chevron dropdown);
 // these four have no sub-category breakdown of their own, so they stay
@@ -98,7 +89,6 @@ const NEUTRAL_FRACTION_ID = 'neutral'
 // Footprint size buckets for the Size filter; anything else (non-square, 4x4 and up) is "other".
 const SIZE_ORDER = ['1x1', '2x2', '3x3', 'other'] as const
 type SizeKey = (typeof SIZE_ORDER)[number]
-const SIZE_LABELS: Record<SizeKey, string> = { '1x1': '1x1', '2x2': '2x2', '3x3': '3x3', other: 'Other' }
 
 /** Visual footprint ("1" cells only, as the grid draws it) as "WxH"; objects with no footprint count as 1x1. */
 function objectSizeLabel(o: CatalogMapObject): string {
@@ -290,6 +280,7 @@ function HoverZoomIcon({ sid, iconId, name, size = 24 }: { sid?: string; iconId?
 }
 
 export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placingCreatureId, onPickCreature, onClose }: Props) {
+  const { t } = useTranslation()
   const initialFilter = useMemo(loadStoredFilter, [])
   const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(() => new Set(initialFilter.types))
   const [plainTypeFilter, setPlainTypeFilter] = useState<TypeFilterKey | null>(initialFilter.plainType)
@@ -513,24 +504,24 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
             onClick={() => setModeAndPersist('objects')}
             className={`h-5 px-2 text-xs rounded-sm transition-colors ${mode === 'objects' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Objects
+            {t('shared.objects')}
           </button>
           <button
             onClick={() => setModeAndPersist('creatures')}
             className={`h-5 px-2 text-xs rounded-sm transition-colors ${mode === 'creatures' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Units
+            {t('mapGrid.objectBrowserPanel.units')}
           </button>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="Reset all filters" onClick={resetAllFilters}>
+          <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.objectBrowserPanel.resetAllFilters')} onClick={resetAllFilters}>
             <FilterReset className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant={showCustom ? 'secondary' : 'ghost'}
             size="icon"
             className="h-6 w-6"
-            title={showCustom ? 'Custom objects (custom_...) included: click to hide' : 'Include custom objects (custom_...)'}
+            title={showCustom ? t('mapGrid.objectBrowserPanel.customObjectsCustomIncludedClick') : t('mapGrid.objectBrowserPanel.includeCustomObjectsCustom')}
             aria-pressed={showCustom}
             onClick={() => setShowCustomAndPersist(!showCustom)}
           >
@@ -538,14 +529,14 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
           </Button>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6" title="Browser settings">
+              <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.objectBrowserPanel.browserSettings')}>
                 <Settings className="h-3.5 w-3.5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 space-y-3" data-nodrag>
               <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="obj-browser-show-campaign" className="text-xs cursor-pointer">
-                  Show campaign objects
+                  {t('mapGrid.objectBrowserPanel.showCampaignObjects')}
                 </Label>
                 <Switch
                   id="obj-browser-show-campaign"
@@ -555,7 +546,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               </div>
               <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="obj-browser-show-custom" className="text-xs cursor-pointer">
-                    Show objects without placeable template
+                    {t('mapGrid.objectBrowserPanel.showObjectsWithoutPlaceableTemplate')}
                 </Label>
                 <Switch
                     id="obj-browser-show-custom"
@@ -565,7 +556,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="ghost" size="icon" className="h-6 w-6" title="Close" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="h-6 w-6" title={t('ui.close')} onClick={onClose}>
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -579,7 +570,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 <Popover>
                   <PopoverTrigger asChild>
                     <button className={pillClass(BIOME_ORDER.some((b) => !biomeFilter[b]), 'px-2 rounded flex items-center gap-0.5')}>
-                      Biomes
+                      {t('mapGrid.objectBrowserPanel.biomes')}
                       <ChevronDown className="h-3 w-3" />
                     </button>
                   </PopoverTrigger>
@@ -590,7 +581,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                         checked={BIOME_ORDER.every((b) => biomeFilter[b])}
                         onCheckedChange={(v) => setAllBiomes(Boolean(v))}
                       />
-                      <Label htmlFor="obj-browser-biome-all" className="text-xs cursor-pointer font-medium">All</Label>
+                      <Label htmlFor="obj-browser-biome-all" className="text-xs cursor-pointer font-medium">{t('shared.all')}</Label>
                     </div>
                     <div className="border-t border-border pt-2 space-y-2">
                       {BIOME_ORDER.map((b) => (
@@ -610,7 +601,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 <Popover>
                   <PopoverTrigger asChild>
                     <button className={pillClass(SIZE_ORDER.some((k) => !sizeFilter[k]), 'px-2 rounded flex items-center gap-0.5')}>
-                      Size
+                      {t('shared.size')}
                       <ChevronDown className="h-3 w-3" />
                     </button>
                   </PopoverTrigger>
@@ -621,7 +612,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                         checked={SIZE_ORDER.every((k) => sizeFilter[k])}
                         onCheckedChange={(v) => setAllSizes(Boolean(v))}
                       />
-                      <Label htmlFor="obj-browser-size-all" className="text-xs cursor-pointer font-medium">All</Label>
+                      <Label htmlFor="obj-browser-size-all" className="text-xs cursor-pointer font-medium">{t('shared.all')}</Label>
                     </div>
                     <div className="border-t border-border pt-2 space-y-2">
                       {SIZE_ORDER.map((k) => (
@@ -631,7 +622,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                             checked={sizeFilter[k]}
                             onCheckedChange={() => toggleSize(k)}
                           />
-                          <Label htmlFor={`obj-browser-size-${k}`} className="text-xs cursor-pointer">{SIZE_LABELS[k]}</Label>
+                          <Label htmlFor={`obj-browser-size-${k}`} className="text-xs cursor-pointer">{k === 'other' ? t('mapGrid.objectBrowserPanel.sizeOther') : k}</Label>
                         </div>
                       ))}
                     </div>
@@ -643,26 +634,26 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     onClick={() => toggleType('environments')}
                     className={pillClass(typeFilter.has('environments'), 'px-2 rounded-l rounded-r-none border-r-0')}
                   >
-                    {TYPE_FILTER_LABELS.environments}
+                    {t('mapGrid.objectBrowserPanel.typeFilters.environments')}
                   </button>
                   <Popover>
                     <PopoverTrigger asChild>
                       <button
                         className={pillClass(typeFilter.has('environments'), 'w-5 rounded-r flex items-center justify-center')}
-                        title="Decorations sub-categories"
+                        title={t('shared.decorationsSubCategories')}
                       >
                         <ChevronDown className="h-3 w-3" />
                       </button>
                     </PopoverTrigger>
                     <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sub-categories</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('shared.subCategories')}</p>
                       <div className="flex items-center gap-2">
                         <Checkbox
                           id="obj-browser-decoration-subcat-all"
                           checked={PANEL_DECORATION_SUBCATEGORY_ORDER.every((c) => decorationSubFilter[c])}
                           onCheckedChange={(v) => setAllDecorationSub(Boolean(v))}
                         />
-                        <Label htmlFor="obj-browser-decoration-subcat-all" className="text-xs cursor-pointer font-medium">All</Label>
+                        <Label htmlFor="obj-browser-decoration-subcat-all" className="text-xs cursor-pointer font-medium">{t('shared.all')}</Label>
                       </div>
                       <div className="border-t border-border pt-2 space-y-2">
                         {PANEL_DECORATION_SUBCATEGORY_ORDER.map((c) => (
@@ -687,26 +678,26 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     onClick={() => toggleType('interactables')}
                     className={pillClass(typeFilter.has('interactables'), 'px-2 rounded-l rounded-r-none border-r-0')}
                   >
-                    {TYPE_FILTER_LABELS.interactables}
+                    {t('mapGrid.objectBrowserPanel.typeFilters.interactables')}
                   </button>
                   <Popover>
                     <PopoverTrigger asChild>
                       <button
                         className={pillClass(typeFilter.has('interactables'), 'w-5 rounded-r flex items-center justify-center')}
-                        title="Interactables sub-categories"
+                        title={t('shared.interactablesSubCategories')}
                       >
                         <ChevronDown className="h-3 w-3" />
                       </button>
                     </PopoverTrigger>
                     <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sub-categories</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('shared.subCategories')}</p>
                       <div className="flex items-center gap-2">
                         <Checkbox
                           id="obj-browser-interactable-subcat-all"
                           checked={INTERACTABLE_SUBCATEGORY_ORDER.every((c) => interactableSubFilter[c])}
                           onCheckedChange={(v) => setAllInteractableSub(Boolean(v))}
                         />
-                        <Label htmlFor="obj-browser-interactable-subcat-all" className="text-xs cursor-pointer font-medium">All</Label>
+                        <Label htmlFor="obj-browser-interactable-subcat-all" className="text-xs cursor-pointer font-medium">{t('shared.all')}</Label>
                       </div>
                       <div className="border-t border-border pt-2 space-y-2">
                         {INTERACTABLE_SUBCATEGORY_ORDER.map((c) => (
@@ -734,13 +725,13 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                   </FilterPill>
                 )).concat(
                   <FilterPill key={NEUTRAL_FRACTION_ID} active={fractionFilter.has(NEUTRAL_FRACTION_ID)} onClick={() => toggleFraction(NEUTRAL_FRACTION_ID)}>
-                    Neutral
+                    {t('common.templateDetailsDialog.neutral')}
                   </FilterPill>,
                 )}
                 <Popover>
                   <PopoverTrigger asChild>
                     <button className={pillClass(TIER_ORDER.some((t) => !tierFilter[t]), 'px-2 rounded flex items-center gap-0.5')}>
-                      Tier
+                      {t('common.spellBanDialog.tier')}
                       <ChevronDown className="h-3 w-3" />
                     </button>
                   </PopoverTrigger>
@@ -751,17 +742,17 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                         checked={TIER_ORDER.every((t) => tierFilter[t])}
                         onCheckedChange={(v) => setAllTiers(Boolean(v))}
                       />
-                      <Label htmlFor="obj-browser-tier-all" className="text-xs cursor-pointer font-medium">All</Label>
+                      <Label htmlFor="obj-browser-tier-all" className="text-xs cursor-pointer font-medium">{t('shared.all')}</Label>
                     </div>
                     <div className="border-t border-border pt-2 space-y-2">
-                      {TIER_ORDER.map((t) => (
-                        <div key={t} className="flex items-center gap-2">
+                      {TIER_ORDER.map((tier) => (
+                        <div key={tier} className="flex items-center gap-2">
                           <Checkbox
-                            id={`obj-browser-tier-${t}`}
-                            checked={tierFilter[t]}
-                            onCheckedChange={() => toggleTier(t)}
+                            id={`obj-browser-tier-${tier}`}
+                            checked={tierFilter[tier]}
+                            onCheckedChange={() => toggleTier(tier)}
                           />
-                          <Label htmlFor={`obj-browser-tier-${t}`} className="text-xs cursor-pointer">Tier {t}</Label>
+                          <Label htmlFor={`obj-browser-tier-${tier}`} className="text-xs cursor-pointer">{t('mapGrid.objectBrowserPanel.tier', { tier })}</Label>
                         </div>
                       ))}
                     </div>
@@ -776,7 +767,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 variant={query ? 'secondary' : 'ghost'}
                 size="icon"
                 className="h-6 w-6 shrink-0"
-                title="Search by sid or name"
+                title={t('mapGrid.objectBrowserPanel.searchBySidOrName')}
               >
                 <Search className="h-3.5 w-3.5" />
               </Button>
@@ -786,7 +777,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search sid / name"
+                placeholder={t('mapGrid.objectBrowserPanel.searchSidName')}
                 className="h-7 text-xs"
               />
             </PopoverContent>
@@ -794,9 +785,9 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
         </div>
         {mode === 'objects' && (
           <div className="flex flex-wrap gap-1">
-            {PLAIN_TYPE_FILTER_ORDER.map((t) => (
-              <FilterPill key={t} active={plainTypeFilter === t} onClick={() => togglePlainType(t)}>
-                {TYPE_FILTER_LABELS[t]}
+            {PLAIN_TYPE_FILTER_ORDER.map((filterKey) => (
+              <FilterPill key={filterKey} active={plainTypeFilter === filterKey} onClick={() => togglePlainType(filterKey)}>
+                {t(`mapGrid.objectBrowserPanel.typeFilters.${filterKey}`)}
               </FilterPill>
             ))}
           </div>
@@ -807,7 +798,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
         {mode === 'objects' ? (
           <>
             {entries.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">No objects match these filters.</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">{t('mapGrid.objectBrowserPanel.noObjectsMatchTheseFilters')}</p>
             )}
             {entries.map((o) => {
               const row = (
@@ -843,7 +834,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
         ) : (
           <>
             {creatureEntries.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">No creatures match these filters.</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">{t('mapGrid.objectBrowserPanel.noCreaturesMatchTheseFilters')}</p>
             )}
             {creatureEntries.map((c) => {
               const placeable = !!templateForCreature(catalog, c)
@@ -878,17 +869,17 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                       />
                     )}
                     <p className="text-xs font-semibold">
-                      {factionDisplayName(catalog, c.fraction)} - Tier {c.tier}
+                      {t('mapGrid.objectBrowserPanel.factionTier', { faction: factionDisplayName(catalog, c.fraction), tier: c.tier })}
                     </p>
                     {c.stats && <CreatureStatsSection stats={c.stats} />}
                     {typeLabel && (
                       <p className="text-xs">
-                        <span className="text-muted-foreground">Type: </span>
+                        <span className="text-muted-foreground">{t('mapGrid.objectBrowserPanel.type')} </span>
                         <span className="font-semibold">{typeLabel}</span>
                       </p>
                     )}
                     {!placeable && (
-                      <p className="text-xs text-amber-500">No placeable template for this creature</p>
+                      <p className="text-xs text-amber-500">{t('mapGrid.objectBrowserPanel.noPlaceableTemplateForThis')}</p>
                     )}
                   </TooltipContent>
                 </Tooltip>
