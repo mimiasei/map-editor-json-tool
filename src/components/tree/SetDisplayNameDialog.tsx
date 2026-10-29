@@ -74,6 +74,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useLocalizedTextField } from '@/hooks/useLocalizedTextField'
 import LocalizedTextField from '@/components/common/LocalizedTextField'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface SetDisplayNameDialogProps {
   open: boolean
@@ -97,6 +98,7 @@ export default function SetDisplayNameDialog({
   mapFilePath,
   existingSids,
 }: SetDisplayNameDialogProps) {
+  const { t } = useTranslation()
   const localization = useScenarioStore((s) => s.localization)
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
   const removeLocalizationToken = useScenarioStore((s) => s.removeLocalizationToken)
@@ -323,8 +325,8 @@ export default function SetDisplayNameDialog({
     }
   }
 
-  const nameLabel = entity.isCitySpawner ? 'City name' : isHero ? 'Hero name' : 'Display name'
-  const dialogTitle = entity.isCitySpawner ? 'Set city name' : isHero ? 'Set hero identity' : 'Set display name'
+  const nameLabel = entity.isCitySpawner ? t('tree.setDisplayNameDialog.cityName') : isHero ? t('tree.setDisplayNameDialog.heroName') : t('tree.setDisplayNameDialog.displayName')
+  const dialogTitle = entity.isCitySpawner ? t('tree.setDisplayNameDialog.titleCity') : isHero ? t('tree.setDisplayNameDialog.titleHero') : t('tree.setDisplayNameDialog.titleEntity')
   const busy = saving || reverting
 
   return (
@@ -346,8 +348,8 @@ export default function SetDisplayNameDialog({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="ml-2">
                 {heroHasNoBase
-                  ? "This spawner has no hero assigned yet — assign one first, then reopen this dialog."
-                  : 'Load the Core.zip catalog (Game Database) to look up and clone this hero\'s base definition.'}
+                  ? t('tree.setDisplayNameDialog.thisSpawnerHasNoHero')
+                  : t('tree.setDisplayNameDialog.loadTheCoreZipCatalog')}
               </AlertDescription>
             </Alert>
           )}
@@ -357,14 +359,11 @@ export default function SetDisplayNameDialog({
               <Alert className="border-amber-600/50 bg-amber-50 dark:bg-amber-950/30">
                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500 shrink-0" />
                 <AlertDescription className="ml-2">
-                  This clones {heroDisplayName(baseHeroSid)}'s hero definition under a new hero SID and
-                  edits only name/description/motto on the clone — mesh, mounts, icon, stats, squad, skills,
-                  and magics stay exactly as {heroDisplayName(baseHeroSid)}'s.
+                  {t('tree.setDisplayNameDialog.cloneNotice', { name: heroDisplayName(baseHeroSid) })}
                 </AlertDescription>
               </Alert>
               <p className="text-xs text-muted-foreground">
-                Based on: <span className="font-medium text-foreground">{heroDisplayName(baseHeroSid)}</span>
-                {existingCustomHero && ' (already customized)'}
+                <Trans i18nKey={existingCustomHero ? 'shared.basedOnCustomized' : 'shared.basedOn'} values={{ name: heroDisplayName(baseHeroSid) }} components={{ v: <span className="font-medium text-foreground" /> }} />
               </p>
             </>
           )}
@@ -378,16 +377,16 @@ export default function SetDisplayNameDialog({
                   onCheckedChange={(c) => handleAutoManageChange(c === true)}
                 />
                 <Label htmlFor="set-display-name-auto-loc" className="cursor-pointer text-sm">
-                  Automatically manage {isHero ? "these SIDs'" : "this SID's"} localization text
+                  {isHero ? t('tree.setDisplayNameDialog.autoManageHero') : t('tree.setDisplayNameDialog.autoManageEntity')}
                 </Label>
               </div>
 
               <LocalizedTextField
                 idPrefix="set-display-name"
-                managedSidLabel="Naming SID"
-                unmanagedLabel={`${nameLabel} (written directly, no localization)`}
-                sidLabelSuffix={<> for <span className="font-mono">{entity.sid}</span></>}
-                textLabel={`${nameLabel} text`}
+                managedSidLabel={t('shared.namingSID')}
+                unmanagedLabel={t('tree.setDisplayNameDialog.unmanagedLabel', { label: nameLabel })}
+                sidLabelSuffix={<Trans i18nKey="tree.setDisplayNameDialog.sidSuffix" values={{ sid: entity.sid }} components={{ sid: <span className="font-mono" /> }} />}
+                textLabel={t('tree.setDisplayNameDialog.textLabel', { label: nameLabel })}
                 sidValue={nameField.sidValue}
                 textValue={nameField.textValue}
                 autoManageLoc={autoManageLoc}
@@ -402,9 +401,9 @@ export default function SetDisplayNameDialog({
                 <>
                   <LocalizedTextField
                     idPrefix="set-display-name-desc"
-                    managedSidLabel="Description SID"
-                    unmanagedLabel="Description (written directly, no localization)"
-                    textLabel="Description text"
+                    managedSidLabel={t('shared.descriptionSID')}
+                    unmanagedLabel={t('tree.setDisplayNameDialog.descriptionWrittenDirectlyNoLocalization')}
+                    textLabel={t('shared.descriptionText')}
                     sidValue={descField.sidValue}
                     textValue={descField.textValue}
                     autoManageLoc={autoManageLoc}
@@ -417,9 +416,9 @@ export default function SetDisplayNameDialog({
 
                   <LocalizedTextField
                     idPrefix="set-display-name-motto"
-                    managedSidLabel="Motto SID"
-                    unmanagedLabel="Motto (written directly, no localization)"
-                    textLabel="Motto text"
+                    managedSidLabel={t('shared.mottoSID')}
+                    unmanagedLabel={t('tree.setDisplayNameDialog.mottoWrittenDirectlyNoLocalization')}
+                    textLabel={t('shared.mottoText')}
                     sidValue={mottoField.sidValue}
                     textValue={mottoField.textValue}
                     autoManageLoc={autoManageLoc}
@@ -442,8 +441,7 @@ export default function SetDisplayNameDialog({
           )}
 
           <p className="text-xs text-muted-foreground">
-            Writes directly to the loaded <code>.map</code> file. A one-time backup
-            is kept at <code>.map.bak</code> next to it.
+            <Trans i18nKey="shared.writesToMap" components={{ code: <code /> }} />
           </p>
         </div>
 
@@ -456,15 +454,15 @@ export default function SetDisplayNameDialog({
               disabled={busy}
             >
               {reverting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-              Revert to {heroDisplayName(existingCustomHero.sourceHeroSid)}
+              {t('tree.setDisplayNameDialog.revertTo', { name: heroDisplayName(existingCustomHero.sourceHeroSid) })}
             </Button>
           )}
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave || busy}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Save to .map
+            {t('shared.saveToMap')}
           </Button>
         </DialogFooter>
       </DialogContent>

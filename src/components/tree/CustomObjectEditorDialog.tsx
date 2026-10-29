@@ -85,6 +85,7 @@ import { mintCustomSid } from '@/lib/zip-export'
 import { isMapObjectIdTaken } from '@/lib/custom-map-object-authoring'
 import EventBankLogicEditor, { isEventBankLogic, collapseToSingleVariant } from './EventBankLogicEditor'
 import NodeGridEditor from './NodeGridEditor'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface CustomObjectEditorDialogProps {
   open: boolean
@@ -244,6 +245,7 @@ export default function CustomObjectEditorDialog({
   editingId,
   existingSids,
 }: CustomObjectEditorDialogProps) {
+  const { t } = useTranslation()
   const localization = useScenarioStore((s) => s.localization)
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
   const removeLocalizationToken = useScenarioStore((s) => s.removeLocalizationToken)
@@ -625,23 +627,20 @@ export default function CustomObjectEditorDialog({
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>{existingDefinition ? 'Edit custom map object' : 'New custom map object'}</DialogTitle>
+          <DialogTitle>{existingDefinition ? t('tree.customObjectEditorDialog.editCustomMapObject') : t('tree.customObjectEditorDialog.newCustomMapObject')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Clones a real map object's definition under a brand-new id so it can carry its own
-            in-game name and description — the same "clone, edit, ship" mechanism the hero editor
-            uses. This app authors and ships the definition only; place the new object type on the
-            map in the official Unfrozen map editor once it recognizes the shipped ZIP.
+            {t('tree.customObjectEditorDialog.clonesARealMapObjects')}
           </p>
 
           {!sourceObjectId && (
             <>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>Mode</Label>
-                  <FieldInfo text="Clone one object: the visual and any native behavior both come from a single existing object, same as before. Build from scratch: pick the visual and native behavior independently — e.g. pick any object purely for its looks, with no native behavior at all, so a Script Template's own scripting is the only thing that happens when a hero interacts with it." />
+                  <Label>{t('shared.mode')}</Label>
+                  <FieldInfo text={t('tree.customObjectEditorDialog.cloneOneObjectTheVisual')} />
                 </div>
                 <div className="flex gap-1.5">
                   <Button
@@ -651,7 +650,7 @@ export default function CustomObjectEditorDialog({
                     className="h-7 text-xs"
                     onClick={() => setMode('clone')}
                   >
-                    Clone one object
+                    {t('tree.customObjectEditorDialog.cloneOneObject')}
                   </Button>
                   <Button
                     type="button"
@@ -665,19 +664,19 @@ export default function CustomObjectEditorDialog({
                       setLogicPickerValue('')
                     }}
                   >
-                    Build from scratch
+                    {t('shared.buildFromScratch')}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>{mode === 'scratch' ? 'Visual' : 'Base object'}</Label>
+                  <Label>{mode === 'scratch' ? t('tree.customObjectEditorDialog.visual') : t('tree.customObjectEditorDialog.baseObject')}</Label>
                   <FieldInfo
                     text={
                       mode === 'scratch'
-                        ? 'The real map object supplying this custom object\'s 3D model and footprint only — its own native behavior (if any) is not included. Pick freely for looks; attach native behavior separately below.'
-                        : 'The real map object whose definition this custom object clones. Everything except id/name/description/narrative description is copied verbatim, including its 3D asset and footprint.'
+                        ? t('tree.customObjectEditorDialog.theRealMapObjectSupplying')
+                        : t('tree.customObjectEditorDialog.theRealMapObjectWhose')
                     }
                   />
                 </div>
@@ -685,7 +684,7 @@ export default function CustomObjectEditorDialog({
                   value={sourcePickerValue}
                   onChange={handlePickSource}
                   category="mapObject"
-                  placeholder={mode === 'scratch' ? 'Search for any object to use its visual…' : 'Search for an object to clone…'}
+                  placeholder={mode === 'scratch' ? t('tree.customObjectEditorDialog.searchForAnyObjectTo') : t('tree.customObjectEditorDialog.searchForAnObjectTo')}
                   groupByCategory
                 />
               </div>
@@ -696,7 +695,7 @@ export default function CustomObjectEditorDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="ml-2">
-                Load the Core.zip catalog (Game Database) to look up and clone this object's base definition.
+                {t('tree.customObjectEditorDialog.loadTheCoreZipCatalog')}
               </AlertDescription>
             </Alert>
           )}
@@ -705,15 +704,13 @@ export default function CustomObjectEditorDialog({
             <>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {mode === 'scratch' ? 'Visual: ' : 'Based on: '}
-                  <span className="font-medium text-foreground">{baseDisplayName}</span>
-                  {existingDefinition && ' (already customized)'}
+                  <Trans i18nKey={mode === 'scratch' ? 'tree.customObjectEditorDialog.visualName' : existingDefinition ? 'shared.basedOnCustomized' : 'shared.basedOn'} values={{ name: baseDisplayName }} components={{ v: <span className="font-medium text-foreground" /> }} />
                 </p>
                 <button
                   type="button"
                   onClick={handleChangeBase}
                   className="shrink-0 rounded border border-transparent p-0.5 hover:border-border hover:bg-accent"
-                  title="Click to change the base object"
+                  title={t('tree.customObjectEditorDialog.clickToChangeTheBase')}
                 >
                   <CatalogIcon iconId={baseCatalogObject?.icon} name={baseDisplayName} size={24} />
                 </button>
@@ -721,11 +718,7 @@ export default function CustomObjectEditorDialog({
 
               {needsInteractionRing && (
                 <p className="text-xs text-muted-foreground">
-                  This visual has no interaction cells of its own — {templateSizeX === 1 && templateSizeZ === 1
-                    ? 'a corner interaction cell will be added so it\'s actually triggerable'
-                    : 'a 1-tile ring will be added around it so it\'s actually triggerable'} (footprint
-                  becomes {debugSizeX}×{debugSizeZ}, was {templateSizeX}×{templateSizeZ}). See "Advanced
-                  (debug)" below to change where the visual sits.
+                  {t(templateSizeX === 1 && templateSizeZ === 1 ? 'tree.customObjectEditorDialog.needsRingCorner' : 'tree.customObjectEditorDialog.needsRingRing', { newX: debugSizeX, newZ: debugSizeZ, oldX: templateSizeX, oldZ: templateSizeZ })}
                 </p>
               )}
 
@@ -736,57 +729,55 @@ export default function CustomObjectEditorDialog({
                     onClick={() => setDebugOpen((o) => !o)}
                     className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
                   >
-                    {debugOpen ? '▾' : '▸'} Advanced (debug): footprint &amp; pivot
+                    {debugOpen ? '▾' : '▸'} {t('tree.customObjectEditorDialog.advancedDebug')}
                   </button>
                   {debugOpen && (
                     <div className="space-y-2 rounded-md border border-border p-2">
                       <p className="text-xs text-muted-foreground">
-                        Directly edits this object's shipped sizeX/sizeZ/nodes/pivot/generatorConfig
-                        — placement anchoring is runtime engine behavior with no documented rule, so
-                        this is for iterating on it directly instead of guessing.
+                        {t('tree.customObjectEditorDialog.directlyEditsThisObjectsShipped')}
                       </p>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-xs">Size X</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.sizeX')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugSizeX} onChange={(e) => setDebugSizeX(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Size Z</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.sizeZ')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugSizeZ} onChange={(e) => setDebugSizeZ(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Pivot X</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.pivotX')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugPivotX} onChange={(e) => setDebugPivotX(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Pivot Z</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.pivotZ')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugPivotZ} onChange={(e) => setDebugPivotZ(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Building size X</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.buildingSizeX')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugBuildingSizeX} onChange={(e) => setDebugBuildingSizeX(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Building size Z</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.buildingSizeZ')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugBuildingSizeZ} onChange={(e) => setDebugBuildingSizeZ(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Building left-bottom X</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.buildingLeftBottomX')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugBuildingLeftBottomX} onChange={(e) => setDebugBuildingLeftBottomX(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Building left-bottom Z</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.buildingLeftBottomZ')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugBuildingLeftBottomZ} onChange={(e) => setDebugBuildingLeftBottomZ(Number(e.target.value) || 0)} />
                         </div>
                         <div className="space-y-1 col-span-2">
-                          <Label className="text-xs">Building interaction layout</Label>
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.buildingInteractionLayout')}</Label>
                           <Input type="number" className="h-7 text-xs" value={debugBuildingInteractionLayout} onChange={(e) => setDebugBuildingInteractionLayout(Number(e.target.value) || 0)} />
                         </div>
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-1">
-                          <Label className="text-xs">Where the visual sits</Label>
-                          <FieldInfo text="Green = interaction cell (a hero can trigger this object by standing here). Dark red = the visual/building itself. Click a cell to move the visual there — every other cell becomes an interaction cell." />
+                          <Label className="text-xs">{t('tree.customObjectEditorDialog.whereTheVisualSits')}</Label>
+                          <FieldInfo text={t('tree.customObjectEditorDialog.greenInteractionCellAHero')} />
                         </div>
                         <NodeGridEditor
                           sizeX={debugSizeX}
@@ -796,7 +787,7 @@ export default function CustomObjectEditorDialog({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Nodes (comma-separated, {debugSizeX * debugSizeZ} expected) — raw fallback for shapes the grid above can't produce</Label>
+                        <Label className="text-xs">{t('tree.customObjectEditorDialog.nodesLabel', { count: debugSizeX * debugSizeZ })}</Label>
                         <Input
                           className="h-7 text-xs font-mono"
                           value={debugNodesText}
@@ -811,8 +802,8 @@ export default function CustomObjectEditorDialog({
               {mode === 'scratch' && (
                 <div className="space-y-1.5 border-t border-border pt-3">
                   <div className="flex items-center gap-1">
-                    <Label>Native behavior</Label>
-                    <FieldInfo text="What happens natively (independent of any Script Template) when a hero interacts with this object. Defaults to none, so a Script Template's own scripting is the only thing that happens — pick an existing object's behavior to attach here only if you actually want native reward/guard/shop logic on top." />
+                    <Label>{t('tree.customObjectEditorDialog.nativeBehavior')}</Label>
+                    <FieldInfo text={t('tree.customObjectEditorDialog.whatHappensNativelyIndependentOf')} />
                   </div>
                   <div className="flex gap-1.5">
                     <Button
@@ -825,7 +816,7 @@ export default function CustomObjectEditorDialog({
                         handleClearLogicSource()
                       }}
                     >
-                      None
+                      {t('common.generateRandomMapDialog.none')}
                     </Button>
                     <Button
                       type="button"
@@ -834,7 +825,7 @@ export default function CustomObjectEditorDialog({
                       className="h-7 text-xs"
                       onClick={() => setNoNativeLogic(false)}
                     >
-                      Attach from another object…
+                      {t('tree.customObjectEditorDialog.attachFromAnotherObject')}
                     </Button>
                   </div>
                   {!noNativeLogic && !logicSourceObjectId && (
@@ -842,7 +833,7 @@ export default function CustomObjectEditorDialog({
                       value={logicPickerValue}
                       onChange={handlePickLogicSource}
                       category="mapObject"
-                      placeholder="Search for an object with behavior to attach…"
+                      placeholder={t('tree.customObjectEditorDialog.searchForAnObjectWith')}
                       restrictToIds={logicBearingIds}
                       groupByCategory
                     />
@@ -851,15 +842,14 @@ export default function CustomObjectEditorDialog({
                     <>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs text-muted-foreground">
-                          Attaching: <span className="font-medium text-foreground">{scratchLogicDisplayName}</span>'s behavior
-                          {scratchLogicSource && ` (${scratchLogicSource.sourcePath})`}
+                          <Trans i18nKey={scratchLogicSource ? 'tree.customObjectEditorDialog.attachingWithPath' : 'tree.customObjectEditorDialog.attaching'} values={{ name: scratchLogicDisplayName, path: scratchLogicSource?.sourcePath }} components={{ v: <span className="font-medium text-foreground" /> }} />
                         </p>
                         <button
                           type="button"
                           onClick={handleClearLogicSource}
                           className="shrink-0 text-xs text-muted-foreground underline hover:text-foreground"
                         >
-                          Change
+                          {t('mapGrid.mapGridDialog.change')}
                         </button>
                       </div>
                       <div className="rounded-md border border-border p-2">
@@ -867,7 +857,7 @@ export default function CustomObjectEditorDialog({
                           <EventBankLogicEditor raw={logicEdits} onChange={setLogicEdits} />
                         ) : (
                           <p className="text-xs text-muted-foreground">
-                            This behavior's settings can't be edited here — shipped as a verbatim clone, same as before.
+                            {t('tree.customObjectEditorDialog.thisBehaviorsSettingsCantBe')}
                           </p>
                         )}
                       </div>
@@ -878,8 +868,8 @@ export default function CustomObjectEditorDialog({
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>Icon</Label>
-                  <FieldInfo text="Real map objects have no icon field of their own — the game always uses the object's 3D model, unaffected by this. This only changes how the custom object displays in this app's own sidebar/pickers, to help tell similar objects apart." />
+                  <Label>{t('shared.icon')}</Label>
+                  <FieldInfo text={t('tree.customObjectEditorDialog.realMapObjectsHaveNo')} />
                 </div>
                 <button
                   type="button"
@@ -887,14 +877,14 @@ export default function CustomObjectEditorDialog({
                   className="flex items-center gap-2 rounded-md border border-border p-2 hover:bg-accent/50"
                 >
                   <CatalogIcon iconId={icon} name={baseDisplayName} size={32} />
-                  <span className="text-xs text-muted-foreground">Click to change…</span>
+                  <span className="text-xs text-muted-foreground">{t('shared.clickToChange')}</span>
                 </button>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="object-editor-id">Id</Label>
-                  <FieldInfo text="The unique id this custom object ships under — also becomes the filename (DB/map/objects/custom_maps/{mapName}_objects.json entry, and DB/objects_logic/{family}/{id}.json if it has behavior logic). Must not match any object id already in the game." />
+                  <Label htmlFor="object-editor-id">{t('shared.id')}</Label>
+                  <FieldInfo text={t('tree.customObjectEditorDialog.theUniqueIdThisCustom')} />
                 </div>
                 <Input
                   id="object-editor-id"
@@ -905,16 +895,16 @@ export default function CustomObjectEditorDialog({
                 {idTaken && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="ml-2">"{trimmedId}" is already used by another object.</AlertDescription>
+                    <AlertDescription className="ml-2">{t('tree.customObjectEditorDialog.isAlreadyUsedByAnother', { trimmedId })}</AlertDescription>
                   </Alert>
                 )}
               </div>
 
               <LocalizedTextField
                 idPrefix="object-editor-name"
-                managedSidLabel="Naming SID"
-                unmanagedLabel="Object name (written directly, no localization)"
-                textLabel="Object name text"
+                managedSidLabel={t('shared.namingSID')}
+                unmanagedLabel={t('tree.customObjectEditorDialog.objectNameWrittenDirectlyNo')}
+                textLabel={t('tree.customObjectEditorDialog.objectNameText')}
                 sidValue={nameField.sidValue}
                 textValue={nameField.textValue}
                 autoManageLoc
@@ -925,9 +915,9 @@ export default function CustomObjectEditorDialog({
               />
               <LocalizedTextField
                 idPrefix="object-editor-desc"
-                managedSidLabel="Description SID"
-                unmanagedLabel="Description (written directly, no localization)"
-                textLabel="Description text"
+                managedSidLabel={t('shared.descriptionSID')}
+                unmanagedLabel={t('tree.customObjectEditorDialog.descriptionWrittenDirectlyNoLocalization')}
+                textLabel={t('shared.descriptionText')}
                 sidValue={descField.sidValue}
                 textValue={descField.textValue}
                 autoManageLoc
@@ -939,9 +929,9 @@ export default function CustomObjectEditorDialog({
               />
               <LocalizedTextField
                 idPrefix="object-editor-narrative"
-                managedSidLabel="Narrative description SID"
-                unmanagedLabel="Narrative description (written directly, no localization)"
-                textLabel="Narrative description text"
+                managedSidLabel={t('tree.customObjectEditorDialog.narrativeDescriptionSID')}
+                unmanagedLabel={t('tree.customObjectEditorDialog.narrativeDescriptionWrittenDirectlyNo')}
+                textLabel={t('tree.customObjectEditorDialog.narrativeDescriptionText')}
                 sidValue={narrativeField.sidValue}
                 textValue={narrativeField.textValue}
                 autoManageLoc
@@ -954,8 +944,7 @@ export default function CustomObjectEditorDialog({
 
               {mode === 'clone' && !logicBase && (
                 <p className="text-xs text-muted-foreground border-t border-border pt-3">
-                  This base object has no behavior logic entry — the clone will ship as a template
-                  only, same as it.
+                  {t('tree.customObjectEditorDialog.thisBaseObjectHasNo')}
                 </p>
               )}
             </>
@@ -971,11 +960,11 @@ export default function CustomObjectEditorDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave || saving}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Save
+            {t('shared.save')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -983,7 +972,7 @@ export default function CustomObjectEditorDialog({
       <IconBrowserDialog
         open={iconBrowserOpen}
         onOpenChange={setIconBrowserOpen}
-        title="Choose a display icon"
+        title={t('tree.customObjectEditorDialog.chooseADisplayIcon')}
         options={iconBrowserOptions}
         currentIconId={icon}
         onPick={setIcon}

@@ -44,6 +44,7 @@ import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import CustomObjectEditorDialog from '@/components/tree/CustomObjectEditorDialog'
 import CustomArtifactEditorDialog from '@/components/tree/CustomArtifactEditorDialog'
 import CustomBuffEditorDialog from '@/components/tree/CustomBuffEditorDialog'
+import { useTranslation } from 'react-i18next'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
@@ -60,6 +61,7 @@ function RowActions({
   onDuplicate?: () => void
   onDelete?: () => void
 }) {
+  const { t } = useTranslation()
   if (!onCopy && !onDuplicate && !onDelete) return null
   return (
     <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
@@ -72,7 +74,7 @@ function RowActions({
             e.stopPropagation()
             onCopy()
           }}
-          title="Copy to clipboard"
+          title={t('tree.scenarioTree.copyToClipboard')}
         >
           <ClipboardCopy className="h-3 w-3" />
         </Button>
@@ -86,7 +88,7 @@ function RowActions({
             e.stopPropagation()
             onDuplicate()
           }}
-          title="Duplicate"
+          title={t('tree.scenarioTree.duplicate')}
         >
           <Copy className="h-3 w-3" />
         </Button>
@@ -265,6 +267,7 @@ function entityTypeLabel(type: unknown): string {
 
 // ─── Main tree ──────────────────────────────────────────────────────────────────
 export default function ScenarioTree() {
+  const { t } = useTranslation()
   const {
     scenario,
     selectedType,
@@ -482,7 +485,7 @@ export default function ScenarioTree() {
               ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
             <span className="shrink-0 text-muted-foreground"><MapIcon className="h-3 w-3" /></span>
-            Map Settings
+            {t('tree.scenarioTree.mapSettings')}
           </span>
         </div>
         {openSections.mapSettings && (
@@ -490,7 +493,7 @@ export default function ScenarioTree() {
             <Input
               value={mapName}
               onChange={(e) => setMapName(e.target.value)}
-              placeholder="Map name…"
+              placeholder={t('tree.scenarioTree.mapName')}
               className="h-7 text-xs"
             />
             {mapName && (
@@ -503,7 +506,7 @@ export default function ScenarioTree() {
 
         {/* ── Counters ── */}
         <SectionHeader
-          label="Counters"
+          label={t('common.statsDialog.counters')}
           count={scenario.counters.length}
           open={openSections.counters}
           onToggle={() => toggleSection('counters')}
@@ -530,7 +533,7 @@ export default function ScenarioTree() {
 
         {/* ── Interruptions ── */}
         <SectionHeader
-          label="Interruptions"
+          label={t('common.statsDialog.interruptions')}
           count={scenario.interruptions.length}
           open={openSections.interruptions}
           onToggle={() => toggleSection('interruptions')}
@@ -557,7 +560,7 @@ export default function ScenarioTree() {
 
         {/* ── Quests ── */}
         <SectionHeader
-          label="Quests"
+          label={t('common.statsDialog.quests')}
           count={scenario.quests.length}
           open={openSections.quests}
           onToggle={() => toggleSection('quests')}
@@ -603,7 +606,7 @@ export default function ScenarioTree() {
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
                     <span className="ml-1 truncate" style={labelStyle}>{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
-                      <span className="shrink-0 text-xs text-primary/70 mr-1">main</span>
+                      <span className="shrink-0 text-xs text-primary/70 mr-1">{t('tree.scenarioTree.main')}</span>
                     )}
                     <RowActions
                       onDuplicate={() => duplicateQuest(qi)}
@@ -644,7 +647,7 @@ export default function ScenarioTree() {
                             </button>
                             <List className="h-3 w-3 shrink-0 text-muted-foreground" />
                             <span className="ml-1 truncate" style={labelStyle}>
-                              sq: {subQuest.sid || '(unnamed)'}
+                              {t('tree.scenarioTree.subQuestRow', { sid: subQuest.sid || t('tree.scenarioTree.unnamed') })}
                             </span>
                             <RowActions
                               onCopy={() => copyToClipboard('subquest', subQuest)}
@@ -676,17 +679,17 @@ export default function ScenarioTree() {
                                 onClick={() => addTrigger(qi, sqi)}
                               >
                                 <Plus className="h-3 w-3" />
-                                Add Trigger
+                                {t('tree.scenarioTree.addTrigger')}
                               </div>
                               {pasteableTrigger && (
                                 <div
                                   className="flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground cursor-pointer transition-all duration-150 hover:text-primary hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
                                   style={{ paddingLeft: '64px' }}
                                   onClick={() => addTrigger(qi, sqi, pasteableTrigger)}
-                                  title="Paste the copied trigger"
+                                  title={t('tree.scenarioTree.pasteTheCopiedTrigger')}
                                 >
                                   <ClipboardPaste className="h-3 w-3" />
-                                  Paste Trigger
+                                  {t('tree.scenarioTree.pasteTrigger')}
                                 </div>
                               )}
                             </>
@@ -707,7 +710,7 @@ export default function ScenarioTree() {
                       }}
                     >
                       <Plus className="h-3 w-3" />
-                      Add SubQuest
+                      {t('tree.scenarioTree.addSubQuest')}
                     </div>
                   )}
                   {questOpen && pasteableSubQuest && (
@@ -719,10 +722,10 @@ export default function ScenarioTree() {
                         addSubQuest(qi, pasteableSubQuest)
                         setOpenSubQuests((s) => ({ ...s, [`${qi}-${newSqi}`]: true }))
                       }}
-                      title="Paste the copied subquest"
+                      title={t('tree.scenarioTree.pasteTheCopiedSubquest')}
                     >
                       <ClipboardPaste className="h-3 w-3" />
-                      Paste SubQuest
+                      {t('tree.scenarioTree.pasteSubQuest')}
                     </div>
                   )}
                 </div>
@@ -733,7 +736,7 @@ export default function ScenarioTree() {
 
         {/* ── Dialogs ── */}
         <SectionHeader
-          label="Dialogs"
+          label={t('tree.scenarioTree.dialogs')}
           count={Object.keys(dialogs).length}
           open={openSections.dialogs}
           onToggle={() => toggleSection('dialogs')}
@@ -752,7 +755,7 @@ export default function ScenarioTree() {
                 <MessageSquare className="h-3 w-3 shrink-0 text-muted-foreground" />
                 <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {flow.slides.length}s
+                  {t('tree.scenarioTree.s', { length: flow.slides.length })}
                 </span>
                 <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
                   <Button
@@ -774,7 +777,7 @@ export default function ScenarioTree() {
 
         {/* ── Custom Heroes (issue #160) ── */}
         <SectionHeader
-          label="Custom Heroes"
+          label={t('tree.scenarioTree.customHeroes')}
           count={Object.keys(customHeroes).length}
           open={openSections.customHeroes}
           onToggle={() => toggleSection('customHeroes')}
@@ -798,7 +801,7 @@ export default function ScenarioTree() {
                 />
                 <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
                 <span className="text-xs text-muted-foreground shrink-0 truncate max-w-[35%]">
-                  {def.sourceHeroSid || 'from scratch'}
+                  {def.sourceHeroSid || t('tree.scenarioTree.fromScratch')}
                 </span>
                 <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
                   <Button
@@ -821,7 +824,7 @@ export default function ScenarioTree() {
 
         {/* ── Custom Objects (issue #146) ── */}
         <SectionHeader
-          label="Custom Objects"
+          label={t('tree.scenarioTree.customObjects')}
           count={Object.keys(customMapObjects).length}
           open={openSections.customObjects}
           onToggle={() => toggleSection('customObjects')}
@@ -862,7 +865,7 @@ export default function ScenarioTree() {
 
         {/* ── Custom Artifacts (issue #150) ── */}
         <SectionHeader
-          label="Custom Artifacts"
+          label={t('tree.scenarioTree.customArtifacts')}
           count={Object.keys(customArtifacts).length}
           open={openSections.customArtifacts}
           onToggle={() => toggleSection('customArtifacts')}
@@ -903,7 +906,7 @@ export default function ScenarioTree() {
 
         {/* ── Custom Buffs (issue #165) ── */}
         <SectionHeader
-          label="Custom Buffs"
+          label={t('tree.scenarioTree.customBuffs')}
           count={Object.keys(customBuffs).length}
           open={openSections.customBuffs}
           onToggle={() => toggleSection('customBuffs')}
@@ -945,7 +948,7 @@ export default function ScenarioTree() {
         {/* ── Entity SIDs (from loaded .map file) ── */}
         <>
           <ReadOnlySectionHeader
-            label="Entity SIDs"
+            label={t('tree.scenarioTree.entitySIDs')}
             count={entities.length}
             open={openSections.entitySids}
             onToggle={() => toggleSection('entitySids')}
@@ -955,12 +958,12 @@ export default function ScenarioTree() {
             <div className="px-1 py-1">
               {!mapLoaded && (
                 <p className="text-[10px] text-muted-foreground px-2 py-1 italic">
-                  Load a .map file to see named entities.
+                  {t('tree.scenarioTree.loadAMapFileTo')}
                 </p>
               )}
               {mapLoaded && entities.length === 0 && (
                 <p className="text-[10px] text-muted-foreground px-2 py-1 italic">
-                  No named entities found in this map.
+                  {t('tree.scenarioTree.noNamedEntitiesFoundIn')}
                 </p>
               )}
               {entityGroups.map(([groupLabel, groupEntities]) => {

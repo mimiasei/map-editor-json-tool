@@ -17,6 +17,7 @@ import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import { Plus, Trash2 } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 interface HeroCatalogListEditorProps<T extends Record<string, unknown>> {
   category: 'creature' | 'skill' | 'spell' | 'squadTemplate' | 'artifact'
@@ -46,6 +47,7 @@ export default function HeroCatalogListEditor<T extends Record<string, unknown>>
   renderExtraFields,
   addLabel = 'Add',
 }: HeroCatalogListEditorProps<T>) {
+  const { t } = useTranslation()
   const addRow = () => {
     if (rows.length >= maxRows) return
     onChange([...rows, { ...emptyRow }])
@@ -74,7 +76,7 @@ export default function HeroCatalogListEditor<T extends Record<string, unknown>>
             size="icon"
             className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
             onClick={() => removeRow(index)}
-            title="Remove"
+            title={t('mapGrid.mapGridSettingsDialog.remove')}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

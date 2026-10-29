@@ -28,6 +28,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import EntityPickerList from '@/components/common/EntityPickerList'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -43,6 +44,7 @@ function emptyInput(template: ScriptTemplateDef): ScriptTemplateInput {
 }
 
 export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [input, setInput] = useState<ScriptTemplateInput>({ slots: {}, params: {}, fields: {} })
 
@@ -54,7 +56,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   const setDialogFlow = useScenarioStore((s) => s.setDialogFlow)
   const setLocalizationBatch = useScenarioStore((s) => s.setLocalizationBatch)
 
-  const selectedTemplate = SCRIPT_TEMPLATE_LIST.find((t) => t.id === selectedId) ?? null
+  const selectedTemplate = SCRIPT_TEMPLATE_LIST.find((tpl) => tpl.id === selectedId) ?? null
 
   // Picking on the Map Grid: hide this dialog (its state lives here, so it
   // survives being closed — onOpenChange, not handleClose, which resets it),
@@ -144,29 +146,28 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {selectedTemplate ? selectedTemplate.name : 'Script Templates'}
+            {selectedTemplate ? selectedTemplate.name : t('tree.scriptTemplateDialog.scriptTemplates')}
           </DialogTitle>
         </DialogHeader>
 
         {!selectedTemplate && (
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
-              Generate ready-made quest/trigger scripting from objects already on your map —
-              a way to replicate classic map objects Olden Era has no native equivalent for.
+              {t('tree.scriptTemplateDialog.intro')}
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {SCRIPT_TEMPLATE_LIST.map((t) => (
+              {SCRIPT_TEMPLATE_LIST.map((tpl) => (
                 <button
-                  key={t.id}
+                  key={tpl.id}
                   type="button"
-                  onClick={() => handlePickTemplate(t)}
+                  onClick={() => handlePickTemplate(tpl)}
                   className={cn(
                     'text-left rounded-md border p-3 space-y-1 transition-colors',
                     'border-border hover:border-primary/50 hover:bg-accent/50',
                   )}
                 >
-                  <p className="text-sm font-medium">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.description}</p>
+                  <p className="text-sm font-medium">{tpl.name}</p>
+                  <p className="text-xs text-muted-foreground">{tpl.description}</p>
                 </button>
               ))}
             </div>
@@ -198,7 +199,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
                         setInput((s) => ({ ...s, slots: { ...s.slots, [slot.id]: values } }))
                       }
                       addLabel={`+ Add ${slot.label.toLowerCase()}`}
-                      placeholder="Search placed objects…"
+                      placeholder={t('tree.scriptTemplateDialog.searchPlacedObjects')}
                     />
                   </div>
                 ))}
@@ -251,8 +252,10 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
             {previewResult && (
               <p className="text-xs text-muted-foreground border-t border-border pt-3">
-                This will add 1 {previewResult.quest.hidden ? 'hidden ' : ''}quest with {triggerCount} trigger{triggerCount === 1 ? '' : 's'}{' '}
-                and {actionCount} action{actionCount === 1 ? '' : 's'} to your project.
+                {t(previewResult.quest.hidden ? 'tree.scriptTemplateDialog.addSummaryHidden' : 'tree.scriptTemplateDialog.addSummary', {
+                  triggers: t('tree.scriptTemplateDialog.triggerCount', { count: triggerCount }),
+                  actions: t('tree.scriptTemplateDialog.actionCount', { count: actionCount }),
+                })}
               </p>
             )}
           </div>
@@ -261,15 +264,15 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
         <DialogFooter>
           {selectedTemplate && (
             <Button variant="ghost" onClick={handleBack}>
-              Back
+              {t('tree.scriptTemplateDialog.back')}
             </Button>
           )}
           <Button variant="ghost" onClick={() => handleClose(false)}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           {selectedTemplate && (
             <Button onClick={handleGenerate} disabled={!previewResult}>
-              Add to Project
+              {t('tree.scriptTemplateDialog.addToProject')}
             </Button>
           )}
         </DialogFooter>

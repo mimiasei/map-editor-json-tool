@@ -58,6 +58,7 @@ import LocalizedTextField from '@/components/common/LocalizedTextField'
 import FieldInfo from '@/components/common/FieldInfo'
 import { mintCustomSid } from '@/lib/zip-export'
 import { isBuffIdTaken } from '@/lib/custom-buff-authoring'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface CustomBuffEditorDialogProps {
   open: boolean
@@ -80,13 +81,8 @@ function dict(v: unknown): Record<string, unknown> {
   return v && typeof v === 'object' && !Array.isArray(v) ? { ...(v as Record<string, unknown>) } : {}
 }
 
-const FLAG_FIELDS: { key: 'canDispel' | 'hidden' | 'dontMimic' | 'dontTriggerAction' | 'keepOnDeath'; label: string; description: string }[] = [
-  { key: 'canDispel', label: 'Can Be Dispelled', description: 'Removable by dispel magic/abilities. Most real buffs leave this off.' },
-  { key: 'hidden', label: 'Hidden', description: "Not shown in the affected unit's effect list/tooltip." },
-  { key: 'dontMimic', label: "Don't Mimic", description: 'Excluded from "copy the target\'s effects" abilities.' },
-  { key: 'dontTriggerAction', label: "Doesn't Count as an Action", description: "Applying this buff doesn't use up the unit's action for the round." },
-  { key: 'keepOnDeath', label: 'Persists After Death', description: 'Stays on the unit even if it dies (used by resurrection/corpse-linked effects).' },
-]
+// Labels live in en.json under tree.customBuffEditorDialog.flagFields.<key>.
+const FLAG_FIELDS = ['canDispel', 'hidden', 'dontMimic', 'dontTriggerAction', 'keepOnDeath'] as const
 
 // "Build from scratch" mode's seed — no real buff has empty stats/tags, so
 // there's nothing genuine to clone from. `addition: 'duration'` and
@@ -128,6 +124,7 @@ export default function CustomBuffEditorDialog({
   editingId,
   existingSids,
 }: CustomBuffEditorDialogProps) {
+  const { t } = useTranslation()
   const localization = useScenarioStore((s) => s.localization)
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
   const removeLocalizationToken = useScenarioStore((s) => s.removeLocalizationToken)
@@ -196,7 +193,7 @@ export default function CustomBuffEditorDialog({
     setFixedDuration(num(templateBase.maxDuration, 1))
     setAddition(str(templateBase.addition, 'duration'))
     const nextFlags: Record<string, boolean> = {}
-    for (const f of FLAG_FIELDS) nextFlags[f.key] = bool(templateBase[f.key])
+    for (const f of FLAG_FIELDS) nextFlags[f] = bool(templateBase[f])
     setFlags(nextFlags)
     setAiValue(num(templateBase.aiValue))
     setAiValuePerDuration(num(templateBase.aiValuePerDuration))
@@ -272,7 +269,7 @@ export default function CustomBuffEditorDialog({
     try {
       const parsed = JSON.parse(text)
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        setAdvancedError('Must be a JSON object.')
+        setAdvancedError(t('tree.customBuffEditorDialog.mustBeJsonObject'))
       } else {
         setAdvancedError(null)
       }
@@ -338,24 +335,22 @@ export default function CustomBuffEditorDialog({
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>{existingDefinition ? 'Edit custom buff' : 'New custom buff'}</DialogTitle>
+          <DialogTitle>{existingDefinition ? t('tree.customBuffEditorDialog.editCustomBuff') : t('tree.customBuffEditorDialog.newCustomBuff')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Clones a real buff/status-effect definition under a brand-new id, or builds one from
-            scratch. A buff has no identity of its own on the map — grant it by referencing its id
-            from an artifact bonus, object reward, or (once supported) a custom skill/spell.
+            {t('tree.customBuffEditorDialog.clonesARealBuffStatus')}
           </p>
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-1">
-              <Label>Mode</Label>
-              <FieldInfo text="Clone one buff: every field starts from a real buff's own values. Build from scratch: stats/tags start blank. Switchable at any time." />
+              <Label>{t('shared.mode')}</Label>
+              <FieldInfo text={t('tree.customBuffEditorDialog.cloneOneBuffEveryField')} />
             </div>
             <div className="flex gap-1.5">
               <Button type="button" aria-pressed={mode === 'clone'} variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
-                Clone one buff
+                {t('tree.customBuffEditorDialog.cloneOneBuff')}
               </Button>
               <Button
                 type="button"
@@ -364,7 +359,7 @@ export default function CustomBuffEditorDialog({
                 className="h-7 text-xs"
                 onClick={() => { setMode('scratch'); setSourceBuffId(''); setSourcePickerValue('') }}
               >
-                Build from scratch
+                {t('shared.buildFromScratch')}
               </Button>
             </div>
           </div>
@@ -372,14 +367,14 @@ export default function CustomBuffEditorDialog({
           {mode === 'clone' && !sourceBuffId && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1">
-                <Label>Base buff</Label>
-                <FieldInfo text="The real buff whose definition this custom buff clones. Everything except id/name/description/icon is copied verbatim." />
+                <Label>{t('tree.customBuffEditorDialog.baseBuff')}</Label>
+                <FieldInfo text={t('tree.customBuffEditorDialog.theRealBuffWhoseDefinition')} />
               </div>
               <EntityCombobox
                 value={sourcePickerValue}
                 onChange={handlePickSource}
                 category="buff"
-                placeholder="Search for a buff to clone…"
+                placeholder={t('tree.customBuffEditorDialog.searchForABuffTo')}
               />
             </div>
           )}
@@ -388,7 +383,7 @@ export default function CustomBuffEditorDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="ml-2">
-                Load the Core.zip catalog (Game Database) to look up and clone this buff's base definition.
+                {t('tree.customBuffEditorDialog.loadTheCoreZipCatalog')}
               </AlertDescription>
             </Alert>
           )}
@@ -398,12 +393,9 @@ export default function CustomBuffEditorDialog({
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
                   {mode === 'clone' && sourceBuffId ? (
-                    <>
-                      Based on: <span className="font-medium text-foreground">{baseDisplayName}</span>
-                      {existingDefinition && ' (already customized)'}
-                    </>
+                    <Trans i18nKey={existingDefinition ? 'shared.basedOnCustomized' : 'shared.basedOn'} values={{ name: baseDisplayName }} components={{ v: <span className="font-medium text-foreground" /> }} />
                   ) : (
-                    'Building from scratch — stats and tags start blank below.'
+                    t('tree.customBuffEditorDialog.buildingFromScratchStatsAnd')
                   )}
                 </p>
                 {mode === 'clone' && sourceBuffId && (
@@ -411,7 +403,7 @@ export default function CustomBuffEditorDialog({
                     type="button"
                     onClick={handleChangeBase}
                     className="shrink-0 rounded border border-transparent p-0.5 hover:border-border hover:bg-accent"
-                    title="Click to change the base buff"
+                    title={t('tree.customBuffEditorDialog.clickToChangeTheBase')}
                   >
                     <CatalogIcon iconId={baseCatalogBuff?.icon} name={baseDisplayName} size={24} />
                   </button>
@@ -420,8 +412,8 @@ export default function CustomBuffEditorDialog({
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>Icon (optional)</Label>
-                  <FieldInfo text="The 2D icon shown wherever this effect is displayed. Not every real buff has one — hidden effects often skip it." />
+                  <Label>{t('tree.customBuffEditorDialog.iconOptional')}</Label>
+                  <FieldInfo text={t('tree.customBuffEditorDialog.the2DIconShownWherever')} />
                 </div>
                 <button
                   type="button"
@@ -429,14 +421,14 @@ export default function CustomBuffEditorDialog({
                   className="flex items-center gap-2 rounded-md border border-border p-2 hover:bg-accent/50"
                 >
                   <CatalogIcon iconId={icon} name={baseDisplayName} size={32} />
-                  <span className="text-xs text-muted-foreground">{icon ? 'Click to change…' : 'Click to set…'}</span>
+                  <span className="text-xs text-muted-foreground">{icon ? t('shared.clickToChange') : t('tree.customBuffEditorDialog.clickToSet')}</span>
                 </button>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="buff-editor-id">Id</Label>
-                  <FieldInfo text="The unique id this custom buff ships under — also referenced by anything that grants it (an artifact's Combat Buff bonus, an object reward). Must not match any buff id already in the game." />
+                  <Label htmlFor="buff-editor-id">{t('shared.id')}</Label>
+                  <FieldInfo text={t('tree.customBuffEditorDialog.theUniqueIdThisCustom')} />
                 </div>
                 <Input
                   id="buff-editor-id"
@@ -447,16 +439,16 @@ export default function CustomBuffEditorDialog({
                 {idTaken && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="ml-2">"{trimmedId}" is already used by another buff.</AlertDescription>
+                    <AlertDescription className="ml-2">{t('tree.customBuffEditorDialog.isAlreadyUsedByAnother', { trimmedId })}</AlertDescription>
                   </Alert>
                 )}
               </div>
 
               <LocalizedTextField
                 idPrefix="buff-editor-name"
-                managedSidLabel="Naming SID"
-                unmanagedLabel="Buff name (written directly, no localization)"
-                textLabel="Buff name text"
+                managedSidLabel={t('shared.namingSID')}
+                unmanagedLabel={t('tree.customBuffEditorDialog.buffNameWrittenDirectlyNo')}
+                textLabel={t('tree.customBuffEditorDialog.buffNameText')}
                 sidValue={nameField.sidValue}
                 textValue={nameField.textValue}
                 autoManageLoc
@@ -467,9 +459,9 @@ export default function CustomBuffEditorDialog({
               />
               <LocalizedTextField
                 idPrefix="buff-editor-desc"
-                managedSidLabel="Description SID"
-                unmanagedLabel="Description (written directly, no localization)"
-                textLabel="Description text"
+                managedSidLabel={t('shared.descriptionSID')}
+                unmanagedLabel={t('tree.customBuffEditorDialog.descriptionWrittenDirectlyNoLocalization')}
+                textLabel={t('shared.descriptionText')}
                 sidValue={descField.sidValue}
                 textValue={descField.textValue}
                 autoManageLoc
@@ -482,22 +474,22 @@ export default function CustomBuffEditorDialog({
 
               {/* ── Effect basics ────────────────────────────────────────── */}
               <div className="border-t border-border pt-3 space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Effect basics</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('tree.customBuffEditorDialog.effectBasics')}</p>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Polarity</Label>
+                    <Label>{t('tree.customBuffEditorDialog.polarity')}</Label>
                     <Select value={isPositive ? 'positive' : 'negative'} onValueChange={(v) => setIsPositive(v === 'positive')}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="positive">Positive (buff)</SelectItem>
-                        <SelectItem value="negative">Negative (debuff)</SelectItem>
+                        <SelectItem value="positive">{t('tree.customBuffEditorDialog.positiveBuff')}</SelectItem>
+                        <SelectItem value="negative">{t('tree.customBuffEditorDialog.negativeDebuff')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label>Reapply rule</Label>
+                      <Label>{t('tree.customBuffEditorDialog.reapplyRule')}</Label>
                       <FieldInfo text={ADDITION_OPTIONS.map((o) => `${o.label}: ${o.description}`).join(' ')} />
                     </div>
                     <Select value={addition} onValueChange={setAddition}>
@@ -511,16 +503,16 @@ export default function CustomBuffEditorDialog({
 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1">
-                    <Label>Duration</Label>
-                    <FieldInfo text="Most real buffs let the caster's spell/skill determine duration (no fixed length set here). Set a fixed number of rounds, or make it last until removed." />
+                    <Label>{t('tree.customBuffEditorDialog.duration')}</Label>
+                    <FieldInfo text={t('tree.customBuffEditorDialog.mostRealBuffsLetThe')} />
                   </div>
                   <div className="flex items-center gap-2">
                     <Select value={durationMode} onValueChange={(v) => setDurationMode(v as DurationMode)}>
                       <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="caster">Set by whatever grants it</SelectItem>
-                        <SelectItem value="fixed">Fixed number of rounds</SelectItem>
-                        <SelectItem value="infinite">Infinite (until removed)</SelectItem>
+                        <SelectItem value="caster">{t('tree.customBuffEditorDialog.setByWhateverGrantsIt')}</SelectItem>
+                        <SelectItem value="fixed">{t('tree.customBuffEditorDialog.fixedNumberOfRounds')}</SelectItem>
+                        <SelectItem value="infinite">{t('tree.customBuffEditorDialog.infiniteUntilRemoved')}</SelectItem>
                       </SelectContent>
                     </Select>
                     {durationMode === 'fixed' && (
@@ -531,22 +523,22 @@ export default function CustomBuffEditorDialog({
 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1">
-                    <Label>Other tags (advanced, optional)</Label>
-                    <FieldInfo text="Free-form tags some real buffs use for cross-referencing (e.g. a spell's own immunity check). Positive/negative are managed by Polarity above, not listed here." />
+                    <Label>{t('tree.customBuffEditorDialog.otherTagsAdvancedOptional')}</Label>
+                    <FieldInfo text={t('tree.customBuffEditorDialog.freeFormTagsSomeReal')} />
                   </div>
-                  <StringListEditor values={otherTags} onChange={setOtherTags} addLabel="+ Add tag" placeholder="Tag" />
+                  <StringListEditor values={otherTags} onChange={setOtherTags} addLabel={t('tree.customBuffEditorDialog.addTag')} placeholder={t('tree.customBuffEditorDialog.tag')} />
                 </div>
               </div>
 
               {/* ── Flags ────────────────────────────────────────────────── */}
               <div className="border-t border-border pt-3 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Flags</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('tree.customBuffEditorDialog.flags')}</p>
                 {FLAG_FIELDS.map((f) => (
-                  <label key={f.key} className="flex items-start gap-2 text-xs">
-                    <Checkbox className="mt-0.5" checked={!!flags[f.key]} onCheckedChange={(c) => setFlags((prev) => ({ ...prev, [f.key]: !!c }))} />
+                  <label key={f} className="flex items-start gap-2 text-xs">
+                    <Checkbox className="mt-0.5" checked={!!flags[f]} onCheckedChange={(c) => setFlags((prev) => ({ ...prev, [f]: !!c }))} />
                     <span>
-                      <span className="font-medium">{f.label}</span>
-                      <span className="block text-muted-foreground">{f.description}</span>
+                      <span className="font-medium">{t(`tree.customBuffEditorDialog.flagFields.${f}.label`)}</span>
+                      <span className="block text-muted-foreground">{t(`tree.customBuffEditorDialog.flagFields.${f}.description`)}</span>
                     </span>
                   </label>
                 ))}
@@ -555,16 +547,16 @@ export default function CustomBuffEditorDialog({
               {/* ── AI weighting ─────────────────────────────────────────── */}
               <div className="border-t border-border pt-3 space-y-3">
                 <div className="flex items-center gap-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI weighting</p>
-                  <FieldInfo text="Used by the game's AI to weigh how good/bad this effect is when deciding actions — has no direct gameplay effect on its own." />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('tree.customBuffEditorDialog.aIWeighting')}</p>
+                  <FieldInfo text={t('tree.customBuffEditorDialog.usedByTheGamesAI')} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>AI value</Label>
+                    <Label>{t('tree.customBuffEditorDialog.aIValue')}</Label>
                     <Input type="number" value={aiValue} onChange={(e) => setAiValue(Number(e.target.value) || 0)} className="h-8 text-xs" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>AI value per duration round</Label>
+                    <Label>{t('tree.customBuffEditorDialog.aIValuePerDurationRound')}</Label>
                     <Input type="number" value={aiValuePerDuration} onChange={(e) => setAiValuePerDuration(Number(e.target.value) || 0)} className="h-8 text-xs" />
                   </div>
                 </div>
@@ -573,8 +565,8 @@ export default function CustomBuffEditorDialog({
               {/* ── Stat effects ─────────────────────────────────────────── */}
               <div className="border-t border-border pt-3 space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>Stat effects</Label>
-                  <FieldInfo text="The stat changes this effect applies to whatever unit/hero it's attached to." />
+                  <Label>{t('tree.customBuffEditorDialog.statEffects')}</Label>
+                  <FieldInfo text={t('tree.customBuffEditorDialog.theStatChangesThisEffect')} />
                 </div>
                 <BuffStatsEditor stats={stats} onChange={setStats} />
               </div>
@@ -587,14 +579,12 @@ export default function CustomBuffEditorDialog({
                   onClick={() => setAdvancedOpen((v) => !v)}
                 >
                   <ChevronRight className={`h-3 w-3 transition-transform ${advancedOpen ? 'rotate-90' : ''}`} />
-                  Advanced (raw JSON)
+                  {t('tree.customBuffEditorDialog.advancedRawJSON')}
                 </button>
                 {advancedOpen && (
                   <div className="space-y-1.5">
                     <p className="text-xs text-muted-foreground">
-                      Anything not covered above (triggered actions, disablers, immunities, damage
-                      sequences, ...) — preserved verbatim from the clone source. Hand-edit as JSON if
-                      you know what you're doing; leave as-is otherwise.
+                      {t('tree.customBuffEditorDialog.anythingNotCoveredAboveTriggered')}
                     </p>
                     <textarea
                       className="w-full h-40 rounded-md border border-border bg-background p-2 font-mono text-xs"
@@ -624,11 +614,11 @@ export default function CustomBuffEditorDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave || saving}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Save
+            {t('shared.save')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -636,7 +626,7 @@ export default function CustomBuffEditorDialog({
       <IconBrowserDialog
         open={iconBrowserOpen}
         onOpenChange={setIconBrowserOpen}
-        title="Choose a buff icon"
+        title={t('tree.customBuffEditorDialog.chooseABuffIcon')}
         options={iconBrowserOptions}
         currentIconId={icon}
         onPick={setIcon}
