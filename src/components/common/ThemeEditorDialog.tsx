@@ -234,10 +234,10 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 <SelectContent>
                   {themeGroups.map((group) => (
                     <SelectGroup key={group.label}>
-                      <SelectLabel>{group.label}</SelectLabel>
+                      <SelectLabel>{t(`common.themeEditorDialog.groups.${group.label}` as 'common.themeEditorDialog.groups.Default')}</SelectLabel>
                       {group.themes.map((th) => (
                         <SelectItem key={th.id} value={th.id}>
-                          {th.name}
+                          {th.id === 'default-light' ? t('common.themeEditorDialog.defaultLightName') : th.name}
                         </SelectItem>
                       ))}
                     </SelectGroup>

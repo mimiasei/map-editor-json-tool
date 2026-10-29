@@ -868,7 +868,17 @@
           "description": "Arrière-plan des actions secondaires"
         }
       },
-      "pickColorFor": "Choisir la couleur : {{label}}"
+      "pickColorFor": "Choisir la couleur : {{label}}",
+      "groups": {
+        "Default": "Par défaut",
+        "Popular": "Populaires",
+        "Pastel": "Pastel",
+        "Vintage": "Rétro",
+        "Nature": "Nature",
+        "Light": "Clair",
+        "Custom": "Personnalisés"
+      },
+      "defaultLightName": "Clair par défaut"
     },
     "mapEntityCombobox": {
       "noMapEntitiesLoadA": "Aucune entité de carte : chargez d'abord un fichier .map"
@@ -2093,7 +2103,8 @@
       "dismiss": "Ignorer",
       "finished": "Rendu terminé : {{label}}.",
       "finishedWithFailures": "Rendu terminé : {{label}} ({{failed}} n'ont pas pu être dessinés).",
-      "failed": "Échec du rendu : {{error}}"
+      "failed": "Échec du rendu : {{error}}",
+      "noObjectRendered": "Aucun objet n’a pu être rendu."
     },
     "toolbar": {
       "oEScenarioEditor": "Éditeur de scénarios OE",
@@ -2785,13 +2796,15 @@
         "cursed_moor": "La Lande maudite",
         "long_siege": "Le Long Siège",
         "border_oath": "Le Serment de la frontière",
-        "my_story": "Mon histoire"
+        "my_story": "Mon histoire",
+        "my_idea": "Mon histoire"
       },
       "blurbs": {
         "cursed_moor": "Des lueurs étranges et un héritier disparu. Suivez les indices, puis désignez le coupable.",
         "long_siege": "Un ennemi approche. Décidez comment vous préparer, puis tenez bon jusqu'à l'arrivée des renforts.",
         "border_oath": "Prenez une ville frontalière, choisissez comment traiter ses habitants, puis affrontez le seigneur de guerre au-delà.",
-        "my_story": "Une histoire que vous assemblez à partir d'étapes."
+        "my_story": "Une histoire que vous assemblez à partir d'étapes.",
+        "my_idea": "Construite à partir de votre propre idée."
       },
       "slots": {
         "clue_sites": "Lieux d'indices",

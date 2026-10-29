@@ -839,7 +839,17 @@
           "description": "Background for secondary actions"
         }
       },
-      "pickColorFor": "Pick color for {{label}}"
+      "pickColorFor": "Pick color for {{label}}",
+      "groups": {
+        "Default": "Default",
+        "Popular": "Popular",
+        "Pastel": "Pastel",
+        "Vintage": "Vintage",
+        "Nature": "Nature",
+        "Light": "Light",
+        "Custom": "Custom"
+      },
+      "defaultLightName": "Default Light"
     },
     "mapEntityCombobox": {
       "noMapEntitiesLoadA": "No map entities — load a .map file first"
@@ -2058,7 +2068,8 @@
       "dismiss": "Dismiss",
       "finished": "Finished rendering {{label}}.",
       "finishedWithFailures": "Finished rendering {{label}} ({{failed}} could not be drawn).",
-      "failed": "Rendering failed: {{error}}"
+      "failed": "Rendering failed: {{error}}",
+      "noObjectRendered": "No object could be rendered."
     },
     "toolbar": {
       "oEScenarioEditor": "OE Scenario Editor",
@@ -2739,13 +2750,15 @@
         "cursed_moor": "The Cursed Moor",
         "long_siege": "The Long Siege",
         "border_oath": "The Border Oath",
-        "my_story": "My story"
+        "my_story": "My story",
+        "my_idea": "My story"
       },
       "blurbs": {
         "cursed_moor": "Strange lights and a missing heir. Follow the clues, then name the culprit.",
         "long_siege": "An enemy is coming. Decide how to prepare, then hold out until help arrives.",
         "border_oath": "Take a border town, choose how to treat its people, and face the warlord beyond.",
-        "my_story": "A story you put together from beats."
+        "my_story": "A story you put together from beats.",
+        "my_idea": "Built from your own idea."
       },
       "slots": {
         "clue_sites": "Clue sites",

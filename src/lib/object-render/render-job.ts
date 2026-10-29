@@ -21,6 +21,7 @@ import { appDataDir, emptyIndex, loadRenderIndex, saveRenderIndex } from './rend
 import { CANVAS_STEPS, CLIFF_AZIMUTH, CLIFF_ELEVATION, RIVER_ELEVATION, canvasForBounds } from './canvas-size'
 import type { RenderRequest, RenderResult } from './render-core'
 import type { WorkerMessage, WorkerReply } from './render.worker'
+import i18n from '@/lib/i18n'
 
 /** One object as listed by the sidecar (mesh_export.list_objects). */
 interface ListedObject {
@@ -265,7 +266,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
     unlisten()
     await saveRenderIndex(structuredClone(index))
     if (abort.signal.aborted) store.setJob({ phase: 'cancelled' })
-    else if (failed.length > 0 && failed.length === todo.length) store.setJob({ phase: 'error', error: 'No object could be rendered.' })
+    else if (failed.length > 0 && failed.length === todo.length) store.setJob({ phase: 'error', error: i18n.t('layout.objectRenderProgressBar.noObjectRendered') })
     else store.setJob({ phase: 'done', failed: failed.length })
   } catch (e) {
     if (abort.signal.aborted) store.setJob({ phase: 'cancelled' })
