@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Upload, Plus, X, Languages, Trash2 } from '@/components/ui/icons'
+import { useTranslation, Trans } from 'react-i18next'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,7 @@ function TokenRow({
   /** Deletes the token everywhere (English + every language) — issue #133. */
   onDelete: () => void
 }) {
+  const { t } = useTranslation()
   const missing = !text.trim()
 
   return (
@@ -95,22 +97,22 @@ function TokenRow({
         <code className="text-xs font-mono text-muted-foreground flex-1 min-w-0 truncate">{sid}</code>
         {isDialogSid && (
           <Badge variant="outline" className="text-xs shrink-0 text-blue-500 border-blue-500/40">
-            Dialog
+            {t('dialogs.localizationDialog.dialog')}
           </Badge>
         )}
         {isQuestSid && (
           <Badge variant="outline" className="text-xs shrink-0 text-purple-500 border-purple-500/40">
-            Quest
+            {t('dialogs.localizationDialog.quest')}
           </Badge>
         )}
         {ownerSid !== undefined && (
           <Badge variant="outline" className="text-xs shrink-0 text-emerald-500 border-emerald-500/40">
-            Naming SID → <span className="font-mono ml-1">{ownerSid}</span>
+            <Trans i18nKey="dialogs.localizationDialog.namingSid" values={{ sid: ownerSid }} components={{ m: <span className="font-mono ml-1" /> }} />
           </Badge>
         )}
         {missing && (
           <Badge variant="secondary" className="text-amber-500 text-xs shrink-0">
-            missing
+            {t('dialogs.localizationDialog.missing')}
           </Badge>
         )}
         <button
@@ -123,13 +125,13 @@ function TokenRow({
       </div>
       {sourceText !== undefined && (
         <p className="border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
-          {sourceText || <span className="text-amber-500">no English text yet</span>}
+          {sourceText || <span className="text-amber-500">{t('dialogs.localizationDialog.noEnglishTextYet')}</span>}
         </p>
       )}
       <Textarea
         value={text}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={sourceText !== undefined ? 'Enter translation…' : 'Enter English text…'}
+        placeholder={sourceText !== undefined ? t('dialogs.localizationDialog.enterTranslation') : t('dialogs.localizationDialog.enterEnglishText')}
         className={`min-h-[52px] text-sm resize-y ${missing ? 'border-amber-600/50' : ''}`}
         rows={2}
       />
@@ -144,6 +146,7 @@ type Tab = 'dialogs' | 'quests' | 'all'
 // ─── Main ────────────────────────────────────────────────────────────────────────
 
 export default function LocalizationDialog() {
+  const { t } = useTranslation()
   const {
     localizationDialogOpen,
     setLocalizationDialogOpen,
@@ -334,10 +337,10 @@ export default function LocalizationDialog() {
         {/* Header — the drag handle. pr-10 clears the close button. */}
         <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-3">
-            <DialogTitle>Localization — {languageLabel(activeLang)}</DialogTitle>
+            <DialogTitle>{t('dialogs.localizationDialog.title', { language: languageLabel(activeLang) })}</DialogTitle>
             {missingCount > 0 && (
               <Badge variant="secondary" className="text-amber-500">
-                {missingCount} missing
+                {t('dialogs.localizationDialog.missing2', { missingCount })}
               </Badge>
             )}
             <Button
@@ -347,7 +350,7 @@ export default function LocalizationDialog() {
               onClick={handleImportPaste}
             >
               <Upload className="h-3.5 w-3.5" />
-              Import JSON
+              {t('dialogs.localizationDialog.importJSON')}
             </Button>
           </div>
 
@@ -362,7 +365,7 @@ export default function LocalizationDialog() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs">
-                    <Plus className="h-3 w-3" /> Add language
+                    <Plus className="h-3 w-3" /> {t('dialogs.localizationDialog.addLanguage')}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
@@ -388,22 +391,22 @@ export default function LocalizationDialog() {
                 className="h-7 gap-1 text-xs text-muted-foreground hover:text-destructive"
                 onClick={handleRemoveLanguage}
               >
-                <X className="h-3 w-3" /> Remove
+                <X className="h-3 w-3" /> {t('mapGrid.mapGridSettingsDialog.remove')}
               </Button>
             )}
           </div>
 
           <div className="flex items-center gap-2 mt-3">
-            <TabButton value="dialogs" label="Dialogs" />
-            <TabButton value="quests" label="Quest names" />
-            <TabButton value="all" label="All tokens" />
+            <TabButton value="dialogs" label={t('tree.scenarioTree.dialogs')} />
+            <TabButton value="quests" label={t('dialogs.localizationDialog.questNames')} />
+            <TabButton value="all" label={t('dialogs.localizationDialog.allTokens')} />
           </div>
           <div className="relative mt-2">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search SIDs or text…"
+              placeholder={t('dialogs.localizationDialog.searchSIDsOrText')}
               className="pl-7 h-8 text-sm"
             />
           </div>
@@ -413,14 +416,14 @@ export default function LocalizationDialog() {
           <div className="py-4 space-y-2">
             {!isBase && (
               <p className="rounded border border-border bg-muted/40 px-2 py-1.5 text-xs text-muted-foreground">
-                Untranslated tokens ship with the English text as a fallback.
+                {t('dialogs.localizationDialog.untranslatedTokensShipWithThe')}
               </p>
             )}
             {filteredSids.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                {tab === 'dialogs' && 'No dialog SIDs found. Add slides to your dialog flows first.'}
-                {tab === 'quests' && 'No quest name SIDs found. Set "name" on quests or subquests.'}
-                {tab === 'all' && 'No tokens yet.'}
+                {tab === 'dialogs' && t('dialogs.localizationDialog.noDialogSIDsFoundAdd')}
+                {tab === 'quests' && t('dialogs.localizationDialog.noQuestNameSIDsFound')}
+                {tab === 'all' && t('dialogs.localizationDialog.noTokensYet')}
               </p>
             )}
             {filteredSids.map((sid) => (
@@ -441,7 +444,7 @@ export default function LocalizationDialog() {
 
         <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
           <Label className="text-xs text-muted-foreground">
-            {filteredSids.length} token{filteredSids.length !== 1 ? 's' : ''} shown
+            {t('dialogs.localizationDialog.tokensShown', { count: filteredSids.length })}
           </Label>
           <div className="flex-1" />
           <Button
@@ -449,7 +452,7 @@ export default function LocalizationDialog() {
             size="sm"
             onClick={() => setLocalizationDialogOpen(false)}
           >
-            Close
+            {t('ui.close')}
           </Button>
         </div>
       </DraggableDialogContent>

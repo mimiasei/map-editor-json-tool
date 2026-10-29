@@ -15,6 +15,7 @@ import AssetCombobox from './AssetCombobox'
 import { LayoutGrid, MessageSquare, Plus, Trash2, UserRound } from '@/components/ui/icons'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import { useTranslation } from 'react-i18next'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ function Slot({
   onSelect: () => void
   onAdd: () => void
 }) {
+  const { t } = useTranslation()
   const occupied = !!avatar
   const portraitSrc = thumbnailPath(avatar?.icon)
 
@@ -87,7 +89,7 @@ function Slot({
       </span>
       {occupied && (
         <span className="w-full truncate text-[9px] leading-tight text-muted-foreground">
-          {iconName(avatar!.icon) || '(no icon)'}
+          {iconName(avatar!.icon) || t('dialogs.avatarStrip.noIcon')}
         </span>
       )}
     </button>
@@ -111,6 +113,7 @@ export default function AvatarStrip({
   speakerPosition,
   onSpeakerPositionChange,
 }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const iconSuggestions = (catalog?.dialogAvatarIcons ?? []).map((v) => ({ value: v }))
 
@@ -183,7 +186,7 @@ export default function AvatarStrip({
             <span className="text-xs font-medium">{POSITION_LABELS[selected.position]}</span>
             {speakerPosition === selected.position ? (
               <span className="flex items-center gap-1 text-[10px] text-primary">
-                <MessageSquare className="h-2.5 w-2.5" /> speaking
+                <MessageSquare className="h-2.5 w-2.5" /> {t('dialogs.avatarStrip.speaking')}
               </span>
             ) : (
               onSpeakerPositionChange && (
@@ -192,9 +195,9 @@ export default function AvatarStrip({
                   size="sm"
                   className="h-6 gap-1 text-xs text-muted-foreground"
                   onClick={() => onSpeakerPositionChange(selected.position)}
-                  title="Anchor the speaker label to this avatar"
+                  title={t('dialogs.avatarStrip.anchorTheSpeakerLabelTo')}
                 >
-                  <MessageSquare className="h-3 w-3" /> Make speaker
+                  <MessageSquare className="h-3 w-3" /> {t('dialogs.avatarStrip.makeSpeaker')}
                 </Button>
               )
             )}
@@ -204,12 +207,12 @@ export default function AvatarStrip({
               className="ml-auto h-6 gap-1 text-xs text-muted-foreground hover:text-destructive"
               onClick={removeSelected}
             >
-              <Trash2 className="h-3 w-3" /> Remove
+              <Trash2 className="h-3 w-3" /> {t('mapGrid.mapGridSettingsDialog.remove')}
             </Button>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Icon</Label>
+            <Label className="text-xs">{t('shared.icon')}</Label>
             {/* A realistic-looking path as placeholder made an empty avatar read as
                 configured — the slot said "(no icon)" while the field appeared filled. */}
             <div className="flex items-center gap-1.5">
@@ -218,8 +221,8 @@ export default function AvatarStrip({
                   value={selected.icon}
                   onChange={(icon) => patchSelected({ icon })}
                   suggestions={iconSuggestions}
-                  placeholder="Pick an avatar portrait…"
-                  emptyHint="No avatar icons — load Core.zip via Game Data"
+                  placeholder={t('dialogs.avatarStrip.pickAnAvatarPortrait')}
+                  emptyHint={t('dialogs.avatarStrip.noAvatarIconsLoadCore')}
                   thumbnailFor={thumbnailPath}
                 />
               </div>
@@ -236,24 +239,24 @@ export default function AvatarStrip({
                 disabled={!heroesLoaded}
                 title={
                   heroesLoaded
-                    ? 'Browse hero portraits grouped by faction'
-                    : 'Load Core.zip via Game Data to browse hero portraits'
+                    ? t('dialogs.avatarStrip.browseHeroPortraitsGroupedBy')
+                    : t('dialogs.avatarStrip.loadCoreZipViaGame')
                 }
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
-                Heroes…
+                {t('dialogs.avatarStrip.heroes')}
               </Button>
             </div>
             {!selected.icon && (
               <p className="text-[10px] text-amber-600">
-                No portrait chosen yet — this avatar will not appear in game.
+                {t('dialogs.avatarStrip.noPortraitChosenYetThis')}
               </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs">Layer</Label>
+              <Label className="text-xs">{t('dialogs.avatarStrip.layer')}</Label>
               <div className="flex items-center gap-3 h-7 text-xs">
                 {(['true', 'false'] as const).map((v) => (
                   <label key={v} className="flex items-center gap-1.5 cursor-pointer">
@@ -263,13 +266,13 @@ export default function AvatarStrip({
                       onChange={() => patchSelected({ isForeground: v })}
                       className="accent-primary"
                     />
-                    {v === 'true' ? 'Foreground' : 'Background'}
+                    {v === 'true' ? t('dialogs.avatarStrip.foreground') : t('common.themeEditorDialog.colorFields.background.label')}
                   </label>
                 ))}
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Width (optional)</Label>
+              <Label className="text-xs">{t('dialogs.avatarStrip.widthOptional')}</Label>
               <Input
                 value={selected.width ?? ''}
                 onChange={(e) => patchSelected({ width: e.target.value || undefined })}
@@ -280,7 +283,7 @@ export default function AvatarStrip({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Animations</Label>
+            <Label className="text-xs">{t('dialogs.avatarStrip.animations')}</Label>
             <div className="flex items-center gap-3 text-xs">
               {AVATAR_ANIMATIONS.map((anim) => (
                 <label key={anim} className="flex items-center gap-1.5 cursor-pointer">

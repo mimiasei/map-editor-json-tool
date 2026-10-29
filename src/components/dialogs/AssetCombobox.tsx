@@ -16,6 +16,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { ChevronsUpDown, X } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 export interface AssetSuggestion {
   /** Value written to the JSON. */
@@ -51,6 +52,7 @@ export default function AssetCombobox({
   className = '',
   thumbnailFor,
 }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -86,7 +88,7 @@ export default function AssetCombobox({
               onChange('')
             }}
             className="absolute right-7 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            title="Clear"
+            title={t('shared.clear')}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -113,7 +115,7 @@ export default function AssetCombobox({
         <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
-              {suggestions.length === 0 ? emptyHint : 'No match — free text is accepted'}
+              {suggestions.length === 0 ? emptyHint : t('dialogs.assetCombobox.noMatchFreeTextIs')}
             </CommandEmpty>
             <CommandGroup>
               {filtered.map((s) => (

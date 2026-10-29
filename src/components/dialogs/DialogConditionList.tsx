@@ -3,6 +3,7 @@ import DialogConditionForm from './DialogConditionForm'
 import { Button } from '@/components/ui/button'
 import { Plus, ClipboardPaste } from '@/components/ui/icons'
 import { useClipboardHasPayload } from '@/lib/clipboard'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   conditions: DialogCondition[]
@@ -14,12 +15,13 @@ interface Props {
 }
 
 export default function DialogConditionList({ conditions, onAdd, onUpdate, onRemove }: Props) {
+  const { t } = useTranslation()
   const pasteable = useClipboardHasPayload<DialogCondition>('condition')
 
   return (
     <div className="space-y-2">
       {conditions.length === 0 && (
-        <p className="text-xs text-muted-foreground">No conditions.</p>
+        <p className="text-xs text-muted-foreground">{t('dialogs.dialogConditionList.noConditions')}</p>
       )}
       {conditions.map((condition, i) => (
         <DialogConditionForm
@@ -32,7 +34,7 @@ export default function DialogConditionList({ conditions, onAdd, onUpdate, onRem
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => onAdd()} className="gap-1.5 text-xs">
           <Plus className="h-3 w-3" />
-          Add Condition
+          {t('dialogs.dialogConditionList.addCondition')}
         </Button>
         {pasteable && (
           <Button
@@ -40,10 +42,10 @@ export default function DialogConditionList({ conditions, onAdd, onUpdate, onRem
             size="sm"
             onClick={() => onAdd(pasteable)}
             className="gap-1.5 text-xs"
-            title="Paste the copied condition"
+            title={t('dialogs.dialogConditionList.pasteTheCopiedCondition')}
           >
             <ClipboardPaste className="h-3 w-3" />
-            Paste Condition
+            {t('dialogs.dialogConditionList.pasteCondition')}
           </Button>
         )}
       </div>

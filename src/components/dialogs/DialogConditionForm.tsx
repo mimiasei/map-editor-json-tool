@@ -25,6 +25,7 @@ import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard } from '@/lib/clipboard'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   condition: DialogCondition
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function DialogConditionForm({ condition, onChange, onRemove }: Props) {
+  const { t } = useTranslation()
   const def = DIALOG_CONDITION_REGISTRY[condition.c]
   const isCustom = !def
   const entities = useMapContextStore((s) => s.context?.entities)
@@ -70,11 +72,11 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
       {/* Type selector */}
       <div className="flex items-start gap-2">
         <div className="flex-1 space-y-1">
-          <Label className="text-xs">Dialog condition type</Label>
+          <Label className="text-xs">{t('dialogs.dialogConditionForm.dialogConditionType')}</Label>
           <div className="flex gap-2">
             <Select value={selectValue} onValueChange={updateType}>
               <SelectTrigger className="w-52">
-                <SelectValue placeholder="Select type…" />
+                <SelectValue placeholder={t('dialogs.dialogConditionForm.selectType')} />
               </SelectTrigger>
               <SelectContent>
                 {DIALOG_CONDITION_LIST.map((c) => (
@@ -82,14 +84,14 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
                     {c.label}
                   </SelectItem>
                 ))}
-                <SelectItem value="__custom__">Custom / unknown type</SelectItem>
+                <SelectItem value="__custom__">{t('dialogs.dialogConditionForm.customUnknownType')}</SelectItem>
               </SelectContent>
             </Select>
             {isCustom && (
               <Input
                 value={condition.c}
                 onChange={(e) => onChange({ ...condition, c: e.target.value })}
-                placeholder="Type string"
+                placeholder={t('dialogs.dialogConditionForm.typeString')}
                 className="flex-1"
               />
             )}
@@ -104,7 +106,7 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
             size="icon"
             className="h-8 w-8 mt-4 text-muted-foreground hover:text-primary"
             onClick={() => copyToClipboard('condition', condition)}
-            title="Copy condition to clipboard"
+            title={t('dialogs.dialogConditionForm.copyConditionToClipboard')}
           >
             <ClipboardCopy className="h-3.5 w-3.5" />
           </Button>
@@ -186,12 +188,12 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
       {isCustom && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Parameters (p)</Label>
+            <Label className="text-xs">{t('dialogs.dialogConditionForm.parametersP')}</Label>
             <button
               className="text-xs text-primary hover:underline"
               onClick={addParam}
             >
-              + Add param
+              {t('dialogs.dialogConditionForm.addParam')}
             </button>
           </div>
           {(condition.p ?? []).map((val, i) => (
@@ -225,7 +227,7 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
           }
         />
         <span className="text-xs">
-          Invert — slide/answer is skipped when this condition IS met
+          {t('dialogs.dialogConditionForm.invertSlideAnswerIsSkipped')}
         </span>
       </label>
     </div>
