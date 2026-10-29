@@ -20,6 +20,7 @@ import { resolveDecorationSubcategory, decorationSubcategoryName } from '@/lib/m
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {isGuardCandidate} from "@/lib/rmg/zone-guard-scatter.ts";
 import i18n from '@/lib/i18n'
+import { localNameById } from '@/lib/catalog/local-name'
 
 export interface PlayerCityStat {
   owner: number
@@ -182,7 +183,7 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     unitSquadCount: concreteSquads.length,
     unitFrequency: [...unitFreq.entries()]
         .sort((a, b) => b[1] - a[1])
-        .map(([sid, n]) => [catalog?.creatures.find((c) => c.id === sid)?.name ?? sid, n] as [string, number]),
+        .map(([sid, n]) => [localNameById(catalog, 'creatures', sid, catalog?.creatures.find((c) => c.id === sid)?.name ?? sid), n] as [string, number]),
     minesByType: [...minesByType.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),

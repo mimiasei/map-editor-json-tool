@@ -1410,6 +1410,10 @@
       "level": ", niveau {{n}}",
       "ramp": ", rampe ({{direction}})",
       "line": "{{biome}}{{water}} - Tuile ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
+    },
+    "rewardParam": {
+      "artifact": "{{name}} (artefact)",
+      "skill": "{{name}} (compétence)"
     }
   },
   "tree": {

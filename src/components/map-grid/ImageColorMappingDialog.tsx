@@ -8,6 +8,7 @@ import { openFile, saveFile } from '@/lib/native-fs'
 import { WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
+import { localName } from '@/lib/catalog/local-name'
 
 export interface ImportedImage {
   name: string
@@ -95,7 +96,7 @@ function quantizeRgba(data: Uint8ClampedArray, colorLimit: 8 | 16 | 32): Uint8Cl
 
 function objectLabel(sid: string, catalog: GameCatalog | null): string {
   const object = catalog?.mapObjects.find((entry) => entry.id === sid)
-  return object ? `${object.name} (${object.id})` : sid
+  return object ? `${localName(catalog, 'mapObjects', object)} (${object.id})` : sid
 }
 
 function objectMatches(entry: { id: string; name: string; category: string }, family: 'forest' | 'mountain'): boolean {

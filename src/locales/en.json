@@ -1378,6 +1378,10 @@
       "level": ", Level {{n}}",
       "ramp": ", Ramp ({{direction}})",
       "line": "{{biome}}{{water}} - Tile ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
+    },
+    "rewardParam": {
+      "artifact": "{{name}} (artifact)",
+      "skill": "{{name}} (skill)"
     }
   },
   "tree": {

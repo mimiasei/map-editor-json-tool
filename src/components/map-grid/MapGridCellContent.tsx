@@ -32,6 +32,7 @@ import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, squadDifficultyName, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import { useTranslation } from 'react-i18next'
+import { factionLabel } from '@/lib/factions'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -1025,7 +1026,7 @@ export default function MapGridCellContent({
                   <p className="text-xs text-muted-foreground">{t('common.statsDialog.faction')}</p>
                   {(() => {
                     const fraction = selected.randomSquadFraction ?? ''
-                    const label = (v: string) => (v === '' ? 'Random' : v === 'neutral' ? 'Neutral' : localNameById(catalog, 'factions', v, catalog?.factions.find((f) => f.id === v)?.name ?? v))
+                    const label = (v: string) => (v === '' ? t('common.generateRandomMapDialog.random') : v === 'neutral' ? factionLabel('Neutral') : localNameById(catalog, 'factions', v, catalog?.factions.find((f) => f.id === v)?.name ?? v))
                     return onSetRandomSquadFraction ? (
                       <Select value={fraction || 'random'} onValueChange={(v) => onSetRandomSquadFraction(selected, v === 'random' ? '' : v)}>
                         <SelectTrigger className="h-7 text-xs mt-0.5 w-40"><SelectValue /></SelectTrigger>

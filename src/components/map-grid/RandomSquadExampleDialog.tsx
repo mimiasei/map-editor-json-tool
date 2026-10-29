@@ -10,6 +10,7 @@ import { Dices } from '@/components/ui/icons'
 import { rollExampleSquad, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
+import { localName } from '@/lib/catalog/local-name'
 
 interface Props {
   open: boolean
@@ -48,8 +49,8 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
                   const creature = catalog?.creatures.find((c) => c.id === u.sid)
                   return (
                     <li key={u.sid} className="flex items-center gap-2 text-sm">
-                      <CatalogIcon iconId={creature?.icon ?? u.sid} name={creature?.name ?? u.sid} size={28} />
-                      <span className="flex-1">{creature?.name ?? u.sid}</span>
+                      <CatalogIcon iconId={creature?.icon ?? u.sid} name={creature ? localName(catalog, 'creatures', creature) : u.sid} size={28} />
+                      <span className="flex-1">{creature ? localName(catalog, 'creatures', creature) : u.sid}</span>
                       <span className="tabular-nums text-muted-foreground">{u.count} × {u.unitValue}</span>
                       <span className="w-14 text-right tabular-nums">{u.count * u.unitValue}</span>
                     </li>
