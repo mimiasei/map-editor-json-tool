@@ -5,6 +5,7 @@ import {
 } from '@/components/common/DraggableDialogContent'
 import { GuidesContent } from './GuidesPanel'
 import UndockButton from '@/components/panels/UndockButton'
+import { useTranslation } from 'react-i18next'
 
 interface GuidesDialogProps {
   open: boolean
@@ -16,6 +17,7 @@ interface GuidesDialogProps {
 }
 
 export default function GuidesDialog({ open, onOpenChange, onUndock, undocked }: GuidesDialogProps) {
+  const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DraggableDialogContent
@@ -26,11 +28,11 @@ export default function GuidesDialog({ open, onOpenChange, onUndock, undocked }:
         minHeight={400}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Guides</DialogTitle>
+        <DialogTitle className="sr-only">{t('layout.toolbar.guides')}</DialogTitle>
 
         {/* Header — acts as the drag handle */}
         <DraggableDialogDragHandle className="flex items-center px-4 py-3 border-b border-border shrink-0">
-          <span className="text-sm font-semibold">Guides</span>
+          <span className="text-sm font-semibold">{t('layout.toolbar.guides')}</span>
 
           {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
           {onUndock && (

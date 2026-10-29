@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPanelSyncChannel, PANEL_META, type PanelState, type PanelAction } from '@/lib/panel-sync'
 import PanelContent from './PanelContent'
 import { logInfo } from '@/lib/logger'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   panelId: string
@@ -24,6 +25,7 @@ interface Props {
  * Until the first state message, a loading indicator is shown.
  */
 export default function PanelShell({ panelId }: Props) {
+  const { t } = useTranslation()
   const [panelState, setPanelState] = useState<PanelState | null>(null)
   const [channel] = useState(() => createPanelSyncChannel(`panel-${panelId}`))
 
@@ -61,7 +63,7 @@ export default function PanelShell({ panelId }: Props) {
           onClick={handleRedock}
           className="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
         >
-          Re-dock
+          {t('panels.undockButton.redock')}
           <span aria-hidden>×</span>
         </button>
       </div>
@@ -70,7 +72,7 @@ export default function PanelShell({ panelId }: Props) {
       <div className="flex-1 min-h-0">
         {panelState === null ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            Waiting for main window…
+            {t('panels.panelShell.waitingForMainWindow')}
           </div>
         ) : (
           <PanelContent

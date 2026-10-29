@@ -26,6 +26,7 @@ import {
   type Provider,
   type TextWriterError,
 } from '@/lib/text-writer'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged }: Props) {
+  const { t } = useTranslation()
   const [provider, setProviderState] = useState<Provider>(getProvider)
   const [keyInput, setKeyInput] = useState('')
   const [consent, setConsentState] = useState(hasConsent)
@@ -50,7 +52,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
   // While a request runs: the step Rust reports and a seconds counter.
   useEffect(() => {
     if (!busy) return
-    setStatus('Starting…')
+    setStatus(t('story.textWriterSettingsDialog.starting'))
     setSeconds(0)
     const timer = setInterval(() => setSeconds((s) => s + 1), 1000)
     let off: (() => void) | undefined
@@ -94,7 +96,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
 
   const failure = (e: unknown) => {
     const err = e as TextWriterError
-    return describeError(err) ?? err.message ?? 'Something went wrong.'
+    return describeError(err) ?? err.message ?? t('story.textWriterSettingsDialog.somethingWentWrong')
   }
 
   const save = async () => {
@@ -133,7 +135,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
     setBusy(true)
     try {
       await clearKey(provider)
-      setMessage({ ok: true, text: 'The key was removed.' })
+      setMessage({ ok: true, text: t('story.textWriterSettingsDialog.keyRemoved') })
     } catch (e) {
       setMessage({ ok: false, text: failure(e) })
     } finally {
@@ -153,16 +155,15 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Text writer</DialogTitle>
+          <DialogTitle>{t('story.textWriterSettingsDialog.textWriter')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Optional. With a free key, stories get richer text, can be written in other languages and can be built from
-            your own idea. Without it, the built-in text is used.
+            {t('story.textWriterSettingsDialog.optionalWithAFreeKey')}
           </p>
 
           <div className="space-y-1.5">
-            <Label>Service</Label>
+            <Label>{t('story.textWriterSettingsDialog.service')}</Label>
             <div className="flex gap-1.5">
               {PROVIDERS.map((p) => (
                 <Button
@@ -179,11 +180,11 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="text-writer-key">Key</Label>
+            <Label htmlFor="text-writer-key">{t('story.textWriterSettingsDialog.key')}</Label>
             <p className="text-xs text-muted-foreground">
               {info.keyHelp}{' '}
               <button type="button" className="inline-flex items-center gap-1 text-primary hover:underline" onClick={openKeyPage}>
-                Open page <ExternalLink className="h-3 w-3" />
+                {t('story.textWriterSettingsDialog.openPage')} <ExternalLink className="h-3 w-3" />
               </button>
             </p>
             <Input
@@ -191,7 +192,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
               type="password"
               autoComplete="off"
               value={keyInput}
-              placeholder={stored ? 'A key is saved. Paste a new one to replace it.' : 'Paste your key'}
+              placeholder={stored ? t('story.textWriterSettingsDialog.aKeyIsSavedPaste') : t('story.textWriterSettingsDialog.pasteYourKey')}
               onChange={(e) => setKeyInput(e.target.value)}
             />
           </div>
@@ -199,20 +200,19 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
           <label className="flex items-start gap-2 text-xs">
             <Checkbox checked={consent} onCheckedChange={(c) => toggleConsent(c === true)} className="mt-0.5" />
             <span>
-              I understand that text written here, and any story idea I type, is sent to {info.label} to be written. Free
-              plans may use it to improve their models, so do not include anything private.
+              {t('story.textWriterSettingsDialog.iUnderstandThatTextWritten', { label: info.label })}
             </span>
           </label>
 
           {stored && (
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> A key is saved for {info.label}.
+              <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {t('story.textWriterSettingsDialog.keySaved', { name: info.label })}
             </p>
           )}
 
           {busy && (
             <p className="text-xs text-muted-foreground" aria-live="polite">
-              Checking… {status} ({seconds} s)
+              {t('story.textWriterSettingsDialog.checkingS', { status, seconds })}
             </p>
           )}
 
@@ -225,20 +225,20 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
         </div>
         <DialogFooter>
           {stored && (
-            <Button variant="outline" onClick={test} disabled={busy || !consent} title={consent ? undefined : 'Tick the box above first'}>
-              {busy ? 'Checking…' : 'Test connection'}
+            <Button variant="outline" onClick={test} disabled={busy || !consent} title={consent ? undefined : t('story.textWriterSettingsDialog.tickTheBoxAboveFirst')}>
+              {busy ? t('story.textWriterSettingsDialog.checking') : t('story.textWriterSettingsDialog.testConnection')}
             </Button>
           )}
           {stored && (
             <Button variant="ghost" onClick={remove} disabled={busy}>
-              Remove key
+              {t('story.textWriterSettingsDialog.removeKey')}
             </Button>
           )}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Close
+            {t('ui.close')}
           </Button>
           <Button onClick={save} disabled={busy || !consent || keyInput.trim().length < 8}>
-            {busy ? 'Checking…' : 'Save and test'}
+            {busy ? t('story.textWriterSettingsDialog.checking') : t('story.textWriterSettingsDialog.saveAndTest')}
           </Button>
         </DialogFooter>
       </DialogContent>

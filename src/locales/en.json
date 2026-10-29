@@ -1888,5 +1888,204 @@
       "blocks": "Blocks",
       "artifacts": "Artifact pickups"
     }
+  },
+  "triggers": {
+    "actionCard": {
+      "needsSetupClickToConfigure": "Needs setup — click to configure",
+      "ifThisActionRunsNone": "If this action runs, none of the actions listed after it will run.",
+      "stopsHere": "Stops here"
+    },
+    "addNodePopover": {
+      "recentlyUsed": "Recently used"
+    },
+    "conditionCard": {
+      "needsSetupClickToConfigure": "Needs setup — click to configure"
+    },
+    "triggerInspectorPanel": {
+      "editCondition": "Edit condition",
+      "editAction": "Edit action"
+    },
+    "triggerVisualBuilder": {
+      "thisRuleCanFireMore": "This rule can fire more than once",
+      "repeats": "Repeats",
+      "thisRuleDoesntDoAnything": "This rule doesn't do anything yet.",
+      "theWhen": "(the \"when\")",
+      "theThen": "(the \"then\")",
+      "tipItsFineToStart": "Tip: it's fine to start with just an action — no conditions means it fires every time it's checked.",
+      "aLLOfTheseAreTrue": "ALL of these are true",
+      "aNYOfTheseAreTrue": "ANY of these are true",
+      "clearAll": "Clear all?",
+      "clearAll2": "Clear all",
+      "noConditionsYetThisWill": "No conditions yet — this will fire every time it's checked.",
+      "aND": "AND",
+      "addCondition": "Add a condition",
+      "nodeIndex": "Node index",
+      "creatingRuleFor": "Creating a rule for <b>{{name}}</b>",
+      "creatingRuleForFaction": "Creating a rule for <b>{{name}}</b> ({{faction}})",
+      "addAction": "Add an action"
+    },
+    "sentenceView": {
+      "noLocalizedText": "No localized text found for this dialog SID."
+    }
+  },
+  "actions": {
+    "actionForm": {
+      "actionType": "Action type",
+      "duplicateAction": "Duplicate action",
+      "pickAHeroSpawnerFrom": "Pick a hero spawner from the map",
+      "pickANodeFromThe": "Pick a node from the map",
+      "editDialog": "Edit dialog",
+      "breakStopExecutingSubsequentActions": "Break — stop executing subsequent actions if this action runs"
+    },
+    "actionList": {
+      "noActionsDefined": "No actions defined.",
+      "addAction": "Add Action"
+    }
+  },
+  "conditions": {
+    "conditionForm": {
+      "conditionType": "Condition type"
+    },
+    "conditionList": {
+      "noConditionsTriggerFiresEvery": "No conditions — trigger fires every tick."
+    }
+  },
+  "story": {
+    "slotPicker": {
+      "addAnother": "Add another",
+      "pickOne": "Pick {{what}} from the map. Suggestions are filled in for you.",
+      "pickMany": "Pick at least {{min}}, each {{what}}, from the map. Suggestions are filled in for you.",
+      "kinds": {
+        "town": "a town",
+        "object": "a named object",
+        "squad": "a named army"
+      }
+    },
+    "storyBuilderDialog": {
+      "another": "Another",
+      "english": "English",
+      "outOfDateUpdate": "Out of date · update",
+      "chooseAStoryItAdds": "Choose a story. It adds connected quests and dialogs to your map, with choices the player makes along the way. You only point at places on your map; the text is written for you.",
+      "writeIn": "Write in",
+      "textWriterIsOn": "Text writer is on",
+      "setUpTheTextWriter": "Set up the text writer for richer text and other languages",
+      "buildMyOwn": "Build my own",
+      "stackStepsLikeVisitingPlaces": "Stack steps like visiting places, capturing a town and making a choice.",
+      "iHaveMyOwnIdea": "I have my own idea",
+      "describeAStoryInYour": "Describe a story in your own words, in any language, and it is turned into quests and choices.",
+      "needsTheTextWriterSet": "Needs the text writer. Set it up above to use this.",
+      "aYoungHeirHasVanished": "A young heir has vanished from a haunted moor. The player follows rumours to three old places, then must decide whom to trust…",
+      "addStepsInTheOrder": "Add steps in the order they should happen. An ending is added for you.",
+      "openAMapFileFirst": "Open a .map file first so places on your map can be picked. You can also type object names.",
+      "tone": "Tone",
+      "textLength": "Text length",
+      "alsoWriteItIn": "Also write it in",
+      "yourMapHasNoName": "Your map has no name yet. Set one in Map Settings so the story's ids are unique to your map.",
+      "rewriteAll": "Rewrite all",
+      "writingDialog": "Writing dialog…",
+      "editAnyTextOrAsk": "Edit any text, or ask for another version of one line. Nothing is added until you press Create story.",
+      "yourStoryWasAddedTo": "Your story was added to the project.",
+      "discardDraft": "Discard draft",
+      "closeThisWindowAndKeep": "Close this window and keep the draft, so you can edit the map and come back",
+      "hideToEditMap": "Hide to edit map",
+      "readingYourIdea": "Reading your idea…",
+      "buildMyStory": "Build my story",
+      "next": "Next",
+      "preview": "Preview",
+      "createStory": "Create story",
+      "kinds": {
+        "quest_name": "Quest title",
+        "quest_desc": "Quest description",
+        "intro": "Introduction",
+        "clue": "Story moment",
+        "choice_prompt": "The choice",
+        "answer": "Answer",
+        "outcome": "What happens",
+        "reward": "Reward",
+        "finale": "Ending"
+      },
+      "lengths": {
+        "short": "Short",
+        "medium": "Medium"
+      },
+      "amounts": {
+        "resources": "Gold needed",
+        "timer": "Days",
+        "reward": "Gold reward"
+      },
+      "kindWithIntent": "{{kind}} · {{intent}}",
+      "ideaNotStory": "That idea could not be turned into a story. Try adding more detail.",
+      "writerUnavailable": "The text writer is not available right now.",
+      "notAvailable": "not available",
+      "languageNotWritten": "{{language}} could not be written ({{reason}}).",
+      "steps": {
+        "pick": "Story Builder",
+        "import": "Your own idea",
+        "build": "Build your own story",
+        "story": "Story",
+        "done": "Story created"
+      },
+      "questCount_one": "{{count}} quest",
+      "questCount_other": "{{count}} quests",
+      "questsWithChoices_one": "{{count}} quest · player choices",
+      "questsWithChoices_other": "{{count}} quests · player choices",
+      "describeStory": "Describe your story: who is in it, what happens, and where the player gets to decide. Write in {{language}}. You can adjust everything afterwards.",
+      "removedPicks_one": "{{count}} pick is no longer on the map ({{names}}). Choose another below.",
+      "removedPicks_other": "{{count}} picks are no longer on the map ({{names}}). Choose new ones below.",
+      "alwaysIncludedEnglish": "English is always included. Added languages are translated drafts; check them before publishing.",
+      "alwaysIncludedBoth": "{{language}} + English are always included. Added languages are translated drafts; check them before publishing.",
+      "summary": "{{quests}} · {{dialogs}}",
+      "summaryTracks": "{{quests}} · {{dialogs}} · tracks: {{variables}}",
+      "dialogCount_one": "{{count}} dialog",
+      "dialogCount_other": "{{count}} dialogs"
+    },
+    "textWriterSettingsDialog": {
+      "textWriter": "Text writer",
+      "optionalWithAFreeKey": "Optional. With a free key, stories get richer text, can be written in other languages and can be built from your own idea. Without it, the built-in text is used.",
+      "service": "Service",
+      "key": "Key",
+      "openPage": "Open page",
+      "aKeyIsSavedPaste": "A key is saved. Paste a new one to replace it.",
+      "pasteYourKey": "Paste your key",
+      "iUnderstandThatTextWritten": "I understand that text written here, and any story idea I type, is sent to {{label}} to be written. Free plans may use it to improve their models, so do not include anything private.",
+      "checkingS": "Checking… {{status}} ({{seconds}} s)",
+      "tickTheBoxAboveFirst": "Tick the box above first",
+      "checking": "Checking…",
+      "testConnection": "Test connection",
+      "removeKey": "Remove key",
+      "saveAndTest": "Save and test",
+      "starting": "Starting…",
+      "somethingWentWrong": "Something went wrong.",
+      "keyRemoved": "The key was removed.",
+      "keySaved": "A key is saved for {{name}}."
+    }
+  },
+  "guides": {
+    "annotationBanner": {
+      "dismissAnnotation": "Dismiss annotation"
+    },
+    "guidesPanel": {
+      "searchGuides": "Search guides…",
+      "selectAGuideFromThe": "Select a guide from the sidebar.",
+      "failedToLoad": "Failed to load: {{loadError}}"
+    },
+    "templatePickerDialog": {
+      "title": "New from Template",
+      "load": "Load Template",
+      "loading": "Loading…"
+    }
+  },
+  "panels": {
+    "panelContent": {
+      "clickATileInThe": "Click a tile in the Map Grid window to see its info here.",
+      "unknownPanel": "Unknown panel: {{panelId}}"
+    },
+    "panelShell": {
+      "waitingForMainWindow": "Waiting for main window…"
+    },
+    "undockButton": {
+      "popOutIntoSeparateWindow": "Pop out into separate window",
+      "redock": "Re-dock"
+    }
   }
 }

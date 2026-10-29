@@ -20,6 +20,7 @@ import {
   HIDDEN_ACTION_TYPES,
 } from '@/lib/trigger-visual'
 import { SUBJECT_DEFS, type SubjectKey } from '@/lib/trigger-subjects'
+import { useTranslation } from 'react-i18next'
 
 interface Item {
   type: string
@@ -66,6 +67,7 @@ function matchTier(item: Item, q: string): MatchTier {
 }
 
 export default function AddNodePopover({ kind, onPick, children, subjectKey }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -147,7 +149,7 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
         <Command shouldFilter={false}>
           <CommandInput placeholder={`Search ${kind}s…`} value={query} onValueChange={setQuery} />
           <CommandList className="max-h-80">
-            <CommandEmpty>No matches.</CommandEmpty>
+            <CommandEmpty>{t('catalog.gameDatabaseDialog.noMatches')}</CommandEmpty>
             {shownSuggested.length > 0 && subjectKey && (
               <CommandGroup heading={SUBJECT_DEFS[subjectKey].label}>
                 {shownSuggested.map((item) => (
@@ -162,7 +164,7 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
               </CommandGroup>
             )}
             {shownRecent.length > 0 && (
-              <CommandGroup heading="Recently used">
+              <CommandGroup heading={t('triggers.addNodePopover.recentlyUsed')}>
                 {shownRecent.map((item) => (
                   <CommandItem
                     key={`recent-${item.type}`}

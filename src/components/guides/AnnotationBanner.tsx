@@ -1,5 +1,6 @@
 import { useGuideStore } from '@/store/useGuideStore'
 import { Info, X } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   /** JSON path of this node, e.g. "quests[0].subQuests[0].triggers[0]" */
@@ -11,6 +12,7 @@ interface Props {
  * Dismissible per-path, persisted via useGuideStore.
  */
 export default function AnnotationBanner({ path }: Props) {
+  const { t } = useTranslation()
   const { templateAnnotations, dismissedAnnotations, dismissAnnotation } = useGuideStore()
 
   const text = templateAnnotations[path]
@@ -25,7 +27,7 @@ export default function AnnotationBanner({ path }: Props) {
         type="button"
         onClick={() => dismissAnnotation(path)}
         className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-200 transition-colors shrink-0"
-        aria-label="Dismiss annotation"
+        aria-label={t('guides.annotationBanner.dismissAnnotation')}
       >
         <X className="h-3 w-3" />
       </button>

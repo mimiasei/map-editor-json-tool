@@ -140,7 +140,7 @@ export default function TemplateDetailsDialog({ open, onOpenChange, fileName, di
     setError(null)
     setVariantIndex(0)
     void readBundledGameTemplateJson(fileName).then((json) => {
-      if (!json) throw new Error('Could not read this template file.')
+      if (!json) throw new Error(t('common.selectGameTemplateDialog.readFailed'))
       setDetails(parseTemplateDetails(json))
     }).catch((e) => {
       const msg = e instanceof Error ? e.message : String(e)

@@ -7,6 +7,7 @@ import { Trash2, AlertTriangle, HelpCircle, OctagonX } from '@/components/ui/ico
 import { Button } from '@/components/ui/button'
 import SentenceView from './SentenceView'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   action: Action
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function ActionCard({ action, dimmed, onEdit, onRemove, onPickNode }: Props) {
+  const { t } = useTranslation()
   const def = ACTION_REGISTRY[action.a]
   const Icon = def ? getActionCategoryIcon(def.category) : HelpCircle
   const configured = isActionConfigured(action)
@@ -58,16 +60,16 @@ export default function ActionCard({ action, dimmed, onEdit, onRemove, onPickNod
                   onNodeClick={onPickNode}
                 />
               ) : (
-                'Needs setup — click to configure'
+                t('triggers.actionCard.needsSetupClickToConfigure')
               )}
             </p>
             {breaks && (
               <span
-                title="If this action runs, none of the actions listed after it will run."
+                title={t('triggers.actionCard.ifThisActionRunsNone')}
                 className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
               >
                 <OctagonX className="h-2.5 w-2.5" />
-                Stops here
+                {t('triggers.actionCard.stopsHere')}
               </span>
             )}
           </div>

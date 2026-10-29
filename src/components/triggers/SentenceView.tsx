@@ -5,6 +5,7 @@
 // onClick (open the edit Sheet) never also fires.
 
 import { Eye } from '@/components/ui/icons'
+import i18n from '@/lib/i18n'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -31,13 +32,13 @@ function dialogPreviewText(
       .map((s) => (s.text ? localization[s.text] : undefined))
       .filter(Boolean)
       .join(' / ')
-    return text || 'No localized text found for this dialog SID.'
+    return text || i18n.t('triggers.sentenceView.noLocalizedText')
   }
 
   const dialog = catalog?.dialogs.find((d) => d.id === sid)
-  if (!dialog) return 'No localized text found for this dialog SID.'
+  if (!dialog) return i18n.t('triggers.sentenceView.noLocalizedText')
   const text = dialog.slides.map((s) => s.text).filter(Boolean).join(' / ')
-  return text || dialog.firstText || 'No localized text found for this dialog SID.'
+  return text || dialog.firstText || i18n.t('triggers.sentenceView.noLocalizedText')
 }
 
 interface Props {

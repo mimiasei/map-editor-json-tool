@@ -20,6 +20,7 @@ import TriggerInspectorPanel, { type SelectedNode } from './TriggerInspectorPane
 import { centerMapOnNode } from '@/lib/trigger-card-links'
 import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
 import { cn } from '@/lib/utils'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface Props {
   questIndex: number
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function TriggerVisualBuilder({ questIndex, subQuestIndex, triggerIndex, trigger }: Props) {
+  const { t } = useTranslation()
   const { updateTrigger, addCondition, updateCondition, removeCondition, addAction, updateAction, removeAction, removeQuest } =
     useScenarioStore()
   const cascadeGuard = useDialogActionCascadeGuard()
@@ -162,7 +164,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   // inspector row so the (possibly updated) value is visible right away.
   const handlePickNodeFromCard = (cardKind: 'condition' | 'action', cardIndex: number, paramIndex: number, currentNode: number) => {
     const def = cardKind === 'condition' ? CONDITION_REGISTRY[conditions[cardIndex]?.c] : ACTION_REGISTRY[actions[cardIndex]?.a]
-    const label = def?.params[paramIndex]?.label ?? 'Node index'
+    const label = def?.params[paramIndex]?.label ?? t('triggers.triggerVisualBuilder.nodeIndex')
     const resumeSelection: SelectedNode = { kind: cardKind, index: cardIndex }
 
     centerMapOnNode(currentNode)
@@ -208,10 +210,10 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
               ? 'border-primary/40 bg-accent text-accent-foreground'
               : 'border-border bg-transparent text-muted-foreground hover:bg-accent/50',
           )}
-          title="This rule can fire more than once"
+          title={t('triggers.triggerVisualBuilder.thisRuleCanFireMore')}
         >
           <Repeat className="h-3 w-3" />
-          Repeats
+          {t('triggers.triggerVisualBuilder.repeats')}
         </button>
       </div>
 
@@ -219,8 +221,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
         <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
           <span className="flex items-center gap-1.5">
             <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
-            Creating a rule for <strong>{activeSubjectSeed.displayName || activeSubjectSeed.entitySid}</strong>
-            {activeSubjectSeed.factionLabel && <span> ({activeSubjectSeed.factionLabel})</span>}
+            <Trans i18nKey={activeSubjectSeed.factionLabel ? 'triggers.triggerVisualBuilder.creatingRuleForFaction' : 'triggers.triggerVisualBuilder.creatingRuleFor'} values={{ name: activeSubjectSeed.displayName || activeSubjectSeed.entitySid, faction: activeSubjectSeed.factionLabel }} components={{ b: <strong /> }} />
           </span>
           <div className="flex shrink-0 items-center gap-1">
             <Button
@@ -232,10 +233,10 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                 clearSubjectSeed()
               }}
             >
-              Cancel
+              {t('shared.cancel')}
             </Button>
             <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearSubjectSeed}>
-              Done
+              {t('shared.done')}
             </Button>
           </div>
         </div>
@@ -243,23 +244,23 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
 
       {isEmpty ? (
         <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-6 py-8 text-center">
-          <p className="text-sm font-medium">This rule doesn't do anything yet.</p>
+          <p className="text-sm font-medium">{t('triggers.triggerVisualBuilder.thisRuleDoesntDoAnything')}</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <AddNodePopover kind="condition" onPick={handleAddCondition} subjectKey={activeSubjectSeed?.subjectKey}>
               <Button variant="outline" size="lg" className="gap-1.5 rounded-xl border-amber-300/70">
                 <Plus className="h-4 w-4" />
-                Add a condition <span className="text-muted-foreground">(the "when")</span>
+                {t('triggers.triggerVisualBuilder.addCondition')} <span className="text-muted-foreground">{t('triggers.triggerVisualBuilder.theWhen')}</span>
               </Button>
             </AddNodePopover>
             <AddNodePopover kind="action" onPick={handleAddAction} subjectKey={activeSubjectSeed?.subjectKey}>
               <Button variant="outline" size="lg" className="gap-1.5 rounded-xl border-teal-300/70">
                 <Plus className="h-4 w-4" />
-                Add an action <span className="text-muted-foreground">(the "then")</span>
+                {t('triggers.triggerVisualBuilder.addAction')} <span className="text-muted-foreground">{t('triggers.triggerVisualBuilder.theThen')}</span>
               </Button>
             </AddNodePopover>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Tip: it's fine to start with just an action — no conditions means it fires every time it's checked.
+            {t('triggers.triggerVisualBuilder.tipItsFineToStart')}
           </p>
         </div>
       ) : (
@@ -268,7 +269,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
           <div className="rounded-2xl bg-amber-50/60 p-4 dark:bg-amber-950/10">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-amber-800/80 dark:text-amber-300/80">
-                When
+                {t('common.timelineDialog.when')}
               </span>
               <div className="flex items-center gap-2">
                 {conditions.length >= 2 && (
@@ -280,15 +281,15 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="And">ALL of these are true</SelectItem>
-                      <SelectItem value="Or">ANY of these are true</SelectItem>
+                      <SelectItem value="And">{t('triggers.triggerVisualBuilder.aLLOfTheseAreTrue')}</SelectItem>
+                      <SelectItem value="Or">{t('triggers.triggerVisualBuilder.aNYOfTheseAreTrue')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
                 {conditions.length >= 2 &&
                   (clearConditionsConfirming ? (
                     <div className="flex items-center gap-1">
-                      <span className="text-xs text-destructive">Clear all?</span>
+                      <span className="text-xs text-destructive">{t('triggers.triggerVisualBuilder.clearAll')}</span>
                       <Button
                         variant="destructive"
                         size="sm"
@@ -299,10 +300,10 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                           setSelected(null)
                         }}
                       >
-                        Confirm
+                        {t('mapGrid.mapGridDialog.confirm')}
                       </Button>
                       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setClearConditionsConfirming(false)}>
-                        Cancel
+                        {t('shared.cancel')}
                       </Button>
                     </div>
                   ) : (
@@ -313,7 +314,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                       onClick={() => setClearConditionsConfirming(true)}
                     >
                       <X className="h-3 w-3" />
-                      Clear all
+                      {t('triggers.triggerVisualBuilder.clearAll2')}
                     </Button>
                   ))}
               </div>
@@ -321,7 +322,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
 
             {conditions.length === 0 ? (
               <p className="text-xs italic text-muted-foreground">
-                No conditions yet — this will fire every time it's checked.
+                {t('triggers.triggerVisualBuilder.noConditionsYetThisWill')}
               </p>
             ) : (
               <div className="flex flex-col items-start gap-2">
@@ -329,7 +330,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                   <div key={i} className="flex flex-col items-start gap-2">
                     {i > 0 && (
                       <span className="pl-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
-                        {logic === 'And' ? 'AND' : 'OR'}
+                        {logic === 'And' ? t('triggers.triggerVisualBuilder.aND') : 'OR'}
                       </span>
                     )}
                     <ConditionCard
@@ -349,7 +350,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                 className="mt-2 inline-flex items-center gap-1.5 rounded-2xl border border-dashed border-amber-300/70 px-3 py-1.5 text-xs text-amber-800/80 transition-colors hover:bg-amber-100/50 dark:text-amber-300/80 dark:hover:bg-amber-950/20"
               >
                 <Plus className="h-3 w-3" />
-                Add condition
+                {t('triggers.triggerVisualBuilder.addCondition')}
               </button>
             </AddNodePopover>
           </div>
@@ -358,12 +359,12 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
           <div className="rounded-2xl bg-teal-50/60 p-4 dark:bg-teal-950/10">
             <div className="mb-3 flex items-center justify-between gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-teal-800/80 dark:text-teal-300/80">
-                Then
+                {t('common.timelineDialog.then')}
               </span>
               {actions.length >= 2 &&
                 (clearActionsConfirming ? (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-destructive">Clear all?</span>
+                    <span className="text-xs text-destructive">{t('triggers.triggerVisualBuilder.clearAll')}</span>
                     <Button
                       variant="destructive"
                       size="sm"
@@ -374,10 +375,10 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                         setSelected(null)
                       }}
                     >
-                      Confirm
+                      {t('mapGrid.mapGridDialog.confirm')}
                     </Button>
                     <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setClearActionsConfirming(false)}>
-                      Cancel
+                      {t('shared.cancel')}
                     </Button>
                   </div>
                 ) : (
@@ -388,13 +389,13 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                     onClick={() => setClearActionsConfirming(true)}
                   >
                     <X className="h-3 w-3" />
-                    Clear all
+                    {t('triggers.triggerVisualBuilder.clearAll2')}
                   </Button>
                 ))}
             </div>
 
             {actions.length === 0 ? (
-              <p className="text-xs italic text-muted-foreground">No actions yet.</p>
+              <p className="text-xs italic text-muted-foreground">{t('common.statsDialog.noActionsYet')}</p>
             ) : (
               <div className="space-y-2">
                 {actions.map((action, i) => (
@@ -409,7 +410,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                       />
                       {i < actions.length - 1 && (
                           <span className="text-xs font-semibold uppercase tracking-wider text-teal-800/80 dark:text-teal-300/80">
-                            And
+                            {t('dialogs.dialogEditor.and')}
                           </span>
                       )}
                   </div>
@@ -423,7 +424,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                 className="mt-2 inline-flex items-center gap-1.5 rounded-2xl border border-dashed border-teal-300/70 px-3 py-1.5 text-xs text-teal-800/80 transition-colors hover:bg-teal-100/50 dark:text-teal-300/80 dark:hover:bg-teal-950/20"
               >
                 <Plus className="h-3 w-3" />
-                Add action
+                {t('mapGrid.objectActionsEditor.addAction')}
               </button>
             </AddNodePopover>
           </div>

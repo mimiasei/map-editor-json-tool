@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const templateIndex = useTemplateIndex()
   const { dismissedAnnotations, clearDismissedAnnotations } = useGuideStore()
   const { setScenario, setMapName, setDialogFlow, setLocalizationBatch, setTranslations, setCustomHero, setCustomMapObject, setCustomArtifact, setCustomBuff } =
@@ -90,7 +92,7 @@ export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>New from Template</DialogTitle>
+          <DialogTitle>{t('guides.templatePickerDialog.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -132,13 +134,13 @@ export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button
             onClick={handleLoad}
             disabled={!selectedTemplate || loading}
           >
-            {loading ? 'Loading…' : 'Load Template'}
+            {loading ? t('guides.templatePickerDialog.loading') : t('guides.templatePickerDialog.load')}
           </Button>
         </div>
       </DialogContent>
