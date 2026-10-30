@@ -8,6 +8,7 @@
 import { useTranslation } from 'react-i18next'
 import tooltipsData from '@/data/tooltips.json'
 import tooltipsFr from '@/data/tooltips.fr.json'
+import tooltipsDe from '@/data/tooltips.de.json'
 import templateIndexData from '@/data/templates/index.json'
 import templateIndexFr from '@/data/templates/index.fr.json'
 import i18n from '@/lib/i18n'
@@ -63,7 +64,7 @@ const templateImporters: Record<string, () => Promise<unknown>> = {
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /** The tooltip text per UI language code; the ids (action/condition types, field keys) are the same in every file. English is the fallback. */
-const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData }
+const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData, de: tooltipsDe as TooltipData }
 
 /** Returns the full tooltip dataset (actions, conditions, fields) in the UI language. */
 export function useTooltips(): TooltipData {

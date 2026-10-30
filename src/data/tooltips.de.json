@@ -1,0 +1,600 @@
+{
+  "actions": {
+    "GameVictory": {
+      "summary": "Löst den Siegesbildschirm für den Spieler aus.",
+      "tip": "Verwenden Sie dies am Ende Ihrer letzten Aufgabe, um die Karte abzuschließen. Stellen Sie sicher, dass alle kritischen Ziele erledigt sind, bevor Sie sie aufrufen."
+    },
+    "GameLose": {
+      "summary": "Löst den Niederlagebildschirm für den Spieler aus.",
+      "tip": "Wird häufig in ObjectLose- oder HeroKill-Auslösern verwendet, um Niederlagebedingungen durchzusetzen."
+    },
+    "Dialog": {
+      "summary": "Zeigt einen Story-Dialog anhand seines Schlüssels.",
+      "params": {
+        "0": "Dialogschlüssel — muss mit einer Dialog-ID im Ordner DB/dialogs/ des Karten-ZIPs übereinstimmen."
+      },
+      "tip": "Die Dialog-JSON und ihre Lokalisierungstokens müssen im Begleit-ZIP Ihrer Karte enthalten sein. Nutzen Sie „ZIP exportieren“, um sie zu bündeln."
+    },
+    "RandomDialog": {
+      "summary": "Spielt einen zufällig gewählten Dialog aus der angegebenen Schlüsselliste ab.",
+      "params": {
+        "0": "Dialogschlüssel 1 (erforderlich).",
+        "1": "Dialogschlüssel 2 (optional).",
+        "2": "Dialogschlüssel 3 (optional).",
+        "3": "Dialogschlüssel 4 (optional).",
+        "4": "Dialogschlüssel 5 (optional)."
+      },
+      "tip": "Gut, um NPCs mehr Abwechslung zu geben. Alle aufgelisteten Dialoge müssen in Ihrem Karten-ZIP vorhanden sein."
+    },
+    "Print": {
+      "summary": "Gibt eine Debug- oder Erfolgsmeldung aus.",
+      "params": {
+        "0": "Nachrichtentext oder Lokalisierungs-SID."
+      },
+      "tip": "Hauptsächlich zum Debuggen während der Entwicklung. Die Meldung erscheint im Spielprotokoll."
+    },
+    "CurrentSubQuestDone": {
+      "summary": "Markiert die aktuell aktive Teilaufgabe als abgeschlossen.",
+      "tip": "Verwenden Sie dies statt SubQuestDone, wenn Sie sich im eigenen Auslöser der Teilaufgabe befinden — es ist einfacher und vermeidet fest einprogrammierte Aufgaben-IDs."
+    },
+    "SubQuestActivate": {
+      "summary": "Aktiviert eine bestimmte Teilaufgabe einer Aufgabe.",
+      "params": {
+        "0": "Aufgaben-SID — die Aufgabe, der die Teilaufgabe gehört.",
+        "1": "Teilaufgaben-SID oder -Index — die zu aktivierende Teilaufgabe."
+      },
+      "tip": "Nutzen Sie dies, um eine Nebenaufgabe aus dem Auslöser einer anderen Aufgabe freizuschalten. Für linearen Fortschritt bevorzugen Sie NextSubQuest."
+    },
+    "SubQuestDeactivate": {
+      "summary": "Deaktiviert eine bestimmte Teilaufgabe einer Aufgabe.",
+      "params": {
+        "0": "Aufgaben-SID.",
+        "1": "Teilaufgaben-SID oder -Index."
+      }
+    },
+    "NextQuest": {
+      "summary": "Rückt zur nächsten Aufgabe einer Reihe vor.",
+      "params": {
+        "0": "Aufgaben-SID — die Aufgabe, die vorrücken soll."
+      }
+    },
+    "EndQuest": {
+      "summary": "Beendet (schließt) eine Aufgabe.",
+      "params": {
+        "0": "Aufgaben-SID."
+      },
+      "tip": "Die Aufgabe verschwindet aus dem Aufgabenbuch. Nutzen Sie dies, nachdem alle Teilaufgaben erledigt sind."
+    },
+    "NextSubQuest": {
+      "summary": "Aktiviert die nächste Teilaufgabe anhand von SID oder numerischem Index.",
+      "params": {
+        "0": "Teilaufgaben-SID oder 0-basierter Index."
+      }
+    },
+    "SubQuestDone": {
+      "summary": "Markiert eine bestimmte Teilaufgabe von außerhalb ihrer eigenen Aufgabe als erledigt.",
+      "params": {
+        "0": "Aufgaben-SID.",
+        "1": "Teilaufgaben-SID."
+      },
+      "tip": "Nutzen Sie dies, wenn eine Aufgabe eine Teilaufgabe einer anderen Aufgabe abschließen soll."
+    },
+    "NextAfterGroup": {
+      "summary": "Aktiviert die nächste Teilaufgabe, sobald alle Teilaufgaben einer Gruppe erledigt sind.",
+      "params": {
+        "0": "Gruppen-SID.",
+        "1": "SID der nächsten zu aktivierenden Teilaufgabe."
+      },
+      "tip": "Nützlich für optionale Nebenziele — warten Sie auf alle, bevor Sie die Hauptlinie fortsetzen."
+    },
+    "CounterSet": {
+      "summary": "Setzt einen Zähler auf einen bestimmten Wert.",
+      "params": {
+        "0": "Zähler-SID.",
+        "1": "Neuer Wert (ganze Zahl)."
+      },
+      "tip": "Zähler müssen vor der Verwendung im Reiter „Zähler“ deklariert werden."
+    },
+    "CounterPlus": {
+      "summary": "Erhöht einen Zähler um den angegebenen Betrag.",
+      "params": {
+        "0": "Zähler-SID.",
+        "1": "Hinzuzufügender Betrag (meist 1)."
+      }
+    },
+    "CounterMinus": {
+      "summary": "Verringert einen Zähler um den angegebenen Betrag.",
+      "params": {
+        "0": "Zähler-SID.",
+        "1": "Abzuziehender Betrag."
+      }
+    },
+    "CounterSetRandom": {
+      "summary": "Setzt einen Zähler auf eine zufällige ganze Zahl zwischen Minimum und Maximum (einschließlich).",
+      "params": {
+        "0": "Zähler-SID.",
+        "1": "Mindestwert.",
+        "2": "Höchstwert."
+      }
+    },
+    "GiveUnitHero": {
+      "summary": "Fügt der Armee eines Helden Einheiten hinzu.",
+      "params": {
+        "0": "Einheiten-SID — zu vergebender Kreaturentyp.",
+        "1": "Anzahl — Zahl der Einheiten.",
+        "2": "Helden-SID — der empfangende Held."
+      },
+      "tip": "Die Einheiten werden zu denen addiert, die der Held bereits hat. Hat der Held keinen freien Platz, kommen die Einheiten in den ersten verfügbaren Platz."
+    },
+    "GiveUnitHeroPerWeek": {
+      "summary": "Fügt der Armee eines Helden jede Woche Einheiten hinzu.",
+      "params": {
+        "0": "Einheiten-SID.",
+        "1": "Anzahl pro Woche.",
+        "2": "Helden-SID."
+      },
+      "tip": "Dies wiederholt sich automatisch. Legen Sie es in einen StartWeek-Auslöser ohne Bedingungen oder sichern Sie es mit einem Zähler ab, wenn es aufhören soll."
+    },
+    "RemoveUnitHero": {
+      "summary": "Entfernt Einheiten aus der Armee eines Helden.",
+      "params": {
+        "0": "Einheiten-SID.",
+        "1": "Zu entfernende Anzahl, oder „all“, um alle Einheiten dieses Typs zu entfernen.",
+        "2": "Helden-SID."
+      }
+    },
+    "GiveStatsHero": {
+      "summary": "Fügt einem Helden Statuspunkte hinzu.",
+      "params": {
+        "0": "Statuswertname: offence, defence, spellPower, intelligence, movementBonus oder moral.",
+        "1": "Helden-SID.",
+        "2": "Hinzuzufügender Betrag."
+      }
+    },
+    "GiveExpHero": {
+      "summary": "Gibt einem Helden Erfahrungspunkte.",
+      "params": {
+        "0": "Erfahrungsmenge.",
+        "1": "Helden-SID (optional — weglassen, um dem Helden des aktuellen Spielers zu geben)."
+      }
+    },
+    "GiveItemHero": {
+      "summary": "Gibt einem Helden ein Artefakt.",
+      "params": {
+        "0": "Artefakt-SID.",
+        "1": "Helden-SID."
+      },
+      "tip": "Der Held muss auf der Karte existieren. Ist der Rucksack des Helden voll, kann der Gegenstand verloren gehen."
+    },
+    "AddSkillHero": {
+      "summary": "Fügt einem Helden eine Stufe einer Fähigkeit hinzu.",
+      "params": {
+        "0": "Fähigkeits-SID.",
+        "1": "Helden-SID."
+      },
+      "tip": "Rufen Sie diese Aktion mehrmals auf, um mehrere Stufen derselben Fähigkeit hinzuzufügen."
+    },
+    "AddSpellHero": {
+      "summary": "Bringt einem Helden einen Zauber bei.",
+      "params": {
+        "0": "Zauber-SID.",
+        "1": "Helden-SID."
+      }
+    },
+    "AddBuffHeroDays": {
+      "summary": "Wendet einen Effekt (Buff) für N Tage auf einen Helden an.",
+      "params": {
+        "0": "Effekt-SID.",
+        "1": "Helden-SID.",
+        "2": "Dauer in Tagen. Verwenden Sie -1 für einen dauerhaften Effekt."
+      }
+    },
+    "RemoveBuffHero": {
+      "summary": "Entfernt einen Effekt (Buff) von einem Helden.",
+      "params": {
+        "0": "Effekt-SID.",
+        "1": "Helden-SID (optional — leer lassen, um ihn von allen Helden zu entfernen)."
+      }
+    },
+    "HeroResetMovePointsMax": {
+      "summary": "Setzt die Bewegungspunkte eines Helden auf ihr Maximum zurück.",
+      "params": {
+        "0": "Helden-SID."
+      },
+      "tip": "Nützlich nach HeroStop oder zu Beginn einer Zwischensequenz."
+    },
+    "SpawnHero": {
+      "summary": "Lässt einen Helden für einen bestimmten Spieler an einem Knoten auf der Karte erscheinen.",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Knoten-ID — Kartenknoten, an dem er erscheint.",
+        "2": "Spielerindex (1-basiert: 1 = erster Spieler)."
+      }
+    },
+    "DeleteHero": {
+      "summary": "Entfernt einen Helden dauerhaft von der Karte.",
+      "params": {
+        "0": "Helden-SID."
+      },
+      "tip": "Dies löst keine HeroKill-Bedingungen aus."
+    },
+    "DisableAiHero": {
+      "summary": "Deaktiviert die KI-Steuerung eines Helden.",
+      "params": {
+        "0": "Helden-SID."
+      }
+    },
+    "TeleportHero": {
+      "summary": "Teleportiert einen Helden sofort zu einem Kartenknoten.",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Ziel-Knoten-ID."
+      }
+    },
+    "HeroToNode": {
+      "summary": "Bewegt einen Helden auf einen Kartenknoten zu (Wegfindung, nicht sofort).",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Ziel-Knoten-ID."
+      }
+    },
+    "HeroToHero": {
+      "summary": "Bewegt einen Helden per Wegfindung auf einen anderen zu.",
+      "params": {
+        "0": "SID des sich bewegenden Helden.",
+        "1": "SID des Zielhelden."
+      }
+    },
+    "HeroStop": {
+      "summary": "Stoppt den aktuellen Bewegungspfad des Helden.",
+      "tip": "Rufen Sie dies vor einer Zwischensequenz oder einer wichtigen geskripteten Sequenz auf, damit der Held nicht davonwandert."
+    },
+    "ChangeManaHero": {
+      "summary": "Setzt das Mana eines Helden auf den angegebenen Wert.",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Manamenge."
+      }
+    },
+    "SetHeroMovePoints": {
+      "summary": "Setzt die Bewegungspunkte eines Helden auf einen bestimmten Wert.",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Wert der Bewegungspunkte."
+      }
+    },
+    "ResurrectHero": {
+      "summary": "Belebt einen besiegten Helden an einem Kartenknoten wieder.",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Knoten-ID, an dem wiederbelebt wird.",
+        "2": "Flag (meist 0)."
+      }
+    },
+    "GiveRes": {
+      "summary": "Gibt dem Spieler eine bestimmte Menge einer Ressource.",
+      "params": {
+        "0": "Ressourcentyp: gold, wood, ore, crystals, mercury, gemstones oder dust.",
+        "1": "Menge."
+      }
+    },
+    "RemoveRes": {
+      "summary": "Entfernt eine Ressource aus dem Vorrat des Spielers.",
+      "params": {
+        "0": "Ressourcentyp.",
+        "1": "Zu entfernende Menge."
+      },
+      "tip": "Prüft nicht, ob der Spieler genug hat — wird mehr als vorhanden entfernt, wird die Ressource auf 0 gesetzt."
+    },
+    "MoveCamera": {
+      "summary": "Bewegt die Kamera auf einen Kartenknoten.",
+      "params": {
+        "0": "Knoten-ID, auf die fokussiert wird."
+      }
+    },
+    "RevealFogOfWar": {
+      "summary": "Deckt den Nebel des Krieges um einen Knoten auf.",
+      "params": {
+        "0": "ID des Mittelknotens.",
+        "1": "Aufdeckradius in Kartenkacheln."
+      }
+    },
+    "DeleteEntity": {
+      "summary": "Entfernt eine Karten-Entität (blockierendes Objekt, Dekoration, Zone) dauerhaft.",
+      "params": {
+        "0": "Entitäts-SID des zu entfernenden Objekts. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für das platzierte Objekt festgelegt."
+      }
+    },
+    "SpawnObject": {
+      "summary": "Lässt ein interaktives Objekt an einem Knoten erscheinen.",
+      "params": {
+        "0": "Objekttyp-SID.",
+        "1": "Knoten-ID, an dem es erscheint.",
+        "2": "Flag (meist false).",
+        "3": "Entitäts-SID, die dem erzeugten Objekt zugewiesen wird (optional). Legen Sie sie fest, um später über andere Aktionen auf das Objekt zu verweisen. Muss auf der Karte eindeutig sein."
+      }
+    },
+    "SpawnMapObject": {
+      "summary": "Lässt eine Kartendekoration oder ein nicht interaktives Objekt an einem Knoten erscheinen.",
+      "params": {
+        "0": "Objekttyp-SID.",
+        "1": "Knoten-ID, an dem es erscheint.",
+        "2": "Flag (meist 0)."
+      }
+    },
+    "SetActivePortal": {
+      "summary": "Aktiviert oder deaktiviert ein Portal.",
+      "params": {
+        "0": "Entitäts-SID des Portals. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für das platzierte Portal festgelegt.",
+        "1": "true zum Aktivieren, false zum Deaktivieren."
+      }
+    },
+    "EntityActionsOff": {
+      "summary": "Deaktiviert alle Interaktionen mit einer Karten-Entität (macht sie nicht anklickbar).",
+      "params": {
+        "0": "Entitäts-SID des zu deaktivierenden Objekts. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors festgelegt."
+      }
+    },
+    "SetQuestMarker": {
+      "summary": "Hängt einen Aufgabenmarkierungs-VFX an eine Karten-Entität.",
+      "params": {
+        "0": "Entitäts-SID des Kartenobjekts, an das die Markierung angehängt wird. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors festgelegt.",
+        "1": "VFX-Pfad (z. B. effects/global_map/quest_mark_silver_01)."
+      }
+    },
+    "SetActiveQuestMarker": {
+      "summary": "Zeigt oder verbirgt eine bereits an einer Entität angehängte Aufgabenmarkierung.",
+      "params": {
+        "0": "Entitäts-SID des Kartenobjekts, an dem die Markierung hängt.",
+        "1": "true zum Anzeigen, false zum Verbergen."
+      }
+    },
+    "CreateVFX": {
+      "summary": "Erzeugt einen VFX-Effekt an einem Knoten.",
+      "params": {
+        "0": "VFX-Typ-SID.",
+        "1": "Knoten-ID.",
+        "2": "Flag 1 (meist false).",
+        "3": "Flag 2 (meist true).",
+        "4": "Entitäts-SID, die dieser VFX-Instanz zugewiesen wird (optional). Erlaubt das spätere Umschalten über SetActiveVFX. Muss auf der Karte eindeutig sein."
+      }
+    },
+    "SetActiveVFX": {
+      "summary": "Zeigt oder verbirgt eine VFX-Entität.",
+      "params": {
+        "0": "Entitäts-SID des anzuzeigenden oder zu verbergenden VFX.",
+        "1": "true zum Anzeigen, false zum Verbergen."
+      }
+    },
+    "SetActiveMarker": {
+      "summary": "Zeigt oder verbirgt eine Zone oder Interaktionsmarkierung.",
+      "params": {
+        "0": "Entitäts-SID der anzuzeigenden oder zu verbergenden Zone oder Markierung. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors festgelegt.",
+        "1": "true zum Anzeigen, false zum Verbergen."
+      }
+    },
+    "IncreaseStrengthSquad": {
+      "summary": "Wertet die Stärke eines neutralen Trupps auf.",
+      "params": {
+        "0": "Entitäts-SID des aufzuwertenden neutralen Trupps. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für den platzierten Stapel festgelegt.",
+        "1": "Aufwertungs-String im Format „Klasse,Stufe“ (z. B. „0,2“ = um 2 Stufen aufwerten)."
+      }
+    },
+    "DeleteSquad": {
+      "summary": "Entfernt einen neutralen Trupp von der Karte.",
+      "params": {
+        "0": "Entitäts-SID des zu entfernenden neutralen Trupps. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für den platzierten Stapel festgelegt.",
+        "1": "Flag (meist 1)."
+      }
+    },
+    "TriggerClearCustom": {
+      "summary": "Leert/setzt einen bestimmten Auslöser zurück, damit er erneut feuern kann.",
+      "params": {
+        "0": "Aufgaben-SID.",
+        "1": "Teilaufgaben-Index (0-basiert).",
+        "2": "Auslöser-Index (0-basiert).",
+        "3": "Flag: 0 oder 1."
+      },
+      "tip": "Nützlich für wiederholte Auslöser, die normalerweise nur einmal feuern."
+    },
+    "EnableInterruption": {
+      "summary": "Aktiviert eine Unterbrechung anhand ihrer SID.",
+      "params": {
+        "0": "Unterbrechungs-SID."
+      }
+    },
+    "DisableInterruption": {
+      "summary": "Deaktiviert eine Unterbrechung anhand ihrer SID.",
+      "params": {
+        "0": "Unterbrechungs-SID."
+      }
+    },
+    "ChangeCampaignOneStep": {
+      "summary": "Rückt die Kampagne um einen Schritt vor.",
+      "params": {
+        "0": "true oder false."
+      }
+    },
+    "AiBanArea": {
+      "summary": "Verbietet KI-Helden, das Gebiet um einen Knoten zu betreten.",
+      "params": {
+        "0": "ID des Mittelknotens."
+      }
+    },
+    "AiUnbanArea": {
+      "summary": "Hebt ein Bewegungsverbot für die KI im Gebiet um einen Knoten auf.",
+      "params": {
+        "0": "ID des Mittelknotens."
+      }
+    }
+  },
+  "conditions": {
+    "StartTurn": {
+      "summary": "Feuert zu Beginn eines bestimmten Zuges für einen bestimmten Spieler.",
+      "params": {
+        "0": "Zugnummer (optional — weglassen, um jeden Zug zu feuern).",
+        "1": "Spielerindex (optional — weglassen für beliebigen Spieler)."
+      },
+      "tip": "Ohne Parameter feuert dies zu Beginn jedes Zuges für jeden Spieler. Nutzen Sie das Zusatzfeld „Zähler“, um zu verlangen, dass N Züge vergangen sind."
+    },
+    "StartWeek": {
+      "summary": "Feuert zu Beginn einer beliebigen Woche.",
+      "tip": "Wochen sind alle 7 Züge. Nutzen Sie dies für periodische Ereignisse wie wöchentliche Verstärkungen."
+    },
+    "AnyStartTurn": {
+      "summary": "Feuert zu Beginn des Zuges eines beliebigen Spielers.",
+      "tip": "Großzügiger als StartTurn. Wird typischerweise mit Zählerbedingungen verwendet, um Ereignisse zeitlich zu steuern."
+    },
+    "Counter": {
+      "summary": "Prüft den Wert eines Zählers gegen einen Schwellenwert.",
+      "params": {
+        "0": "Zähler-SID — der zu prüfende Zähler.",
+        "1": "Vergleichsoperator: =, >, <, >=, <=, !=",
+        "2": "Vergleichswert."
+      },
+      "tip": "Zähler müssen im Reiter „Zähler“ deklariert werden. Diese Bedingung wird meist mit anderen per UND-Logik kombiniert."
+    },
+    "HeroKill": {
+      "summary": "Feuert, wenn der angegebene Held im Kampf getötet wird.",
+      "params": {
+        "0": "Helden-SID."
+      },
+      "tip": "Feuert, wenn der Held besiegt wird, nicht unbedingt, wenn er von der Karte entfernt wird. Mit GameLose für Niederlagebedingungen kombinieren."
+    },
+    "SquadKill": {
+      "summary": "Feuert, wenn ein bestimmter neutraler Trupp besiegt wird.",
+      "params": {
+        "0": "Entitäts-SID des neutralen Stapels — wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für den platzierten Stapel festgelegt. Dies ist nicht die SID des Einheitentyps."
+      },
+      "tip": "Die Entitäts-SID wird im Karteneditor beim Platzieren des neutralen Stapels festgelegt, nicht der Name des Einheitentyps (z. B. „E_Squad_Dragon“ verwenden, nicht „Dragon“)."
+    },
+    "ObjectLose": {
+      "summary": "Feuert, wenn der Spieler ein bestimmtes Kartenobjekt verliert (z. B. eine Stadt).",
+      "params": {
+        "0": "Entitäts-SID des Kartenobjekts. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für das platzierte Objekt festgelegt."
+      }
+    },
+    "ObjectInteractionBefore": {
+      "summary": "Feuert, bevor der Spieler mit einem Kartenobjekt interagiert.",
+      "params": {
+        "0": "Entitäts-SID des Kartenobjekts. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für das platzierte Objekt festgelegt."
+      },
+      "tip": "Verwenden Sie „Before“, wenn Sie die Interaktion abfangen und einen Dialog zeigen wollen, bevor das Standardereignis feuert."
+    },
+    "ObjectInteractionAfter": {
+      "summary": "Feuert, nachdem der Spieler mit einem Kartenobjekt interagiert hat.",
+      "params": {
+        "0": "Entitäts-SID des Kartenobjekts. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für das platzierte Objekt festgelegt."
+      }
+    },
+    "ObjectCaptureEntity": {
+      "summary": "Feuert, wenn der Spieler eine Karten-Entität erobert (Mine, Stadt usw.).",
+      "params": {
+        "0": "Entitäts-SID des erobertbaren Objekts. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für das platzierte Objekt festgelegt."
+      }
+    },
+    "NodeRevealed": {
+      "summary": "Feuert, wenn ein bestimmter Kartenknoten aufgedeckt wird (Nebel des Krieges gelichtet).",
+      "params": {
+        "0": "Knoten-ID."
+      }
+    },
+    "SquadInteraction": {
+      "summary": "Feuert, wenn der Spieler mit einem neutralen Trupp interagiert (sich ihm nähert).",
+      "params": {
+        "0": "Entitäts-SID des neutralen Stapels. Wird über das Feld „Entität“ im Eigenschaftenbereich des Karteneditors für den platzierten Stapel festgelegt."
+      },
+      "tip": "Löst aus, bevor der Kampf beginnt. Nützlich für Dialog-vor-dem-Kampf-Sequenzen."
+    },
+    "UnitOwnSide": {
+      "summary": "Prüft, wie viele Einheiten eines Typs die Seite des Spielers in allen Armeen besitzt.",
+      "params": {
+        "0": "Einheitentyp-SID.",
+        "1": "Vergleichsoperator.",
+        "2": "Schwellenwert."
+      }
+    },
+    "UnitOwnHero": {
+      "summary": "Prüft, wie viele Einheiten eines Typs ein bestimmter Held besitzt.",
+      "params": {
+        "0": "Helden-SID.",
+        "1": "Einheitentyp-SID.",
+        "2": "Vergleichsoperator.",
+        "3": "Schwellenwert."
+      }
+    },
+    "UnitKill": {
+      "summary": "Feuert, wenn ein Einheitentyp getötet wird.",
+      "params": {
+        "0": "Einheitentyp-SID."
+      },
+      "tip": "Nutzen Sie das Zusatzfeld „Zähler“, um N Tötungen zu verlangen, bevor diese Bedingung feuert (z. B. 10 Goblins töten)."
+    },
+    "UnitLose": {
+      "summary": "Feuert, wenn ein Einheitentyp verloren geht (auf Ihrer Seite getötet).",
+      "params": {
+        "0": "Einheitentyp-SID."
+      },
+      "tip": "Nutzen Sie das Zusatzfeld „Zähler“, um eine Verlustschwelle festzulegen."
+    },
+    "UnitHire": {
+      "summary": "Feuert, wenn ein Einheitentyp rekrutiert/angeworben wird.",
+      "params": {
+        "0": "Einheitentyp-SID."
+      },
+      "tip": "Nutzen Sie das Zusatzfeld „Zähler“, um N Anwerbungen zu verlangen."
+    },
+    "ResCounter": {
+      "summary": "Prüft den Ressourcenvorrat des Spielers gegen einen Wert.",
+      "params": {
+        "0": "Ressourcentyp: gold, wood, ore, crystals, mercury, gemstones, dust.",
+        "1": "Vergleichsoperator.",
+        "2": "Schwellenwert."
+      }
+    },
+    "ItemOwnSide": {
+      "summary": "Prüft, ob die Seite des Spielers ein bestimmtes Artefakt besitzt.",
+      "params": {
+        "0": "Artefakt-SID.",
+        "1": "Vergleichsoperator.",
+        "2": "Anzahl (meist 0 für „hat nicht“, 1 für „hat mindestens eines“)."
+      }
+    },
+    "DifficultyCustomMap": {
+      "summary": "Prüft die Schwierigkeitseinstellung der benutzerdefinierten Karte.",
+      "params": {
+        "0": "Typ: Neutral (Stärke der Neutralen), Economy (Startressourcen) oder Ai (KI-Stärke).",
+        "1": "Stufe: 1 (einfach), 2 (mittel) oder 3 (schwer)."
+      },
+      "tip": "Nutzen Sie dies, um Gegnerstärke oder Belohnungen je Schwierigkeitsgrad zu skalieren."
+    },
+    "PlayerDefeated": {
+      "summary": "Feuert, wenn ein bestimmter Spieler besiegt wird.",
+      "params": {
+        "0": "Spielerindex: 0, 1, 2 oder 3."
+      }
+    }
+  },
+  "fields": {
+    "quest.sid": "Eindeutiger Bezeichner dieser Aufgabe. Wird von aufgabenbezogenen Aktionen und Bedingungen referenziert.",
+    "quest.name": "Lokalisierungs-SID, die im Aufgabenbuch des Spiels als Aufgabenname angezeigt wird. Muss ein passendes Token in customMaps.json haben.",
+    "quest.description": "Lokalisierungs-SID, die im Aufgabenbuch als Aufgabenbeschreibung angezeigt wird. Muss ein passendes Token in customMaps.json haben.",
+    "quest.sharing": "Steuert, wem die Aufgabe gehört. „Clone“ erstellt eine eigene Kopie pro Spieler (Standard). „Ai“ beschränkt die Aufgabe auf KI-Spieler. Von der Engine erforderlich.",
+    "quest.comment": "An diese Aufgabe angehängte Entwicklernotiz. Wird von der Spiel-Engine ignoriert — nur als Referenz für Kartenautoren.",
+    "quest.activeOnStart": "Wenn true, ist diese Aufgabe beim Laden der Karte aktiv. Wenn false, muss sie über eine ActivateQuest-Aktion aktiviert werden.",
+    "quest.main": "Markiert diese Aufgabe als Hauptziel. Wird im Aufgabenbuch des Spielers hervorgehoben angezeigt.",
+    "quest.hidden": "Wenn true, wird diese Aufgabe nie im Aufgabenbuch des Spielers angezeigt, auch wenn sie aktiv ist. Nützlich für interne Buchhaltungsaufgaben.",
+    "subquest.sid": "Eindeutiger Bezeichner dieser Teilaufgabenstufe. Wird von den Aktionen SubQuestActivate und SubQuestDeactivate referenziert.",
+    "subquest.name": "Lokalisierungs-SID, die im Aufgabenbuch als Teilaufgabenname angezeigt wird. Muss ein passendes Token in customMaps.json haben.",
+    "subquest.comment": "An diese Teilaufgabe angehängte Entwicklernotiz. Wird von der Spiel-Engine ignoriert — nur als Referenz für Kartenautoren.",
+    "subquest.activeOnStart": "Wenn true, ist diese Teilaufgabenstufe aktiv, wenn die Aufgabe beginnt. Wenn false, aktivieren Sie sie manuell über SubQuestActivate.",
+    "trigger.conditionsLogic": "„And“ verlangt, dass alle Bedingungen erfüllt sind, bevor der Auslöser feuert. „Or“ feuert, sobald eine einzelne Bedingung erfüllt ist.",
+    "trigger.repeat": "Wenn true, feuert dieser Auslöser jedes Mal, wenn seine Bedingungen erfüllt sind, nicht nur beim ersten Mal. Mit Vorsicht verwenden — ungesicherte wiederholende Auslöser können mehrfach pro Zug feuern.",
+    "counter.sid": "Eindeutiger Bezeichner dieses Zählers. Wird in CounterSet, CounterPlus, CounterMinus und Counter-Bedingungen verwendet.",
+    "counter.value": "Anfangswert des Zählers beim Laden der Karte. Meist 0.",
+    "interruption.sid": "Eindeutiger Bezeichner dieser Unterbrechung. Wird von den Aktionen EnableInterruption und DisableInterruption verwendet.",
+    "interruption.interruption": "Das Kampfereignis, auf das dieser Hook lauscht. Optionen: BeforeIamVsHero, AfterIamWinVsHero, BeforeHeroVsHero, AfterHeroWinVsHero.",
+    "interruption.activeOnStart": "Wenn true, ist dieser Unterbrechungs-Hook beim Laden der Karte aktiv. Wenn false, muss er über eine EnableInterruption-Aktion aktiviert werden.",
+    "interruption.p": "Parameter dieser Unterbrechung. Bei allen vier bekannten Unterbrechungstypen ist p[0] die Entitäts-SID eines bestimmten, auf der Karte platzierten Helden (festgelegt über das Feld „Entität“ im Karteneditor). Leer lassen, um jeden Helden zu treffen."
+  }
+}
