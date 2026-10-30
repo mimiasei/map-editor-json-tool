@@ -1578,10 +1578,9 @@
     },
     "tileInfo": {
       "unknown": "Неизвестно",
-      "water": " (вода)",
       "level": ", уровень {{n}}",
       "ramp": ", пандус ({{direction}})",
-      "line": "{{biome}}{{water}} — клетка ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
+      "line": "{{biome}} — клетка ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
     },
     "rewardParam": {
       "artifact": "{{name}} (артефакт)",

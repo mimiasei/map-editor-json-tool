@@ -104,6 +104,12 @@ function mixWithWhite(hex: string, amount: number, alpha = 1): string {
   return alpha < 1 ? `rgba(${mix(r)}, ${mix(g)}, ${mix(b)}, ${alpha})` : `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
 }
 
+/** Colour of one water type as a translucent overlay (the Map Grid's water plane). */
+export function waterOverlayColor(waterId: number, alpha: number): string {
+  const [r, g, b] = hexToRgb(WATER_BASE_COLORS[waterId] ?? WATER_FALLBACK_COLOR)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 export function isBiomeId(id: number): id is BiomeId {
   return id >= 1 && id <= 7
 }
@@ -144,10 +150,12 @@ export function terrainLabel(
 ): string {
   const tileId = tilesMap[node]
   const waterId = waterMap[node]
-  const biome = tileId !== undefined && isBiomeId(tileId) ? i18n.t(`shared.biomes.${tileId}`) : i18n.t('mapGrid.tileInfo.unknown')
+  // A water tile is named by its water type (Water (Snow)), not by the ground biome underneath it.
+  const biome = waterId && waterId in WATER_TYPE_NAMES
+    ? i18n.t(`shared.waterTypes.${waterId as 1}`)
+    : tileId !== undefined && isBiomeId(tileId) ? i18n.t(`shared.biomes.${tileId}`) : i18n.t('mapGrid.tileInfo.unknown')
   return i18n.t('mapGrid.tileInfo.line', {
     biome,
-    water: waterId ? i18n.t('mapGrid.tileInfo.water') : '',
     x: node % sizeX,
     y: Math.floor(node / sizeX),
     node,

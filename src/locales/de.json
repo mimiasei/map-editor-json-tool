@@ -1514,10 +1514,9 @@
     },
     "tileInfo": {
       "unknown": "Unbekannt",
-      "water": " (Wasser)",
       "level": ", Ebene {{n}}",
       "ramp": ", Rampe ({{direction}})",
-      "line": "{{biome}}{{water}} - Kachel ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
+      "line": "{{biome}} - Kachel ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
     },
     "rewardParam": {
       "artifact": "{{name}} (Artefakt)",

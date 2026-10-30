@@ -1514,10 +1514,9 @@
     },
     "tileInfo": {
       "unknown": "Ukjent",
-      "water": " (vann)",
       "level": ", nivå {{n}}",
       "ramp": ", rampe ({{direction}})",
-      "line": "{{biome}}{{water}} - Flis ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
+      "line": "{{biome}} - Flis ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
     },
     "rewardParam": {
       "artifact": "{{name}} (artefakt)",

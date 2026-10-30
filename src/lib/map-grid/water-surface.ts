@@ -9,8 +9,9 @@ import { loadLayer } from './terrain-textures'
 /** How many tiles one copy of the overlay spans (chosen by eye against a GME screenshot). */
 export const WATER_SURFACE_REPEAT_TILES = 8
 
-/** The tint the water plane gets over the terrain (a flat teal like GME's), and how much of the ground and cliff walls still shows through. */
-export const WATER_SURFACE_COLOR = 'rgba(22, 128, 132, 0.72)'
+/** Opacity of the tint the water plane gets over the terrain (its colour per water type is in terrain-colors.ts), i.e. how much of the
+ *  ground and cliff walls still shows through. */
+export const WATER_SURFACE_ALPHA = 0.72
 
 // Light from the upper right, as in GME's screenshot: a ripple facing it brightens, the one facing away darkens.
 const LIGHT_X = 0.6

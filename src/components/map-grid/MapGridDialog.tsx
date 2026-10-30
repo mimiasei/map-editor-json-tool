@@ -59,11 +59,11 @@ import {
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
-import { terrainLabel, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainLabel, waterOverlayColor, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { enclosedBlockedTiles } from '@/lib/map-grid/zone-fill'
 import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
-import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
+import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_ALPHA } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
@@ -2877,12 +2877,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     layer.height = waterCanvasEl.height
     const lctx = layer.getContext('2d')
     if (!lctx) return
+    // One path per water type: each type has its own colour in the game (terrain-colors.ts WATER_BASE_COLORS).
     const path = new Path2D()
+    const pathsByType = new Map<number, Path2D>()
     for (let node = 0; node < sizeX * sizeZ; node++) {
-      if (waterMap[node]) path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
+      const waterId = waterMap[node]
+      if (!waterId) continue
+      let typePath = pathsByType.get(waterId)
+      if (!typePath) pathsByType.set(waterId, (typePath = new Path2D()))
+      const x = (node % sizeX) * scale
+      const y = (sizeZ - 1 - Math.floor(node / sizeX)) * scale
+      typePath.rect(x, y, scale, scale)
+      path.rect(x, y, scale, scale)
     }
-    lctx.fillStyle = WATER_SURFACE_COLOR
-    lctx.fill(path)
+    for (const [waterId, typePath] of pathsByType) {
+      lctx.fillStyle = waterOverlayColor(waterId, WATER_SURFACE_ALPHA)
+      lctx.fill(typePath)
+    }
     const pattern = waterSurfacePattern(lctx, waterSurface, scale)
     if (pattern) {
       lctx.fillStyle = pattern

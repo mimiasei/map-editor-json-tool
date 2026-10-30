@@ -1546,10 +1546,9 @@
     },
     "tileInfo": {
       "unknown": "Inconnu",
-      "water": " (eau)",
       "level": ", niveau {{n}}",
       "ramp": ", rampe ({{direction}})",
-      "line": "{{biome}}{{water}} - Tuile ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
+      "line": "{{biome}} - Tuile ({{x}}, {{y}}) ({{node}}) {{level}}{{ramp}}"
     },
     "rewardParam": {
       "artifact": "{{name}} (artefact)",
