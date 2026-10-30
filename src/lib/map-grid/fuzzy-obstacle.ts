@@ -205,6 +205,8 @@ export function buildWalkablePools(catalog: GameCatalog): Record<BiomeId, FuzzyO
     const biomeId = biomeIdByCatalogName.get(obj.biome)
     if (biomeId) pools[biomeId].obstacles.push(obj.id)
   }
+  // Dirt uses the Grass biome's walkables (user-confirmed), so "this biome only" on Dirt paints the same set as on Grass.
+  pools[7].obstacles = [...pools[1].obstacles]
   return pools
 }
 
