@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next'
 import tooltipsData from '@/data/tooltips.json'
 import tooltipsFr from '@/data/tooltips.fr.json'
 import templateIndexData from '@/data/templates/index.json'
+import templateIndexFr from '@/data/templates/index.fr.json'
+import i18n from '@/lib/i18n'
 import {
   buildGuideIndex,
   loadGuideArticle as _loadGuideArticle,
@@ -74,9 +76,25 @@ export function useGuideIndex() {
   return buildGuideIndex()
 }
 
-/** Returns the template index (categories + template metadata). */
+/**
+ * The translated text of the templates per UI language code: category labels, template names and descriptions, and the annotation banners.
+ * Only the display text is translated; the template's quests, counters and sids are written into the user's map and stay as they are.
+ */
+const TEMPLATE_TEXT_BY_LANGUAGE: Record<string, typeof templateIndexFr> = { fr: templateIndexFr }
+
+/** Returns the template index (categories + template metadata) in the UI language. */
 export function useTemplateIndex(): TemplateIndex {
-  return templateIndexData as TemplateIndex
+  const { i18n: lang } = useTranslation()
+  const base = templateIndexData as TemplateIndex
+  const text = TEMPLATE_TEXT_BY_LANGUAGE[lang.language]
+  if (!text) return base
+  return {
+    categories: base.categories.map((c) => ({ ...c, label: text.categories.find((x) => x.id === c.id)?.label ?? c.label })),
+    templates: base.templates.map((t) => {
+      const tr = text.templates.find((x) => x.id === t.id)
+      return tr ? { ...t, name: tr.name, description: tr.description } : t
+    }),
+  }
 }
 
 /** Loads a guide article by ID. Returns a promise (use with React.use or Suspense). */
@@ -88,5 +106,9 @@ export async function loadGuideArticle(id: string) {
 export async function loadTemplate(id: string): Promise<unknown> {
   const importer = templateImporters[id]
   if (!importer) return Promise.reject(new Error(`Unknown template: ${id}`))
-  return importer()
+  const raw = await importer()
+  const annotations = (TEMPLATE_TEXT_BY_LANGUAGE[i18n.language]?.annotations as Record<string, Record<string, string>> | undefined)?.[id]
+  if (!annotations) return raw
+  // Same paths as the English annotations; the banners show the translated text.
+  return { ...(raw as Record<string, unknown>), _annotations: annotations }
 }

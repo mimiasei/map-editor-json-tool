@@ -16,7 +16,7 @@ import { guideCategoryLabel } from '@/lib/guideLoader'
  * Reads all state from useGuideStore — no props needed.
  */
 export function GuidesContent() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { activeArticleId, navigateTo } = useGuideStore()
   const guideIndex = useGuideIndex()
 
@@ -32,20 +32,19 @@ export function GuidesContent() {
       .then((a) => { if (!cancelled) setArticle(a) })
       .catch((e) => { if (!cancelled) setLoadError(String(e)) })
     return () => { cancelled = true }
-  }, [activeArticleId])
+  }, [activeArticleId, i18n.language])
 
   const query = search.trim().toLowerCase()
   const filteredIds = new Set(
     query
-      ? guideIndex.articles.filter((a) => a.id.includes(query) || a.category.includes(query)).map((a) => a.id)
+      ? guideIndex.articles.filter((a) => a.id.includes(query) || a.category.includes(query) || a.title.toLowerCase().includes(query)).map((a) => a.id)
       : guideIndex.articles.map((a) => a.id)
   )
 
   const articlesByCategory = (categoryId: string) =>
     guideIndex.articles.filter((a) => a.category === categoryId).sort((a, b) => a.order - b.order)
 
-  const articleTitle = (id: string) =>
-    id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  const articleTitle = (id: string) => guideIndex.articles.find((a) => a.id === id)?.title ?? id
 
   return (
     <div className="flex flex-col h-full min-h-0">
