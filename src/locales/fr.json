@@ -873,11 +873,6 @@
       "pickColorFor": "Choisir la couleur : {{label}}",
       "groups": {
         "Default": "Par défaut",
-        "Popular": "Populaires",
-        "Pastel": "Pastel",
-        "Vintage": "Rétro",
-        "Nature": "Nature",
-        "Light": "Clair",
         "Custom": "Personnalisés"
       },
       "defaultLightName": "Clair par défaut"

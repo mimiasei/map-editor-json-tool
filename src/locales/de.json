@@ -844,11 +844,6 @@
       "pickColorFor": "Farbe für {{label}} wählen",
       "groups": {
         "Default": "Standard",
-        "Popular": "Beliebt",
-        "Pastel": "Pastell",
-        "Vintage": "Vintage",
-        "Nature": "Natur",
-        "Light": "Hell",
         "Custom": "Benutzerdefiniert"
       },
       "defaultLightName": "Standard Hell"

@@ -844,11 +844,6 @@
       "pickColorFor": "Pick color for {{label}}",
       "groups": {
         "Default": "Default",
-        "Popular": "Popular",
-        "Pastel": "Pastel",
-        "Vintage": "Vintage",
-        "Nature": "Nature",
-        "Light": "Light",
         "Custom": "Custom"
       },
       "defaultLightName": "Default Light"
