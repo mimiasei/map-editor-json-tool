@@ -143,18 +143,26 @@ export function fadeWaterShore(ctx: CanvasRenderingContext2D, isWater: (node: nu
 /** How far the lava's glowing rim reaches into a tile, as a share of the tile, and its colour. */
 const GLOW_REACH_TILES = 0.5
 const GLOW_STEPS = 32
-/** Opacity of the glow right at the rim (where the lava meets the rock) and at its inner end, GLOW_REACH_TILES into the lava. */
-const GLOW_EDGE_ALPHA = 0
-const GLOW_INNER_ALPHA = 1
+/** The opacity follows a sine from the glow's inner end (GLOW_REACH_TILES into the lava) to the rim (where the lava meets the rock): 0 at the
+ *  inner end, GLOW_INNER_ALPHA at its peak, GLOW_PEAK_AT of the way to the rim, and GLOW_EDGE_ALPHA right at the rim. */
+const GLOW_INNER_ALPHA = 0.8
+const GLOW_EDGE_ALPHA = 0.5
+const GLOW_PEAK_AT = 0.5
 export const LAVA_GLOW_COLOR = '#ffb41e'
 
+/** Opacity of the lava glow at `t` (0 = inner end, 1 = rim): a sine up to GLOW_INNER_ALPHA at GLOW_PEAK_AT, then a half cosine on to GLOW_EDGE_ALPHA. */
+function glowAlpha(t: number): number {
+  if (t <= GLOW_PEAK_AT) return GLOW_INNER_ALPHA * Math.sin((t / GLOW_PEAK_AT) * (Math.PI / 2))
+  const u = (t - GLOW_PEAK_AT) / (1 - GLOW_PEAK_AT)
+  return GLOW_EDGE_ALPHA + (GLOW_INNER_ALPHA - GLOW_EDGE_ALPHA) * (0.5 + 0.5 * Math.cos(u * Math.PI))
+}
+
 /**
- * Lava glows yellow-orange along its rim (the game's lava shows a bright edge where it meets rock). Nested strips along every tile edge
- * that meets a non-lava tile, each adding a little opacity, so it is strongest at the rim and fades inward. Drawn after fadeWaterShore,
- * which would erase it, and not at the map border.
+ * Lava glows yellow-orange along its rim (the game's lava shows a bright edge where it meets rock). Bands along every tile edge that meets a
+ * non-lava tile, each with its own opacity from glowAlpha(). Drawn after fadeWaterShore, which would erase it, and not at the map border.
  */
 export function glowLavaRim(ctx: CanvasRenderingContext2D, isLava: (node: number) => boolean, sizeX: number, sizeZ: number, pxPerTile: number): void {
-  const strips = Array.from({ length: GLOW_STEPS }, () => new Path2D())
+  const bands = Array.from({ length: GLOW_STEPS }, () => new Path2D())
   const reach = GLOW_REACH_TILES * pxPerTile
   for (let z = 0; z < sizeZ; z++) {
     for (let x = 0; x < sizeX; x++) {
@@ -165,25 +173,23 @@ export function glowLavaRim(ctx: CanvasRenderingContext2D, isLava: (node: number
         const nx = x + dx
         const nz = z + dz
         if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ || isLava(nz * sizeX + nx)) continue
+        // Band 0 is the outermost (inner end of the glow); each one spans the depth between two strip widths.
         for (let step = 0; step < GLOW_STEPS; step++) {
-          const w = (reach * (GLOW_STEPS - step)) / GLOW_STEPS
-          if (dx === -1) strips[step].rect(left, top, w, pxPerTile)
-          else if (dx === 1) strips[step].rect(left + pxPerTile - w, top, w, pxPerTile)
-          else if (dz === 1) strips[step].rect(left, top, pxPerTile, w)
-          else strips[step].rect(left, top + pxPerTile - w, pxPerTile, w)
+          const outer = (reach * (GLOW_STEPS - step)) / GLOW_STEPS
+          const inner = (reach * (GLOW_STEPS - step - 1)) / GLOW_STEPS
+          const w = outer - inner
+          if (dx === -1) bands[step].rect(left + inner, top, w, pxPerTile)
+          else if (dx === 1) bands[step].rect(left + pxPerTile - outer, top, w, pxPerTile)
+          else if (dz === 1) bands[step].rect(left, top + inner, pxPerTile, w)
+          else bands[step].rect(left, top + pxPerTile - outer, pxPerTile, w)
         }
       }
     }
   }
-  // The strips stack, widest first: where j + 1 of them overlap the visible opacity is the running total. Each strip's own opacity lifts that
-  // total from the ramp's value one step farther in to its value here, so it ramps linearly from GLOW_INNER_ALPHA to GLOW_EDGE_ALPHA.
   ctx.save()
   ctx.fillStyle = LAVA_GLOW_COLOR
-  let total = 0
-  strips.forEach((path, step) => {
-    const target = GLOW_INNER_ALPHA + ((GLOW_EDGE_ALPHA - GLOW_INNER_ALPHA) * (step + 1)) / GLOW_STEPS
-    ctx.globalAlpha = Math.max(0, 1 - (1 - target) / (1 - total))
-    total = Math.max(total, target)
+  bands.forEach((path, step) => {
+    ctx.globalAlpha = glowAlpha((step + 0.5) / GLOW_STEPS)
     ctx.fill(path)
   })
   ctx.restore()
