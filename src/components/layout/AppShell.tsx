@@ -30,7 +30,6 @@ import UpdateDialog from '@/components/common/UpdateDialog'
 import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
 import MapValidationErrorDialog from '@/components/common/MapValidationErrorDialog'
 import Toolbar from './Toolbar'
-import ViewTabs from './ViewTabs'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
 import JsonPreview from '@/components/common/JsonPreview'
@@ -136,6 +135,7 @@ export default function AppShell() {
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
   const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
+  const mapLoaded = useMapContextStore((s) => s.context !== null)
   const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
   const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
@@ -764,7 +764,6 @@ export default function AppShell() {
           onDismiss={() => setUpdateDismissed(true)}
         />
       )}
-      <ViewTabs />
       <UpdateDialog
         open={updateDialogOpen}
         onOpenChange={setUpdateDialogOpen}
@@ -839,12 +838,17 @@ export default function AppShell() {
         // the normal 3-pane editor Group occupies below and needs no resize
         // chrome of its own.
         <div className="flex-1 overflow-hidden p-3">
-          <MapGridDialog
-            open={mapGridOpen}
-            onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
-            onUndock={() => handleUndock('mapGridCell')}
-            undocked={isUndocked('mapGridCell')}
-          />
+          {mapLoaded ? (
+            <MapGridDialog
+              open={mapGridOpen}
+              onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
+              onUndock={() => handleUndock('mapGridCell')}
+              undocked={isUndocked('mapGridCell')}
+            />
+          ) : (
+            // The Map tab is also where New Map / Import Map / Random Map live, so it must be reachable without a map.
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t('layout.noMapLoaded')}</div>
+          )}
         </div>
       ) : rmgOpen ? (
         // Same inline-view pattern as Map Grid above (issue #232) — Generate

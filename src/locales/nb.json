@@ -2080,7 +2080,6 @@
       "noObjectRendered": "Ingen objekter kunne tegnes."
     },
     "toolbar": {
-      "oEScenarioEditor": "OE Scenario Editor",
       "new": "Ny",
       "newScenarioCtrlN": "Nytt scenario (Ctrl+N)",
       "newMap": "Nytt kart",
@@ -2153,8 +2152,6 @@
       "confirmGenerateTitle": "Generer tilfeldig kart",
       "confirmOpenRecent": "Du har ulagrede endringer. Åpne {{name}} likevel?",
       "confirmOpenRecentTitle": "Åpne nylig",
-      "statisticsMap": "Kartstatistikk",
-      "statisticsScenario": "Scenariostatistikk",
       "validate": "Valider",
       "publish": "Publiser",
       "unsaved": "ulagret",
@@ -2171,20 +2168,20 @@
         "importH3Map": "Importer H3-kart…"
       },
       "resaved": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}}",
-      "resavedBackupKept": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}} (fantes allerede — ikke overskrevet)"
-    },
-    "viewTabs": {
-      "label": "Visninger",
-      "mapGrid": "Kartrutenett",
-      "scenario": "Scenario",
-      "randomMap": "Tilfeldig kart",
-      "needsMap": "Åpne en .map-fil for å redigere den i Kartrutenettet."
+      "resavedBackupKept": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}} (fantes allerede — ikke overskrevet)",
+      "views": "Visninger",
+      "viewMap": "Kart",
+      "viewQuests": "Oppdrag",
+      "statistics": "Statistikk",
+      "saveAs": "Lagre som",
+      "saveAsTitle": "Velg filnavn: lagrer .map-filen og scenario-JSON-en"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} er åpent i et eget vindu",
       "confirmNew": "Du har ulagrede endringer. Starte et nytt scenario likevel?",
       "confirmNewTitle": "Nytt scenario"
-    }
+    },
+    "noMapLoaded": "Ingen kart er lastet inn. Bruk Nytt kart, Importer kart eller Tilfeldig kart i verktøylinjen."
   },
   "dialogs": {
     "assetCombobox": {

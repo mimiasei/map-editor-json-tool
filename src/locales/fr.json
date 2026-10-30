@@ -2115,7 +2115,6 @@
       "noObjectRendered": "Aucun objet n’a pu être rendu."
     },
     "toolbar": {
-      "oEScenarioEditor": "Éditeur de scénarios OE",
       "new": "Nouveau",
       "newScenarioCtrlN": "Nouveau scénario (Ctrl+N)",
       "newMap": "Nouvelle carte",
@@ -2188,8 +2187,6 @@
       "confirmGenerateTitle": "Générer une carte aléatoire",
       "confirmOpenRecent": "Vous avez des modifications non enregistrées. Ouvrir quand même {{name}} ?",
       "confirmOpenRecentTitle": "Ouvrir un fichier récent",
-      "statisticsMap": "Statistiques de la carte",
-      "statisticsScenario": "Statistiques du scénario",
       "validate": "Valider",
       "publish": "Publier",
       "unsaved": "non enregistré",
@@ -2206,20 +2203,20 @@
         "importH3Map": "Importer une carte H3…"
       },
       "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
-      "resavedBackupKept": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}} (existait déjà — non écrasée)"
-    },
-    "viewTabs": {
-      "label": "Vues",
-      "mapGrid": "Grille de carte",
-      "scenario": "Scénario",
-      "randomMap": "Carte aléatoire",
-      "needsMap": "Ouvrez un fichier .map pour le modifier dans la grille de carte."
+      "resavedBackupKept": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}} (existait déjà — non écrasée)",
+      "views": "Vues",
+      "viewMap": "Carte",
+      "viewQuests": "Quêtes",
+      "statistics": "Statistiques",
+      "saveAs": "Sauvegarder sous",
+      "saveAsTitle": "Choisir un nom de fichier : sauvegarde la carte (.map) et son JSON de scénario"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} est ouvert dans une fenêtre séparée",
       "confirmNew": "Vous avez des modifications non enregistrées. Démarrer quand même un nouveau scénario ?",
       "confirmNewTitle": "Nouveau scénario"
-    }
+    },
+    "noMapLoaded": "Aucune carte n'est chargée. Utilisez Nouvelle carte, Importer une carte ou Carte aléatoire dans la barre d'outils."
   },
   "dialogs": {
     "assetCombobox": {

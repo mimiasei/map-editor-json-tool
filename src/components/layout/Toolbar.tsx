@@ -25,11 +25,6 @@ import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -49,7 +44,6 @@ import {
   FilePlus,
   Upload,
   Info,
-  Download,
   ShieldCheck,
   PanelLeft,
   PenLine,
@@ -79,7 +73,14 @@ import {
   FileInput,
   Dices,
   BalanceScale,
+  LayoutGrid,
+  Layers,
+  ListChecks,
+  MoreHorizontal,
+  ScrollText,
 } from '@/components/ui/icons'
+import ToolButton from '@/components/map-grid/ToolButton'
+import { cn } from '@/lib/utils'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
@@ -122,6 +123,11 @@ interface ToolbarProps {
   /** Called when Save As is triggered */
   onSaveAs?: () => void
 }
+
+// Text tabs of the view switch; the tools themselves are ToolButtons (map-grid/ToolButton.tsx), like the Map Grid's own.
+const VIEW_TAB = 'flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-40'
+const VIEW_TAB_ON = 'bg-accent text-accent-foreground'
+const VIEW_TAB_OFF = 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
 
 export default function Toolbar({
   onSearchOpen,
@@ -181,6 +187,12 @@ export default function Toolbar({
   const [fairnessOpen,        setFairnessOpen]        = useState(false)
   // A boolean selector, so map edits don't re-render the toolbar.
   const hasMap = useMapContextStore((s) => !!s.context)
+  const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
+  const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
+  const closeRmg = useViewBridgeStore((s) => s.closeRmg)
+  // A pick started from the quests editor owns the view switch until it resolves or is cancelled.
+  const pickPending = useViewBridgeStore((s) => s.pendingPick !== null)
+  const mapView = !!mapGridOpen || rmgOpen
   const [fairness, setFairness] = useState<PlayerBalance | null>(null)
   const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
@@ -663,294 +675,202 @@ export default function Toolbar({
 
   return (
     <>
-      <header className="flex h-10 items-center gap-2 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-        {/* Left: app title */}
-        <span className="mr-3 text-sm font-semibold text-primary tracking-wide">
-          {t('layout.toolbar.oEScenarioEditor')}
-        </span>
+      <header className="flex h-10 items-center gap-1 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+        {/* View switch: the Map Grid (and the random map view) versus the quests editor. Each view has its own tools below. */}
+        <div className="flex items-center gap-1" role="group" aria-label={t('layout.toolbar.views')}>
+          <button
+            type="button"
+            disabled={pickPending}
+            aria-pressed={mapView}
+            onClick={() => onMapGridOpen?.()}
+            className={cn(VIEW_TAB, mapView ? VIEW_TAB_ON : VIEW_TAB_OFF)}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            {t('layout.toolbar.viewMap')}
+          </button>
+          <button
+            type="button"
+            disabled={pickPending}
+            aria-pressed={!mapView}
+            onClick={() => { closeMapGrid(); closeRmg() }}
+            className={cn(VIEW_TAB, !mapView ? VIEW_TAB_ON : VIEW_TAB_OFF)}
+          >
+            <ListChecks className="h-4 w-4" />
+            {t('layout.toolbar.viewQuests')}
+          </button>
+        </div>
 
-        {/* Main actions */}
-        <div className="flex items-center gap-1">
-          {/* issue #160: on the Tauri desktop build, the native File menu
-              (lib.rs) already has New/Open/Save/Save As — duplicating them
-              here just doubled up on the same actions. Web has no native
-              menu at all, so it keeps these unconditionally. */}
-          {!isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={onNew} className="gap-1.5">
-                  <FilePlus className="h-4 w-4" />
-                  {t('layout.toolbar.new')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.newScenarioCtrlN')}</TooltipContent>
-            </Tooltip>
-          )}
+        <div className="mx-1.5 h-5 w-px bg-border" />
 
-          {/* Needs real filesystem write access to produce a brand-new .map
-              file from the bundled blank template — Tauri only, the
-              opposite gating of Import Map below (which the native File
-              menu already covers on Tauri, but has no equivalent for this
-              since map creation isn't part of that menu yet). */}
+        {/* Tools of the active view */}
+        <div className="flex items-center gap-0.5">
+          {mapView ? (
+            <>
           {isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleNewMapClick} className="gap-1.5">
-                  <FilePlus className="h-4 w-4" />
-                  {t('layout.toolbar.newMap')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.createANewBlankMap')}</TooltipContent>
-            </Tooltip>
+            <ToolButton
+              icon={<FilePlus className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.newMap')}
+              title={t('layout.toolbar.createANewBlankMap')}
+              onClick={handleNewMapClick}
+            />
           )}
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={onTemplateOpen} className="gap-1.5 text-muted-foreground">
-                <FilePlus className="h-4 w-4" />
-                {t('layout.toolbar.template')}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.newFromTemplate')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={onScriptTemplatesOpen} className="gap-1.5 text-muted-foreground">
-                <Wand2 className="h-4 w-4" />
-                {t('tree.scriptTemplateDialog.scriptTemplates')}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.generateScriptingForClassicHoMM3')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={onStoryBuilderOpen} className="gap-1.5 text-muted-foreground">
-                <BookOpen className="h-4 w-4" />
-                {t('layout.toolbar.story')}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.addAReadyMadeOr')}</TooltipContent>
-          </Tooltip>
-
           {!isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleImport} className="gap-1.5">
-                  <Upload className="h-4 w-4" />
-                  {t('common.themeEditorDialog.import')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.importJSONFile')}</TooltipContent>
-            </Tooltip>
+            <ToolButton
+              icon={<Upload className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.importMap')}
+              title={t('layout.toolbar.importMapFile')}
+              onClick={handleOpenMap}
+            />
           )}
-
+          <ToolButton
+            icon={<Dices className="h-3.5 w-3.5" />}
+            label={t('common.generateRandomMapDialog.generateRandomMap')}
+            onClick={handleGenerateMapClick}
+          />
+          {hasMap && (
+            <ToolButton
+              icon={<BalanceScale className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.fairness')}
+              title={t('layout.toolbar.checkHowEvenTheMap')}
+              onClick={handleOpenFairness}
+            />
+          )}
+          </>
+          ) : (
+            <>
           {!isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
-                  <Upload className="h-4 w-4" />
-                  {t('layout.toolbar.importMap')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.importMapFile')}</TooltipContent>
-            </Tooltip>
+            <ToolButton
+              icon={<FilePlus className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.new')}
+              title={t('layout.toolbar.newScenarioCtrlN')}
+              onClick={onNew}
+            />
           )}
-
+          <ToolButton
+            icon={<Layers className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.template')}
+            title={t('layout.toolbar.newFromTemplate')}
+            onClick={onTemplateOpen}
+          />
+          <ToolButton
+            icon={<Wand2 className="h-3.5 w-3.5" />}
+            label={t('tree.scriptTemplateDialog.scriptTemplates')}
+            title={t('layout.toolbar.generateScriptingForClassicHoMM3')}
+            onClick={onScriptTemplatesOpen}
+          />
+          <ToolButton
+            icon={<ScrollText className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.story')}
+            title={t('layout.toolbar.addAReadyMadeOr')}
+            onClick={onStoryBuilderOpen}
+          />
           {!isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5">
-                  <Download className="h-4 w-4" />
-                  {t('common.themeEditorDialog.export')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.exportScenarioJSON')}</TooltipContent>
-            </Tooltip>
+            <ToolButton
+              icon={<Upload className="h-3.5 w-3.5" />}
+              label={t('common.themeEditorDialog.import')}
+              title={t('layout.toolbar.importJSONFile')}
+              onClick={handleImport}
+            />
           )}
+          {isTauri() && (
+            <ToolButton
+              icon={
+                <span className="relative">
+                  <UploadCloud className="h-3.5 w-3.5" />
+                  {zipDirty && <span className="absolute -right-1.5 -top-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                </span>
+              }
+              label={t('layout.toolbar.publish')}
+              title={zipDirty ? t('layout.toolbar.publishMapYouHaveChanges') : t('common.publishDialog.publishMap')}
+              onClick={() => setPublishOpen(true)}
+            />
+          )}
+          <ToolButton
+            icon={<CalendarClock className="h-3.5 w-3.5" />}
+            label={t('common.timelineDialog.eventTimeline')}
+            onClick={onTimelineOpen}
+          />
+          <ToolButton
+            icon={<Workflow className="h-3.5 w-3.5" />}
+            label={t('common.questFlowDialog.questFlowDiagram')}
+            onClick={onDiagramOpen}
+          />
+          </>
+          )}
+        </div>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="relative gap-1.5">
-                <ShieldCheck className="h-4 w-4" />
-                {t('layout.toolbar.validate')}
-                {/* Sits on the button's corner, so it adds no width: the gap to the next button is the same as to the one before. */}
+        <div className="mx-1.5 h-5 w-px bg-border" />
+
+        {/* Tools that work in both views */}
+        <div className="flex items-center gap-0.5">
+          <ToolButton
+            icon={<Undo2 className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.undoCtrlZ')}
+            onClick={handleUndo}
+            disabled={!canUndo}
+          />
+          <ToolButton
+            icon={<Redo2 className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.redoCtrlShiftZ')}
+            onClick={handleRedo}
+            disabled={!canRedo}
+          />
+          <ToolButton
+            icon={
+              <span className="relative">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {/* Sits on the icon's corner, so it adds no width. */}
                 {(validation.errors.length > 0 || validation.warnings.length > 0) && (
                   <Badge
                     variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
-                    className="absolute -top-1 -right-1 h-4 min-w-4 justify-center px-1 text-[10px] leading-none"
+                    className="absolute -right-3 -top-2 h-4 min-w-4 justify-center px-1 text-[10px] leading-none"
                   >
                     {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
                   </Badge>
                 )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.validateScenario')}</TooltipContent>
-          </Tooltip>
-
-          {hasMap && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleOpenFairness} className="gap-1.5">
-                  <BalanceScale className="h-4 w-4" />
-                  {t('layout.toolbar.fairness')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.checkHowEvenTheMap')}</TooltipContent>
-            </Tooltip>
+              </span>
+            }
+            label={t('layout.toolbar.validate')}
+            title={t('layout.toolbar.validateScenario')}
+            onClick={handleOpenValidate}
+          />
+          {!isTauri() && (
+            <ToolButton
+              icon={<Save className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.saveAs')}
+              title={t('layout.toolbar.saveAsTitle')}
+              onClick={handleExport}
+            />
           )}
+          <ToolButton
+            icon={<BookOpen className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.guides')}
+            onClick={onGuidesOpen}
+          />
+          <ToolButton
+            icon={<Database className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.gameDatabase')}
+            onClick={onGameDatabaseOpen}
+          />
+          <ToolButton
+            icon={<Search className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.searchCtrlK')}
+            onClick={onSearchOpen}
+          />
+          <ToolButton
+            icon={<BarChart2 className="h-3.5 w-3.5" />}
+            label={t('layout.toolbar.statistics')}
+            onClick={onStatsOpen}
+          />
 
-          {isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={() => setPublishOpen(true)} className="gap-1.5">
-                  <UploadCloud className="h-4 w-4" />
-                  {t('layout.toolbar.publish')}
-                  {zipDirty && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title={t('layout.toolbar.unpublishedChanges')} />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {zipDirty
-                  ? t('layout.toolbar.publishMapYouHaveChanges')
-                  : t('common.publishDialog.publishMap')}
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onGuidesOpen}>
-                <BookOpen className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.guides')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onGameDatabaseOpen}>
-                <Database className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.gameDatabase')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleUndo}
-                disabled={!canUndo}
-              >
-                <Undo2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.undoCtrlZ')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleRedo}
-                disabled={!canRedo}
-              >
-                <Redo2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.redoCtrlShiftZ')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onSearchOpen}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.searchCtrlK')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onTimelineOpen}
-              >
-                <CalendarClock className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('common.timelineDialog.eventTimeline')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onDiagramOpen}
-              >
-                <Workflow className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('common.questFlowDialog.questFlowDiagram')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onStatsOpen}
-              >
-                <BarChart2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{mapGridOpen ? t('layout.toolbar.statisticsMap') : t('layout.toolbar.statisticsScenario')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleGenerateMapClick}
-              >
-                <Dices className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('common.generateRandomMapDialog.generateRandomMap')}</TooltipContent>
-          </Tooltip>
-
-          {/* The Map Grid is opened from the view tabs (ViewTabs.tsx) now. */}
           <DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5">
-                    {t('layout.toolbar.menu.more')}
-                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent>{t('layout.toolbar.localizationExportZIPGameData')}</TooltipContent>
-            </Tooltip>
+            <DropdownMenuTrigger asChild>
+              <ToolButton
+                icon={<MoreHorizontal className="h-3.5 w-3.5" />}
+                label={t('layout.toolbar.menu.more')}
+                title={t('layout.toolbar.localizationExportZIPGameData')}
+              />
+            </DropdownMenuTrigger>
 
             <DropdownMenuContent align="start" className="w-52">
               <DropdownMenuItem onClick={() => setTimeout(() => setLocalizationDialogOpen(true), 0)}>
@@ -1037,8 +957,6 @@ export default function Toolbar({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* ── Game Data dialog (opened from More dropdown) ── */}
-
           {/* Hidden file input for web Core.zip selection */}
           <input
             type="file"
@@ -1062,86 +980,22 @@ export default function Toolbar({
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Panel toggles */}
-        <div className="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={panels.sidebar ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => togglePanel('sidebar')}
-              >
-                <PanelLeft className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.toggleSidebar')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={panels.editor ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => togglePanel('editor')}
-              >
-                <PenLine className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.toggleEditor')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={panels.preview ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => togglePanel('preview')}
-              >
-                <Braces className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.toggleJSONPreview')}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={toggleTheme}
-                aria-label={theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
-                aria-pressed={theme === 'dark'}
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setThemeEditorOpen(true)}
-                aria-label={t('layout.toolbar.openThemeEditor')}
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('layout.toolbar.themeEditor')}</TooltipContent>
-          </Tooltip>
+        {/* Panel toggles (the quests view's three columns) and the theme controls */}
+        <div className="flex items-center gap-0.5">
+          {!mapView && (
+            <>
+              <ToolButton icon={<PanelLeft className="h-3.5 w-3.5" />} label={t('layout.toolbar.toggleSidebar')} active={panels.sidebar} onClick={() => togglePanel('sidebar')} />
+              <ToolButton icon={<PenLine className="h-3.5 w-3.5" />} label={t('layout.toolbar.toggleEditor')} active={panels.editor} onClick={() => togglePanel('editor')} />
+              <ToolButton icon={<Braces className="h-3.5 w-3.5" />} label={t('layout.toolbar.toggleJSONPreview')} active={panels.preview} onClick={() => togglePanel('preview')} />
+            </>
+          )}
+          <ToolButton
+            icon={theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            label={theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
+            aria-pressed={theme === 'dark'}
+            onClick={toggleTheme}
+          />
+          <ToolButton icon={<Palette className="h-3.5 w-3.5" />} label={t('layout.toolbar.themeEditor')} onClick={() => setThemeEditorOpen(true)} />
         </div>
       </header>
 

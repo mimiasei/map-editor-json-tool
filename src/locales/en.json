@@ -2080,7 +2080,6 @@
       "noObjectRendered": "No object could be rendered."
     },
     "toolbar": {
-      "oEScenarioEditor": "OE Scenario Editor",
       "new": "New",
       "newScenarioCtrlN": "New scenario (Ctrl+N)",
       "newMap": "New Map",
@@ -2153,8 +2152,6 @@
       "confirmGenerateTitle": "Generate Random Map",
       "confirmOpenRecent": "You have unsaved changes. Open {{name}} anyway?",
       "confirmOpenRecentTitle": "Open Recent",
-      "statisticsMap": "Map Statistics",
-      "statisticsScenario": "Scenario Statistics",
       "validate": "Validate",
       "publish": "Publish",
       "unsaved": "unsaved",
@@ -2171,20 +2168,20 @@
         "importH3Map": "Import H3 Map…"
       },
       "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
-      "resavedBackupKept": "Re-saved {{bytes}} bytes.\nBackup: {{path}} (already existed — not overwritten)"
-    },
-    "viewTabs": {
-      "label": "Views",
-      "mapGrid": "Map Grid",
-      "scenario": "Scenario",
-      "randomMap": "Random Map",
-      "needsMap": "Open a .map file to edit it in the Map Grid."
+      "resavedBackupKept": "Re-saved {{bytes}} bytes.\nBackup: {{path}} (already existed — not overwritten)",
+      "views": "Views",
+      "viewMap": "Map",
+      "viewQuests": "Quests",
+      "statistics": "Statistics",
+      "saveAs": "Save As",
+      "saveAsTitle": "Choose a file name: saves the .map and its scenario JSON"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} is open in a separate window",
       "confirmNew": "You have unsaved changes. Start a new scenario anyway?",
       "confirmNewTitle": "New Scenario"
-    }
+    },
+    "noMapLoaded": "No map is loaded. Use New Map, Import Map or Random Map in the toolbar."
   },
   "dialogs": {
     "assetCombobox": {

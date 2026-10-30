@@ -2080,7 +2080,6 @@
       "noObjectRendered": "Es konnte kein Objekt gerendert werden."
     },
     "toolbar": {
-      "oEScenarioEditor": "OE Szenario-Editor",
       "new": "Neu",
       "newScenarioCtrlN": "Neues Szenario (Strg+N)",
       "newMap": "Neue Karte",
@@ -2153,8 +2152,6 @@
       "confirmGenerateTitle": "Zufällige Karte generieren",
       "confirmOpenRecent": "Sie haben ungespeicherte Änderungen. Trotzdem {{name}} öffnen?",
       "confirmOpenRecentTitle": "Zuletzt geöffnet",
-      "statisticsMap": "Kartenstatistik",
-      "statisticsScenario": "Szenariostatistik",
       "validate": "Validieren",
       "publish": "Veröffentlichen",
       "unsaved": "ungespeichert",
@@ -2171,20 +2168,20 @@
         "importH3Map": "H3-Karte importieren…"
       },
       "resaved": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}}",
-      "resavedBackupKept": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}} (bestand bereits — nicht überschrieben)"
-    },
-    "viewTabs": {
-      "label": "Ansichten",
-      "mapGrid": "Kartenraster",
-      "scenario": "Szenario",
-      "randomMap": "Zufallskarte",
-      "needsMap": "Öffnen Sie eine .map-Datei, um sie im Kartenraster zu bearbeiten."
+      "resavedBackupKept": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}} (bestand bereits — nicht überschrieben)",
+      "views": "Ansichten",
+      "viewMap": "Karte",
+      "viewQuests": "Aufgaben",
+      "statistics": "Statistiken",
+      "saveAs": "Speichern unter",
+      "saveAsTitle": "Dateinamen wählen: speichert die .map und ihr Szenario-JSON"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} ist in einem separaten Fenster geöffnet",
       "confirmNew": "Sie haben ungespeicherte Änderungen. Trotzdem ein neues Szenario beginnen?",
       "confirmNewTitle": "Neues Szenario"
-    }
+    },
+    "noMapLoaded": "Keine Karte geladen. Nutzen Sie in der Werkzeugleiste „Neue Karte“, „Karte importieren“ oder „Zufallskarte“."
   },
   "dialogs": {
     "assetCombobox": {
