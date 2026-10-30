@@ -96,7 +96,7 @@ export function waterSurfacePattern(ctx: CanvasRenderingContext2D, surface: HTML
 
 /** How far the plane's own shore fade reaches into a water tile, as a share of the tile. */
 const SHORE_REACH_TILES = 0.8
-const SHORE_STEPS = 32
+const SHORE_STEPS = 16
 /** Share of the plane that is erased right at the shore (1 = fully see-through there). */
 const SHORE_EDGE_ERASE = 4.0
 
@@ -140,10 +140,12 @@ export function fadeWaterShore(ctx: CanvasRenderingContext2D, isWater: (node: nu
   ctx.restore()
 }
 
-/** How far the lava's glowing rim reaches into a tile, as a share of the tile, and its colour and opacity right at the rim. */
-const GLOW_REACH_TILES = 0.35
-const GLOW_STEPS = 8
-const GLOW_EDGE_ALPHA = 0.9
+/** How far the lava's glowing rim reaches into a tile, as a share of the tile, and its colour. */
+const GLOW_REACH_TILES = 0.5
+const GLOW_STEPS = 32
+/** Opacity of the glow right at the rim (where the lava meets the rock) and at its inner end, GLOW_REACH_TILES into the lava. */
+const GLOW_EDGE_ALPHA = 0
+const GLOW_INNER_ALPHA = 1
 export const LAVA_GLOW_COLOR = '#ffb41e'
 
 /**
@@ -173,10 +175,16 @@ export function glowLavaRim(ctx: CanvasRenderingContext2D, isLava: (node: number
       }
     }
   }
-  // The layers add up: the strip that reaches farthest alone is one step's opacity, the rim itself has all of them, i.e. GLOW_EDGE_ALPHA.
+  // The strips stack, widest first: where j + 1 of them overlap the visible opacity is the running total. Each strip's own opacity lifts that
+  // total from the ramp's value one step farther in to its value here, so it ramps linearly from GLOW_INNER_ALPHA to GLOW_EDGE_ALPHA.
   ctx.save()
   ctx.fillStyle = LAVA_GLOW_COLOR
-  ctx.globalAlpha = 1 - Math.pow(1 - GLOW_EDGE_ALPHA, 1 / GLOW_STEPS)
-  for (const path of strips) ctx.fill(path)
+  let total = 0
+  strips.forEach((path, step) => {
+    const target = GLOW_INNER_ALPHA + ((GLOW_EDGE_ALPHA - GLOW_INNER_ALPHA) * (step + 1)) / GLOW_STEPS
+    ctx.globalAlpha = Math.max(0, 1 - (1 - target) / (1 - total))
+    total = Math.max(total, target)
+    ctx.fill(path)
+  })
   ctx.restore()
 }
