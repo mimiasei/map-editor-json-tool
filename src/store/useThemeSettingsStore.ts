@@ -125,13 +125,21 @@ export const useThemeSettingsStore = create<ThemeSettingsState>()(
     }),
     {
       name: 'oe-theme-settings',
-      version: 1,
-      // v0 -> v1: backfill the 15 built-in presets for existing users. Runs
-      // once per browser profile; deleting a preset afterwards is permanent
-      // since migrate() only fires when the stored version is stale.
+      version: 4,
+      // Syncs the saved theme list with PRESET_THEMES whenever the stored version is
+      // stale: built-in presets (id "preset-…") that no longer exist are dropped,
+      // missing ones are added, and the active theme falls back to the default if it
+      // was dropped. Default and custom themes are kept. Runs once per browser
+      // profile per version, so deleting a preset afterwards is permanent. Bump
+      // `version` and the `version <` check below whenever PRESET_THEMES changes.
       migrate: (persisted, version) => {
         const state = persisted as ThemeSettingsState
-        if (version < 1) {
+        if (version < 4) {
+          const current = new Set(PRESET_THEMES.map((t) => t.id))
+          // drop old presets that no longer exist, keep default + custom themes
+          state.themes = state.themes.filter((t) => !t.id.startsWith('preset-') || current.has(t.id))
+          // then append the missing ones as before
+          if (!state.themes.some((t) => t.id === state.activeThemeId)) state.activeThemeId = 'default-light'
           const existingIds = new Set(state.themes.map((t) => t.id))
           const missingPresets = PRESET_THEMES.filter((t) => !existingIds.has(t.id))
           state.themes = [...state.themes, ...missingPresets]
