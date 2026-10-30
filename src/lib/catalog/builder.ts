@@ -74,13 +74,14 @@ async function readBareJsonArray(zip: JSZip, path: string): Promise<Record<strin
 // ─── Localization loader ──────────────────────────────────────────────────────
 
 /**
- * Merges all `Lang/english/texts/*.json` files into a single Map<sid, text>.
+ * Merges all `Lang/<language>/texts/*.json` files into a single Map<sid, text>.
  * Keys are lower-cased for case-insensitive lookup.
  * This is used by all collectors for name resolution.
+ * A language other than English is laid over `into` (the English map), so a token the language lacks keeps its English text.
  */
-async function loadLocalization(zip: JSZip): Promise<Map<string, string>> {
-  const loc = new Map<string, string>()
-  const langFiles = zipFilesUnder(zip, 'Lang/english/texts/')
+async function loadLocalization(zip: JSZip, language = 'english', into = new Map<string, string>()): Promise<Map<string, string>> {
+  const loc = into
+  const langFiles = zipFilesUnder(zip, `Lang/${language}/texts/`)
   for (const path of langFiles) {
     try {
       const text = await readZipEntry(zip, path)
@@ -1019,5 +1020,48 @@ export async function buildCatalog(
     rmgStatSids,
     rmgZoneLayout,
     goodsValueBySid,
+  }
+}
+
+// ─── Localized display names ──────────────────────────────────────────────────
+
+/**
+ * Names of heroes, creatures, artifacts and the like in `language`, for display only. The catalog itself stays English: its
+ * `name` fields are written into the map's own text (speaker tokens, prefilled editors, generated stories), where English is
+ * the base language. Returns only the entries whose text differs from the English one in `catalog`.
+ */
+export async function buildLocalNames(zip: JSZip, language: string, catalog: GameCatalog): Promise<GameCatalog['localNames']> {
+  if (language === 'english') return undefined
+  // A UI language the game has no texts for (Norwegian): nothing to localize, names stay English.
+  if (zipFilesUnder(zip, `Lang/${language}/texts/`).length === 0) return undefined
+  const english = await loadLocalization(zip)
+  const locMap = await loadLocalization(zip, language, new Map(english))
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions] = await Promise.all([
+    collectHeroes(zip, locMap),
+    collectCreatures(zip, locMap),
+    collectArtifacts(zip, locMap),
+    collectSpells(zip, locMap),
+    collectSkills(zip, locMap),
+    collectBuffs(zip, locMap),
+    collectMapObjects(zip, locMap),
+    collectFactions(zip, locMap),
+  ])
+  const diff = (local: { id: string; name: string }[], english: { id: string; name: string }[]): Record<string, string> => {
+    const englishById = new Map(english.map((e) => [e.id, e.name]))
+    const out: Record<string, string> = {}
+    for (const e of local) if (e.name && e.name !== englishById.get(e.id)) out[e.id] = e.name
+    return out
+  }
+  return {
+    heroes: diff(heroes, catalog.heroes),
+    creatures: diff(creatures, catalog.creatures),
+    artifacts: diff(artifacts, catalog.artifacts),
+    spells: diff(spells, catalog.spells),
+    skills: diff(skills, catalog.skills),
+    buffs: diff(buffs, catalog.buffs),
+    mapObjects: diff(mapObjects, catalog.mapObjects),
+    factions: diff(factions, catalog.factions),
+    // RMG template descriptions: keyed by localization sid, not by entity id. The template names are not localized in the game.
+    templateStrings: Object.fromEntries([...locMap].filter(([sid, text]) => sid.startsWith('templates_') && english.get(sid) !== text)),
   }
 }

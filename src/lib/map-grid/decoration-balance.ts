@@ -8,6 +8,7 @@ import type { GameCatalog } from '@/lib/catalog/types'
 import { objectBlockedCells } from './passability'
 import { groupOf } from './tile-index'
 import { groupPlayerStartsByZone } from './zone-ownership'
+import i18n from '@/lib/i18n'
 
 export interface DecorationBalanceRow {
   owner: number
@@ -84,8 +85,8 @@ export function computeDecorationBalance(context: MapContext, catalog: GameCatal
     if (Math.abs(gap) < 2 || Math.abs(gap) < typical * 0.25) continue
     r.flagged = true
     notes.push(gap > 0
-      ? `Player ${r.owner}'s area is ${Math.round(r.blockedPct)}% blocked by decorations, the typical player's ${Math.round(typical)}%: remove some mountains, trees or rocks there, or add some for the others.`
-      : `Player ${r.owner}'s area is only ${Math.round(r.blockedPct)}% blocked by decorations, the typical player's ${Math.round(typical)}%: add some there, or thin out the others.`)
+      ? i18n.t('validate.decorationBalance.tooBlocked', { owner: r.owner, pct: Math.round(r.blockedPct), typical: Math.round(typical) })
+      : i18n.t('validate.decorationBalance.tooOpen', { owner: r.owner, pct: Math.round(r.blockedPct), typical: Math.round(typical) }))
   }
   return { rows, notes }
 }

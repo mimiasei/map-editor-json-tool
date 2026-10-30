@@ -11,6 +11,7 @@
 
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import i18n from '@/lib/i18n'
 
 export type DecorationSubcategory =
   | 'animals'
@@ -37,17 +38,9 @@ export const DECORATION_SUBCATEGORY_ORDER: DecorationSubcategory[] = [
   'other',
 ]
 
-export const DECORATION_SUBCATEGORY_LABELS: Record<DecorationSubcategory, string> = {
-  animals: 'Animals',
-  fx: 'FX',
-  mountains: 'Mountains',
-  trees: 'Trees',
-  rocks: 'Rocks',
-  pools: 'Pools',
-  hills: 'Hills',
-  walkable: 'Walkable',
-  campaignRelated: 'Campaign related',
-  other: 'Other decorations',
+/** Display name of a subcategory in the UI language. */
+export function decorationSubcategoryName(sub: DecorationSubcategory): string {
+  return i18n.t(`shared.decorationSubcategories.${sub}`)
 }
 
 const WALKABLE_BIOMES = ['death', 'snow', 'desert', 'autumn', 'dirt']
@@ -74,6 +67,12 @@ export function resolveDecorationSubcategory(sid: string, category: string | und
   if (WALKABLE_PREFIXES.some((w) => sid.includes(w))) return 'walkable'
   if (sid.includes('_hill_')) return 'hills'
   return 'other'
+}
+
+/** Actual grass tufts among the walkables: `grass_` + a number (grass_1_3) or the Autumn/Desert/Deathland/Snow variants
+ *  (grass_autumn_1 ...). Every other `grass_*` sid is something else (grass_dirt_*, grass_log_1, grass_stump_1 ...), per the user. */
+export function isGrassSid(sid: string): boolean {
+  return /^grass_(\d|autumn|desert|death|snow)/.test(sid)
 }
 
 const groundCoverCache = new WeakMap<GameCatalog, Map<string, boolean>>()

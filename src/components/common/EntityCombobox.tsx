@@ -1,5 +1,6 @@
+import { localName } from '@/lib/catalog/local-name'
 import { useState, useMemo, useRef } from 'react'
-import { ENTITY_REGISTRIES, ENTITY_LABELS } from '@/schema/entities'
+import { ENTITY_REGISTRIES } from '@/schema/entities'
 import type { EntityCategory, EntityEntry } from '@/schema/entities'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -19,6 +20,8 @@ import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/c
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import { humanizeFxId } from '@/lib/vfx-options'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,20 +55,10 @@ interface Props {
 // HIDDEN_ACTION_TYPES elsewhere in this codebase.
 const CAMPAIGN_OR_TUTORIAL_ID = /campaign|tutorial/i
 
-// Friendly labels for CatalogMapObject.category, used only when a caller
-// opts into `groupByCategory` — confirmed exhaustive against
+// Friendly labels for CatalogMapObject.category (shared.mapObjectCategories), used only when a caller
+// opts into `groupByCategory` — the keys are exhaustive against
 // CatalogMapObject['category'] in src/lib/catalog/types.ts.
-const MAP_OBJECT_CATEGORY_GROUP_LABELS: Record<CatalogMapObject['category'], string> = {
-  interactables: 'Interactive',
-  environments: 'Decoration',
-  resources: 'Resource',
-  spawns: 'Spawn',
-  animals: 'Animal',
-  fxs: 'Effect',
-  artifacts: 'Artifact',
-  test: 'Test',
-  blocks: 'Block',
-}
+const mapObjectCategoryLabel = (category: CatalogMapObject['category']): string => i18n.t(`shared.mapObjectCategories.${category}`)
 
 // ─── Hook: build the entry list from catalog or static fallback ───────────────
 
@@ -93,11 +86,11 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
 
     switch (category) {
       case 'hero':
-        return [...catalog.heroes.map((h) => ({ id: h.id, label: `${h.name}`, icon: h.icon })), ...customHeroEntries()]
+        return [...catalog.heroes.map((h) => ({ id: h.id, label: localName(catalog, 'heroes', h), icon: h.icon })), ...customHeroEntries()]
       case 'creature':
-        return catalog.creatures.map((c) => ({ id: c.id, label: c.name, icon: c.icon }))
+        return catalog.creatures.map((c) => ({ id: c.id, label: localName(catalog, 'creatures', c), icon: c.icon }))
       case 'artifact': {
-        const real = catalog.artifacts.map((a) => ({ id: a.id, label: a.name, icon: a.icon }))
+        const real = catalog.artifacts.map((a) => ({ id: a.id, label: localName(catalog, 'artifacts', a), icon: a.icon }))
         const custom = Object.values(customArtifacts).map((def) => {
           const nameSid = typeof def.template.name === 'string' ? def.template.name : def.id
           const icon = typeof def.template.icon === 'string' ? def.template.icon : undefined
@@ -108,9 +101,9 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
       case 'mapObject':
         return catalog.mapObjects.map((o) => ({
           id: o.id,
-          label: o.name,
+          label: localName(catalog, 'mapObjects', o),
           icon: o.icon,
-          group: MAP_OBJECT_CATEGORY_GROUP_LABELS[o.category],
+          group: mapObjectCategoryLabel(o.category),
         }))
       case 'vfx':
         return catalog.mapObjects
@@ -124,7 +117,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         // this filters on that flag directly rather than by category.
         return catalog.mapObjects
           .filter((o) => o.isInteractable && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
-          .map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
+          .map((o) => ({ id: o.id, label: localName(catalog, 'mapObjects', o), icon: o.icon }))
       case 'decoration':
         // SpawnMapObject ("Spawn Decoration Object") is explicitly
         // non-interactive per its own description — DB/map/objects/
@@ -132,13 +125,13 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         // the one category file that's non-interactive for every entry.
         return catalog.mapObjects
           .filter((o) => o.category === 'environments' && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
-          .map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
+          .map((o) => ({ id: o.id, label: localName(catalog, 'mapObjects', o), icon: o.icon }))
       case 'spell':
-        return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
+        return catalog.spells.map((s) => ({ id: s.id, label: localName(catalog, 'spells', s), icon: s.icon }))
       case 'skill':
-        return catalog.skills.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
+        return catalog.skills.map((s) => ({ id: s.id, label: localName(catalog, 'skills', s), icon: s.icon }))
       case 'buff': {
-        const real = catalog.buffs.map((b) => ({ id: b.id, label: b.name, icon: b.icon }))
+        const real = catalog.buffs.map((b) => ({ id: b.id, label: localName(catalog, 'buffs', b), icon: b.icon }))
         const custom = Object.values(customBuffs).map((def) => {
           const nameSid = typeof def.template.name_ === 'string' ? def.template.name_ : def.id
           const icon = typeof def.template.icon === 'string' ? def.template.icon : undefined
@@ -151,7 +144,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         // from fraction/tier plus the real unit names inside it (issue #143),
         // resolved via a Map rather than a per-template .find() since there
         // are ~4200 templates.
-        const creatureNameById = new Map(catalog.creatures.map((c) => [c.id, c.name]))
+        const creatureNameById = new Map(catalog.creatures.map((c) => [c.id, localName(catalog, 'creatures', c)]))
         return catalog.squadTemplates.map((t) => {
           const units = t.unitSids.map((sid) => creatureNameById.get(sid) ?? sid).join(', ')
           const fraction = t.fraction ? t.fraction.charAt(0).toUpperCase() + t.fraction.slice(1) : 'Unknown'
@@ -221,6 +214,7 @@ function renderEntityItem(entry: EntityEntry, onChange: (value: string) => void,
  * Free-text entry is always accepted for forward-compatibility.
  */
 export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -338,7 +332,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                   onChange('')
                 }}
                 className={`absolute ${category === 'mapObject' ? 'right-12' : 'right-7'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}
-                title="Clear"
+                title={t('shared.clear')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -353,7 +347,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                     ? 'text-primary hover:text-primary/80'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
-                title={`Filter map objects${filterBadge ? ` (${filterBadge})` : ''}`}
+                title={filterBadge ? t('common.entityCombobox.filterMapObjectsActive', { filter: filterBadge }) : t('common.entityCombobox.filterMapObjects')}
                 onClick={(e) => { e.stopPropagation(); setFilterOpen(true) }}
               >
                 <SlidersHorizontal className="h-3 w-3" />
@@ -374,10 +368,10 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
               size="sm"
               className="h-7 shrink-0 gap-1 px-2 text-xs"
               onClick={() => setPickerOpen(true)}
-              title="Browse heroes grouped by faction"
+              title={t('common.entityCombobox.browseHeroesGroupedByFaction')}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              Browse
+              {t('common.entityCombobox.browse')}
             </Button>
           )}
 
@@ -423,15 +417,15 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                       className="flex items-center gap-1.5 text-xs py-1.5 font-medium"
                     >
                       <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      Browse heroes by faction…
+                      {t('common.entityCombobox.browseHeroesByFaction')}
                     </CommandItem>
                   </CommandGroup>
                 )}
 
                 <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
                   {filtered.length === 0 && allEntries.length > 0
-                    ? `No matching ${ENTITY_LABELS[category]}`
-                    : `No ${ENTITY_LABELS[category]} — load Core.zip via Game Data`}
+                    ? t(`common.entityCombobox.noMatching.${category}`)
+                    : t(`common.entityCombobox.noneLoaded.${category}`)}
                 </CommandEmpty>
                 {groupedEntries ? (
                   groupedEntries.map(([group, entries]) => (

@@ -25,6 +25,7 @@ import type { PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
+import { localName } from '@/lib/catalog/local-name'
 
 export type GridCellVisual =
   | { kind: 'icon'; Icon: AppIcon; colorClassName?: string }
@@ -137,7 +138,7 @@ export function resolveGridCellVisual(
   if (item.type === 2 && item.firstUnitSid) {
     const creature = catalog?.creatures.find((c) => c.id === item.firstUnitSid)
     if (hasThumbnail(creature?.icon)) {
-      return { kind: 'catalogOverride', iconId: creature.icon, name: creature.name }
+      return { kind: 'catalogOverride', iconId: creature.icon, name: localName(catalog, 'creatures', creature) }
     }
   }
 
@@ -149,7 +150,7 @@ export function resolveGridCellVisual(
     const template = catalog?.squadTemplates.find((t) => t.id === item.sid && t.unitSids.length === 1)
     const creature = template && catalog?.creatures.find((c) => c.id === template.unitSids[0])
     if (hasThumbnail(creature?.icon)) {
-      return { kind: 'catalogOverride', iconId: creature.icon, name: creature.name }
+      return { kind: 'catalogOverride', iconId: creature.icon, name: localName(catalog, 'creatures', creature) }
     }
   }
 
@@ -218,7 +219,7 @@ export function resolveGridCellVisual(
   // custom_* specifically.
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === item.sid)
   if (catalogEntry?.icon && catalogEntry.icon !== item.sid && hasThumbnail(catalogEntry.icon)) {
-    return { kind: 'catalogOverride', iconId: catalogEntry.icon, name: catalogEntry.name }
+    return { kind: 'catalogOverride', iconId: catalogEntry.icon, name: localName(catalog, 'mapObjects', catalogEntry) }
   }
 
   if (hasThumbnail(catalogEntry?.icon)) return { kind: 'catalog' }

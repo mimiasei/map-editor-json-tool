@@ -3,6 +3,7 @@
 // interrupted by. Styling follows AnnotationBanner.
 
 import { BookOpen, Download, ImageIcon, Info, X } from '@/components/ui/icons'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface StoryDraftBannerProps {
   onResume: () => void
@@ -11,19 +12,20 @@ interface StoryDraftBannerProps {
 
 /** A Story Builder draft is waiting while the user edits the map. */
 export function StoryDraftBanner({ onResume, onDiscard }: StoryDraftBannerProps) {
+  const { t } = useTranslation()
   return (
     <div className="mx-3 mt-2 flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/40 dark:text-blue-200">
       <BookOpen className="h-3.5 w-3.5 shrink-0 text-blue-500 dark:text-blue-400" />
-      <span className="flex-1">A story is in progress. Nothing is added to the map until you create it.</span>
+      <span className="flex-1">{t('common.updateBanner.aStoryIsInProgress')}</span>
       <button type="button" onClick={onResume} className="shrink-0 font-medium underline underline-offset-2 hover:no-underline">
-        Resume story
+        {t('common.updateBanner.resumeStory')}
       </button>
       <button
         type="button"
         onClick={onDiscard}
         className="shrink-0 text-blue-500 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
-        aria-label="Discard story draft"
-        title="Discard the draft"
+        aria-label={t('common.updateBanner.discardStoryDraft')}
+        title={t('common.updateBanner.discardTheDraft')}
       >
         <X className="h-3 w-3" />
       </button>
@@ -43,24 +45,25 @@ interface UpdateBannerProps {
  * #51 asks for.
  */
 export function UpdateBanner({ version, onOpen, onDismiss }: UpdateBannerProps) {
+  const { t } = useTranslation()
   return (
     <div className="mx-3 mt-2 flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/40 dark:text-blue-200">
       <Download className="h-3.5 w-3.5 shrink-0 text-blue-500 dark:text-blue-400" />
       <span className="flex-1">
-        Version <span className="font-mono font-semibold">{version}</span> is available.
+        <Trans i18nKey="common.updateBanner.versionAvailable" values={{ version }} components={{ v: <span className="font-mono font-semibold" /> }} />
       </span>
       <button
         type="button"
         onClick={onOpen}
         className="shrink-0 font-medium underline underline-offset-2 hover:no-underline"
       >
-        What's new
+        {t('shared.whatsNew')}
       </button>
       <button
         type="button"
         onClick={onDismiss}
         className="shrink-0 text-blue-500 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
-        aria-label="Dismiss update notice"
+        aria-label={t('common.updateBanner.dismissUpdateNotice')}
       >
         <X className="h-3 w-3" />
       </button>
@@ -80,19 +83,21 @@ interface RestoreBannerProps {
  * holding changes they never saved.
  */
 export function RestoreBanner({ fileName, wasDirty, onDismiss }: RestoreBannerProps) {
+  const { t } = useTranslation()
   return (
     <div className="mx-3 mt-2 flex items-start gap-2 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-xs text-green-800 dark:border-green-700/30 dark:bg-green-950/40 dark:text-green-200">
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400" />
       <span className="flex-1">
-        Restored {fileName ? <span className="font-mono">{fileName}</span> : 'your work'} from
-        before the update.
-        {wasDirty && ' It still has unsaved changes.'}
+        {fileName
+          ? <Trans i18nKey="common.updateBanner.restoredFile" values={{ fileName }} components={{ f: <span className="font-mono" /> }} />
+          : t('common.updateBanner.restoredWork')}
+        {wasDirty && ` ${t('common.updateBanner.stillDirty')}`}
       </span>
       <button
         type="button"
         onClick={onDismiss}
         className="shrink-0 text-green-600 transition-colors hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
-        aria-label="Dismiss restore notice"
+        aria-label={t('common.updateBanner.dismissRestoreNotice')}
       >
         <X className="h-3 w-3" />
       </button>
@@ -113,26 +118,25 @@ interface ThumbnailsBannerProps {
  * the only symptom is silently missing portraits.
  */
 export function ThumbnailsBanner({ count, onExtract, onDismiss }: ThumbnailsBannerProps) {
+  const { t } = useTranslation()
   return (
     <div className="mx-3 mt-2 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700/30 dark:bg-amber-950/40 dark:text-amber-200">
       <ImageIcon className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
       <span className="flex-1">
-        {count} new game {count === 1 ? 'image is' : 'images are'} available — re-run the
-        extractor to see {count === 1 ? 'it' : 'them'} in dropdowns, the hero picker and dialog
-        avatars.
+        {t('common.updateBanner.newImages', { count })}
       </span>
       <button
         type="button"
         onClick={onExtract}
         className="shrink-0 font-medium underline underline-offset-2 hover:no-underline"
       >
-        Extract now
+        {t('common.updateBanner.extractNow')}
       </button>
       <button
         type="button"
         onClick={onDismiss}
         className="shrink-0 text-amber-600 transition-colors hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
-        aria-label="Dismiss artwork notice"
+        aria-label={t('common.updateBanner.dismissArtworkNotice')}
       >
         <X className="h-3 w-3" />
       </button>

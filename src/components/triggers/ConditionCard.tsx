@@ -7,6 +7,7 @@ import { Trash2, AlertTriangle, HelpCircle } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import SentenceView from './SentenceView'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   condition: Condition
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function ConditionCard({ condition, onEdit, onRemove, onPickNode }: Props) {
+  const { t } = useTranslation()
   const def = CONDITION_REGISTRY[condition.c]
   const category = condition.c ? getConditionCategory(condition.c) : undefined
   const Icon = category?.icon ?? HelpCircle
@@ -55,7 +57,7 @@ export default function ConditionCard({ condition, onEdit, onRemove, onPickNode 
               onNodeClick={onPickNode}
             />
           ) : (
-            'Needs setup — click to configure'
+            t('triggers.conditionCard.needsSetupClickToConfigure')
           )}
         </p>
         {configured && def && (

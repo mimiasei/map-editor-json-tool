@@ -8,6 +8,7 @@
 // parameter rather than reading these constants directly, so a customized
 // value actually takes effect everywhere.
 
+import i18n from '@/lib/i18n'
 import type { BiomeId } from './terrain-colors'
 import unitValuesData from '@/data/units_values.json'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -41,9 +42,15 @@ export function squadValueFromUnits(
  *  Driven by the (possibly user-customized) ranges rather than hardcoded
  *  thresholds, so the Browse-mode Value field's badge stays consistent with
  *  whatever boundaries Advanced settings has set. */
+/** Display name of a difficulty label. The labels themselves ('Easy', 'Random', ...) are keys in the saved settings and stay English. */
+export function squadDifficultyName(label: string): string {
+  const key = `mapGrid.squadDifficulty.${label}`
+  return i18n.exists(key) ? i18n.t(key as 'mapGrid.squadDifficulty.Easy') : label
+}
+
 export function randomSquadDifficultyLabel(value: number, ranges: DifficultyRange[] = DEFAULT_SQUAD_DIFFICULTY_RANGES): string {
   const named = ranges.filter((r) => r.label !== 'Random')
-  return (named.find((r) => value <= r.max) ?? named[named.length - 1] ?? ranges[0]).label
+  return squadDifficultyName((named.find((r) => value <= r.max) ?? named[named.length - 1] ?? ranges[0]).label)
 }
 
 /** Default ranges for the difficulty quick-pick buttons/Encounter tool

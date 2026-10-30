@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
+import i18next from 'eslint-plugin-i18next'
 
 export default tseslint.config(
   { ignores: ['dist', 'node_modules', 'src-tauri', 'gme-mod', 'tools', 'scripts', 'examples'] },
@@ -20,6 +21,17 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  // UI text must go through t() (src/locales/en.json). Only JSX text is checked:
+  // schema/data tables, generated story text and exported values stay English.
+  {
+    ...i18next.configs['flat/recommended'],
+    files: ['src/components/**/*.tsx', 'src/App.tsx'],
+    rules: {
+      // Replacing `words.exclude` drops the plugin defaults, so they are repeated here:
+      // punctuation/digits and ALL_CAPS. Added: symbols (●, ×) and the `p[0]` parameter index in the hint list.
+      'i18next/no-literal-string': ['error', { mode: 'jsx-text-only', words: { exclude: ['[0-9!-/:-@[-`{-~]+', '[A-Z_-]+', '^[●×•–—·→←]+$', '^p[[]$'] } }],
     },
   },
 )

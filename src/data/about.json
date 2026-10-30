@@ -1,9 +1,7 @@
 {
   "app": "HommOE Scenario Editor",
-  "tagline": "Visual editor for scenario scripting JSON",
   "game": "Heroes of Might and Magic: Olden Era (Unfrozen)",
   "creator": "Mikkel Syse Grosland",
-  "license": "Open source — contributions welcome",
   "repository": "https://github.com/mimiasei/map-editor-json-tool",
   "issues": "https://github.com/mimiasei/map-editor-json-tool/issues",
   "stack": [

@@ -7,6 +7,7 @@ import ActionForm from '@/components/actions/ActionForm'
 import { formatConditionSentence, formatActionSentence } from '@/lib/trigger-visual'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useTranslation } from 'react-i18next'
 
 export type SelectedNode = { kind: 'condition'; index: number } | { kind: 'action'; index: number }
 
@@ -36,6 +37,7 @@ export default function TriggerInspectorPanel({
   onDuplicateAction,
   onPickFromMap,
 }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
 
@@ -74,7 +76,7 @@ export default function TriggerInspectorPanel({
         {selected && selected.kind === 'condition' && (
           <>
             <SheetHeader>
-              <SheetTitle>Edit condition</SheetTitle>
+              <SheetTitle>{t('triggers.triggerInspectorPanel.editCondition')}</SheetTitle>
               <p className="text-sm text-muted-foreground">
                 {formatConditionSentence(trigger.conditions[selected.index], { catalog, placedObjects })}
               </p>
@@ -90,16 +92,16 @@ export default function TriggerInspectorPanel({
             />
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="outline" onClick={handleCancel}>
-                Cancel
+                {t('shared.cancel')}
               </Button>
-              <Button onClick={onClose}>Confirm</Button>
+              <Button onClick={onClose}>{t('mapGrid.mapGridDialog.confirm')}</Button>
             </div>
           </>
         )}
         {selected && selected.kind === 'action' && (
           <>
             <SheetHeader>
-              <SheetTitle>Edit action</SheetTitle>
+              <SheetTitle>{t('triggers.triggerInspectorPanel.editAction')}</SheetTitle>
               <p className="text-sm text-muted-foreground">
                 {formatActionSentence(trigger.actions[selected.index], { catalog, placedObjects })}
               </p>
@@ -124,9 +126,9 @@ export default function TriggerInspectorPanel({
             />
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="outline" onClick={handleCancel}>
-                Cancel
+                {t('shared.cancel')}
               </Button>
-              <Button onClick={onClose}>Confirm</Button>
+              <Button onClick={onClose}>{t('mapGrid.mapGridDialog.confirm')}</Button>
             </div>
           </>
         )}

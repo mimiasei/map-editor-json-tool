@@ -14,6 +14,7 @@
 // nodes text field alongside this grid remains the only way to author that.
 
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface NodeGridEditorProps {
   sizeX: number
@@ -23,6 +24,7 @@ interface NodeGridEditorProps {
 }
 
 export default function NodeGridEditor({ sizeX, sizeZ, nodes, onChange }: NodeGridEditorProps) {
+  const { t } = useTranslation()
   const cellCount = Math.max(0, sizeX * sizeZ)
 
   const handleClick = (index: number) => {
@@ -32,7 +34,7 @@ export default function NodeGridEditor({ sizeX, sizeZ, nodes, onChange }: NodeGr
   }
 
   if (cellCount === 0 || cellCount > 400) {
-    return <p className="text-xs text-muted-foreground">Grid too large to render — edit the raw nodes field below.</p>
+    return <p className="text-xs text-muted-foreground">{t('tree.nodeGridEditor.gridTooLargeToRender')}</p>
   }
 
   return (
@@ -47,7 +49,7 @@ export default function NodeGridEditor({ sizeX, sizeZ, nodes, onChange }: NodeGr
             key={i}
             type="button"
             onClick={() => handleClick(i)}
-            title={`Node ${i} (${v}) — click to place the visual/building here`}
+            title={t('tree.nodeGridEditor.nodeTitle', { i, v })}
             className={cn(
               'h-7 w-7 shrink-0 rounded border text-[10px] font-mono flex items-center justify-center transition-colors',
               v === 1 && 'bg-red-900 border-red-950 text-white hover:bg-red-800',

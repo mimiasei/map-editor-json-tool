@@ -2,6 +2,7 @@ import type { Action } from '@/types/scenario'
 import ActionForm from './ActionForm'
 import { Button } from '@/components/ui/button'
 import { Plus } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   actions: Action[]
@@ -15,10 +16,11 @@ interface Props {
 }
 
 export default function ActionList({ actions, onAdd, onUpdate, onRemove, typeFilter }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-2">
       {actions.length === 0 && (
-        <p className="text-xs text-muted-foreground">No actions defined.</p>
+        <p className="text-xs text-muted-foreground">{t('actions.actionList.noActionsDefined')}</p>
       )}
       {actions.map((action, i) => (
         <ActionForm
@@ -34,7 +36,7 @@ export default function ActionList({ actions, onAdd, onUpdate, onRemove, typeFil
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => onAdd()} className="gap-1.5 text-xs">
           <Plus className="h-3 w-3" />
-          Add Action
+          {t('actions.actionList.addAction')}
         </Button>
       </div>
     </div>

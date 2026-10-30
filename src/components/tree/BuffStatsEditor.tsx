@@ -18,6 +18,7 @@ import {
   defaultValueForBuffAttr,
 } from '@/lib/buff-catalog'
 import { percentToDisplay, displayToPercent } from '@/lib/percent-utils'
+import { useTranslation } from 'react-i18next'
 
 const DAMAGE_LIST_KEYS = ['outDmgMods', 'inDmgMods'] as const
 type DamageListKey = (typeof DAMAGE_LIST_KEYS)[number]
@@ -54,6 +55,7 @@ interface BuffStatsEditorProps {
 }
 
 export default function BuffStatsEditor({ stats, onChange }: BuffStatsEditorProps) {
+  const { t } = useTranslation()
   const groups = useMemo(groupAttributes, [])
   const keys = Object.keys(stats)
 
@@ -101,7 +103,7 @@ export default function BuffStatsEditor({ stats, onChange }: BuffStatsEditorProp
                     <Input
                       list="buff-damage-type-options"
                       className="h-7 flex-1 text-xs"
-                      placeholder="Damage/attack type…"
+                      placeholder={t('tree.buffStatsEditor.damageAttackType')}
                       value={item.t ?? ''}
                       onChange={(e) => setItems(items.map((it, idx) => (idx === i ? { ...it, t: e.target.value } : it)))}
                     />
@@ -120,11 +122,11 @@ export default function BuffStatsEditor({ stats, onChange }: BuffStatsEditorProp
                   </div>
                 ))}
                 <button type="button" className="text-xs text-primary hover:underline" onClick={() => setItems([...items, { t: COMMON_DAMAGE_TYPES[0], v: 0.1 }])}>
-                  + Add damage type
+                  {t('tree.buffStatsEditor.addDamageType')}
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Negative reduces damage; positive increases it. Common types are suggested, but any real damage/attack-type id can be typed.
+                {t('tree.buffStatsEditor.negativeReducesDamagePositiveIncreases')}
               </p>
             </div>
           )
@@ -156,7 +158,7 @@ export default function BuffStatsEditor({ stats, onChange }: BuffStatsEditorProp
               {attr?.valueKind === 'boolean' ? (
                 <label className="flex items-center gap-1.5 text-xs shrink-0">
                   <Checkbox checked={value === true || value === 'true'} onCheckedChange={(c) => setValue(key, !!c)} />
-                  On
+                  {t('shared.on')}
                 </label>
               ) : attr?.valueKind === 'percent' ? (
                 <div className="flex items-center gap-1 shrink-0">
@@ -170,27 +172,27 @@ export default function BuffStatsEditor({ stats, onChange }: BuffStatsEditorProp
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">{attr?.description ?? 'Not a recognized stat key — kept as-is.'}</p>
+            <p className="text-xs text-muted-foreground">{attr?.description ?? t('tree.buffStatsEditor.notARecognizedStatKey')}</p>
           </div>
         )
       })}
 
       <div className="flex items-center gap-3">
         <button type="button" className="inline-flex items-center gap-1 text-xs text-primary hover:underline" onClick={addPlainStat}>
-          <Plus className="h-3 w-3" /> Add stat
+          <Plus className="h-3 w-3" /> {t('tree.buffStatsEditor.addStat')}
         </button>
         {!('outDmgMods' in stats) && (
           <button type="button" className="text-xs text-primary hover:underline" onClick={() => addDamageList('outDmgMods')}>
-            + Outgoing damage by type
+            {t('tree.buffStatsEditor.outgoingDamageByType')}
           </button>
         )}
         {!('inDmgMods' in stats) && (
           <button type="button" className="text-xs text-primary hover:underline" onClick={() => addDamageList('inDmgMods')}>
-            + Incoming damage by type
+            {t('tree.buffStatsEditor.incomingDamageByType')}
           </button>
         )}
       </div>
-      {keys.length === 0 && <p className="text-xs text-muted-foreground">No stat effects.</p>}
+      {keys.length === 0 && <p className="text-xs text-muted-foreground">{t('tree.buffStatsEditor.noStatEffects')}</p>}
       <datalist id="buff-damage-type-options">
         {COMMON_DAMAGE_TYPES.map((t) => <option key={t} value={t} />)}
       </datalist>

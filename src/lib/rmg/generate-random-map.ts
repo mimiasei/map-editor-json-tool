@@ -27,6 +27,7 @@
 // optimization, or a real RMG template JSON format/authoring UI beyond
 // today's size/player-count dialog — those are Milestones 4/5 (issue #210).
 
+import i18n from '@/lib/i18n'
 import {
   addObjectInstance,
   addObjectInstances,
@@ -73,7 +74,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, c
 import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
-import { scatterZoneWater } from './zone-water'
+import { scatterZoneWater, waterChangesByBody } from './zone-water'
 import type { LayoutArchetype } from './zone-archetypes'
 import { isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, mirrorObjects } from './zone-mirror'
 import { closeMirroredBorders } from './zone-mirror-border'
@@ -371,7 +372,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // `computeWater`/`computeElevation` are on for terrain-only runs and (see
   // `terrainFirst` below) for every mode except islands, which still floods
   // its own water after object population.
-  await reportProgress('Laying out zones and terrain', 0)
+  await reportProgress(i18n.t('rmg.progress.layoutZones'), 0)
   // Terrain first: lakes and hills/valleys are cut before any object exists, and
   // every object is then placed knowing them. Islands mode keeps the old order
   // (its flood and portals are built around objects existing first).
@@ -383,7 +384,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     elevationModes: catalog.rmgZoneLayout?.elevationModes,
   })
   if (terrainOnly) {
-    await reportProgress('Terrain generated', 100)
+    await reportProgress(i18n.t('rmg.progress.terrainGenerated'), 100)
     return { container: terrain.container, balanceReport: { score: null, findings: [], summary: { zones: 0, players: 0, totalWealth: 0, wealthPerPlayer: 0, wealthSpread: 0 } } }
   }
 
@@ -414,7 +415,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     spawnerGroup.levels.push(0)
   })
 
-  await reportProgress('Populating zones with mines, dwellings and cities', 10)
+  await reportProgress(i18n.t('rmg.progress.populatingZones'), 10)
   // Two phases: key objects (mines, dwellings, cities and their guards) now,
   // treasure and its guards only after the roads exist, so roads aren't
   // detoured around piles and treasure keeps off the road. The three result
@@ -505,7 +506,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const isNotableSid = (sid: string): boolean => MINE_SIDS_LOCAL.has(sid) || WEEKLY_RESOURCE_SIDS.has(sid) || sid === 'random-city'
   const roadPoiNodes = [...placements, ...concreteSquads].filter((p) => isNotableSid(p.sid)).map((p) => p.node)
 
-  await reportProgress('Adding water', 25)
+  await reportProgress(i18n.t('rmg.progress.addingWater'), 25)
   if (terrainFirst) {
     // Lakes were cut by generateTerrain, before any object.
   } else if (waterContent === 'normal') {
@@ -522,9 +523,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   } else if (waterContent === 'islands') {
     for (const node of islandFloodNodes) {
       waterNodesAll.add(node)
-      waterChangesAll.push({ node, waterId: 1 })
       levelChangesAll.push({ node, level: -1 })
     }
+    waterChangesAll.push(...waterChangesByBody(islandFloodNodes, sizeX, sizeZ, tileBiome, 1))
     // Per-edge portal placement (one island-touching zone-graph edge = one
     // portal pair, exactly mirroring how a non-island edge gets one road)
     // happens inside the road loop below, not here — see that loop's own
@@ -586,7 +587,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // tiles as blocked; after object population, so blobs avoid overlapping
   // a real mine/dwelling/guard) — see zone-elevation.ts's own header
   // comment. Unlike water, both player AND neutral zones are eligible.
-  await reportProgress('Shaping elevation', 32)
+  await reportProgress(i18n.t('rmg.progress.shapingElevation'), 32)
   let climbChangesAll: { node: number; climb: 1 }[] = []
   let elevationNodesAll = new Set<number>(terrainFirst ? terrain.elevationNodesAll : [])
   if (terrainFirst) {
@@ -672,7 +673,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // second real cause the same user report raised: two independently-
   // generated roads running close together and interleaving (more likely
   // at higher player counts, with more edges sharing the same map).
-  await reportProgress('Building roads', 40)
+  await reportProgress(i18n.t('rmg.progress.buildingRoads'), 40)
   const roadNodes = new Set<number>()
   const roadIdByNode = new Map<number, number>()
   const roadPathsByEdge = new Map<string, number[]>()
@@ -1236,7 +1237,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
   // Treasure and its guards, now that the roads are laid: road tiles count as
   // blocked, so no pile or guard lands on a road or is placed over it.
-  await reportProgress('Placing treasure', 55)
+  await reportProgress(i18n.t('rmg.progress.placingTreasure'), 55)
   // Remembered so rivers, which may cross a road, don't see these as blocked.
   const roadOnlyBlocked = new Set<number>()
   for (const node of roadNodes) {
@@ -1282,7 +1283,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // uphill, never across another hill or a ramp. Shape codes are the real
   // per-node connectivity bitmask river-shape.ts derives from sample maps;
   // the waterfall tile uses the game's own waterfall encoding.
-  await reportProgress('Carving rivers', 62)
+  await reportProgress(i18n.t('rmg.progress.carvingRivers'), 62)
   let riverNodes = new Set<number>()
   const riverPaths: number[][] = []
   const riverMouths: number[] = []
@@ -1526,7 +1527,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // other already-placed object. See zone-boundary.ts's own header comment
   // for the full design; a no-op (empty results) when `boundaryGuardStrength`
   // is `'none'` (the default).
-  await reportProgress('Fortifying zone boundaries', 68)
+  await reportProgress(i18n.t('rmg.progress.fortifyingBoundaries'), 68)
   const boundaryResult = fortifyZoneBoundaries({
     sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
     roadPaths: [...roadPathsByEdge.values(), ...riverPaths],
@@ -1539,7 +1540,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
   // the river, or the water.
-  await reportProgress('Scattering obstacles', 73)
+  await reportProgress(i18n.t('rmg.progress.scatteringObstacles'), 73)
   const { densityByZone, ambientPickupByZone } = deriveObstacleOverrides(zoneLayoutByZoneId)
   // Real distance-to-road field (issue #224) — only computed when actually
   // needed; `roadNodes` is already fully populated and painted by this
@@ -1588,7 +1589,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // obstacles so it only fills tiles obstacles left free; every placement
   // is non-blocking, so this can never introduce a new reachability or
   // water-isolation problem for anything else.
-  await reportProgress('Adding wildlife and decoration', 78)
+  await reportProgress(i18n.t('rmg.progress.addingWildlife'), 78)
   const faunaPlacements = scatterZoneFauna({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, waterNodes: waterNodesAll, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
@@ -1629,7 +1630,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // `populateZones` already decided (neutral mines, guarded treasure, neutral
   // cities — `decidedNodes`) are skipped. Runs before the reachability pass
   // below so that pass sees the guards.
-  await reportProgress('Placing guards', 82)
+  await reportProgress(i18n.t('rmg.progress.placingGuards'), 82)
   const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
   const proximityGuards = scatterProximityGuards({
     sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
@@ -1714,7 +1715,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     mirrorLayers()
   }
 
-  await reportProgress('Checking reachability and repairing zones', 84)
+  await reportProgress(i18n.t('rmg.progress.checkingReachability'), 84)
   const report = applyAccessibilityPass(
     objectGroups,
     sizeX,
@@ -1858,7 +1859,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     logInfo(`Mirrored map: sealed the zone borders with ${border.walls.length} wall object(s) and ${border.guards.length} gate guard(s), ${border.gateRows} row(s) on the middle line left open for roads, ${border.gaps} border tile(s) no wall fitted on, ${border.removeNodes.length} pickup(s) or guard(s) given up`)
   }
 
-  await reportProgress('Writing placements', 90)
+  await reportProgress(i18n.t('rmg.progress.writingPlacements'), 90)
   const additions: { sid: string; node: number; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean }; randomHireOverrides?: { tier: number } }[] = []
   const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
   for (const [sid, group] of objectGroups) {

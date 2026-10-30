@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, Info } from '@/components/ui/icons'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface LocalizedTextFieldProps {
   idPrefix: string
@@ -48,12 +49,13 @@ export default function LocalizedTextField({
   autoFocus,
   bordered,
 }: LocalizedTextFieldProps) {
+  const { t } = useTranslation()
   return (
     <div className={bordered ? 'border-t border-border pt-3 space-y-1.5' : 'space-y-1.5'}>
       <Label htmlFor={`${idPrefix}-sid`}>
         {autoManageLoc ? managedSidLabel : unmanagedLabel}
         {sidLabelSuffix}
-        {optional && <span className="text-muted-foreground font-normal"> (optional)</span>}
+        {optional && <span className="text-muted-foreground font-normal"> {t('common.localizedTextField.optional')}</span>}
       </Label>
       <Input
         id={`${idPrefix}-sid`}
@@ -77,7 +79,7 @@ export default function LocalizedTextField({
       {showFirstTimeNote && autoManageLoc && (
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-          A localization token will be created automatically using the SID above.
+          {t('common.localizedTextField.aLocalizationTokenWillBe')}
         </p>
       )}
 
@@ -85,7 +87,7 @@ export default function LocalizedTextField({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="ml-2">
-            "{sidValue.trim()}" is already used by another entity or token.
+            {t('common.localizedTextField.duplicateSid', { sid: sidValue.trim() })}
           </AlertDescription>
         </Alert>
       )}

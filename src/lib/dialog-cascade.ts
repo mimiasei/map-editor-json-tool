@@ -16,6 +16,7 @@ import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { CustomBuffDefinition } from '@/types/custom-buff'
 import { ACTION_REGISTRY } from '@/schema/actions'
+import i18n from '@/lib/i18n'
 
 export interface DialogActionCascade {
   /** Dialog ids referenced by this action, safe to delete (unused elsewhere). */
@@ -209,17 +210,17 @@ export function describeDialogActionCascade(
   cascade: DialogActionCascade,
   mapLoaded: boolean,
 ): string {
-  const lines = ['Deleting this action will also delete:']
+  const lines = [i18n.t('dialogs.cascade.heading')]
   if (cascade.dialogsToDelete.length > 0) {
-    lines.push(`• Dialog(s): ${cascade.dialogsToDelete.join(', ')}`)
+    lines.push(i18n.t('dialogs.cascade.dialogs', { ids: cascade.dialogsToDelete.join(', ') }))
   }
   if (cascade.tokensToDelete.length > 0) {
-    const owner = cascade.dialogsToDelete.length === 1 ? 'it' : 'these dialogs'
-    lines.push(`• ${cascade.tokensToDelete.length} localization token(s) used only by ${owner}`)
+    const key = cascade.dialogsToDelete.length === 1 ? 'dialogs.cascade.tokensOnlyThisDialog' : 'dialogs.cascade.tokensOnlyTheseDialogs'
+    lines.push(i18n.t(key, { count: cascade.tokensToDelete.length }))
   }
-  lines.push('', 'This cannot be undone with Ctrl+Z.')
+  lines.push('', i18n.t('dialogs.cascade.noUndo'))
   if (!mapLoaded) {
-    lines.push('(No map is loaded this session, so map object names/descriptions weren’t checked.)')
+    lines.push(i18n.t('dialogs.cascade.noMap'))
   }
   return lines.join('\n')
 }

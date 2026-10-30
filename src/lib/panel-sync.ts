@@ -12,16 +12,23 @@ import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { CustomBuffDefinition } from '@/types/custom-buff'
 import type { TranslationMap } from '@/lib/languages'
+import i18n from '@/lib/i18n'
 
 // ─── Panel metadata ───────────────────────────────────────────────────────────
 
-export const PANEL_META: Record<string, { title: string; width: number; height: number }> = {
-  preview:     { title: 'JSON Preview',        width: 600,  height: 800 },
-  timeline:    { title: 'Event Timeline',      width: 900,  height: 600 },
-  flow:        { title: 'Quest Flow Diagram',  width: 1000, height: 700 },
-  stats:       { title: 'Scenario Statistics', width: 800,  height: 600 },
-  guides:      { title: 'Guides',              width: 700,  height: 600 },
-  mapGridCell: { title: 'Map Grid — Tile Info', width: 380, height: 700 },
+export const PANEL_META: Record<string, { width: number; height: number }> = {
+  preview:     { width: 600,  height: 800 },
+  timeline:    { width: 900,  height: 600 },
+  flow:        { width: 1000, height: 700 },
+  stats:       { width: 800,  height: 600 },
+  guides:      { width: 700,  height: 600 },
+  mapGridCell: { width: 380,  height: 700 },
+}
+
+/** Window title in the UI language; an unknown panel id is shown as is. */
+export function panelTitle(panelId: string): string {
+  const key = `panels.windowTitles.${panelId}`
+  return i18n.exists(key) ? i18n.t(key as 'panels.windowTitles.preview') : panelId
 }
 
 // ─── Message types ────────────────────────────────────────────────────────────

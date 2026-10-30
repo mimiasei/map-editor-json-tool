@@ -8,9 +8,10 @@
 // Master-detail layout per issue #125 item 3: a clickable row per item on
 // the tile, and a detail panel below for whichever row is selected.
 
+import { localName, localNameById } from '@/lib/catalog/local-name'
 import { useEffect, useState } from 'react'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
-import { groupOf, GRID_GROUP_LABELS } from '@/lib/map-grid/tile-index'
+import { groupOf } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import { formatRewardParam } from '@/lib/map-grid/reward-params'
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
@@ -29,7 +30,9 @@ import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import RandomSquadExampleDialog from './RandomSquadExampleDialog'
 import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
-import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, squadDifficultyName, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { useTranslation } from 'react-i18next'
+import { factionLabel } from '@/lib/factions'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -196,19 +199,7 @@ export interface MapGridCellContentProps {
   onMoveInStack?: (item: PlacedObject, delta: -1 | 1) => void
 }
 
-const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
-  'two-way': 'Two-way',
-  'one-way': 'One-way (exit only on the other end)',
-  unlinked: 'Not connected',
-}
-
-const LINK_KIND_EXPLANATIONS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
-  'two-way': 'Stepping on either portal sends you to the other.',
-  'one-way': "This portal sends you to the other one, but stepping on that one won't send you back — it only receives (the official editor calls a disabled portal like this an \"exit portal\").",
-  unlinked: "This portal isn't connected to another one, so stepping on it does nothing.",
-}
-
-const PLAYER_TYPE_LABELS = ['Player', 'Bot', 'Unknown'] as const
+const PLAYER_TYPE_KEYS = ['player', 'bot', 'unknown'] as const
 
 /** `rotation` is a 0-3 quadrant enum (0/90/180/270°) with a `+10` offset for
  *  a mirrored variant (10-13) — confirmed against every real sample map's
@@ -266,6 +257,7 @@ export default function MapGridCellContent({
   onCreateRule,
   onMoveInStack,
 }: MapGridCellContentProps) {
+  const { t } = useTranslation()
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
   // Hero-spawner only, local-only (never written) — just narrows the hero
@@ -337,14 +329,13 @@ export default function MapGridCellContent({
       <div className="px-3 py-2 border-b border-border shrink-0">
         <p className="text-sm font-semibold">{terrainLabel}</p>
         <p className="text-xs text-muted-foreground">
-          {items.length} item{items.length !== 1 ? 's' : ''}
-          {items.length > 1 && ' · top of the list is drawn in front'}
+          {t(items.length > 1 ? 'mapGrid.mapGridCellContent.itemCountStacked' : 'mapGrid.mapGridCellContent.itemCount', { count: items.length })}
         </p>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {items.length === 0 && (
-          <p className="p-3 text-sm text-muted-foreground">Nothing on this tile.</p>
+          <p className="p-3 text-sm text-muted-foreground">{t('mapGrid.mapGridCellContent.nothingOnThisTile')}</p>
         )}
         {items.map((item) => {
           const group = groupOf(item, catalog)
@@ -368,7 +359,7 @@ export default function MapGridCellContent({
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{name}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {group ? GRID_GROUP_LABELS[group] : item.sid}
+                  {group ? t(`mapGrid.groups.${group}`) : item.sid}
                 </p>
               </div>
             </button>
@@ -376,7 +367,7 @@ export default function MapGridCellContent({
               <div className="flex shrink-0 pr-1">
                 <button
                   className="p-1 rounded hover:bg-background/60 disabled:opacity-30 disabled:pointer-events-none"
-                  title="Bring forward"
+                  title={t('mapGrid.mapGridCellContent.bringForward')}
                   disabled={index === 0}
                   onClick={() => onMoveInStack(item, -1)}
                 >
@@ -384,7 +375,7 @@ export default function MapGridCellContent({
                 </button>
                 <button
                   className="p-1 rounded hover:bg-background/60 disabled:opacity-30 disabled:pointer-events-none"
-                  title="Send backward"
+                  title={t('mapGrid.mapGridCellContent.sendBackward')}
                   disabled={index === items.length - 1}
                   onClick={() => onMoveInStack(item, 1)}
                 >
@@ -400,7 +391,7 @@ export default function MapGridCellContent({
       {selected && (
         <div className="border-t border-border shrink-0 max-h-[55%] overflow-y-auto p-3 space-y-2 text-sm">
           <div>
-            <p className="text-xs text-muted-foreground">Object SID</p>
+            <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.objectSID')}</p>
             <p className="font-mono text-xs truncate">{selected.sid}</p>
           </div>
 
@@ -408,15 +399,15 @@ export default function MapGridCellContent({
             const isMoving = moveTarget?.key === selected.key
             return (
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Position</p>
+                <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.position')}</p>
                 {isMoving ? (
                   <div className="space-y-1.5">
                     <p className="text-xs">({selected.x}, {selected.z})</p>
                     <p className="text-xs text-muted-foreground">
-                      Click a tile on the grid, or use the arrow keys, to relocate it — takes effect immediately.
+                      {t('mapGrid.mapGridCellContent.clickATileOnThe')}
                     </p>
                     <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelMove}>
-                      Done
+                      {t('shared.done')}
                     </Button>
                   </div>
                 ) : (
@@ -424,7 +415,7 @@ export default function MapGridCellContent({
                     <p className="text-xs">({selected.x}, {selected.z})</p>
                     {onStartMove && (
                       <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => onStartMove(selected)}>
-                        Move
+                        {t('mapGrid.mapGridCellContent.move')}
                       </Button>
                     )}
                     {onStartDelete && (
@@ -434,7 +425,7 @@ export default function MapGridCellContent({
                         className="h-6 text-xs text-destructive hover:text-destructive"
                         onClick={() => onStartDelete(selected)}
                       >
-                        Delete
+                        {t('common.themeEditorDialog.delete')}
                       </Button>
                     )}
                   </div>
@@ -452,7 +443,7 @@ export default function MapGridCellContent({
           {selected.type === 0 && selected.rotation !== undefined &&
             catalog?.mapObjects.find((o) => o.id === selected.sid)?.randomRotation !== undefined && (
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Rotation</p>
+              <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.rotation')}</p>
               <div className="flex items-center gap-1.5">
                 {onStepRotate && (
                   <Button
@@ -489,22 +480,20 @@ export default function MapGridCellContent({
                 disabled={!onSetMirrored}
                 onCheckedChange={(on) => onSetMirrored?.(selected, on)}
               />
-              <Label htmlFor="mgc-mirrored" className="text-xs">Mirrored</Label>
+              <Label htmlFor="mgc-mirrored" className="text-xs">{t('mapGrid.mapGridCellContent.mirrored')}</Label>
             </div>
           )}
 
           {deleteTarget?.key === selected.key && (
             <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-2">
-              <p className="text-xs font-semibold text-destructive">Delete this object?</p>
+              <p className="text-xs font-semibold text-destructive">{t('mapGrid.mapGridCellContent.deleteThisObject')}</p>
               <p className="text-xs text-muted-foreground">
-                This removes it (and every property table row it has) from the .map file. There is no
-                undo in this app beyond Ctrl+Z (before the next Save) or the one-time .bak backup.
+                {t('mapGrid.mapGridCellContent.thisRemovesItAndEvery')}
               </p>
               {deleteUsageWarnings.length > 0 && (
                 <div className="space-y-1 rounded bg-amber-500/10 p-1.5">
                   <p className="text-xs font-medium text-amber-600">
-                    Referenced by {deleteUsageWarnings.length} script location{deleteUsageWarnings.length > 1 ? 's' : ''} —
-                    deleting will leave those references dangling:
+                    {t('mapGrid.mapGridCellContent.referencedBy', { count: deleteUsageWarnings.length })}
                   </p>
                   <ul className="text-xs text-muted-foreground list-disc list-inside">
                     {deleteUsageWarnings.map((w, i) => <li key={i}>{w}</li>)}
@@ -513,10 +502,10 @@ export default function MapGridCellContent({
               )}
               <div className="flex items-center gap-2 pt-0.5">
                 <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={onConfirmDelete}>
-                  Delete
+                  {t('common.themeEditorDialog.delete')}
                 </Button>
                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelDelete}>
-                  Cancel
+                  {t('shared.cancel')}
                 </Button>
               </div>
             </div>
@@ -524,25 +513,25 @@ export default function MapGridCellContent({
 
           {selected.isActive === false && (
             <Badge variant="secondary" className="text-amber-500 text-xs">
-              Inactive at start
+              {t('mapGrid.mapGridCellContent.inactiveAtStart')}
             </Badge>
           )}
           {selected.owner !== undefined && selected.sid !== 'random-city' && (
             <div>
-              <p className="text-xs text-muted-foreground">Owner</p>
-              <p className="text-xs">{selected.owner === -1 ? 'None' : `Player ${selected.owner}`}</p>
+              <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.owner')}</p>
+              <p className="text-xs">{selected.owner === -1 ? t('common.generateRandomMapDialog.none') : `Player ${selected.owner}`}</p>
             </div>
           )}
           {selected.entitySid && (
             <div>
-              <p className="text-xs text-muted-foreground">Entity SID</p>
+              <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.entitySID')}</p>
               <p className="font-mono text-xs truncate">{selected.entitySid}</p>
             </div>
           )}
           {selected.displayName && (
             <div>
               <p className="text-xs text-muted-foreground">
-                {isCitySpawner ? 'City name' : 'Display name'}
+                {isCitySpawner ? t('mapGrid.mapGridCellContent.cityName') : t('mapGrid.mapGridCellContent.displayName')}
               </p>
               <p className="text-xs truncate">{selected.displayName}</p>
             </div>
@@ -551,18 +540,18 @@ export default function MapGridCellContent({
             <div className="flex items-center gap-2 pt-1">
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onRename(renameEntity)}>
                 <PenLine className="h-3 w-3" />
-                Rename SID
+                {t('mapGrid.mapGridCellContent.renameSID')}
               </Button>
               {onSetDisplayName && !isHeroSpawner && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
-                  {isCitySpawner ? 'Set city name' : 'Set display name'}
+                  {isCitySpawner ? t('mapGrid.mapGridCellContent.setCityName') : t('mapGrid.mapGridCellContent.setDisplayName')}
                 </Button>
               )}
               {isHeroSpawner && onEditFullHero && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onEditFullHero(toDisplayNameEntity(selected))}>
                   <UserCog className="h-3 w-3" />
-                  Edit full hero
+                  {t('mapGrid.mapGridCellContent.editFullHero')}
                 </Button>
               )}
             </div>
@@ -572,7 +561,7 @@ export default function MapGridCellContent({
             <div className="pt-1">
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onCreateRule(selected)}>
                 <Wand2 className="h-3 w-3" />
-                Create a rule for this
+                {t('mapGrid.mapGridCellContent.createARuleForThis')}
               </Button>
             </div>
           )}
@@ -581,13 +570,13 @@ export default function MapGridCellContent({
             <div className="space-y-2 pt-1">
               {onAssignEntitySid && (
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Assign entity SID</p>
+                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.assignEntitySID')}</p>
                   <div className="flex items-center gap-1.5">
                     <Input
                       value={newSidInput}
                       onChange={(e) => setNewSidInput(e.target.value)}
                       className="h-7 text-xs font-mono"
-                      placeholder="entity_sid"
+                      placeholder={t('mapGrid.mapGridCellContent.entitySid')}
                     />
                     <Button
                       size="sm"
@@ -595,22 +584,22 @@ export default function MapGridCellContent({
                       disabled={!trimmedSid || sidTaken}
                       onClick={() => { onAssignEntitySid(selected, trimmedSid); setNewSidInput('') }}
                     >
-                      Assign
+                      {t('mapGrid.mapGridCellContent.assign')}
                     </Button>
                   </div>
-                  {sidTaken && <p className="text-xs text-destructive">Another entity already uses this SID.</p>}
+                  {sidTaken && <p className="text-xs text-destructive">{t('mapGrid.mapGridCellContent.anotherEntityAlreadyUsesThis')}</p>}
                 </div>
               )}
               {onSetDisplayName && !isHeroSpawner && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
-                  {isCitySpawner ? 'Set city name' : 'Set display name'}
+                  {isCitySpawner ? t('mapGrid.mapGridCellContent.setCityName') : t('mapGrid.mapGridCellContent.setDisplayName')}
                 </Button>
               )}
               {isHeroSpawner && onEditFullHero && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onEditFullHero(toDisplayNameEntity(selected))}>
                   <UserCog className="h-3 w-3" />
-                  Edit full hero
+                  {t('mapGrid.mapGridCellContent.editFullHero')}
                 </Button>
               )}
             </div>
@@ -625,20 +614,18 @@ export default function MapGridCellContent({
                   onCheckedChange={(c) => onSetNoCombineGeometry(selected, c === true)}
                 />
                 <Label htmlFor="mgc-no-combine" className="text-xs cursor-pointer">
-                  No Combine Geometry
+                  {t('mapGrid.mapGridCellContent.noCombineGeometry')}
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                Lets this decoration carry an entity SID so it can be referenced in quest
-                scripting, the same as an interactable object — off by default since most
-                decorations aren't meant to be scripted.
+                {t('mapGrid.mapGridCellContent.letsThisDecorationCarryAn')}
               </p>
             </div>
           )}
 
           {selected.spawnerInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-              <p className="text-xs font-semibold text-muted-foreground">Spawner</p>
+              <p className="text-xs font-semibold text-muted-foreground">{t('shared.spawner')}</p>
               {(() => {
                 const info = selected.spawnerInfo!
                 const isCitySpawnerHere = info.spawnPointType === 0
@@ -646,14 +633,15 @@ export default function MapGridCellContent({
                 const currentSpawnHero = info.spawnHero ?? false
                 const currentHeroSid = info.heroSid ?? 'random'
                 const factionName = (sid: string) => {
-                  const name = catalog?.factions.find((f) => f.id === sid)?.name
+                  const faction = catalog?.factions.find((f) => f.id === sid)
+                  const name = faction ? localName(catalog, 'factions', faction) : undefined
                   return name ? `${name} (${sid})` : sid
                 }
                 const canEditFaction = isCitySpawnerHere ? !!onSetCityFaction : !!onSetHeroSid
                 return (
                   <>
                     <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Faction</p>
+                      <p className="text-xs text-muted-foreground">{t('common.statsDialog.faction')}</p>
                       {canEditFaction ? (
                         <Select
                           value={currentFactionSid || 'random'}
@@ -667,14 +655,14 @@ export default function MapGridCellContent({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="random">Random</SelectItem>
+                            <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
                             {(catalog?.factions ?? []).map((f) => (
-                              <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                              <SelectItem key={f.id} value={f.id}>{localName(catalog, 'factions', f)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       ) : (
-                        <p className="text-xs">{currentFactionSid ? factionName(currentFactionSid) : 'Random'}</p>
+                        <p className="text-xs">{currentFactionSid ? factionName(currentFactionSid) : t('common.generateRandomMapDialog.random')}</p>
                       )}
                     </div>
 
@@ -689,25 +677,25 @@ export default function MapGridCellContent({
                           ) : (
                             <Checkbox checked={currentSpawnHero} disabled />
                           )}
-                          Spawns with a hero
+                          {t('mapGrid.mapGridCellContent.spawnsWithHero')}
                         </label>
-                        {currentSpawnHero && <p className="text-xs text-muted-foreground pl-6">Random hero</p>}
+                        {currentSpawnHero && <p className="text-xs text-muted-foreground pl-6">{t('mapGrid.mapGridCellContent.randomHero')}</p>}
                       </div>
                     )}
 
                     {!isCitySpawnerHere && (
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Hero</p>
+                        <p className="text-xs text-muted-foreground">{t('common.statsDialog.hero')}</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs">{currentHeroSid === 'random' ? 'Random' : currentHeroSid}</p>
+                          <p className="text-xs">{currentHeroSid === 'random' ? t('common.generateRandomMapDialog.random') : currentHeroSid}</p>
                           {onSetHeroSid && (
                             <>
                               <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
-                                Browse…
+                                {t('mapGrid.mapGridCellContent.browse')}
                               </Button>
                               {currentHeroSid !== 'random' && (
                                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetHeroSid(selected, 'random')}>
-                                  Set to random
+                                  {t('mapGrid.mapGridCellContent.setToRandom')}
                                 </Button>
                               )}
                             </>
@@ -729,12 +717,12 @@ export default function MapGridCellContent({
               })()}
               {isCitySpawner && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Spawner type</p>
-                  <p className="text-xs">City</p>
+                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.spawnerType')}</p>
+                  <p className="text-xs">{t('shared.city')}</p>
                 </div>
               )}
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Player attached to this spawner</p>
+                <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.playerAttachedToThisSpawner')}</p>
                 {onSetSpawnerOwner && playersCount > 0 ? (
                   <Select
                     value={String(selected.spawnerInfo.owner)}
@@ -745,21 +733,21 @@ export default function MapGridCellContent({
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from({ length: playersCount }, (_, i) => i + 1).map((p) => (
-                        <SelectItem key={p} value={String(p)}>Player {p}</SelectItem>
+                        <SelectItem key={p} value={String(p)}>{t('mapGrid.mapGridCellContent.player', { p })}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 ) : (
-                  <p className="text-xs">Player {selected.spawnerInfo.owner}</p>
+                  <p className="text-xs">{t('shared.player2', { owner: selected.spawnerInfo.owner })}</p>
                 )}
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Player type</p>
+                <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.playerType')}</p>
                 {onSetSpawnerPlayerType ? (
                   <div className="flex gap-1">
-                    {PLAYER_TYPE_LABELS.map((label, idx) => (
+                    {PLAYER_TYPE_KEYS.map((typeKey, idx) => (
                       <button
-                        key={label}
+                        key={typeKey}
                         onClick={() => onSetSpawnerPlayerType(selected, idx as 0 | 1 | 2)}
                         className={cn(
                           'h-6 px-2 text-xs rounded border transition-colors',
@@ -768,12 +756,12 @@ export default function MapGridCellContent({
                             : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground',
                         )}
                       >
-                        {label}
+                        {t(`mapGrid.mapGridCellContent.playerTypes.${typeKey}`)}
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs">{PLAYER_TYPE_LABELS[selected.spawnerInfo.spawnType] ?? 'Unknown'}</p>
+                  <p className="text-xs">{t(`mapGrid.mapGridCellContent.playerTypes.${PLAYER_TYPE_KEYS[selected.spawnerInfo.spawnType] ?? 'unknown'}`)}</p>
                 )}
               </div>
             </div>
@@ -789,9 +777,9 @@ export default function MapGridCellContent({
             const factionSid = selected.cityFactionSid ?? ''
             return (
               <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                <p className="text-xs font-semibold text-muted-foreground">Random city</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.randomCity')}</p>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Owner</p>
+                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.owner')}</p>
                   {onSetObjectOwner ? (
                     <Select value={String(owner)} onValueChange={(v) => onSetObjectOwner(selected, Number(v))}>
                       <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
@@ -808,7 +796,7 @@ export default function MapGridCellContent({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Faction</p>
+                  <p className="text-xs text-muted-foreground">{t('common.statsDialog.faction')}</p>
                   {onSetRandomCityFaction ? (
                     <Select
                       value={factionSid || 'random'}
@@ -818,14 +806,14 @@ export default function MapGridCellContent({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="random">Random</SelectItem>
+                        <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
                         {(catalog?.factions ?? []).map((f) => (
-                          <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                          <SelectItem key={f.id} value={f.id}>{localName(catalog, 'factions', f)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-xs">{factionSid ? (catalog?.factions.find((f) => f.id === factionSid)?.name ?? factionSid) : 'Random'}</p>
+                    <p className="text-xs">{factionSid ? localNameById(catalog, 'factions', factionSid, catalog?.factions.find((f) => f.id === factionSid)?.name ?? factionSid) : t('common.generateRandomMapDialog.random')}</p>
                   )}
                 </div>
               </div>
@@ -843,29 +831,29 @@ export default function MapGridCellContent({
             if (owner !== undefined && !ownerOptions.includes(owner)) ownerOptions.push(owner)
             return (
               <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                <p className="text-xs font-semibold text-muted-foreground">Random hero</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.randomHero')}</p>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Player</p>
+                  <p className="text-xs text-muted-foreground">{t('shared.player')}</p>
                   {onSetObjectOwner ? (
                     <Select
                       value={owner !== undefined ? String(owner) : undefined}
                       onValueChange={(v) => onSetObjectOwner(selected, Number(v))}
                     >
                       <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
-                        <SelectValue placeholder="Not set" />
+                        <SelectValue placeholder={t('mapGrid.mapGridCellContent.notSet')} />
                       </SelectTrigger>
                       <SelectContent>
                         {ownerOptions.map((p) => (
-                          <SelectItem key={p} value={String(p)}>{p === -1 ? 'None' : `Player ${p}`}</SelectItem>
+                          <SelectItem key={p} value={String(p)}>{p === -1 ? t('common.generateRandomMapDialog.none') : `Player ${p}`}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-xs">{owner === undefined ? 'Not set' : owner === -1 ? 'None' : `Player ${owner}`}</p>
+                    <p className="text-xs">{owner === undefined ? t('mapGrid.mapGridCellContent.notSet') : owner === -1 ? t('common.generateRandomMapDialog.none') : `Player ${owner}`}</p>
                   )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Hero</p>
+                  <p className="text-xs text-muted-foreground">{t('common.statsDialog.hero')}</p>
                   <div className="flex items-start gap-2">
                     {/* Portrait with the name under it; "Random" has no portrait. */}
                     <div className="flex w-16 shrink-0 flex-col items-center gap-0.5">
@@ -884,11 +872,11 @@ export default function MapGridCellContent({
                     {onSetObjectHero && (
                       <div className="flex flex-col items-start gap-1">
                         <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
-                          Browse…
+                          {t('mapGrid.mapGridCellContent.browse')}
                         </Button>
                         {heroSid !== 'random' && (
                           <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetObjectHero(selected, 'random')}>
-                            Set to random
+                            {t('mapGrid.mapGridCellContent.setToRandom')}
                           </Button>
                         )}
                       </div>
@@ -928,28 +916,28 @@ export default function MapGridCellContent({
                       maxRows={12}
                       refField="sid"
                       emptyRow={{ sid: '', count: 1 }}
-                      addLabel="Add unit"
+                      addLabel={t('mapGrid.mapGridCellContent.addUnit')}
                       renderExtraFields={(row, _i, update) => (
                         <Input
                           type="number"
                           value={row.count}
                           onChange={(e) => update({ count: Number(e.target.value) || 1 })}
                           className="h-8 w-16 text-xs"
-                          title="Count"
+                          title={t('common.playerBalancePanel.count')}
                         />
                       )}
                     />
                   ) : (
                     <ul className="text-xs list-disc list-inside space-y-0.5">
                       {guardRows.map((u, i) => (
-                        <li key={i}>{catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid} x{u.count}</li>
+                        <li key={i}>{t('mapGrid.mapGridCellContent.guardRow', { name: localNameById(catalog, 'creatures', u.sid, catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid), n: u.count })}</li>
                       ))}
                     </ul>
                   )}
                   <p className="text-xs text-muted-foreground">
                     {selected.type === 2
-                      ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
-                      : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
+                      ? t('mapGrid.mapGridCellContent.leaveEmptyForARandomized')
+                      : t('mapGrid.mapGridCellContent.confirmedOnInteractableObjectsIn')}
                   </p>
                 </div>
               )
@@ -960,10 +948,9 @@ export default function MapGridCellContent({
             const garrisonRows = garrisonSids.map((sid) => ({ sid }))
             return (
               <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                <p className="text-xs font-semibold text-muted-foreground">Garrison</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.garrison')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Squad templates this city starts with — each references a pre-built
-                  squad (Core/DB/squads), not an individual unit.
+                  {t('mapGrid.mapGridCellContent.squadTemplatesThisCityStarts')}
                 </p>
                 {onSetCityGarrison ? (
                   <HeroCatalogListEditor
@@ -973,7 +960,7 @@ export default function MapGridCellContent({
                     maxRows={5}
                     refField="sid"
                     emptyRow={{ sid: '' }}
-                    addLabel="Add squad"
+                    addLabel={t('mapGrid.mapGridCellContent.addSquad')}
                     renderExtraFields={() => null}
                   />
                 ) : (
@@ -992,9 +979,9 @@ export default function MapGridCellContent({
             const shownValue = draftRandomSquadValue ?? selected.randomSquadValue ?? 0
             return (
               <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                <p className="text-xs font-semibold text-muted-foreground">Value</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.value')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Total army value the game rolls a matching squad against.
+                  {t('mapGrid.mapGridCellContent.totalArmyValueTheGame')}
                 </p>
                 <div className="flex items-center gap-2">
                   {onSetRandomSquadValue ? (
@@ -1020,8 +1007,8 @@ export default function MapGridCellContent({
                     variant="outline"
                     size="icon"
                     className="h-6 w-6"
-                    title="Show an example squad for this value"
-                    aria-label="Show an example squad for this value"
+                    title={t('mapGrid.mapGridCellContent.showAnExampleSquadFor')}
+                    aria-label={t('mapGrid.mapGridCellContent.showAnExampleSquadFor')}
                     onClick={() => setSquadExampleOpen(true)}
                   >
                     <Dices className="h-3.5 w-3.5" />
@@ -1036,17 +1023,17 @@ export default function MapGridCellContent({
                   />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Faction</p>
+                  <p className="text-xs text-muted-foreground">{t('common.statsDialog.faction')}</p>
                   {(() => {
                     const fraction = selected.randomSquadFraction ?? ''
-                    const label = (v: string) => (v === '' ? 'Random' : v === 'neutral' ? 'Neutral' : catalog?.factions.find((f) => f.id === v)?.name ?? v)
+                    const label = (v: string) => (v === '' ? t('common.generateRandomMapDialog.random') : v === 'neutral' ? factionLabel('Neutral') : localNameById(catalog, 'factions', v, catalog?.factions.find((f) => f.id === v)?.name ?? v))
                     return onSetRandomSquadFraction ? (
                       <Select value={fraction || 'random'} onValueChange={(v) => onSetRandomSquadFraction(selected, v === 'random' ? '' : v)}>
                         <SelectTrigger className="h-7 text-xs mt-0.5 w-40"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="random">Random</SelectItem>
-                          {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>))}
-                          <SelectItem value="neutral">Neutral</SelectItem>
+                          <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
+                          {(catalog?.factions ?? []).filter((f) => f.id !== 'neutral').map((f) => (<SelectItem key={f.id} value={f.id}>{localName(catalog, 'factions', f)}</SelectItem>))}
+                          <SelectItem value="neutral">{t('common.templateDetailsDialog.neutral')}</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (<p className="text-xs">{label(fraction)}</p>)
@@ -1063,7 +1050,7 @@ export default function MapGridCellContent({
                         className="h-6 px-2 text-xs"
                         onClick={() => onSetRandomSquadValue(selected, randomInRange(min, max))}
                       >
-                        {label}
+                        {squadDifficultyName(label)}
                       </Button>
                     ))}
                   </div>
@@ -1074,33 +1061,33 @@ export default function MapGridCellContent({
 
           {selected && portalInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-              <p className="text-xs font-semibold text-muted-foreground">Portal</p>
+              <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.portal')}</p>
 
               <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">Connected to</p>
+                <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.connectedTo')}</p>
                 {connectedPortal ? (
                   <p className="text-xs font-medium">
                     {connectedPortal.entitySid || connectedPortal.displayName || connectedPortal.sid} ({connectedPortal.x}, {connectedPortal.z})
                   </p>
                 ) : portalInfo.targetIdx !== undefined ? (
-                  <p className="text-xs">Portal #{portalInfo.targetIdx} (not found on the map)</p>
+                  <p className="text-xs">{t('mapGrid.mapGridCellContent.portalNotFoundOnThe', { targetIdx: portalInfo.targetIdx })}</p>
                 ) : (
-                  <p className="text-xs">Not connected</p>
+                  <p className="text-xs">{t('mapGrid.mapGridCellContent.notConnected')}</p>
                 )}
                 {(onStartPortalLink || onUnlinkPortal) && (
                   <div className="flex items-center gap-1.5">
                     {onStartPortalLink && (
                       <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onStartPortalLink(selected)}
-                        title="Then click the other portal on the map. Links both ways.">
+                        title={t('mapGrid.mapGridCellContent.thenClickTheOtherPortal')}>
                         <LinkPortal className="h-3.5 w-3.5" />
-                        {portalInfo.targetIdx !== undefined ? 'Change link…' : 'Link to portal…'}
+                        {portalInfo.targetIdx !== undefined ? t('mapGrid.mapGridCellContent.changeLink') : t('mapGrid.mapGridCellContent.linkToPortal')}
                       </Button>
                     )}
                     {onUnlinkPortal && portalInfo.targetIdx !== undefined && (
                       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onUnlinkPortal(selected)}
-                        title="Disconnect this portal and the one it leads to">
+                        title={t('mapGrid.mapGridCellContent.disconnectThisPortalAndThe')}>
                         <UnlinkPortal className="h-3.5 w-3.5" />
-                        Unlink
+                        {t('mapGrid.mapGridCellContent.unlink')}
                       </Button>
                     )}
                   </div>
@@ -1117,15 +1104,15 @@ export default function MapGridCellContent({
                 ) : (
                   <Checkbox id="mgc-portal-active" checked={portalInfo.isActive} disabled />
                 )}
-                <Label htmlFor="mgc-portal-active" className="text-xs cursor-pointer">Active</Label>
+                <Label htmlFor="mgc-portal-active" className="text-xs cursor-pointer">{t('mapGrid.mapGridCellContent.active')}</Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                An inactive portal only receives — stepping on it won't send you anywhere (an "exit portal").
+                {t('mapGrid.mapGridCellContent.anInactivePortalOnlyReceives')}
               </p>
 
               <div>
-                <p className="text-xs font-medium">{LINK_KIND_LABELS[portalInfo.linkKind]}</p>
-                <p className="text-xs text-muted-foreground">{LINK_KIND_EXPLANATIONS[portalInfo.linkKind]}</p>
+                <p className="text-xs font-medium">{t(`mapGrid.mapGridCellContent.linkKind.${portalInfo.linkKind}.label`)}</p>
+                <p className="text-xs text-muted-foreground">{t(`mapGrid.mapGridCellContent.linkKind.${portalInfo.linkKind}.explanation`)}</p>
               </div>
 
               {portalInfo.targetNode !== undefined && onSetHighlightedNode && (
@@ -1136,7 +1123,7 @@ export default function MapGridCellContent({
                     onCheckedChange={(c) => onSetHighlightedNode(c === true ? portalInfo.targetNode! : null)}
                   />
                   <Label htmlFor="mgc-portal-highlight" className="text-xs cursor-pointer">
-                    Highlight connected portal on grid
+                    {t('mapGrid.mapGridCellContent.highlightConnectedPortalOnGrid')}
                   </Label>
                 </div>
               )}
@@ -1147,7 +1134,7 @@ export default function MapGridCellContent({
             const rewardValues = selected.rewardParams!
             return (
               <div className="space-y-1 pt-2 mt-1 border-t border-border/50">
-                <p className="text-xs font-semibold text-muted-foreground">Rewards</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.rewards')}</p>
                 {onSetRewardParams ? (
                   <RewardSlotEditor
                     parameters={rewardValues}
@@ -1167,17 +1154,15 @@ export default function MapGridCellContent({
 
           {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined) && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-              <p className="text-xs font-semibold text-muted-foreground">Zone</p>
+              <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.zone')}</p>
               {selected.markerActive !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Switch id="mgc-marker-active" checked={selected.markerActive} disabled={!onSetMarkerState} onCheckedChange={(on) => onSetMarkerState?.(selected, on, selected.markerDeleteAfterTrigger ?? false)} />
-                    <Label htmlFor="mgc-marker-active" className="text-xs">Active</Label>
+                    <Label htmlFor="mgc-marker-active" className="text-xs">{t('mapGrid.mapGridCellContent.active')}</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    The official editor's own "Activate" checkbox. When off, this zone
-                    doesn't interrupt hero movement or fire its actions at all — it can be
-                    turned back on later via the SetActiveMarker script action.
+                    {t('mapGrid.mapGridCellContent.theOfficialEditorsOwnActivate')}
                   </p>
                 </div>
               )}
@@ -1185,11 +1170,10 @@ export default function MapGridCellContent({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Switch id="mgc-marker-delete" checked={selected.markerDeleteAfterTrigger} disabled={!onSetMarkerState} onCheckedChange={(on) => onSetMarkerState?.(selected, selected.markerActive ?? true, on)} />
-                    <Label htmlFor="mgc-marker-delete" className="text-xs">Delete after trigger</Label>
+                    <Label htmlFor="mgc-marker-delete" className="text-xs">{t('mapGrid.mapGridCellContent.deleteAfterTrigger')}</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Whether this zone removes itself automatically the first time it
-                    fires. When off, the zone remains on the map and can fire again.
+                    {t('mapGrid.mapGridCellContent.whetherThisZoneRemovesItself')}
                   </p>
                 </div>
               )}
@@ -1200,11 +1184,11 @@ export default function MapGridCellContent({
             <>
               <ObjectActionsEditor
                 key={`${selected.key}-before`}
-                title={selected.type === 1 ? 'Actions when a hero enters' : 'Actions before the interaction'}
+                title={selected.type === 1 ? t('mapGrid.mapGridCellContent.actionsWhenAHeroEnters') : t('mapGrid.mapGridCellContent.actionsBeforeTheInteraction')}
                 hint={
                   selected.type === 1
-                    ? 'Run when a hero steps onto this zone from outside. The hero always stops there while the zone is active.'
-                    : 'Run when a hero interacts with this object, before its own effect.'
+                    ? t('mapGrid.mapGridCellContent.runWhenAHeroSteps')
+                    : t('mapGrid.mapGridCellContent.runWhenAHeroInteracts')
                 }
                 value={selected.actionsBefore}
                 playersCount={playersCount ?? 0}
@@ -1213,8 +1197,8 @@ export default function MapGridCellContent({
               {(selected.type === 0 || selected.actionsAfter) && (
                 <ObjectActionsEditor
                   key={`${selected.key}-after`}
-                  title="Actions after the interaction"
-                  hint="Run after the object's own effect has happened."
+                  title={t('mapGrid.mapGridCellContent.actionsAfterTheInteraction')}
+                  hint={t('mapGrid.mapGridCellContent.runAfterTheObjectsOwn')}
                   value={selected.actionsAfter}
                   playersCount={playersCount ?? 0}
                   onApply={onSetObjectActions ? (v) => onSetObjectActions(selected, 'after', v) : undefined}

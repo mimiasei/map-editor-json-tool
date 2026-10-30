@@ -20,6 +20,8 @@ import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
+import { useTranslation } from 'react-i18next'
+import { enumOptionLabel } from '@/lib/game-labels'
 
 interface Props {
   condition: Condition
@@ -33,6 +35,7 @@ interface Props {
 }
 
 export default function ConditionForm({ condition, onChange, onRemove, onPickFromMap }: Props) {
+  const { t } = useTranslation()
   const def = CONDITION_REGISTRY[condition.c]
   const isCustom = !def
   const entities = useMapContextStore((s) => s.context?.entities)
@@ -41,7 +44,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
   const entityCoordsMap = useMemo(() => {
     const map = new Map<string, string>()
     for (const e of entities ?? []) {
-      if (e.x !== undefined && e.z !== undefined) map.set(e.sid, `Map Coords: ${e.x}, ${e.z}`)
+      if (e.x !== undefined && e.z !== undefined) map.set(e.sid, t('shared.mapCoords', { x: e.x, z: e.z }))
     }
     return map
   }, [entities])
@@ -90,13 +93,13 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
       <div className="flex items-start gap-2">
         <div className="flex-1 space-y-1">
           <div className="flex items-center gap-1">
-            <Label className="text-xs">Condition type</Label>
+            <Label className="text-xs">{t('conditions.conditionForm.conditionType')}</Label>
             {!isCustom && <HelpTooltip category="conditions" id={condition.c} />}
           </div>
           <div className="flex gap-2">
             <Select value={selectValue} onValueChange={updateType}>
               <SelectTrigger className="w-52">
-                <SelectValue placeholder="Select type…" />
+                <SelectValue placeholder={t('dialogs.dialogConditionForm.selectType')} />
               </SelectTrigger>
               <SelectContent>
                 {CONDITION_LIST.map((c) => (
@@ -104,14 +107,14 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                     {c.label}
                   </SelectItem>
                 ))}
-                <SelectItem value="__custom__">Custom / unknown type</SelectItem>
+                <SelectItem value="__custom__">{t('dialogs.dialogConditionForm.customUnknownType')}</SelectItem>
               </SelectContent>
             </Select>
             {isCustom && (
               <Input
                 value={condition.c}
                 onChange={(e) => onChange({ ...condition, c: e.target.value })}
-                placeholder="Type string"
+                placeholder={t('dialogs.dialogConditionForm.typeString')}
                 className="flex-1"
               />
             )}
@@ -190,7 +193,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                   <SelectContent>
                     {param.options.map((o) => (
                       <SelectItem key={o} value={o}>
-                        {o}
+                        {enumOptionLabel(o)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -218,7 +221,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                         variant="outline"
                         size="icon"
                         className="h-9 w-9 shrink-0"
-                        title="Pick from map"
+                        title={t('common.mapEntityPickField.pickFromMap')}
                         onClick={() => onPickFromMap(i, 'mapEntity')}
                       >
                         <MapPin className="h-3.5 w-3.5" />
@@ -248,7 +251,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                       variant="outline"
                       size="icon"
                       className="h-9 w-9 shrink-0"
-                      title="Pick a hero spawner from the map"
+                      title={t('actions.actionForm.pickAHeroSpawnerFrom')}
                       onClick={() => onPickFromMap(i, 'hero')}
                     >
                       <MapPin className="h-3.5 w-3.5" />
@@ -270,7 +273,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                       variant="outline"
                       size="icon"
                       className="h-9 w-9 shrink-0"
-                      title="Pick a node from the map"
+                      title={t('actions.actionForm.pickANodeFromThe')}
                       onClick={() => onPickFromMap(i, 'node')}
                     >
                       <MapPin className="h-3.5 w-3.5" />
@@ -320,12 +323,12 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
       {isCustom && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Parameters (p)</Label>
+            <Label className="text-xs">{t('dialogs.dialogConditionForm.parametersP')}</Label>
             <button
               className="text-xs text-primary hover:underline"
               onClick={addParam}
             >
-              + Add param
+              {t('dialogs.dialogConditionForm.addParam')}
             </button>
           </div>
           {(condition.p ?? []).map((val, i) => (
@@ -333,7 +336,7 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
               <Input
                 value={val}
                 onChange={(e) => updateParam(i, e.target.value)}
-                placeholder={`Param ${i + 1}`}
+                placeholder={t('shared.paramN', { n: i + 1 })}
                 className="flex-1"
               />
               <Button

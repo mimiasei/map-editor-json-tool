@@ -10,21 +10,16 @@
 // shared helpers formatRewardParam's read-only display uses, so both agree
 // on what a given raw string means.
 
+import { useTranslation } from 'react-i18next'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import { classifyRewardParam, encodeRewardParam, type RewardParamClass } from '@/lib/map-grid/reward-params'
 import { BASIC_RESOURCE_IDS } from '@/lib/resources'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { resourceName } from '@/lib/game-labels'
 
 type SlotKind = RewardParamClass['kind']
-
-const KIND_LABELS: Record<SlotKind, string> = {
-  empty: 'Empty',
-  resource: 'Resource',
-  artifact: 'Artifact',
-  skill: 'Skill',
-}
 
 const SLOT_KINDS: SlotKind[] = ['empty', 'resource', 'artifact', 'skill']
 
@@ -35,6 +30,7 @@ interface RewardSlotEditorProps {
 }
 
 export default function RewardSlotEditor({ parameters, onChange, catalog }: RewardSlotEditorProps) {
+  const { t } = useTranslation()
   const updateSlot = (index: number, next: RewardParamClass) => {
     const nextParams = parameters.slice()
     nextParams[index] = encodeRewardParam(next)
@@ -59,7 +55,7 @@ export default function RewardSlotEditor({ parameters, onChange, catalog }: Rewa
               <SelectTrigger className="h-7 text-xs w-24 shrink-0"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {SLOT_KINDS.map((k) => (
-                  <SelectItem key={k} value={k}>{KIND_LABELS[k]}</SelectItem>
+                  <SelectItem key={k} value={k}>{t(`tree.rewardSlotEditor.kinds.${k}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -73,7 +69,7 @@ export default function RewardSlotEditor({ parameters, onChange, catalog }: Rewa
                   <SelectTrigger className="h-7 text-xs w-24 shrink-0"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {BASIC_RESOURCE_IDS.map((r) => (
-                      <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>
+                      <SelectItem key={r} value={r}>{resourceName(r)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -5,6 +5,8 @@
 // catalog data and keep the hardcoded table only as a fallback for when Core.zip is
 // not loaded, and for the alias spellings the DB does not carry.
 
+import i18n from '@/lib/i18n'
+import { localName } from '@/lib/catalog/local-name'
 import type { CatalogFaction } from '@/lib/catalog/types'
 
 /** Fallback display names, verified against Core.zip's English localization. */
@@ -48,6 +50,18 @@ export function factionDisplayName(raw: string, catalogFactions?: CatalogFaction
   if (fromCatalog) return fromCatalog
 
   return FACTION_DISPLAY[key] ?? raw
+}
+
+/**
+ * UI-language name for a faction display name from `factionDisplayName`. The English display names stay the
+ * grouping/sorting/comparison keys; only what is shown goes through here. The catalog's own localized names win
+ * (they come from the game); the static table covers the neutral bucket and a missing Core.zip.
+ */
+export function factionLabel(displayName: string, catalog?: { factions: CatalogFaction[]; localNames?: object } | null): string {
+  const faction = catalog?.factions.find((f) => f.name === displayName)
+  if (catalog && faction) return localName(catalog, 'factions', faction)
+  const key = `shared.factions.${displayName}`
+  return i18n.exists(key) ? i18n.t(key as 'shared.factions.Temple') : displayName
 }
 
 /** Sort index for a display name — unknown factions go last, then alphabetically. */

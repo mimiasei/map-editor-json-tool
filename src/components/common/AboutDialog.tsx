@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { isTauri, openExternal } from '@/lib/native-fs'
 import { ExternalLink } from '@/components/ui/icons'
 import about from '@/data/about.json'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -38,6 +39,7 @@ function formatDate(iso: string): string {
 }
 
 export default function AboutDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const [version, setVersion] = useState<string | null>(null)
 
   useEffect(() => {
@@ -64,29 +66,29 @@ export default function AboutDialog({ open, onOpenChange }: Props) {
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">About</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{t('common.aboutDialog.about')}</DialogTitle>
         </DraggableDialogDragHandle>
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="p-4 space-y-3">
             <div>
               <p className="text-base font-semibold leading-tight">{about.app}</p>
-              <p className="text-xs text-muted-foreground">{about.tagline}</p>
+              <p className="text-xs text-muted-foreground">{t('common.aboutDialog.tagline')}</p>
             </div>
 
             <div className="rounded border border-border bg-card px-3 py-2">
-              <Row label="Version">
-                {version ? `v${version}` : <span className="text-muted-foreground">web build</span>}
+              <Row label={t('common.aboutDialog.version')}>
+                {version ? `v${version}` : <span className="text-muted-foreground">{t('common.aboutDialog.webBuild')}</span>}
               </Row>
-              <Row label="Built">{formatDate(__BUILD_DATE__)}</Row>
-              <Row label="Game">{about.game}</Row>
-              <Row label="Created by">{about.creator}</Row>
-              <Row label="License">{about.license}</Row>
+              <Row label={t('common.aboutDialog.built')}>{formatDate(__BUILD_DATE__)}</Row>
+              <Row label={t('common.aboutDialog.game')}>{about.game}</Row>
+              <Row label={t('common.aboutDialog.createdBy')}>{about.creator}</Row>
+              <Row label={t('common.aboutDialog.license')}>{t('common.aboutDialog.licenseText')}</Row>
             </div>
 
             <div className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Built with
+                {t('common.aboutDialog.builtWith')}
               </p>
               <ul className="space-y-0.5">
                 {about.stack.map((item) => (
@@ -108,7 +110,7 @@ export default function AboutDialog({ open, onOpenChange }: Props) {
             onClick={() => openExternal(about.repository)}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Repository
+            {t('common.aboutDialog.repository')}
           </Button>
           <Button
             variant="ghost"
@@ -117,11 +119,11 @@ export default function AboutDialog({ open, onOpenChange }: Props) {
             onClick={() => openExternal(about.issues)}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Report an issue
+            {t('common.aboutDialog.reportAnIssue')}
           </Button>
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Close
+            {t('ui.close')}
           </Button>
         </div>
       </DraggableDialogContent>

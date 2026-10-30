@@ -12,6 +12,7 @@
 // (climbsMap === 1) is excluded — that's a legitimate ramped 1-tile
 // platform, not a problem.
 
+import i18n from '@/lib/i18n'
 import type { MapContext, PlacedObject } from '@/types/map-context'
 
 export interface ElevationSpikePlacement {
@@ -71,5 +72,5 @@ export function findElevationSpikePlacements(context: SpikeContext): ElevationSp
 }
 
 export function describeElevationSpikePlacement(issue: ElevationSpikePlacement): string {
-  return `${issue.sid} (id ${issue.id}) at (${issue.x}, ${issue.z}) sits on a level-${issue.fromLevel} tile surrounded by level ${issue.toLevel}`
+  return i18n.t('validate.map.elevationSpike', { sid: issue.sid, id: issue.id, x: issue.x, z: issue.z, fromLevel: issue.fromLevel, toLevel: issue.toLevel })
 }

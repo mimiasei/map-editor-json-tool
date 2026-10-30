@@ -377,12 +377,19 @@ export interface CatalogRmgZoneLayout {
   }
 }
 
+/** Entity kinds whose display name can differ per UI language. */
+export type LocalNameKind = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'buffs' | 'mapObjects' | 'factions' | 'templateStrings'
+
 export interface GameCatalog {
   /** Schema version — bump on breaking changes */
   version: number
   generatedAt: string
   /** Human-readable hint about where Core.zip was found */
   sourceHint: string
+  /** Display names in the UI language, by entity id — only entries that differ from the English `name`. Display only: `name`
+   *  stays English everywhere text is written into the map (see `localName`). Absent when the UI language is English.
+   *  Not part of the schema version: nothing persists a built catalog. */
+  localNames?: Partial<Record<LocalNameKind, Record<string, string>>>
   heroes: CatalogHero[]
   creatures: CatalogCreature[]
   artifacts: CatalogArtifact[]

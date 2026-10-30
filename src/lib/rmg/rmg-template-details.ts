@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 // ─── Real game RMG template — full detail parsing (for the "View details" dialog) ─
 // Deliberately separate from rmg-template-import.ts, which only models the
 // subset of a real `.rmg.json` template's fields this generator actually
@@ -173,9 +174,9 @@ function summarizeFaction(raw: unknown): string | undefined {
       else other.push(arg)
     }
     const parts: string[] = []
-    if (differentFrom.length > 0) parts.push(`Must differ from: ${differentFrom.join(', ')}`)
+    if (differentFrom.length > 0) parts.push(i18n.t('common.templateDetailsDialog.summaries.mustDifferFrom', { list: differentFrom.join(', ') }))
     if (other.length > 0) parts.push(other.join(', '))
-    return parts.length > 0 ? parts.join(' — ') : 'From list'
+    return parts.length > 0 ? parts.join(' — ') : i18n.t('common.templateDetailsDialog.summaries.fromList')
   }
   return [type, ...args].filter(Boolean).join(': ') || undefined
 }
@@ -189,7 +190,7 @@ function summarizeBiome(raw: unknown): string | undefined {
   const type = asString(b.type)
   const args = asStringArray(b.args) ?? []
   if (type === 'FromList') return args.join(', ') || undefined
-  if (type === 'MatchMainObject') return `Matches this zone's own main object #${args[0] ?? '?'}`
+  if (type === 'MatchMainObject') return i18n.t('common.templateDetailsDialog.summaries.matchesMainObject', { n: args[0] ?? '?' })
   return [type, ...args].filter(Boolean).join(': ') || undefined
 }
 

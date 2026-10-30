@@ -14,6 +14,7 @@ import FilterRows, {
   mergeFilterGroup,
   isGroupActive,
 } from './FilterRows'
+import { useTranslation } from 'react-i18next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,16 +41,7 @@ const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
 // mapObjects tab entirely (see GameDatabaseDialog.tsx), shown under the
 // Artifacts tab instead. Otherwise the full CatalogMapObject['category'] set.
 const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'test', 'blocks']
-const MAP_CATEGORY_LABELS: Record<string, string> = {
-  interactables: 'Interactables',
-  resources:     'Resources',
-  environments:  'Environments',
-  spawns:        'Spawns',
-  animals:       'Animals',
-  fxs:           'FX',
-  test:          'Test (debug objects)',
-  blocks:        'Blocks',
-}
+type MapCategoryKey = 'interactables' | 'resources' | 'environments' | 'spawns' | 'animals' | 'fxs' | 'test' | 'blocks'
 
 export const DEFAULT_FILTER: GameDatabaseFilterState = {
   factions:      makeFilterGroup(FACTIONS),
@@ -117,6 +109,7 @@ interface Props {
 }
 
 export default function GameDatabaseFilter({ activeTab, catalog, value, onChange }: Props) {
+  const { t } = useTranslation()
   if (activeTab === 'skills') return null
 
   // Derive dynamic option lists from catalog
@@ -147,7 +140,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
           variant="ghost"
           size="icon"
           className="relative h-7 w-7 shrink-0"
-          title="Filter items"
+          title={t('catalog.gameDatabaseFilter.filterItems')}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           {isFilterActive(value, activeTab) && (
@@ -160,7 +153,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {/* ── Heroes ── */}
         {activeTab === 'heroes' && (
           <FilterRows
-            label="Faction"
+            label={t('common.statsDialog.faction')}
             group={value.factions}
             keys={FACTIONS}
             labelFor={(k) => k}
@@ -172,14 +165,14 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {activeTab === 'creatures' && (
           <>
             <FilterRows
-              label="Faction"
+              label={t('common.statsDialog.faction')}
               group={value.factions}
               keys={FACTIONS}
               labelFor={(k) => k}
               onChange={update('factions')}
             />
             <FilterRows
-              label="Tier"
+              label={t('common.spellBanDialog.tier')}
               group={value.tiers}
               keys={CREATURE_TIERS.map(String)}
               labelFor={(k) => `Tier ${k}`}
@@ -192,14 +185,14 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {activeTab === 'artifacts' && (
           <>
             <FilterRows
-              label="Slot"
+              label={t('common.artifactBanDialog.slot')}
               group={value.slots}
               keys={artifactSlots}
               labelFor={(k) => k}
               onChange={update('slots')}
             />
             <FilterRows
-              label="Rarity"
+              label={t('common.artifactBanDialog.rarity')}
               group={value.rarities}
               keys={artifactRarities}
               labelFor={(k) => k}
@@ -211,7 +204,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {/* ── Spells ── */}
         {activeTab === 'spells' && (
           <FilterRows
-            label="School"
+            label={t('common.spellBanDialog.school')}
             group={value.schools}
             keys={SCHOOLS}
             labelFor={(k) => k}
@@ -222,17 +215,17 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {/* ── Map Objects ── */}
         {activeTab === 'mapObjects' && (
           <FilterRows
-            label="Category"
+            label={t('catalog.gameDatabaseFilter.category')}
             group={value.mapCategories}
             keys={MAP_CATEGORIES}
-            labelFor={(k) => MAP_CATEGORY_LABELS[k] ?? k}
+            labelFor={(k) => t(`catalog.mapCategories.${k as MapCategoryKey}`)}
             onChange={update('mapCategories')}
           />
         )}
 
         <div className="pt-1 border-t border-border">
           <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={handleReset}>
-            Reset filters
+            {t('shared.resetFilters')}
           </Button>
         </div>
       </PopoverContent>

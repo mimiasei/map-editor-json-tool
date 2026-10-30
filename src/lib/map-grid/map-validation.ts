@@ -3,6 +3,7 @@
 // dialog only ever deal with one heterogeneous issue list rather than two
 // parallel ones. Each check stays single-purpose and independently testable.
 
+import i18n from '@/lib/i18n'
 import type { MapContext } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { findOutOfBoundsPlacements, type OutOfBoundsPlacement } from './bounds-validation'
@@ -22,8 +23,8 @@ export function findMapValidationIssues(context: MapValidationContext, catalog: 
 }
 
 export function describeMapValidationIssue(issue: MapValidationIssue): string {
-    const where = `${issue.sid} (id ${issue.id}) at (${issue.x}, ${issue.z})`
+    const where = i18n.t('validate.map.where', { sid: issue.sid, id: issue.id, x: issue.x, z: issue.z })
     return issue.kind === 'outOfBounds'
-        ? `${where} — extends past the map's edge`
-        : `${where} — entrance is fully blocked (can't be reached)`
+        ? i18n.t('validate.map.outOfBounds', { where })
+        : i18n.t('validate.map.blockedEntrance', { where })
 }

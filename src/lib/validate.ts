@@ -2,6 +2,7 @@ import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import { AVATAR_ANIMATIONS, RESULT_DIALOG_VALUES } from '@/types/dialog'
 import { validateStoryState } from '@/lib/story-validate'
+import i18n from '@/lib/i18n'
 
 export interface ValidationMessage {
   path: string
@@ -39,7 +40,7 @@ export function validateDialogFlow(
   const flowId = flow?.id || '(no id)'
 
   if (!flow || !Array.isArray(flow.slides)) {
-    errors.push({ path: `Dialog "${flowId}"`, message: '"slides" must be an array.' })
+    errors.push({ path: `Dialog "${flowId}"`, message: i18n.t('validate.scenario.slidesMustBeAnArray') })
     return { errors, warnings }
   }
 
@@ -48,13 +49,13 @@ export function validateDialogFlow(
   for (const [si, slide] of flow.slides.entries()) {
     const path = `Dialog "${flowId}" > Slide[${si}] "${slide?.id ?? ''}"`
     if (!slide || typeof slide !== 'object') {
-      errors.push({ path, message: 'Slide is not an object.' })
+      errors.push({ path, message: i18n.t('validate.scenario.slideIsNotAnObject') })
       continue
     }
     if (!slide.id) {
-      errors.push({ path, message: 'Slide ID is empty.' })
+      errors.push({ path, message: i18n.t('validate.scenario.slideIDIsEmpty') })
     } else if (slideIds.has(slide.id)) {
-      errors.push({ path, message: `Duplicate slide ID: "${slide.id}".` })
+      errors.push({ path, message: i18n.t('validate.scenario.duplicateSlideID', { id: slide.id }) })
     } else {
       slideIds.add(slide.id)
     }
@@ -73,22 +74,22 @@ export function validateDialogFlow(
     if (slide.end && slide.next) {
       errors.push({
         path,
-        message: `Slide has both "end" and "next" ("${slide.next}") — the game would ignore one. Pick one.`,
+        message: i18n.t('validate.scenario.slideHasBothEndAnd', { next: slide.next }),
       })
     }
     if (slide.next && !slideIds.has(slide.next)) {
-      errors.push({ path, message: `"next" points at unknown slide "${slide.next}".` })
+      errors.push({ path, message: i18n.t('validate.scenario.nextPointsAtUnknownSlide', { next: slide.next }) })
     }
     if (!slide.end && !slide.next && !hasAnswers) {
       warnings.push({
         path,
-        message: 'Slide has no "next", no "end", and no answers — the dialog stops here.',
+        message: i18n.t('validate.scenario.slideHasNoNextNo'),
       })
     }
 
     // Localization
     if (slide.text && !localization[slide.text]) {
-      warnings.push({ path, message: `Text SID "${slide.text}" has no localization token.` })
+      warnings.push({ path, message: i18n.t('validate.scenario.textSIDHasNoLocalization', { text: slide.text }) })
     }
 
     // Speaker label. A custom SID with no text renders as the raw SID in game.
@@ -101,7 +102,7 @@ export function validateDialogFlow(
     ) {
       warnings.push({
         path,
-        message: `Speaker SID "${titleSid}" has no localization token — the dialog will show the raw SID.`,
+        message: i18n.t('validate.scenario.speakerSIDHasNoLocalization', { titleSid }),
       })
     }
 
@@ -111,20 +112,20 @@ export function validateDialogFlow(
       if (avatar.position < 1 || avatar.position > 5) {
         warnings.push({
           path: avPath,
-          message: `Position ${avatar.position} is outside the 1–5 range the game renders.`,
+          message: i18n.t('validate.scenario.positionIsOutsideThe1', { position: avatar.position }),
         })
       }
       if (avatar.isForeground !== 'true' && avatar.isForeground !== 'false') {
         warnings.push({
           path: avPath,
-          message: `"isForeground" should be the string "true" or "false", not ${JSON.stringify(avatar.isForeground)}.`,
+          message: i18n.t('validate.scenario.isForegroundShouldBeTheString', { value: JSON.stringify(avatar.isForeground) }),
         })
       }
       for (const anim of avatar.animations ?? []) {
         if (!(AVATAR_ANIMATIONS as readonly string[]).includes(anim)) {
           warnings.push({
             path: avPath,
-            message: `Unrecognised animation "${anim}". Known: ${AVATAR_ANIMATIONS.join(', ')}.`,
+            message: i18n.t('validate.scenario.unrecognisedAnimationKnown', { anim, known: AVATAR_ANIMATIONS.join(', ') }),
           })
         }
       }
@@ -134,7 +135,7 @@ export function validateDialogFlow(
     if (slide.resultDialog && !(RESULT_DIALOG_VALUES as readonly string[]).includes(slide.resultDialog)) {
       warnings.push({
         path,
-        message: `Unrecognised "resultDialog" value "${slide.resultDialog}". Known: ${RESULT_DIALOG_VALUES.join(', ')}.`,
+        message: i18n.t('validate.scenario.unrecognisedResultDialogValueKnown', { resultDialog: slide.resultDialog, known: RESULT_DIALOG_VALUES.join(', ') }),
       })
     }
 
@@ -144,21 +145,21 @@ export function validateDialogFlow(
       if (answer.text && !localization[answer.text]) {
         warnings.push({
           path: aPath,
-          message: `Answer text SID "${answer.text}" has no localization token.`,
+          message: i18n.t('validate.scenario.answerTextSIDHasNo', { text: answer.text }),
         })
       }
       const actions = Array.isArray(answer.actions) ? answer.actions : []
       if (actions.length === 0) {
-        warnings.push({ path: aPath, message: 'Answer has no flow actions — it leads nowhere.' })
+        warnings.push({ path: aPath, message: i18n.t('validate.scenario.answerHasNoFlowActions') })
       }
       for (const action of actions) {
         if (action.a === 'End') hasTerminal = true
         if (action.a === 'Go') {
           const target = action.p?.[0]
           if (!target) {
-            errors.push({ path: aPath, message: '"Go" action has no target slide ID.' })
+            errors.push({ path: aPath, message: i18n.t('validate.scenario.goActionHasNoTarget') })
           } else if (!slideIds.has(target)) {
-            errors.push({ path: aPath, message: `"Go" points at unknown slide "${target}".` })
+            errors.push({ path: aPath, message: i18n.t('validate.scenario.goPointsAtUnknownSlide', { target }) })
           }
         }
       }
@@ -168,7 +169,7 @@ export function validateDialogFlow(
   if (flow.slides.length > 0 && !hasTerminal) {
     errors.push({
       path: `Dialog "${flowId}"`,
-      message: 'No slide ends the dialog — mark a slide as "end" or give an answer an "End" action.',
+      message: i18n.t('validate.scenario.noSlideEndsTheDialog'),
     })
   }
 
@@ -195,9 +196,9 @@ export function validateScenario(
   for (const [i, counter] of scenario.counters.entries()) {
     const path = `Counter[${i}]`
     if (!counter.sid) {
-      errors.push({ path, message: 'SID is empty.' })
+      errors.push({ path, message: i18n.t('validate.scenario.sIDIsEmpty') })
     } else if (counterSids.has(counter.sid)) {
-      errors.push({ path, message: `Duplicate counter SID: "${counter.sid}".` })
+      errors.push({ path, message: i18n.t('validate.scenario.duplicateCounterSID', { sid: counter.sid }) })
     } else {
       counterSids.add(counter.sid)
     }
@@ -208,9 +209,9 @@ export function validateScenario(
   for (const [i, interruption] of scenario.interruptions.entries()) {
     const path = `Interruption[${i}]`
     if (!interruption.sid) {
-      errors.push({ path, message: 'SID is empty.' })
+      errors.push({ path, message: i18n.t('validate.scenario.sIDIsEmpty') })
     } else if (interruptionSids.has(interruption.sid)) {
-      errors.push({ path, message: `Duplicate interruption SID: "${interruption.sid}".` })
+      errors.push({ path, message: i18n.t('validate.scenario.duplicateInterruptionSID', { sid: interruption.sid }) })
     } else {
       interruptionSids.add(interruption.sid)
     }
@@ -222,9 +223,9 @@ export function validateScenario(
     const questPath = `Quest[${qi}] "${quest.sid}"`
 
     if (!quest.sid) {
-      errors.push({ path: questPath, message: 'SID is empty.' })
+      errors.push({ path: questPath, message: i18n.t('validate.scenario.sIDIsEmpty') })
     } else if (topQuestSids.has(quest.sid)) {
-      errors.push({ path: questPath, message: `Duplicate quest SID: "${quest.sid}".` })
+      errors.push({ path: questPath, message: i18n.t('validate.scenario.duplicateQuestSID', { sid: quest.sid }) })
     } else {
       topQuestSids.add(quest.sid)
     }
@@ -236,9 +237,9 @@ export function validateScenario(
       const subPath = `${questPath} > SubQuest[${sqi}] "${subQuest.sid}"`
 
       if (!subQuest.sid) {
-        errors.push({ path: subPath, message: 'SID is empty.' })
+        errors.push({ path: subPath, message: i18n.t('validate.scenario.sIDIsEmpty') })
       } else if (subQuestSidMap.has(subQuest.sid)) {
-        errors.push({ path: subPath, message: `Duplicate subquest SID: "${subQuest.sid}".` })
+        errors.push({ path: subPath, message: i18n.t('validate.scenario.duplicateSubquestSID', { sid: subQuest.sid }) })
       } else {
         subQuestSidMap.set(subQuest.sid, true)
       }
@@ -247,10 +248,10 @@ export function validateScenario(
         const trigPath = `${subPath} > Trigger[${ti}]`
 
         if (trigger.conditions.length === 0) {
-          warnings.push({ path: trigPath, message: 'Trigger has no conditions.' })
+          warnings.push({ path: trigPath, message: i18n.t('validate.scenario.triggerHasNoConditions') })
         }
         if (trigger.actions.length === 0) {
-          warnings.push({ path: trigPath, message: 'Trigger has no actions.' })
+          warnings.push({ path: trigPath, message: i18n.t('validate.scenario.triggerHasNoActions') })
         }
 
       }
@@ -286,7 +287,7 @@ export function validateScenario(
     if (Object.keys(dialogs).length > 0 && !mapName.trim()) {
       warnings.push({
         path: 'Map Settings',
-        message: 'Map name is empty. It is required to export a ZIP with dialog files.',
+        message: i18n.t('validate.scenario.mapNameIsEmptyIt'),
       })
     }
 
@@ -301,7 +302,7 @@ export function validateScenario(
               if (!dialogs[key]) {
                 warnings.push({
                   path,
-                  message: `Action "${action.a}" references dialog key "${key}" which has no dialog flow defined.`,
+                  message: i18n.t('validate.scenario.actionReferencesDialogKeyWhich', { a: action.a, key }),
                 })
               }
             }
@@ -317,7 +318,7 @@ export function validateScenario(
           if (!dialogs[key]) {
             warnings.push({
               path,
-              message: `Action "${action.a}" references dialog key "${key}" which has no dialog flow defined.`,
+              message: i18n.t('validate.scenario.actionReferencesDialogKeyWhich', { a: action.a, key }),
             })
           }
         }
@@ -337,14 +338,14 @@ export function validateScenario(
       if (quest.name && !localization[quest.name]) {
         warnings.push({
           path: `Quest[${qi}] "${quest.sid}"`,
-          message: `Quest name SID "${quest.name}" has no localization token.`,
+          message: i18n.t('validate.scenario.questNameSIDHasNo', { name: quest.name }),
         })
       }
       for (const [sqi, subQuest] of quest.subQuests.entries()) {
         if (subQuest.name && !localization[subQuest.name]) {
           warnings.push({
             path: `Quest[${qi}] > SubQuest[${sqi}] "${subQuest.sid}"`,
-            message: `SubQuest name SID "${subQuest.name}" has no localization token.`,
+            message: i18n.t('validate.scenario.subQuestNameSIDHasNo', { name: subQuest.name }),
           })
         }
       }
@@ -376,7 +377,7 @@ function checkActionRefs(
     if (sid && !counterSids.has(sid)) {
       warnings.push({
         path,
-        message: `${action.a}: counter "${sid}" is not defined in counters.`,
+        message: i18n.t('validate.scenario.counterIsNotDefinedIn', { a: action.a, sid }),
       })
     }
   }
@@ -392,7 +393,7 @@ function checkActionRefs(
     if (questSid && !questSids.has(questSid)) {
       warnings.push({
         path,
-        message: `${action.a}: quest "${questSid}" is not defined in quests.`,
+        message: i18n.t('validate.scenario.questIsNotDefinedIn', { a: action.a, questSid }),
       })
     }
 
@@ -404,7 +405,7 @@ function checkActionRefs(
       if (subSids && !subSids.has(p[1])) {
         warnings.push({
           path,
-          message: `${action.a}: subquest "${p[1]}" not found in quest "${p[0]}".`,
+          message: i18n.t('validate.scenario.subquestNotFoundInQuest', { a: action.a, subquest: p[1], quest: p[0] }),
         })
       }
     }

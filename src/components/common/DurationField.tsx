@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from 'react-i18next'
 
 /** The game's calendar: 7 days to a week, 4 weeks to a month. */
 export const DAYS_PER_WEEK = 7
@@ -23,6 +24,7 @@ interface Props {
 
 /** A duration entered as months, weeks and days (as the game does), reported as total days. */
 export default function DurationField({ label, value, onChange, disabled }: Props) {
+  const { t } = useTranslation()
   // Local fields so typing "10" in the day box doesn't reflow into weeks mid-edit;
   // they only resync when the value changes from outside.
   const [parts, setParts] = useState<[number, number, number]>(() => split(value))
@@ -41,10 +43,10 @@ export default function DurationField({ label, value, onChange, disabled }: Prop
     <div className="space-y-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <div className="grid grid-cols-3 gap-2">
-        {(['Months', 'Weeks', 'Days'] as const).map((unit, i) => (
+        {(['months', 'weeks', 'days'] as const).map((unit, i) => (
           <div key={unit} className="flex items-center gap-1">
-            <Input type="number" min={0} value={parts[i]} disabled={disabled} onChange={(e) => update(i as 0 | 1 | 2, e.target.value)} className="h-7 min-w-0 text-sm px-2" aria-label={`${label} ${unit.toLowerCase()}`} />
-            <span className="text-[10px] text-muted-foreground">{unit[0]}</span>
+            <Input type="number" min={0} value={parts[i]} disabled={disabled} onChange={(e) => update(i as 0 | 1 | 2, e.target.value)} className="h-7 min-w-0 text-sm px-2" aria-label={t('common.durationField.ariaLabel', { label, unit: t(`common.durationField.${unit}`).toLowerCase() })} />
+            <span className="text-[10px] text-muted-foreground">{t(`common.durationField.${unit}Short`)}</span>
           </div>
         ))}
       </div>

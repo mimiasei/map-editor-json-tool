@@ -11,9 +11,11 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { commitMapWithPathPrompt } from '@/lib/map-file'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
-import { clearRecentFiles, syncRecentMenu } from '@/lib/recent-files'
+import { clearRecentFiles } from '@/lib/recent-files'
+import { syncNativeMenu } from '@/lib/native-menu'
+import i18n from '@/lib/i18n'
 import { logInfo, logError } from '@/lib/logger'
-import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
+import { createPanelSyncChannel, PANEL_META, panelTitle } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
 import { warmThumbnailDir } from '@/lib/catalog/thumbnails'
 import { loadThumbnailManifest, getThumbnailCount } from '@/hooks/useThumbnailManifest'
@@ -52,16 +54,18 @@ import ObjectRenderProgressBar from '@/components/layout/ObjectRenderProgressBar
 import { loadRenderIndex } from '@/lib/object-render/render-index'
 import { refreshPendingCounts } from '@/lib/object-render/render-job'
 import { SquareArrowOutUpRight } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 const SETUP_SHOWN_KEY = 'oe-setup-shown'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
 
 function UndockedPlaceholder({ label }: { label: string }) {
+  const { t } = useTranslation()
   return (
     <div className="flex h-full items-center justify-center text-sm text-muted-foreground gap-2">
       <SquareArrowOutUpRight className="h-4 w-4 opacity-40" />
-      {label} is open in a separate window
+      {t('layout.appShell.undockedPlaceholder', { label })}
     </div>
   )
 }
@@ -92,6 +96,7 @@ function buildPanelState(): PanelState {
 // ─── AppShell ─────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
+  const { t } = useTranslation()
   const {
     scenario,
     isDirty,
@@ -130,6 +135,7 @@ export default function AppShell() {
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
   const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
+  const mapLoaded = useMapContextStore((s) => s.context !== null)
   const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
   const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
@@ -435,14 +441,14 @@ export default function AppShell() {
   const handleNew = useCallback(async () => {
     if (isDirtyRef.current || useMapDocumentStore.getState().mapIsDirty) {
       const ok = await confirmDialog(
-        'You have unsaved changes. Start a new scenario anyway?',
-        'New Scenario',
+        t('layout.appShell.confirmNew'),
+        t('layout.appShell.confirmNewTitle'),
       )
       if (!ok) return
     }
     resetScenario()
     useMapDocumentStore.getState().clear()
-  }, [resetScenario])
+  }, [resetScenario, t])
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -546,7 +552,7 @@ export default function AppShell() {
 
     const win = new WebviewWindow(`panel-${panelId}`, {
       url:       `/?panel=${panelId}`,
-      title:     meta?.title ?? panelId,
+      title:     panelTitle(panelId),
       width:     meta?.width  ?? 800,
       height:    meta?.height ?? 600,
       minWidth:  400,
@@ -588,6 +594,7 @@ export default function AppShell() {
 
     let unlistenMenu: (() => void) | undefined
     let unlistenClose: (() => void) | undefined
+    const onLanguageChanged = () => { void syncNativeMenu() }
 
     ;(async () => {
       const { listen } = await import('@tauri-apps/api/event')
@@ -627,8 +634,9 @@ export default function AppShell() {
         }
       })
 
-      // The native File > Open Recent submenu starts as a placeholder; fill it from the stored list.
-      syncRecentMenu()
+      // The native menu starts in English with a placeholder Open Recent list; send it the UI-language labels (which also redraws the list).
+      void syncNativeMenu()
+      i18n.on('languageChanged', onLanguageChanged)
 
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
       const win = getCurrentWindow()
@@ -669,6 +677,7 @@ export default function AppShell() {
     return () => {
       unlistenMenu?.()
       unlistenClose?.()
+      i18n.off('languageChanged', onLanguageChanged)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -829,12 +838,17 @@ export default function AppShell() {
         // the normal 3-pane editor Group occupies below and needs no resize
         // chrome of its own.
         <div className="flex-1 overflow-hidden p-3">
-          <MapGridDialog
-            open={mapGridOpen}
-            onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
-            onUndock={() => handleUndock('mapGridCell')}
-            undocked={isUndocked('mapGridCell')}
-          />
+          {mapLoaded ? (
+            <MapGridDialog
+              open={mapGridOpen}
+              onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
+              onUndock={() => handleUndock('mapGridCell')}
+              undocked={isUndocked('mapGridCell')}
+            />
+          ) : (
+            // The Map tab is also where New Map / Import Map / Random Map live, so it must be reachable without a map.
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t('layout.noMapLoaded')}</div>
+          )}
         </div>
       ) : rmgOpen ? (
         // Same inline-view pattern as Map Grid above (issue #232) — Generate
@@ -899,7 +913,7 @@ export default function AppShell() {
         >
           <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[var(--column-right)] dark:bg-card">
             {isUndocked('preview') ? (
-              <UndockedPlaceholder label="JSON Preview" />
+              <UndockedPlaceholder label={t('common.jsonPreview.jSONPreview')} />
             ) : (
               <JsonPreview
                 onUndock={() => handleUndock('preview')}

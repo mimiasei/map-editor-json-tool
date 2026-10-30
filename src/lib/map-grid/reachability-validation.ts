@@ -85,6 +85,7 @@
 // collapses to exactly the original single merged call. See
 // analyzeReachability's own doc comment for the exact algorithm.
 
+import i18n from '@/lib/i18n'
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, entranceGroups, isFootprintInBounds } from './footprint'
@@ -824,16 +825,14 @@ export function computeReachabilityGuarantee(context: ReachabilityContext, catal
 }
 
 export function describeUnreachablePlacement(issue: UnreachablePlacement): string {
-  const where = `${issue.sid} (id ${issue.id}) at (${issue.x}, ${issue.z})`
+  const where = i18n.t('validate.map.where', { sid: issue.sid, id: issue.id, x: issue.x, z: issue.z })
   if (issue.blockedBy.length === 0) {
-    return issue.sealedByElevation
-      ? `${where} — unreachable from any player start: sealed by a raised/lowered terrain level with no ramp connecting it to the rest of the map. This can't be auto-fixed; add a climb ramp or adjust the terrain yourself.`
-      : `${where} — unreachable from any player start (sealed by terrain/water, nothing placed to move)`
+    return issue.sealedByElevation ? i18n.t('validate.map.unreachableSealedByElevation', { where }) : i18n.t('validate.map.unreachableSealed', { where })
   }
-  const blockers = issue.blockedBy.map((b) => `${b.sid} (id ${b.id})`).join(', ')
-  return `${where} — unreachable from any player start, blocked by: ${blockers}`
+  const blockers = issue.blockedBy.map((b) => i18n.t('validate.map.blocker', { sid: b.sid, id: b.id })).join(', ')
+  return i18n.t('validate.map.unreachableBlockedBy', { where, blockers })
 }
 
 export function describeIsolatedPlayerStart(issue: IsolatedPlayerStart): string {
-  return `Player ${issue.owner}'s ${issue.sid} (id ${issue.id}) at (${issue.x}, ${issue.z}) can't reach any other player's start — no connected path or bridging portal. Whichever side has less of the map's real content is effectively unplayable for that player, even though findUnreachablePlacements won't flag any of it (it's still "reachable", just only by the other player).`
+  return i18n.t('validate.map.isolatedPlayerStart', { owner: issue.owner, sid: issue.sid, id: issue.id, x: issue.x, z: issue.z })
 }

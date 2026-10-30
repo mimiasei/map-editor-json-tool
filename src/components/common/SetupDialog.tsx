@@ -22,6 +22,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
 import { buildIconRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
 import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
+import { useTranslation, Trans } from 'react-i18next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ const detectGameDir = getGameDir
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SetupDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const [gameDir, setGameDir]             = useState('')
   const [detecting, setDetecting]         = useState(false)
   const [phase, setPhase]                 = useState<Phase>('idle')
@@ -113,7 +115,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     await useCatalogStore.getState().loadFromPath(zipPath)
     const store = useCatalogStore.getState()
     if (store.error || !store.catalog) {
-      setZipError(store.error ?? 'Failed to load Core.zip')
+      setZipError(store.error ?? t('common.setupDialog.loadFailed'))
       return false
     }
     return true
@@ -175,7 +177,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     try {
       const { open: openDialog } = await import('@tauri-apps/plugin-dialog')
       const picked = await openDialog({
-        title: 'Select Core.zip',
+        title: t('common.setupDialog.selectCoreZip'),
         filters: [{ name: 'Core.zip', extensions: ['zip'] }],
       })
       if (!picked || typeof picked !== 'string') return
@@ -226,19 +228,14 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) phase === 'done' ? handleDone() : (!isRunning && handleSkip()) }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-lg">Welcome to the Scenario Editor</DialogTitle>
+          <DialogTitle className="text-lg">{t('common.setupDialog.welcomeToTheScenarioEditor')}</DialogTitle>
         </DialogHeader>
 
         {/* ── Idle / phase-1 error ── */}
         {(phase === 'idle' || (phase === 'loading-zip' && zipError)) && (
           <div className="space-y-4 text-sm">
             <p className="text-muted-foreground">
-              Point the editor at your{' '}
-              <span className="font-medium text-foreground">
-                Heroes of Might and Magic: Olden Era
-              </span>{' '}
-              installation folder. The editor will load game data and extract icon
-              thumbnails automatically — only needs to be done once.
+              <Trans i18nKey="common.setupDialog.intro" components={{ b: <span className="font-medium text-foreground" /> }} />
             </p>
 
             {/* What will happen */}
@@ -246,27 +243,25 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
               <div className="flex items-center gap-2">
                 <Database className="h-3.5 w-3.5 shrink-0" />
                 <span>
-                  <span className="font-medium text-foreground">Step 1</span> — Load game data
-                  from <span className="font-mono">Core.zip</span>
+                  <Trans i18nKey="common.setupDialog.step1Line" components={{ b: <span className="font-medium text-foreground" />, m: <span className="font-mono" /> }} />
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <ImageIcon className="h-3.5 w-3.5 shrink-0" />
                 <span>
-                  <span className="font-medium text-foreground">Step 2</span> — Extract icon
-                  thumbnails (stored locally, icons show in all dropdowns)
+                  <Trans i18nKey="common.setupDialog.step2Line" components={{ b: <span className="font-medium text-foreground" /> }} />
                 </span>
               </div>
             </div>
 
             {/* Game dir input */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Game installation folder</Label>
+              <Label className="text-xs text-muted-foreground">{t('common.setupDialog.gameInstallationFolder')}</Label>
               <div className="flex gap-2">
                 <Input
-                  value={detecting ? 'Detecting…' : gameDir}
+                  value={detecting ? t('shared.detecting') : gameDir}
                   onChange={(e) => setGameDir(e.target.value)}
-                  placeholder="Path to game installation folder"
+                  placeholder={t('common.setupDialog.pathToGameInstallationFolder')}
                   disabled={detecting || isRunning}
                   className="flex-1 text-xs font-mono"
                 />
@@ -278,7 +273,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                     const { open: openDialog } = await import('@tauri-apps/plugin-dialog')
                     const path = await openDialog({
                       directory: true,
-                      title: 'Select game installation folder',
+                      title: t('common.setupDialog.selectGameFolder'),
                     })
                     if (typeof path === 'string') setGameDir(path)
                   }}
@@ -294,8 +289,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <AlertDescription className="ml-2 text-xs space-y-1.5">
                   <p>
-                    Could not load Core.zip from the expected path. You can browse to it
-                    manually.
+                    {t('common.setupDialog.couldNotLoadCoreZip')}
                   </p>
                   <p className="font-mono break-all opacity-70">{coreZipPath(gameDir)}</p>
                   <Button
@@ -304,7 +298,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                     className="mt-1 h-6 text-xs"
                     onClick={handlePickCoreZip}
                   >
-                    Browse for Core.zip manually
+                    {t('common.setupDialog.browseForCoreZipManually')}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -324,7 +318,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
                 )}
                 <span className={phase !== 'loading-zip' ? 'text-muted-foreground' : ''}>
-                  Loading game data…
+                  {t('common.setupDialog.loadingGameData')}
                 </span>
               </div>
 
@@ -341,7 +335,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                 >
                   {phase === 'extracting' && progress.current
                     ? `Extracting: ${progress.current}`
-                    : 'Extracting icon thumbnails…'}
+                    : t('common.setupDialog.extractingIconThumbnails')}
                 </span>
               </div>
             </div>
@@ -356,7 +350,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground text-right">
-                  {progress.done} / {progress.total || '?'} icons
+                  {t('shared.iconProgress', { done: progress.done, total: progress.total || '?' })}
                 </p>
               </div>
             )}
@@ -368,20 +362,14 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
           <div className="space-y-3 text-sm">
             <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
-              Setup complete!
+              {t('common.setupDialog.setupComplete')}
             </div>
             <p className="text-muted-foreground">
-              Game data loaded and{' '}
-              <span className="font-medium text-foreground">
-                {result.saved} icon{result.saved !== 1 ? 's' : ''}
-              </span>{' '}
-              extracted. Icons will appear in all dropdowns immediately.
+              <Trans i18nKey="common.setupDialog.doneSummary" count={result.saved} components={{ b: <span className="font-medium text-foreground" /> }} />
             </p>
             {result.missing.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                {result.missing.length} icon
-                {result.missing.length !== 1 ? 's' : ''} were not found in the game files
-                and will show as text only.
+                {t('common.setupDialog.missing', { count: result.missing.length })}
               </p>
             )}
           </div>
@@ -408,7 +396,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                 htmlFor="setup-dont-show"
                 className="text-xs text-muted-foreground cursor-pointer"
               >
-                Don't show this again
+                {t('common.setupDialog.dontShowThisAgain')}
               </Label>
             </div>
           )}
@@ -418,10 +406,10 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
             {phase === 'idle' && (
               <>
                 <Button variant="ghost" size="sm" onClick={handleSkip}>
-                  Skip
+                  {t('common.setupDialog.skip')}
                 </Button>
                 <Button onClick={() => void handleSetup()} disabled={!gameDir.trim() || detecting}>
-                  Set up editor
+                  {t('common.setupDialog.setUpEditor')}
                 </Button>
               </>
             )}
@@ -429,7 +417,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
             {/* Phase-1 error — show Skip + retry via picker */}
             {phase === 'loading-zip' && zipError && (
               <Button variant="ghost" size="sm" onClick={handleSkip}>
-                Skip
+                {t('common.setupDialog.skip')}
               </Button>
             )}
 
@@ -437,22 +425,22 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
             {isRunning && !zipError && (
               <Button disabled>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                {phase === 'loading-zip' ? 'Loading game data…' : 'Extracting…'}
+                {phase === 'loading-zip' ? t('common.setupDialog.loadingGameData') : t('common.thumbnailExtractDialog.extracting')}
               </Button>
             )}
 
             {/* Done */}
             {phase === 'done' && (
-              <Button onClick={handleDone}>Done</Button>
+              <Button onClick={handleDone}>{t('shared.done')}</Button>
             )}
 
             {/* Unrecoverable error */}
             {phase === 'error' && (
               <>
                 <Button variant="ghost" size="sm" onClick={handleSkip}>
-                  Skip
+                  {t('common.setupDialog.skip')}
                 </Button>
-                <Button onClick={reset}>Try again</Button>
+                <Button onClick={reset}>{t('common.setupDialog.tryAgain')}</Button>
               </>
             )}
           </div>

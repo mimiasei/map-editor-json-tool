@@ -1,5 +1,6 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Info, type AppIcon } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 interface FieldInfoProps {
   /** The explanation text shown in the popover. */
@@ -17,13 +18,14 @@ interface FieldInfoProps {
  * issue #141). Use HelpTooltip for scripting fields, this for everything else.
  */
 export default function FieldInfo({ text, className, icon: Icon = Info }: FieldInfoProps) {
+  const { t } = useTranslation()
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
           className={`inline-flex items-center text-muted-foreground hover:text-foreground transition-colors ${className ?? ''}`}
-          aria-label="Help"
+          aria-label={t('ui.help')}
         >
           <Icon className="h-3 w-3" />
         </button>

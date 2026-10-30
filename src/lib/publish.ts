@@ -11,6 +11,7 @@
 
 import { getStreamingAssetsDir, mapZipFileName, pathSep } from '@/lib/zip-export'
 import { checkFileExists } from '@/lib/native-fs'
+import i18n from '@/lib/i18n'
 
 export interface PublishTarget {
   /** Absolute destination path, or null when it could not be derived. */
@@ -50,7 +51,7 @@ export async function resolvePublishTargets({
     exists: jsonPath ? await checkFileExists(jsonPath) : false,
     reason: jsonPath
       ? undefined
-      : 'No file path yet — open a .map file or save the scenario once.',
+      : i18n.t('common.publishDialog.reasons.noFilePath'),
   }
 
   // ── Map ZIP ───────────────────────────────────────────────────────────────
@@ -58,12 +59,12 @@ export async function resolvePublishTargets({
   let zip: PublishTarget
 
   if (!mapName.trim()) {
-    zip = { path: null, exists: false, reason: 'Map name is required to name the ZIP.' }
+    zip = { path: null, exists: false, reason: i18n.t('common.publishDialog.reasons.mapNameRequired') }
   } else if (!dir) {
     zip = {
       path: null,
       exists: false,
-      reason: 'StreamingAssets folder unknown — load Core.zip via Game Data first.',
+      reason: i18n.t('common.publishDialog.reasons.streamingAssetsUnknown'),
     }
   } else {
     const zipPath = `${dir}${pathSep(dir)}${mapZipFileName(mapName)}`

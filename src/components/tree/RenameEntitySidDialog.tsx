@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, Loader2 } from '@/components/ui/icons'
 import type { MapEntity } from '@/types/map-context'
 import { saveMapFile } from '@/lib/map-save'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface RenameEntitySidDialogProps {
   open: boolean
@@ -43,6 +44,7 @@ export default function RenameEntitySidDialog({
   usageDescriptions,
   mapFilePath,
 }: RenameEntitySidDialogProps) {
+  const { t } = useTranslation()
   const [value, setValue] = useState('')
   const [confirmedReferenced, setConfirmedReferenced] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -84,12 +86,12 @@ export default function RenameEntitySidDialog({
     <Dialog open={open} onOpenChange={(o) => { if (!saving) onOpenChange(o) }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Rename entity SID</DialogTitle>
+          <DialogTitle>{t('tree.renameEntitySidDialog.renameEntitySID')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="rename-entity-sid">New SID</Label>
+            <Label htmlFor="rename-entity-sid">{t('tree.renameEntitySidDialog.newSID')}</Label>
             <Input
               id="rename-entity-sid"
               value={value}
@@ -98,7 +100,7 @@ export default function RenameEntitySidDialog({
               autoFocus
             />
             {isDuplicate && (
-              <p className="text-xs text-destructive">Another entity already uses this SID.</p>
+              <p className="text-xs text-destructive">{t('mapGrid.mapGridCellContent.anotherEntityAlreadyUsesThis')}</p>
             )}
           </div>
 
@@ -107,16 +109,14 @@ export default function RenameEntitySidDialog({
               <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 shrink-0" />
               <AlertDescription className="ml-2 space-y-1.5">
                 <p>
-                  <span className="font-mono">{entity.sid}</span> is referenced by{' '}
-                  {usageDescriptions.length} {usageDescriptions.length === 1 ? 'place' : 'places'}.
-                  Renaming does <strong>not</strong> update these — they will keep pointing at the old SID:
+                  <Trans i18nKey="tree.renameEntitySidDialog.references" count={usageDescriptions.length} values={{ sid: entity.sid }} components={{ id: <span className="font-mono" />, b: <strong /> }} />
                 </p>
                 <ul className="list-disc pl-4 font-mono text-xs">
                   {usageDescriptions.map((u) => <li key={u}>{u}</li>)}
                 </ul>
                 <label className="flex items-center gap-1.5 pt-1 font-normal text-foreground">
                   <Checkbox checked={confirmedReferenced} onCheckedChange={(c) => setConfirmedReferenced(c === true)} />
-                  Rename anyway
+                  {t('tree.renameEntitySidDialog.renameAnyway')}
                 </label>
               </AlertDescription>
             </Alert>
@@ -130,18 +130,17 @@ export default function RenameEntitySidDialog({
           )}
 
           <p className="text-xs text-muted-foreground">
-            Writes directly to the loaded <code>.map</code> file. A one-time backup
-            is kept at <code>.map.bak</code> next to it.
+            <Trans i18nKey="shared.writesToMap" components={{ code: <code /> }} />
           </p>
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave || saving}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Save to .map
+            {t('shared.saveToMap')}
           </Button>
         </DialogFooter>
       </DialogContent>

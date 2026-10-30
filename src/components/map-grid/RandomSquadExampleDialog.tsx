@@ -9,6 +9,8 @@ import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { Dices } from '@/components/ui/icons'
 import { rollExampleSquad, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { useTranslation } from 'react-i18next'
+import { localName } from '@/lib/catalog/local-name'
 
 interface Props {
   open: boolean
@@ -21,6 +23,7 @@ interface Props {
 }
 
 export default function RandomSquadExampleDialog({ open, onOpenChange, value, fraction, catalog, ranges }: Props) {
+  const { t } = useTranslation()
   const [roll, setRoll] = useState(0)
   // roll is only a re-roll trigger.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -30,12 +33,12 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Example squad</DialogTitle>
-          <DialogDescription>One squad this random-squad could turn into. It is an approximation of the game&apos;s own roll.</DialogDescription>
+          <DialogTitle>{t('mapGrid.randomSquadExampleDialog.exampleSquad')}</DialogTitle>
+          <DialogDescription>{t('mapGrid.randomSquadExampleDialog.oneSquadThisRandomSquad')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Based on value</span>
+            <span className="text-muted-foreground">{t('mapGrid.randomSquadExampleDialog.basedOnValue')}</span>
             <span className="font-semibold tabular-nums">{value}</span>
             <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(value, ranges)}</Badge>
           </div>
@@ -46,8 +49,8 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
                   const creature = catalog?.creatures.find((c) => c.id === u.sid)
                   return (
                     <li key={u.sid} className="flex items-center gap-2 text-sm">
-                      <CatalogIcon iconId={creature?.icon ?? u.sid} name={creature?.name ?? u.sid} size={28} />
-                      <span className="flex-1">{creature?.name ?? u.sid}</span>
+                      <CatalogIcon iconId={creature?.icon ?? u.sid} name={creature ? localName(catalog, 'creatures', creature) : u.sid} size={28} />
+                      <span className="flex-1">{creature ? localName(catalog, 'creatures', creature) : u.sid}</span>
                       <span className="tabular-nums text-muted-foreground">{u.count} × {u.unitValue}</span>
                       <span className="w-14 text-right tabular-nums">{u.count * u.unitValue}</span>
                     </li>
@@ -55,16 +58,15 @@ export default function RandomSquadExampleDialog({ open, onOpenChange, value, fr
                 })}
               </ul>
               <p className="text-xs text-muted-foreground min-h-[3.75rem]">
-                Total value {example.totalValue} · {example.fraction}{fraction === '' ? ' (no faction set: picked at random)' : ''}
-                {example.nearest && ' · no squad template covers this value, the nearest one is shown'}
+                {t(`mapGrid.randomSquadExampleDialog.${fraction === '' ? (example.nearest ? 'totalValueNoFactionNearest' : 'totalValueNoFaction') : example.nearest ? 'totalValueNearest' : 'totalValue'}`, { value: example.totalValue, fraction: example.fraction })}
               </p>
             </>
           ) : (
-            <p className="text-xs text-muted-foreground min-h-[12.75rem]">No squad templates are loaded, so there is nothing to show. Extract the game data first.</p>
+            <p className="text-xs text-muted-foreground min-h-[12.75rem]">{t('mapGrid.randomSquadExampleDialog.noSquadTemplatesAreLoaded')}</p>
           )}
           <div className="flex justify-end">
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setRoll((n) => n + 1)}>
-              <Dices className="h-3.5 w-3.5 mr-1" /> Roll again
+              <Dices className="h-3.5 w-3.5 mr-1" /> {t('mapGrid.randomSquadExampleDialog.rollAgain')}
             </Button>
           </div>
         </div>

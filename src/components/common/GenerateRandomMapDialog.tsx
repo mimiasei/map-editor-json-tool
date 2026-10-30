@@ -36,6 +36,7 @@
 // cosmetic tuning aid, not a forecast) while the terrain phase IS
 // guaranteed identical for the same seed (one shared implementation).
 
+import { biomeName } from '@/lib/map-grid/terrain-names'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,7 +47,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dices, LayoutGrid, X } from '@/components/ui/icons'
 import FieldInfo from '@/components/common/FieldInfo'
 import { loadRmgDialogSettings, saveRmgDialogSettings } from '@/lib/rmg/dialog-persist'
-import { neutralZoneRange, availableArchetypes, LAYOUT_LABELS, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
+import { neutralZoneRange, availableArchetypes, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
 import { MAX_CITIES_PER_ZONE } from '@/lib/rmg/rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
@@ -57,7 +58,7 @@ import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
 import WinConditionsPanel from '@/components/common/WinConditionsPanel'
-import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import SpellBanDialog from '@/components/common/SpellBanDialog'
@@ -81,6 +82,7 @@ import {
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
 import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -110,15 +112,9 @@ type PreviewPhase = 'off' | 'terrain' | 'roads' | 'all'
  *  reachable regardless of live-preview stage (see NAV_STAGE_ALLOWED)
  *  since that's where the Live preview off-switch lives. */
 type Category = 'core' | 'terrain' | 'biomes' | 'roads' | 'scenery' | 'economy' | 'connectivity' | 'advanced'
-const CATEGORIES: { id: Category; label: string }[] = [
-  { id: 'core', label: 'Start' },
-  { id: 'terrain', label: 'Terrain & Elevation' },
-  { id: 'biomes', label: 'Biomes' },
-  { id: 'roads', label: 'Roads & Rivers' },
-  { id: 'scenery', label: 'Scenery & Decoration' },
-  { id: 'economy', label: 'Economy & Encounters' },
-  { id: 'connectivity', label: 'Connectivity & Portals' },
-  { id: 'advanced', label: 'Advanced' },
+const CATEGORIES: { id: Category }[] = [
+  { id: 'core' }, { id: 'terrain' }, { id: 'biomes' }, { id: 'roads' },
+  { id: 'scenery' }, { id: 'economy' }, { id: 'connectivity' }, { id: 'advanced' },
 ]
 /** During live preview, only these categories have anything to show (see
  *  the showXFields derivations below) — everything else's nav button is
@@ -200,6 +196,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // Classic (3 word selectors) vs Advanced (the category nav + sliders) —
   // either-or, never mixed (issue #250).
   // Last used settings (localStorage), restored on open and saved again below.
+  const { t } = useTranslation()
   const [saved] = useState(loadRmgDialogSettings)
   const [mode, setMode] = useState<'classic' | 'advanced'>(saved.mode ?? 'classic')
   const [classic, setClassic] = useState<ClassicSettings>(saved.classic ?? DEFAULT_CLASSIC_SETTINGS)
@@ -433,7 +430,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
   const handleGenerate = async (freshSeed = false) => {
     setGenerating(true)
-    setGenProgress({ pct: 0, label: 'Starting…' })
+    setGenProgress({ pct: 0, label: t('common.generateRandomMapDialog.starting') })
     try {
       // Regenerate (issue #255) always rolls a new random map, even if a seed
       // was typed — re-running the same seed would just give the same map.
@@ -633,12 +630,12 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
   }
 
   const footerLabel = generating
-    ? 'Generating…'
+    ? t('common.generateRandomMapDialog.footerGenerating')
     : previewPhase === 'terrain'
-      ? (terrainOnly ? 'Generate' : 'Confirm terrain')
+      ? (terrainOnly ? t('common.generateRandomMapDialog.footerGenerate') : t('common.generateRandomMapDialog.footerConfirmTerrain'))
       : previewPhase === 'roads'
-        ? 'Confirm roads'
-        : 'Generate'
+        ? t('common.generateRandomMapDialog.footerConfirmRoads')
+        : t('common.generateRandomMapDialog.footerGenerate')
   const footerAction = previewPhase === 'terrain' ? handleConfirmTerrain : previewPhase === 'roads' ? handleConfirmRoads : () => void handleGenerate()
 
   const handleResetAll= () => {
@@ -686,19 +683,14 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
             variant="ghost"
             size="icon"
             className="absolute right-2 top-2 h-7 w-7"
-            title="Close Generate Random Map"
+            title={t('common.generateRandomMapDialog.closeGenerateRandomMap')}
             onClick={() => onOpenChange(false)}
           >
             <X className="h-4 w-4" />
           </Button>
             <div className="flex gap-1.5">
-                <span className="text-sm font-semibold">Generate Random Map</span>
-                <FieldInfo text="One zone per player plus a neutral zone between each pair, each
-                                with its own biome/faction, roads connecting every zone, one
-                                river, and biome-appropriate scenery. Player zones get a
-                                faction-matched starting dwelling, mine, and guard; neutral
-                                zones get a mine (guarded to its own real economic value) and
-                                scaled treasure. No zone-shape variety yet." />
+                <span className="text-sm font-semibold">{t('common.generateRandomMapDialog.generateRandomMap')}</span>
+                <FieldInfo text={t('common.generateRandomMapDialog.oneZonePerPlayerPlus')} />
             </div>
         </div>
 
@@ -706,22 +698,22 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
           <div className="flex-1 overflow-y-auto p-6 bg-[var(--column-center)] dark:bg-background">
             <div className="mx-auto max-w-2xl space-y-5">
               <div>
-                <h2 className="text-base font-semibold">Map generated</h2>
-                <p className="text-xs text-muted-foreground">{generated.name} is loaded. Open it, or roll a new one with the same settings.</p>
+                <h2 className="text-base font-semibold">{t('common.generateRandomMapDialog.mapGenerated')}</h2>
+                <p className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.isLoadedOpenItOr', { name: generated.name })}</p>
               </div>
               <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Player Balance</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('shared.playerBalance')}</h3>
                 <PlayerBalancePanel balance={generated.balance} />
               </div>
               {generated.warnings.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Notes</h3>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.generateRandomMapDialog.notes')}</h3>
                   <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
                     {generated.warnings.map((w) => <li key={w}>{w}</li>)}
                   </ul>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">The full report stays available later under Stats → Player Balance.</p>
+              <p className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.theFullReportStaysAvailable')}</p>
             </div>
           </div>
         ) : (
@@ -738,7 +730,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   onClick={() => setActiveCategory(cat.id)}
                   className={`w-full text-left text-sm px-3 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
                 >
-                  {cat.label}
+                  {t(`common.generateRandomMapDialog.categories.${cat.id}`)}
                 </button>
               )
             })}
@@ -749,14 +741,14 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                 <div className={classicMode ? 'flex px-64 gap-16 items-start justify-center' : undefined}>
                 <div className={classicMode ? 'space-y-6 w-2/3 min-w-0' : 'space-y-6'}>
                   <div className="space-y-1.5">
-                    <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
+                    <Label htmlFor="rmg-map-name" className="text-xs">{t('shared.mapName')}</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
                   </div>
 
                   <div className="space-y-1.5 w-60 min-w-60">
                     <div className="flex items-center gap-1">
-                      <Label className="text-xs">Settings</Label>
-                      <FieldInfo text="Classic: pick Richness, Complexity and Water below — everything else uses sensible defaults. Advanced: tune every slider yourself in the categories on the left. The two are never mixed: Classic ignores the Advanced sliders, and Advanced ignores the Classic selectors." />
+                      <Label className="text-xs">{t('common.generateRandomMapDialog.settings')}</Label>
+                      <FieldInfo text={t('common.generateRandomMapDialog.classicPickRichnessComplexityAnd')} />
                     </div>
                     <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
                       {(['classic', 'advanced'] as const).map((m) => (
@@ -767,7 +759,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           onClick={() => setMode(m)}
                           className={`text-sm rounded px-3 py-1 disabled:opacity-50 ${mode === m ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                         >
-                          {m === 'classic' ? 'Classic' : 'Advanced'}
+                          {m === 'classic' ? t('common.generateRandomMapDialog.classic') : t('common.generateRandomMapDialog.advanced')}
                         </button>
                       ))}
                     </div>
@@ -776,7 +768,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   <div className="space-y-1.5">
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1.5">
-                        <Label className="text-xs">Size</Label>
+                        <Label className="text-xs">{t('shared.size')}</Label>
                         <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -788,7 +780,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-xs">Players</Label>
+                        <Label className="text-xs">{t('shared.players')}</Label>
                         <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -802,8 +794,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                       <div className="space-y-1.5">
                         {/* Same box as the bare Players label: the info icon lives inside the Label and is capped at h-3, so it cannot make this row taller. */}
                         <Label className="text-xs">
-                          Max heroes
-                          <FieldInfo className="ml-1 h-3 align-middle" text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
+                          {t('common.generateRandomMapDialog.maxHeroes')}
+                          <FieldInfo className="ml-1 h-3 align-middle" text={t('common.generateRandomMapDialog.howManyHeroesEachPlayer')} />
                         </Label>
                         <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -813,14 +805,14 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                         </Select>
                       </div>
                     </div>
-                    {gameTemplate && <p className="text-xs text-muted-foreground">Players ignored — the game template below sets its own player count.</p>}
+                    {gameTemplate && <p className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.playersIgnoredTheGameTemplate')}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
-                        <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
+                        <Label htmlFor="rmg-random-faction" className="text-xs">{t('common.generateRandomMapDialog.randomStartingTowns')}</Label>
+                        <FieldInfo text={t('common.generateRandomMapDialog.everyPlayerStartsWithA')} />
                       </div>
                       <Switch
                         id="rmg-random-faction"
@@ -831,8 +823,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        <Label htmlFor="rmg-limit-cities" className="text-xs">Set number of random cities</Label>
-                        <FieldInfo text={`Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets the default of 1. On: you choose the total for the whole map, from 0 up to ${MAX_CITIES_PER_ZONE} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with ${playerCount} players the map has ${neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones, so up to ${maxCities} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones.`} />
+                        <Label htmlFor="rmg-limit-cities" className="text-xs">{t('common.generateRandomMapDialog.setNumberOfRandomCities')}</Label>
+                        <FieldInfo text={t('common.generateRandomMapDialog.randomCitiesInfo', { perZone: MAX_CITIES_PER_ZONE, players: playerCount, zones: neutralZones.min === neutralZones.max ? String(neutralZones.min) : `${neutralZones.min}-${neutralZones.max}`, maxCities })} />
                       </div>
                       <Switch id="rmg-limit-cities" checked={limitCities} onCheckedChange={setLimitCities} disabled={terrainLocked} />
                     </div>
@@ -841,7 +833,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">
-                          {neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones with {playerCount} players
+                          {t('common.generateRandomMapDialog.neutralZones', { zones: neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`, players: playerCount })}
                         </span>
                         <span className="text-xs font-medium tabular-nums">{cityTotalShown} {cityTotalShown === 1 ? 'city' : 'cities'}</span>
                       </div>
@@ -853,8 +845,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        <Label htmlFor="rmg-pandora" className="text-xs">Include Pandora's Box</Label>
-                        <FieldInfo text="Lets a neutral zone hold one Pandora's Box, at a low chance (about 1 zone in 5). Off by default." />
+                        <Label htmlFor="rmg-pandora" className="text-xs">{t('common.generateRandomMapDialog.includePandorasBox')}</Label>
+                        <FieldInfo text={t('common.generateRandomMapDialog.letsANeutralZoneHold')} />
                       </div>
                       <Switch
                         id="rmg-pandora"
@@ -865,8 +857,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        <Label htmlFor="rmg-mirrored" className="text-xs">Mirrored map</Label>
-                        <FieldInfo text={`The right half of the map is an exact mirror image of the left half, so every player has precisely the same surroundings: the same zones, land, roads, mines, dwellings, guards and treasure. Players take turns on the two sides (player 1 on the left, player 2 on the right, player 3 on the left, ...), so two human players in the first two slots face each other and the AI players are split evenly. Needs an even number of players and an even map width. What differs: the starting heroes (each is unique), and everything is generated for the left half only, so mirrored maps have no rivers, islands or portals and no City Hold (there is no single city in the middle). Objects that straddle the middle line are left out. With random starting towns each player is still dealt their own random town.`} />
+                        <Label htmlFor="rmg-mirrored" className="text-xs">{t('common.generateRandomMapDialog.mirroredMap')}</Label>
+                        <FieldInfo text={t('common.generateRandomMapDialog.theRightHalfOfThe')} />
                       </div>
                       <Switch
                         id="rmg-mirrored"
@@ -879,19 +871,19 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label className="text-xs">Game template</Label>
-                      <FieldInfo text="A game template is a real Olden Era map-generator layout. Using one replaces this generator's own zone layout with the template's zones and connections (and its player count), and applies its per-zone settings: zone size, lake amount, guard strength, how rich each zone's content is, content limits, road types, and the template's game rules and bans. Terrain, objects and decoration are still generated by this tool." />
+                      <Label className="text-xs">{t('common.generateRandomMapDialog.gameTemplate')}</Label>
+                      <FieldInfo text={t('common.generateRandomMapDialog.aGameTemplateIsA')} />
                     </div>
                     {gameTemplate ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
                         <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setGameTemplate(null)} disabled={terrainLocked}>
-                          Clear
+                          {t('shared.clear')}
                         </Button>
                       </div>
                     ) : (
                       <Button type="button" variant="outline" size="sm" className="h-8 w-full justify-start text-sm font-normal" onClick={() => setTemplatePickerOpen(true)} disabled={terrainLocked}>
-                        Use a game template…
+                        {t('common.generateRandomMapDialog.useAGameTemplate')}
                       </Button>
                     )}
                   </div>
@@ -899,10 +891,10 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   {classicMode && (
                     <>
                       {([
-                        ['Richness', 'How valuable the treasure is — from poor piles and cheap buildings to rich ones with powerful artifacts. Uses the game\'s own richness tiers.', classic.richness, 'richness', RICHNESS_LEVELS],
-                        ['Complexity', 'How busy the map is — scales decoration, interactable objects, treasure piles and guard squads together.', classic.complexity, 'complexity', COMPLEXITY_LEVELS],
-                        ['Difficulty', 'How strong the guard squads are and how fast they grow each week, using the game\'s own six difficulty levels. Neutral cities get guards at higher levels, and the map\'s lobby difficulty is set to match.', classic.difficulty, 'difficulty', DIFFICULTY_LEVELS],
-                        ['Water', 'How much water: none, a few to many lakes, or islands reached by portals.', classic.water, 'water', WATER_LEVELS],
+                        [t('common.generateRandomMapDialog.richness'), t('common.generateRandomMapDialog.richnessInfo'), classic.richness, 'richness', RICHNESS_LEVELS],
+                        [t('common.generateRandomMapDialog.complexity'), t('common.generateRandomMapDialog.complexityInfo'), classic.complexity, 'complexity', COMPLEXITY_LEVELS],
+                        [t('common.generateRandomMapDialog.difficulty'), t('common.generateRandomMapDialog.difficultyInfo'), classic.difficulty, 'difficulty', DIFFICULTY_LEVELS],
+                        [t('common.generateRandomMapDialog.water'), t('common.generateRandomMapDialog.waterInfo'), classic.water, 'water', WATER_LEVELS],
                       ] as const).map(([label, info, value, key, options]) => (
                         <div key={key} className="space-y-1.5">
                           <div className="flex items-center gap-1">
@@ -913,7 +905,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {/* A mirrored map has no islands (they are joined by portals that are not mirrored). */}
-                              {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                              {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{t(`common.generateRandomMapDialog.levels.${key}.${o.id}` as never)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
@@ -921,10 +913,10 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                       {!gameTemplate && (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1">
-                            <Label className="text-xs">Layout</Label>
-                            <FieldInfo text="How the zones are arranged. Random picks one of the layouts for you. Layouts too crowded for this map size or with too many players are not offered." />
+                            <Label className="text-xs">{t('shared.layout')}</Label>
+                            <FieldInfo text={t('common.generateRandomMapDialog.howTheZonesAreArranged')} />
                             {classic.layout && availableLayouts.includes(classic.layout) && (
-                              <FieldInfo icon={LayoutGrid} text={`${LAYOUT_LABELS[classic.layout].label}: ${LAYOUT_LABELS[classic.layout].details}`} />
+                              <FieldInfo icon={LayoutGrid} text={`${t(`common.generateRandomMapDialog.layouts.${classic.layout}.label`)}: ${t(`common.generateRandomMapDialog.layouts.${classic.layout}.details`)}`} />
                             )}
                           </div>
                           <Select
@@ -934,9 +926,9 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           >
                             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={RANDOM_LAYOUT}>Random</SelectItem>
+                              <SelectItem value={RANDOM_LAYOUT}>{t('common.generateRandomMapDialog.random')}</SelectItem>
                               {availableLayouts.map((name) => (
-                                <SelectItem key={name} value={name} title={LAYOUT_LABELS[name].description}>{LAYOUT_LABELS[name].label}</SelectItem>
+                                <SelectItem key={name} value={name} title={t(`common.generateRandomMapDialog.layouts.${name}.description`)}>{t(`common.generateRandomMapDialog.layouts.${name}.label`)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -948,11 +940,11 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
-                        <Label className="text-xs">Banned spells</Label>
-                        <FieldInfo text="Spells nobody can learn or cast on the generated map, picked per magic school. Added to any spells.banned in the RMG tuning file." />
+                        <Label className="text-xs">{t('shared.bannedSpells')}</Label>
+                        <FieldInfo text={t('common.generateRandomMapDialog.spellsNobodyCanLearnOr')} />
                       </div>
                       <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSpellPickerOpen(true)} disabled={terrainLocked}>
-                        {bannedSpellSids.size > 0 ? `${bannedSpellSids.size} banned` : 'None banned'}
+                        {bannedSpellSids.size > 0 ? `${bannedSpellSids.size} banned` : t('common.generateRandomMapDialog.noneBanned')}
                       </Button>
                     </div>
                   </div>
@@ -960,38 +952,38 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
-                        <Label className="text-xs">Banned artifacts</Label>
-                        <FieldInfo text="Artifacts that will not appear on the generated map, picked by kind and slot. Written to the map's banned items." />
+                        <Label className="text-xs">{t('shared.bannedArtifacts')}</Label>
+                        <FieldInfo text={t('common.generateRandomMapDialog.artifactsThatWillNotAppear')} />
                       </div>
                       <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setArtifactPickerOpen(true)} disabled={terrainLocked}>
-                        {bannedArtifactSids.size > 0 ? `${bannedArtifactSids.size} banned` : 'None banned'}
+                        {bannedArtifactSids.size > 0 ? `${bannedArtifactSids.size} banned` : t('common.generateRandomMapDialog.noneBanned')}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label className="text-xs">Seed</Label>
-                      <FieldInfo text="Same seed, same map. The number field for typing an exact seed lives in the Advanced category — this is the quick way to get a fresh random terrain result immediately." />
+                      <Label className="text-xs">{t('common.generateRandomMapDialog.seed')}</Label>
+                      <FieldInfo text={t('common.generateRandomMapDialog.sameSeedSameMapThe')} />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground flex-1 truncate">{seedText || 'Random'}</span>
-                      <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
+                      <span className="text-xs text-muted-foreground flex-1 truncate">{seedText || t('common.generateRandomMapDialog.random')}</span>
+                      <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title={t('common.generateRandomMapDialog.rerollSeed')} />
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <Label htmlFor="rmg-terrain-only" className="text-xs">Terrain only</Label>
-                      <FieldInfo text="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves." />
+                      <Label htmlFor="rmg-terrain-only" className="text-xs">{t('common.generateRandomMapDialog.terrainOnly')}</Label>
+                      <FieldInfo text={t('common.generateRandomMapDialog.producesJustTheTileArrays')} />
                     </div>
                     <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
                   </div>
 
                   {!classicMode && <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <Label htmlFor="rmg-live-preview" className="text-xs">Live preview</Label>
-                      <FieldInfo text="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage." />
+                      <Label htmlFor="rmg-live-preview" className="text-xs">{t('common.generateRandomMapDialog.livePreview')}</Label>
+                      <FieldInfo text={t('common.generateRandomMapDialog.previewTheTerrainAndUnless')} />
                     </div>
                     <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
                   </div>}
@@ -1006,7 +998,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
               {showBiomesFields && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Terrain types ({ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b]).length}/{ALL_TEMPLATE_BIOMES.length} enabled)</Label>
+                  <Label className="text-xs">{t('common.generateRandomMapDialog.terrainTypes', { enabled: ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b]).length, total: ALL_TEMPLATE_BIOMES.length })}</Label>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                     {ALL_TEMPLATE_BIOMES.map((biomeId) => (
                       <div key={biomeId} className="flex items-center gap-2">
@@ -1023,7 +1015,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             })
                           }}
                         />
-                        <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
+                        <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{biomeName(biomeId)}</Label>
                       </div>
                     ))}
                   </div>
@@ -1035,8 +1027,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Water</Label>
-                    <FieldInfo text="0: no water at all. 1-50: Normal — lakes inside some neutral zones, amount scaling with the slider. 51-100: Islands — some neutral zones (and, per this generator's own default, every player's own zone) are fully cut off by water and reached only through a portal — Olden Era has no boats." />
+                    <Label className="text-xs">{t('shared.water')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.0NoWaterAtAll')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{waterSliderLabel(waterSliderValue(waterContent, waterChance))}</span>
                 </div>
@@ -1056,10 +1048,10 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <Label className="text-xs">Land/water ratio</Label>
-                      <FieldInfo text="Independent from the Water slider (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water." />
+                      <Label className="text-xs">{t('common.generateRandomMapDialog.landWaterRatio')}</Label>
+                      <FieldInfo text={t('common.generateRandomMapDialog.independentFromTheWaterSlider')} />
                     </div>
-                    <span className="text-xs text-muted-foreground">{Math.round(islandLandRatio * 100)}% land</span>
+                    <span className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.landPercent', { percent: Math.round(islandLandRatio * 100) })}</span>
                   </div>
                   <Slider min={0} max={1} step={0.01} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
                 </div>
@@ -1068,8 +1060,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Elevation variation</Label>
-                    <FieldInfo text="How much of each zone's free area becomes raised (hill) or lowered (dry valley) terrain, and how likely a zone is to get either at all — both player and neutral zones are eligible (a player's own start tile itself always stays flat). Drives Hills and Valleys equally. Every hill/valley gets real ramp access." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.elevationVariation')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.howMuchOfEachZones')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(elevationSliderValue(hillChance, valleyChance) / 100)}</span>
                 </div>
@@ -1084,8 +1076,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Zone jaggedness</Label>
-                    <FieldInfo text="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.zoneJaggedness')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.controlsThePenroseTilingZone')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
                 </div>
@@ -1095,8 +1087,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Zone spread</Label>
-                    <FieldInfo text="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.zoneSpread')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.howTightlyZonesPackTogether')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
                 </div>
@@ -1106,8 +1098,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Organic terrain blending</Label>
-                    <FieldInfo text="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill — only tiles near a zone boundary are affected, zone interiors are unchanged. 0 = today's flat fill, no blending at all. Higher values widen the blended band and weaken each tile's bias toward its own zone's biome, so the max setting blends noticeably more than this feature's old on/off switch ever did." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.organicTerrainBlending')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.blendsTerrainBiomesOrganicallyAcross')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(organicTerrainBlending)}</span>
                 </div>
@@ -1122,8 +1114,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Road windiness</Label>
-                    <FieldInfo text="How much roads/rivers curve. Low: mostly straight, broad sweeps if any. High: swings noticeably away from a straight line, with tighter, more frequent curves." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.roadWindiness')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.howMuchRoadsRiversCurve')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(roadWindinessValue(roadWindingAmplitude) / 100)}</span>
                 </div>
@@ -1141,12 +1133,12 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               {previewActive && (
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Road/river randomness</Label>
-                    <FieldInfo text="The roads/rivers preview's own randomness — independent from the terrain seed, so rerolling it never changes the terrain you already confirmed." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.roadRiverRandomness')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.theRoadsRiversPreviewsOwn')} />
                   </div>
                   <div className="flex items-center gap-2">
                     <Input value={String(roadSeed)} readOnly className="h-8 text-sm text-muted-foreground" />
-                    <RerollButton onClick={() => setRoadSeed(randomSeedValue())} title="Reroll road/river randomness" />
+                    <RerollButton onClick={() => setRoadSeed(randomSeedValue())} title={t('common.generateRandomMapDialog.rerollRoadRiverRandomness')} />
                   </div>
                 </div>
               )}
@@ -1157,7 +1149,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Obstacle density</Label>
+                  <Label className="text-xs">{t('common.generateRandomMapDialog.obstacleDensity')}</Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(obstacleDensity)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
@@ -1165,7 +1157,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Interactable density</Label>
+                  <Label className="text-xs">{t('common.generateRandomMapDialog.interactableDensity')}</Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(interactableDensity)}</span>
                 </div>
                 <Slider min={0} max={0.4} step={0.007} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
@@ -1173,7 +1165,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Mountain density in zone boundaries</Label>
+                  <Label className="text-xs">{t('common.generateRandomMapDialog.mountainDensityInZoneBoundaries')}</Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(mountainDensity)}</span>
                 </div>
                 <Slider min={0} max={0.8} step={0.02} value={[mountainDensity]} onValueChange={([v]) => setMountainDensity(v)} />
@@ -1182,8 +1174,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Authentic real-map patterns</Label>
-                    <FieldInfo text="How strongly real hand-crafted-map evidence steers placement: decoration thinning near roads (real density near a road ~0.78x the map's own average, rising to ~1.29x far from any road), decoration clustering by category (ponds cluster with ponds, mountains avoid ponds), decoration density by elevation/climb proximity (valley tiles ~3.19x denser, ramp-adjacent tiles ~0.66x as dense), and gold mines favoring Sand-biome zones (~2.02x more than Sand's own area share) — all four calibrated from the same real 18-map survey. 0 = today's flat, evidence-blind behavior for all four; higher looks progressively more like a hand-crafted map's own placement patterns." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.authenticRealMapPatterns')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.howStronglyRealHandCrafted')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(decorationRoadDecayStrength)}</span>
                 </div>
@@ -1206,8 +1198,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Treasure density</Label>
-                    <FieldInfo text="Multiplier on neutral-zone treasure-pile count, 0-3×. 1× is the generator's own default zone-size scaling, 3× (the max) triples it, 0 removes treasure piles entirely." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.treasureDensity')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.multiplierOnNeutralZoneTreasure')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{treasureDensity.toFixed(1)}×</span>
                 </div>
@@ -1217,8 +1209,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Object variety</Label>
-                    <FieldInfo text="Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.objectVariety')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.chanceATreasureGuardSlot')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
@@ -1228,11 +1220,11 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Interactables</Label>
-                    <FieldInfo text="Which real interactable buildings/sites the RMG is allowed to pick from at all — every one is enabled by default." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.interactables')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.whichRealInteractableBuildingsSites')} />
                   </div>
                   <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setInteractablePickerOpen(true)}>
-                    {disabledInteractableSids.size > 0 ? `${disabledInteractableSids.size} disabled` : 'All enabled'}
+                    {disabledInteractableSids.size > 0 ? `${disabledInteractableSids.size} disabled` : t('common.generateRandomMapDialog.allEnabled')}
                   </Button>
                 </div>
               </div>
@@ -1240,8 +1232,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Label className="text-xs">Squad density</Label>
-                    <FieldInfo text="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty." />
+                    <Label className="text-xs">{t('common.generateRandomMapDialog.squadDensity')}</Label>
+                    <FieldInfo text={t('common.generateRandomMapDialog.chanceARealMineDwelling')} />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
                 </div>
@@ -1250,16 +1242,16 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label className="text-xs">Boundary guards</Label>
-                  <FieldInfo text="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further." />
+                  <Label className="text-xs">{t('common.generateRandomMapDialog.boundaryGuards')}</Label>
+                  <FieldInfo text={t('common.generateRandomMapDialog.wallsEveryZoneToZone')} />
                 </div>
                 <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong' | 'very strong')}>
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="strong">Strong</SelectItem>
-                    <SelectItem value="very strong">Very strong</SelectItem>
+                    <SelectItem value="none">{t('common.generateRandomMapDialog.none')}</SelectItem>
+                    <SelectItem value="normal">{t('common.generateRandomMapDialog.normal')}</SelectItem>
+                    <SelectItem value="strong">{t('common.generateRandomMapDialog.strong')}</SelectItem>
+                    <SelectItem value="very strong">{t('common.generateRandomMapDialog.veryStrong')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1270,8 +1262,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="rmg-use-portals" className="text-xs">Use portals</Label>
-                  <FieldInfo text="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement." />
+                  <Label htmlFor="rmg-use-portals" className="text-xs">{t('common.generateRandomMapDialog.usePortals')}</Label>
+                  <FieldInfo text={t('common.generateRandomMapDialog.addsOneBonusPortalPair')} />
                 </div>
                 <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
               </div>
@@ -1281,12 +1273,12 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
           {activeCategory === 'advanced' && (
             <div className="space-y-6">
               <div className="space-y-1.5">
-                <Label htmlFor="rmg-seed-manual" className="text-xs">Seed (optional — same seed, same map)</Label>
+                <Label htmlFor="rmg-seed-manual" className="text-xs">{t('common.generateRandomMapDialog.seedOptionalSameSeedSame')}</Label>
                 <Input
                   id="rmg-seed-manual"
                   value={seedText}
                   onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder="Random"
+                  placeholder={t('common.generateRandomMapDialog.random')}
                   className="h-8 text-sm"
                   disabled={terrainLocked}
                 />
@@ -1300,24 +1292,24 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               rendering stays visible no matter which category is open. */}
             {!classicMode && (
               <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
-                <Label className="text-xs font-semibold">Map Preview</Label>
+                <Label className="text-xs font-semibold">{t('common.generateRandomMapDialog.mapPreview')}</Label>
                 {previewActive ? (
                   <div className="space-y-1.5">
                     <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
                       <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
                     </div>
-                    {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
+                    {previewBusy && <p className="text-xs text-muted-foreground text-center">{t('common.generateRandomMapDialog.renderingPreview')}</p>}
                     {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
                     <p className="text-xs text-muted-foreground">
                       {previewPhase === 'terrain'
-                        ? 'Tune terrain in the sidebar, then confirm to move on.'
+                        ? t('common.generateRandomMapDialog.tuneTerrainInTheSidebar')
                         : previewPhase === 'roads'
-                          ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
-                          : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
+                          ? t('common.generateRandomMapDialog.tuneRoadRiverWindingIn')
+                          : t('common.generateRandomMapDialog.terrainAndRoadsRiversAre')}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
+                  <p className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.turnOnLivePreviewStart')}</p>
                 )}
               </div>
             )}
@@ -1334,11 +1326,11 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
           {generated ? (
             <>
               <Button variant="ghost" size="sm" onClick={() => setGenerated(null)} disabled={generating}>
-                Back to settings
+                {t('common.generateRandomMapDialog.backToSettings')}
               </Button>
               <div className="flex-1" />
               <Button variant="outline" size="sm" onClick={() => void handleGenerate(true)} disabled={generating}>
-                {generating ? 'Generating…' : 'Regenerate'}
+                {generating ? t('common.generateRandomMapDialog.generating') : t('common.generateRandomMapDialog.regenerate')}
               </Button>
               <Button
                 size="sm"
@@ -1349,25 +1341,25 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   onOpenChange(false)
                 }}
               >
-                Open map
+                {t('common.generateRandomMapDialog.openMap')}
               </Button>
             </>
           ) : (
             <>
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleSaveTemplate}>
-                    Save Template…
+                    {t('common.generateRandomMapDialog.saveTemplate')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleLoadTemplate}>
-                    Load Template…
+                    {t('common.generateRandomMapDialog.loadTemplate')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleResetAll()} disabled={generating}>
-                    Reset all to defaults
+                    {t('common.generateRandomMapDialog.resetAllToDefaults')}
                 </Button>
             </div>
           <div className="flex-1" />
               <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
-                Cancel
+                {t('shared.cancel')}
               </Button>
               <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
                 {footerLabel}

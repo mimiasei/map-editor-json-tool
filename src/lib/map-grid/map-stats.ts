@@ -8,17 +8,19 @@
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
-import { factionDisplayName } from '@/lib/factions'
+import { factionDisplayName, factionLabel } from '@/lib/factions'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
 import {collectArtifactSids, RESOURCE_SIDS, STORAGE_SIDS} from '@/lib/rmg/object-variety'
 import {
   resolveInteractableSubcategory,
   INTERACTABLE_SUBCATEGORY_ORDER,
-  INTERACTABLE_SUBCATEGORY_LABELS,
+  interactableSubcategoryName,
 } from '@/lib/map-grid/interactable-subcategories'
-import { resolveDecorationSubcategory, DECORATION_SUBCATEGORY_LABELS } from '@/lib/map-grid/decoration-subcategories'
+import { resolveDecorationSubcategory, decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {isGuardCandidate} from "@/lib/rmg/zone-guard-scatter.ts";
+import i18n from '@/lib/i18n'
+import { localNameById } from '@/lib/catalog/local-name'
 
 export interface PlayerCityStat {
   owner: number
@@ -72,7 +74,7 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     )
     .map((o) => ({
       owner: o.spawnerInfo.owner,
-      faction: o.spawnerInfo.factionSid ? factionDisplayName(o.spawnerInfo.factionSid, catalog?.factions) : 'Random',
+      faction: o.spawnerInfo.factionSid ? factionLabel(factionDisplayName(o.spawnerInfo.factionSid, catalog?.factions), catalog) : i18n.t('validate.balance.randomFaction'),
       hasHero: !!o.spawnerInfo.spawnHero,
     }))
     .sort((a, b) => a.owner - b.owner)
@@ -100,11 +102,11 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     if (!catalogObj) continue
     if (catalogObj.category === 'interactables') {
       const sub = resolveInteractableSubcategory(o.sid)
-      const label = INTERACTABLE_SUBCATEGORY_LABELS[sub]
+      const label = interactableSubcategoryName(sub)
       interactableByCategory.set(label, (interactableByCategory.get(label) ?? 0) + 1)
     }
     if ((DECORATION_CATEGORIES as readonly string[]).includes(catalogObj.category)) {
-      const sub = DECORATION_SUBCATEGORY_LABELS[resolveDecorationSubcategory(o.sid, catalogObj.category)]
+      const sub = decorationSubcategoryName(resolveDecorationSubcategory(o.sid, catalogObj.category))
       decorationByCategory.set(sub, (decorationByCategory.get(sub) ?? 0) + 1)
     }
   }
@@ -181,12 +183,12 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     unitSquadCount: concreteSquads.length,
     unitFrequency: [...unitFreq.entries()]
         .sort((a, b) => b[1] - a[1])
-        .map(([sid, n]) => [catalog?.creatures.find((c) => c.id === sid)?.name ?? sid, n] as [string, number]),
+        .map(([sid, n]) => [localNameById(catalog, 'creatures', sid, catalog?.creatures.find((c) => c.id === sid)?.name ?? sid), n] as [string, number]),
     minesByType: [...minesByType.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
     interactableByCategory: INTERACTABLE_SUBCATEGORY_ORDER
-      .map((s) => INTERACTABLE_SUBCATEGORY_LABELS[s])
+      .map((s) => interactableSubcategoryName(s))
       .filter((label) => (interactableByCategory.get(label) ?? 0) > 0)
       .map((label) => [label, interactableByCategory.get(label) ?? 0] as [string, number]),
     decorationByCategory: [...decorationByCategory.entries()].sort((a, b) => b[1] - a[1]),

@@ -2,6 +2,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import type { Counter } from '@/types/scenario'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   index: number
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function CounterEditor({ index, counter }: Props) {
+  const { t } = useTranslation()
   const { updateCounter } = useScenarioStore()
 
   if (!counter) return null
@@ -19,24 +21,24 @@ export default function CounterEditor({ index, counter }: Props) {
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Counter
+        {t('editors.counterEditor.counter')}
       </h2>
 
       <div className="space-y-1">
-        <Label htmlFor="counter-sid">SID</Label>
+        <Label htmlFor="counter-sid">{t('shared.sID')}</Label>
         <Input
           id="counter-sid"
           value={counter.sid}
           onChange={(e) => update({ sid: e.target.value })}
-          placeholder="e.g. main_quest_stage"
+          placeholder={t('editors.counterEditor.eGMainQuestStage')}
         />
         <p className="text-xs text-muted-foreground">
-          Unique identifier. Referenced by Counter conditions and CounterPlus / CounterSetRandom actions.
+          {t('editors.counterEditor.uniqueIdentifierReferencedByCounter')}
         </p>
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="counter-value">Initial value</Label>
+        <Label htmlFor="counter-value">{t('editors.counterEditor.initialValue')}</Label>
         <Input
           id="counter-value"
           type="number"
@@ -48,7 +50,7 @@ export default function CounterEditor({ index, counter }: Props) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor="counter-min">Min value</Label>
+          <Label htmlFor="counter-min">{t('editors.counterEditor.minValue')}</Label>
           <Input
             id="counter-min"
             type="number"
@@ -56,11 +58,11 @@ export default function CounterEditor({ index, counter }: Props) {
             onChange={(e) =>
               update({ minValue: e.target.value === '' ? undefined : Number(e.target.value) })
             }
-            placeholder="No lower bound"
+            placeholder={t('editors.counterEditor.noLowerBound')}
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="counter-max">Max value</Label>
+          <Label htmlFor="counter-max">{t('editors.counterEditor.maxValue')}</Label>
           <Input
             id="counter-max"
             type="number"
@@ -68,34 +70,34 @@ export default function CounterEditor({ index, counter }: Props) {
             onChange={(e) =>
               update({ maxValue: e.target.value === '' ? undefined : Number(e.target.value) })
             }
-            placeholder="No upper bound"
+            placeholder={t('editors.counterEditor.noUpperBound')}
           />
         </div>
       </div>
       <p className="text-xs text-muted-foreground -mt-2">
-        Assigning a value outside this range clamps it to the bound instead.
+        {t('editors.counterEditor.assigningAValueOutsideThis')}
       </p>
 
       <div className="space-y-1">
-        <Label htmlFor="counter-sharing">Sharing</Label>
+        <Label htmlFor="counter-sharing">{t('shared.sharing')}</Label>
         <Input
           id="counter-sharing"
           value={counter.sharing ?? ''}
           onChange={(e) => update({ sharing: e.target.value || undefined })}
-          placeholder="e.g. Clone"
+          placeholder={t('editors.counterEditor.eGClone')}
         />
         <p className="text-xs text-muted-foreground">
-          Visibility scope — makes the counter accessible to all quests with the same sharing value.
+          {t('editors.counterEditor.visibilityScopeMakesTheCounter')}
         </p>
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="counter-comment">Developer comment</Label>
+        <Label htmlFor="counter-comment">{t('shared.developerComment')}</Label>
         <Input
           id="counter-comment"
           value={counter.comment ?? ''}
           onChange={(e) => update({ comment: e.target.value || undefined })}
-          placeholder="Optional note (not used by game engine)"
+          placeholder={t('editors.counterEditor.optionalNoteNotUsedBy')}
         />
       </div>
     </div>

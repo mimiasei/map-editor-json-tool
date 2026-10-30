@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, ChevronRight } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import { guideCategoryLabel } from '@/lib/guideLoader'
 
 /**
  * The inner content of the Guides panel.
@@ -14,6 +16,7 @@ import { cn } from '@/lib/utils'
  * Reads all state from useGuideStore — no props needed.
  */
 export function GuidesContent() {
+  const { t, i18n } = useTranslation()
   const { activeArticleId, navigateTo } = useGuideStore()
   const guideIndex = useGuideIndex()
 
@@ -29,20 +32,19 @@ export function GuidesContent() {
       .then((a) => { if (!cancelled) setArticle(a) })
       .catch((e) => { if (!cancelled) setLoadError(String(e)) })
     return () => { cancelled = true }
-  }, [activeArticleId])
+  }, [activeArticleId, i18n.language])
 
   const query = search.trim().toLowerCase()
   const filteredIds = new Set(
     query
-      ? guideIndex.articles.filter((a) => a.id.includes(query) || a.category.includes(query)).map((a) => a.id)
+      ? guideIndex.articles.filter((a) => a.id.includes(query) || a.category.includes(query) || a.title.toLowerCase().includes(query)).map((a) => a.id)
       : guideIndex.articles.map((a) => a.id)
   )
 
   const articlesByCategory = (categoryId: string) =>
     guideIndex.articles.filter((a) => a.category === categoryId).sort((a, b) => a.order - b.order)
 
-  const articleTitle = (id: string) =>
-    id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  const articleTitle = (id: string) => guideIndex.articles.find((a) => a.id === id)?.title ?? id
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -52,7 +54,7 @@ export function GuidesContent() {
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             className="pl-7 h-7 text-xs"
-            placeholder="Search guides…"
+            placeholder={t('guides.guidesPanel.searchGuides')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -72,7 +74,7 @@ export function GuidesContent() {
               return (
                 <div key={cat.id}>
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-2 mb-1">
-                    {cat.label}
+                    {guideCategoryLabel(cat.id, cat.label)}
                   </p>
                   {visible.map((a) => (
                     <button
@@ -101,7 +103,7 @@ export function GuidesContent() {
           <div className="p-4">
             {!activeArticleId && (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Select a guide from the sidebar.</p>
+                <p className="text-sm text-muted-foreground">{t('guides.guidesPanel.selectAGuideFromThe')}</p>
                 <div className="space-y-1">
                   {guideIndex.articles.slice(0, 3).map((a) => (
                     <button key={a.id} type="button" onClick={() => navigateTo(a.id)}
@@ -112,8 +114,8 @@ export function GuidesContent() {
                 </div>
               </div>
             )}
-            {activeArticleId && loadError && <p className="text-xs text-destructive">Failed to load: {loadError}</p>}
-            {activeArticleId && !loadError && !article && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {activeArticleId && loadError && <p className="text-xs text-destructive">{t('guides.guidesPanel.failedToLoad', { loadError })}</p>}
+            {activeArticleId && !loadError && !article && <p className="text-xs text-muted-foreground">{t('shared.loading')}</p>}
             {article && <GuideArticle title={article.title} sections={article.sections} />}
           </div>
         </ScrollArea>

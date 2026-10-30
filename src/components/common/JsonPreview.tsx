@@ -25,6 +25,8 @@ import { validateDialogFlow } from '@/lib/validate'
 import type { ValidationMessage } from '@/lib/validate'
 import { BASE_LANGUAGE, type TranslationMap } from '@/lib/languages'
 import UndockButton from '@/components/panels/UndockButton'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 /** Parses `{"array": [...]}`, the shape every batched/single-entry custom
  *  JSON doc (heroes, map objects, artifacts, their logic/ground clones)
@@ -131,6 +133,7 @@ export function JsonPreviewContent({
   mapActions,
   handlers,
 }: JsonPreviewContentProps) {
+  const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState('')
@@ -142,7 +145,9 @@ export function JsonPreviewContent({
 
   const docs = useMemo(
     () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions),
-    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions],
+    // i18n.language: the document labels are translated when built
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions, i18n.language],
   )
 
   // Fall back to the scenario if the selected dialog was renamed or deleted
@@ -205,7 +210,7 @@ export function JsonPreviewContent({
         handlers.onSaveScenario(parsed)
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -237,7 +242,7 @@ export function JsonPreviewContent({
         handlers.onSaveLocalization(doc.lang!, parseTokensField(editValue))
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -250,7 +255,7 @@ export function JsonPreviewContent({
         handlers.onSaveCustomHero(doc.heroSid!, arr[0])
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -262,7 +267,7 @@ export function JsonPreviewContent({
         if (error) { setParseError(error); return }
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -275,7 +280,7 @@ export function JsonPreviewContent({
         handlers.onSaveCustomMapObjectLogic(doc.objectId!, arr[0])
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -287,7 +292,7 @@ export function JsonPreviewContent({
         if (error) { setParseError(error); return }
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -299,7 +304,7 @@ export function JsonPreviewContent({
         if (error) { setParseError(error); return }
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -311,7 +316,7 @@ export function JsonPreviewContent({
         if (error) { setParseError(error); return }
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
       return
     }
@@ -323,7 +328,7 @@ export function JsonPreviewContent({
         if (error) { setParseError(error); return }
         clearEditState()
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : t('shared.invalidJson'))
       }
     }
   }, [handlers, doc, editValue, localization, clearEditState])
@@ -337,7 +342,7 @@ export function JsonPreviewContent({
       <SelectContent>
         {docs.map((d) => (
           <SelectItem key={d.id} value={d.id} className="text-xs">
-            {d.kind === 'dialog' ? `Dialog: ${d.label}` : d.label}
+            {d.label}
           </SelectItem>
         ))}
       </SelectContent>
@@ -354,7 +359,7 @@ export function JsonPreviewContent({
     >
       <div className="flex items-center gap-1.5 font-medium">
         <AlertTriangle className="h-3 w-3" />
-        {issuesAreErrors ? 'Fix these before saving' : 'Warnings'}
+        {issuesAreErrors ? t('common.jsonPreview.fixTheseBeforeSaving') : t('common.jsonPreview.warnings')}
       </div>
       {issues.map((m, i) => (
         <p key={i} className="pl-4">
@@ -381,7 +386,7 @@ export function JsonPreviewContent({
             className="h-6 gap-1 text-xs shrink-0"
             onClick={clearEditState}
           >
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button
             variant="ghost"
@@ -390,7 +395,7 @@ export function JsonPreviewContent({
             onClick={handleSave}
             disabled={!editDirty}
           >
-            Save
+            {t('shared.save')}
           </Button>
         </div>
         {issueList}
@@ -419,7 +424,7 @@ export function JsonPreviewContent({
           onClick={handleCopy}
         >
           {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? t('common.jsonPreview.copied') : t('common.jsonPreview.copy')}
         </Button>
         {handlers && (
           <Button
@@ -429,7 +434,7 @@ export function JsonPreviewContent({
             onClick={handleEdit}
           >
             <Pencil className="h-3 w-3" />
-            Edit
+            {t('common.jsonPreview.edit')}
           </Button>
         )}
       </div>
@@ -458,6 +463,7 @@ interface JsonPreviewProps {
 }
 
 export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
+  const { t } = useTranslation()
   const {
     scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName,
     setScenario, setDialogFlow, removeDialogFlow, setLocalizationBatch, setTranslationBatch,
@@ -481,13 +487,13 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
     for (const template of templates) {
       const id = typeof template.id === 'string' ? template.id : ''
       if (!id || !(id in existing)) {
-        unknownIds.push(id || '(missing id)')
+        unknownIds.push(id || i18n.t('common.jsonPreview.missingId'))
         continue
       }
       setOne(id, { ...existing[id], template })
     }
     if (unknownIds.length > 0) {
-      return `Unknown ${noun} id(s): ${unknownIds.join(', ')} — add new ones via the sidebar, not here.`
+      return i18n.t('common.jsonPreview.unknownIds', { noun, ids: unknownIds.join(', ') })
     }
   }
 
@@ -529,13 +535,13 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
         for (const template of templates) {
           const id = typeof template.id === 'string' ? template.id : ''
           if (!id || !(id in customArtifacts)) {
-            unknownIds.push(id || '(missing id)')
+            unknownIds.push(id || i18n.t('common.jsonPreview.missingId'))
             continue
           }
           setCustomArtifact(id, { ...customArtifacts[id], mapObjectTemplate: template })
         }
         if (unknownIds.length > 0) {
-          return `Unknown artifact id(s): ${unknownIds.join(', ')} — ground objects must match an existing custom artifact's id.`
+          return i18n.t('common.jsonPreview.unknownArtifactIds', { ids: unknownIds.join(', ') })
         }
       },
       onSaveCustomBuffTemplates: (templates) =>
@@ -544,7 +550,7 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
         try {
           useMapDocumentStore.getState().applyEdit({ kind: 'replaceActionTable', which, rows })
         } catch (err) {
-          return err instanceof Error ? err.message : 'The map rejected these rows'
+          return err instanceof Error ? err.message : t('common.jsonPreview.mapRejectedRows')
         }
       },
     }),
@@ -567,7 +573,7 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
   return (
     <div className="group flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border px-3 py-1.5 shrink-0">
-        <span className="text-xs font-medium text-muted-foreground">JSON Preview</span>
+        <span className="text-xs font-medium text-muted-foreground">{t('common.jsonPreview.jSONPreview')}</span>
         {onUndock && (
           <UndockButton panelId="preview" onUndock={onUndock} disabled={undocked} />
         )}

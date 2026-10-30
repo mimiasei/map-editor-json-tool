@@ -10,9 +10,10 @@
 import { Crown, Landmark, X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
-import { factionDisplayName } from '@/lib/factions'
+import { factionDisplayName, factionLabel } from '@/lib/factions'
 import type { GameCatalog } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   spawners: PlacedObject[]
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function SpawnerSelectorPanel({ spawners, catalog, selectedNode, onSelect, onClose }: Props) {
+  const { t } = useTranslation()
   const sorted = [...spawners].sort((a, b) => {
     const ownerDiff = (a.spawnerInfo?.owner ?? 0) - (b.spawnerInfo?.owner ?? 0)
     if (ownerDiff !== 0) return ownerDiff
@@ -32,14 +34,14 @@ export default function SpawnerSelectorPanel({ spawners, catalog, selectedNode, 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-muted-foreground pl-1">Player Spawners</span>
-        <Button variant="ghost" size="icon" className="h-6 w-6" title="Close" onClick={onClose}>
+        <span className="text-xs font-semibold text-muted-foreground pl-1">{t('mapGrid.spawnerSelectorPanel.playerSpawners')}</span>
+        <Button variant="ghost" size="icon" className="h-6 w-6" title={t('ui.close')} onClick={onClose}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto py-1">
         {sorted.length === 0 && (
-          <p className="px-3 py-2 text-xs text-muted-foreground">No city or hero spawners placed yet.</p>
+          <p className="px-3 py-2 text-xs text-muted-foreground">{t('mapGrid.spawnerSelectorPanel.noCityOrHeroSpawners')}</p>
         )}
         {sorted.map((item) => {
           const isCity = item.sid === 'city-spawner'
@@ -50,23 +52,23 @@ export default function SpawnerSelectorPanel({ spawners, catalog, selectedNode, 
           // heroSid, per map-context.ts: undefined spawnHero for hero rows).
           const factionText = isCity
             ? item.spawnerInfo?.factionSid
-              ? factionDisplayName(item.spawnerInfo.factionSid, catalog?.factions)
-              : 'Random faction'
+              ? factionLabel(factionDisplayName(item.spawnerInfo.factionSid, catalog?.factions), catalog)
+              : t('mapGrid.spawnerSelectorPanel.randomFaction')
             : null
-          const spawnHeroText = isCity ? (item.spawnerInfo?.spawnHero ? 'Spawns with hero' : 'No hero') : null
+          const spawnHeroText = isCity ? (item.spawnerInfo?.spawnHero ? t('mapGrid.spawnerSelectorPanel.spawnsWithHero') : t('mapGrid.spawnerSelectorPanel.noHero')) : null
           // No confirmed "garrison total value" field exists for cities
           // (see propRandomSquads.sids doc comment, map-context.ts) — squad
           // count is the closest real, exposed data.
           const garrisonCount = item.citySquadSids?.length ?? 0
           const garrisonText = isCity
             ? garrisonCount > 0
-              ? `Garrison: ${garrisonCount} squad${garrisonCount > 1 ? 's' : ''}`
-              : 'Garrison: None'
+              ? t('mapGrid.spawnerSelectorPanel.garrison', { count: garrisonCount })
+              : t('mapGrid.spawnerSelectorPanel.garrisonNone')
             : null
           const heroSidText = !isCity
             ? item.spawnerInfo?.heroSid && item.spawnerInfo.heroSid !== 'random'
               ? item.spawnerInfo.heroSid
-              : 'Random hero'
+              : t('mapGrid.spawnerSelectorPanel.randomHero')
             : null
           return (
             <button
@@ -85,7 +87,7 @@ export default function SpawnerSelectorPanel({ spawners, catalog, selectedNode, 
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">
-                  Player {owner ?? '?'} — {isCity ? 'City' : 'Hero'} Spawner
+                  {t('mapGrid.spawnerSelectorPanel.title', { owner: owner ?? '?', kind: isCity ? t('shared.city') : t('common.statsDialog.hero') })}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {[factionText, spawnHeroText, garrisonText, heroSidText].filter(Boolean).join(' · ')}

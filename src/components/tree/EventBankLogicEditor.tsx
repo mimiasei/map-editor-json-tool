@@ -42,6 +42,8 @@ import { Trash2 } from '@/components/ui/icons'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import StringListEditor from '@/components/common/StringListEditor'
 import { BASIC_RESOURCE_IDS } from '@/lib/resources'
+import { useTranslation } from 'react-i18next'
+import { resourceName, rarityName } from '@/lib/game-labels'
 
 // ─── Shape detection ───────────────────────────────────────────────────────────
 
@@ -163,10 +165,11 @@ function str(v: unknown, fallback = ''): string {
 }
 
 function BoolToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  const { t } = useTranslation()
   return (
     <div className="flex gap-1.5">
-      <Button type="button" aria-pressed={value} variant={value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(true)}>Yes</Button>
-      <Button type="button" aria-pressed={!value} variant={!value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(false)}>No</Button>
+      <Button type="button" aria-pressed={value} variant={value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(true)}>{t('common.statsDialog.yes')}</Button>
+      <Button type="button" aria-pressed={!value} variant={!value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(false)}>{t('tree.eventBankLogicEditor.no')}</Button>
     </div>
   )
 }
@@ -186,6 +189,7 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
   parameters: string[]
   onChange: (parameters: string[]) => void
 }) {
+  const { t } = useTranslation()
   const kind = REWARD_KIND_BY_TYPE[rewardType] ?? 'raw'
   const set = (i: number, v: string) => {
     const next = parameters.slice()
@@ -195,7 +199,7 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
 
   switch (kind) {
     case 'none':
-      return <p className="text-xs text-muted-foreground">No parameters for this reward type.</p>
+      return <p className="text-xs text-muted-foreground">{t('tree.eventBankLogicEditor.noParametersForThisReward')}</p>
 
     case 'amount':
       return (
@@ -221,14 +225,14 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
               <Select value={resource} onValueChange={(v) => updatePairs(pairs.map((p, idx) => (idx === i ? [v, p[1]] : p)))}>
                 <SelectTrigger className="h-7 text-xs w-28 shrink-0"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+                  {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{resourceName(r)}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Input type="number" className="h-7 w-24 text-xs" value={amount} onChange={(e) => updatePairs(pairs.map((p, idx) => (idx === i ? [p[0], e.target.value] : p)))} />
               <RemoveRowButton onClick={() => updatePairs(pairs.filter((_, idx) => idx !== i))} />
             </div>
           ))}
-          <button type="button" className="text-xs text-primary hover:underline" onClick={() => updatePairs([...pairs, [BASIC_RESOURCE_IDS[0], '0']])}>+ Add resource</button>
+          <button type="button" className="text-xs text-primary hover:underline" onClick={() => updatePairs([...pairs, [BASIC_RESOURCE_IDS[0], '0']])}>{t('tree.eventBankLogicEditor.addResource')}</button>
         </div>
       )
     }
@@ -236,7 +240,7 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
     case 'creature-amount':
       return (
         <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0"><EntityCombobox category="creature" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder="Creature…" /></div>
+          <div className="flex-1 min-w-0"><EntityCombobox category="creature" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder={t('tree.eventBankLogicEditor.creature')} /></div>
           <Input type="number" className="h-7 w-20 text-xs shrink-0" value={parameters[1] ?? '1'} onChange={(e) => set(1, e.target.value)} />
         </div>
       )
@@ -259,7 +263,7 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
         <Select value={parameters[0] ?? RARITY_OPTIONS[0]} onValueChange={(v) => set(0, v)}>
           <SelectTrigger className="h-7 text-xs w-32"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+            {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{rarityName(r.charAt(0).toUpperCase() + r.slice(1))}</SelectItem>)}
           </SelectContent>
         </Select>
       )
@@ -267,26 +271,26 @@ function RewardParamsEditor({ rewardType, parameters, onChange }: {
     case 'skill-boolean':
       return (
         <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0"><EntityCombobox category="skill" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder="Skill…" /></div>
+          <div className="flex-1 min-w-0"><EntityCombobox category="skill" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder={t('shared.skill')} /></div>
           <BoolToggle value={parameters[1] === 'true'} onChange={(v) => set(1, v ? 'true' : 'false')} />
         </div>
       )
 
     case 'artifact':
-      return <EntityCombobox category="artifact" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder="Artifact…" />
+      return <EntityCombobox category="artifact" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder={t('tree.eventBankLogicEditor.artifact')} />
 
     case 'buff-duration-amount':
       return (
         <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0"><EntityCombobox category="buff" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder="Buff…" /></div>
-          <Input className="h-7 w-32 text-xs" value={parameters[1] ?? 'Infinite'} onChange={(e) => set(1, e.target.value)} placeholder="Infinite" title="Duration type — real examples: Infinite, UntilNextWeek, ForSeveralDays" />
+          <div className="flex-1 min-w-0"><EntityCombobox category="buff" value={parameters[0] ?? ''} onChange={(v) => set(0, v)} placeholder={t('shared.buff')} /></div>
+          <Input className="h-7 w-32 text-xs" value={parameters[1] ?? 'Infinite'} onChange={(e) => set(1, e.target.value)} placeholder={t('tree.eventBankLogicEditor.infinite')} title={t('tree.eventBankLogicEditor.durationTypeRealExamplesInfinite')} />
           <Input type="number" className="h-7 w-16 text-xs" value={parameters[2] ?? '0'} onChange={(e) => set(2, e.target.value)} />
         </div>
       )
 
     case 'raw':
     default:
-      return <StringListEditor values={parameters} onChange={onChange} addLabel="+ Add parameter" placeholder="Raw parameter value" />
+      return <StringListEditor values={parameters} onChange={onChange} addLabel={t('tree.eventBankLogicEditor.addParameter')} placeholder={t('tree.eventBankLogicEditor.rawParameterValue')} />
   }
 }
 
@@ -300,13 +304,13 @@ interface Props {
 }
 
 export default function EventBankLogicEditor({ raw, onChange }: Props) {
+  const { t } = useTranslation()
   const variants = Array.isArray(raw.variants) ? (raw.variants as Record<string, unknown>[]) : []
 
   if (variants.length !== 1) {
     return (
       <p className="text-xs text-muted-foreground">
-        This behavior has {variants.length} weighted variants — editing multi-variant behavior isn't
-        supported here, so it ships unchanged.
+        {t('tree.eventBankLogicEditor.thisBehaviorHasWeightedVariants', { length: variants.length })}
       </p>
     )
   }
@@ -324,7 +328,7 @@ export default function EventBankLogicEditor({ raw, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label>Visit type</Label>
+        <Label>{t('tree.eventBankLogicEditor.visitType')}</Label>
         <Select value={str(raw.visitType, VISIT_TYPES[0])} onValueChange={(v) => onChange({ ...raw, visitType: v })}>
           <SelectTrigger className="h-7 text-xs w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -334,7 +338,7 @@ export default function EventBankLogicEditor({ raw, onChange }: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label>Guard units</Label>
+        <Label>{t('tree.eventBankLogicEditor.guardUnits')}</Label>
         <div className="space-y-1.5">
           {guardUnits.map((g, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -343,7 +347,7 @@ export default function EventBankLogicEditor({ raw, onChange }: Props) {
                   category="creature"
                   value={str(g.sid)}
                   onChange={(v) => updateGuardUnits(guardUnits.map((u, idx) => (idx === i ? { ...u, sid: v } : u)))}
-                  placeholder="Creature…"
+                  placeholder={t('tree.eventBankLogicEditor.creature')}
                 />
               </div>
               <Input
@@ -356,14 +360,14 @@ export default function EventBankLogicEditor({ raw, onChange }: Props) {
             </div>
           ))}
           <button type="button" className="text-xs text-primary hover:underline" onClick={() => updateGuardUnits([...guardUnits, { sid: '', amount: 1 }])}>
-            + Add guard
+            {t('tree.eventBankLogicEditor.addGuard')}
           </button>
-          {guardUnits.length === 0 && <p className="text-xs text-muted-foreground">No guard — visiting is unopposed.</p>}
+          {guardUnits.length === 0 && <p className="text-xs text-muted-foreground">{t('tree.eventBankLogicEditor.noGuardVisitingIsUnopposed')}</p>}
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Rewards</Label>
+        <Label>{t('mapGrid.mapGridCellContent.rewards')}</Label>
         <div className="space-y-2">
           {rewards.map((reward, i) => {
             const rewardType = str(reward.rewardType, KNOWN_REWARD_TYPES[0])
@@ -390,9 +394,9 @@ export default function EventBankLogicEditor({ raw, onChange }: Props) {
             )
           })}
           <button type="button" className="text-xs text-primary hover:underline" onClick={() => updateRewards([...rewards, blankReward(KNOWN_REWARD_TYPES[0])])}>
-            + Add reward
+            {t('tree.eventBankLogicEditor.addReward')}
           </button>
-          {rewards.length === 0 && <p className="text-xs text-muted-foreground">No rewards.</p>}
+          {rewards.length === 0 && <p className="text-xs text-muted-foreground">{t('tree.eventBankLogicEditor.noRewards')}</p>}
         </div>
       </div>
     </div>

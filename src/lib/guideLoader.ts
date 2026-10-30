@@ -1,5 +1,7 @@
+import i18n from '@/lib/i18n'
 // ─── Guide Markdown loader ────────────────────────────────────────────────────
-// Loads all .md files in src/data/guides/ at build time via Vite glob.
+// Loads all .md files in src/data/guides/ at build time via Vite glob. A translation of an article lives in
+// src/data/guides/<language code>/<same file name>; an article without one is shown in English.
 // Each file has YAML frontmatter (title, category, order) followed by
 // sections delimited by ## headings. Notes and warnings are expressed as
 // blockquotes prefixed with **Note:** or **Warning:** at the end of a section.
@@ -25,6 +27,7 @@ export interface GuideArticle {
 
 export interface GuideArticleMeta {
   id: string
+  title: string
   category: string
   order: number
 }
@@ -49,9 +52,30 @@ const CATEGORY_LABELS: Record<string, string> = {
   'troubleshooting': 'Gotchas & Workarounds',
 }
 
+/** UI-language name of a category; an unknown id is shown as is. */
+export function guideCategoryLabel(id: string, fallback: string): string {
+  const key = `guides.categories.${id}`
+  return i18n.exists(key) ? i18n.t(key as 'guides.categories.recipes') : fallback
+}
+
 // ─── Raw file glob ────────────────────────────────────────────────────────────
 
-const rawFiles = import.meta.glob('../data/guides/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+const rawGlob = import.meta.glob('../data/guides/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+
+const BASE_CODE = 'en'
+
+/** language code -> article id -> raw markdown. The English files sit directly in guides/, a translation in guides/<code>/. */
+const rawByLanguage = new Map<string, Map<string, string>>()
+for (const [path, raw] of Object.entries(rawGlob)) {
+  const code = path.match(/guides\/([a-z-]+)\/[^/]+\.md$/)?.[1] ?? BASE_CODE
+  if (!rawByLanguage.has(code)) rawByLanguage.set(code, new Map())
+  rawByLanguage.get(code)!.set(idFromPath(path), raw)
+}
+
+/** The markdown of an article in the UI language, or in English when it has not been translated. */
+function rawFor(id: string): string | undefined {
+  return rawByLanguage.get(i18n.language)?.get(id) ?? rawByLanguage.get(BASE_CODE)?.get(id)
+}
 
 // ─── Parsers ──────────────────────────────────────────────────────────────────
 
@@ -124,15 +148,14 @@ function idFromPath(path: string): string {
 
 const parsedArticles = new Map<string, GuideArticle>()
 
-for (const [path, raw] of Object.entries(rawFiles)) {
-  const id = idFromPath(path)
+function parseArticle(id: string, raw: string): GuideArticle {
   const { meta, body } = parseFrontmatter(raw)
-  parsedArticles.set(id, {
+  return {
     id,
     title:    meta['title']    ?? id,
     category: meta['category'] ?? 'uncategorized',
     sections: parseSections(body),
-  })
+  }
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -141,11 +164,13 @@ for (const [path, raw] of Object.entries(rawFiles)) {
 export function buildGuideIndex(): GuideIndex {
   const articleMetas: GuideArticleMeta[] = []
 
-  for (const [path, raw] of Object.entries(rawFiles)) {
-    const id = idFromPath(path)
+  // Category and order come from the English file, so a translation cannot reorder the list.
+  for (const [id, raw] of rawByLanguage.get(BASE_CODE) ?? []) {
     const { meta } = parseFrontmatter(raw)
+    const localized = parseFrontmatter(rawFor(id) ?? raw).meta
     articleMetas.push({
       id,
+      title:    localized['title'] ?? meta['title'] ?? id,
       category: meta['category'] ?? 'uncategorized',
       order:    parseInt(meta['order'] ?? '99', 10),
     })
@@ -169,7 +194,13 @@ export function buildGuideIndex(): GuideIndex {
 
 /** Load a guide article by ID. Synchronous — all content is eager-loaded. */
 export async function loadGuideArticle(id: string): Promise<GuideArticle> {
-  const article = parsedArticles.get(id)
-  if (!article) return Promise.reject(new Error(`Unknown guide article: ${id}`))
+  const raw = rawFor(id)
+  if (raw === undefined) return Promise.reject(new Error(`Unknown guide article: ${id}`))
+  const key = `${i18n.language}:${id}`
+  let article = parsedArticles.get(key)
+  if (!article) {
+    article = parseArticle(id, raw)
+    parsedArticles.set(key, article)
+  }
   return article
 }

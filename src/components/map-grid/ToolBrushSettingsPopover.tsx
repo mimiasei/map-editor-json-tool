@@ -14,7 +14,8 @@ import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Settings } from '@/components/ui/icons'
-import { DEFAULT_SQUAD_DIFFICULTY_RANGES, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, squadDifficultyName, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   tool: 'obstacles' | 'trees' | 'flowers' | 'interactable' | 'squad' | 'resource'
@@ -33,6 +34,9 @@ interface Props {
    *  propRandomSquads.fraction its tile's biome maps to — see squad-pool.ts). */
   biomePurity: number
   onBiomePurityChange: (value: number) => void
+  /** Walkables only — chance a placed walkable is actual grass rather than flowers/mushrooms (0 = none, 1 = only grass). */
+  grassChance: number
+  onGrassChanceChange: (value: number) => void
   /** Obstacles/Trees/Interactable only — whether a cross-biome pick can land
    *  on a visually jarring biome (Snow decorations on Grass, Lava objects
    *  anywhere else, etc. — see areBiomesCompatible, fuzzy-obstacle.ts). Not
@@ -65,15 +69,6 @@ function pctLabel(value: number, zeroLabel: string, oneLabel: string): string {
   return `${Math.round(value * 100)}%`
 }
 
-const TOOL_TITLES: Record<Props['tool'], string> = {
-  obstacles: 'Obstacle brush settings',
-  trees: 'Tree brush settings',
-  flowers: 'Walkables brush settings',
-  interactable: 'Interactable brush settings',
-  squad: 'Encounter brush settings',
-  resource: 'Resource brush settings',
-}
-
 /** Every setting's description moved from an always-visible line of text to
  *  a hover tooltip on its label (user-requested) — the dotted underline is
  *  the hover affordance since there's no other visual cue a label is
@@ -104,6 +99,8 @@ export default function ToolBrushSettingsPopover({
   onPoolChanceChange,
   biomePurity,
   onBiomePurityChange,
+  grassChance,
+  onGrassChanceChange,
   allowHighContrastBiomes,
   onAllowHighContrastBiomesChange,
   squadDifficulties,
@@ -114,10 +111,11 @@ export default function ToolBrushSettingsPopover({
   resourceGuardBelow,
   onResourceGuardBelowChange,
 }: Props) {
+  const { t } = useTranslation()
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" title={TOOL_TITLES[tool]}>
+        <Button variant="ghost" size="icon" className="h-6 w-6" title={t(`mapGrid.toolBrushSettingsPopover.titles.${tool}`)}>
           <Settings className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
@@ -126,7 +124,7 @@ export default function ToolBrushSettingsPopover({
           <>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <LabelWithTooltip tooltip="Chance of a mountain in the cluster.">Mountains</LabelWithTooltip>
+                <LabelWithTooltip tooltip={t('mapGrid.toolBrushSettingsPopover.chanceOfAMountainIn')}>{t('mapGrid.toolBrushSettingsPopover.mountains')}</LabelWithTooltip>
                 <span className="text-xs text-muted-foreground">{pctLabel(mountainChance, 'None', 'Always')}</span>
               </div>
               <Slider
@@ -138,8 +136,8 @@ export default function ToolBrushSettingsPopover({
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <LabelWithTooltip tooltip="Chance of a pool in the cluster. Higher chance allows a smaller brush (down to 3×3).">
-                  Pools
+                <LabelWithTooltip tooltip={t('mapGrid.toolBrushSettingsPopover.chanceOfAPoolIn')}>
+                  {t('mapGrid.toolBrushSettingsPopover.pools')}
                 </LabelWithTooltip>
                 <span className="text-xs text-muted-foreground">{pctLabel(poolChance, 'None', 'High')}</span>
               </div>
@@ -154,8 +152,8 @@ export default function ToolBrushSettingsPopover({
 
         {tool === 'squad' && (
           <div className="space-y-1.5">
-            <LabelWithTooltip tooltip="Total army value the game rolls a matching squad against — same ranges as the Value field's quick-pick buttons in Browse mode. Multiple can be on at once (each placement picks one at random); Random already covers their whole combined range, so picking it clears the rest.">
-              Difficulty
+            <LabelWithTooltip tooltip={t('mapGrid.toolBrushSettingsPopover.totalArmyValueTheGame')}>
+              {t('common.generateRandomMapDialog.difficulty')}
             </LabelWithTooltip>
             {/* Same on/off pill style as the Browse-mode header filters
                 (Units/Artifact pickups/...) — user-requested, the previous
@@ -173,7 +171,7 @@ export default function ToolBrushSettingsPopover({
                       : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
                   }`}
                 >
-                  {label}
+                  {squadDifficultyName(label)}
                 </button>
               ))}
             </div>
@@ -184,9 +182,9 @@ export default function ToolBrushSettingsPopover({
           <div className="flex items-center justify-between">
             <LabelWithTooltip
               htmlFor="resource-guard-below"
-              tooltip="Also places a random-squad guard on the tile directly south of the resource — an easy way to auto-generate a guarded resource."
+              tooltip={t('mapGrid.toolBrushSettingsPopover.alsoPlacesARandomSquad')}
             >
-              Place a guard on the tile below
+              {t('mapGrid.toolBrushSettingsPopover.placeAGuardOnThe')}
             </LabelWithTooltip>
             <Switch
               id="resource-guard-below"
@@ -200,12 +198,12 @@ export default function ToolBrushSettingsPopover({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <LabelWithTooltip
-                  tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'flowers' ? 'walkable types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
+                  tooltip={t(`mapGrid.toolBrushSettingsPopover.biomeMixTooltip.${tool === 'obstacles' || tool === 'trees' || tool === 'flowers' || tool === 'squad' ? tool : 'other'}`)}
                 >
-                  Biome mix
+                  {t('mapGrid.toolBrushSettingsPopover.biomeMix')}
                 </LabelWithTooltip>
                 <span className="text-xs text-muted-foreground">
-                  {biomePurity >= 1 ? 'This biome only' : biomePurity <= 0 ? 'All biomes' : `${Math.round(biomePurity * 100)}% pure`}
+                  {biomePurity >= 1 ? t('mapGrid.toolBrushSettingsPopover.thisBiomeOnly') : biomePurity <= 0 ? t('mapGrid.toolBrushSettingsPopover.allBiomes') : `${Math.round(biomePurity * 100)}% pure`}
                 </span>
               </div>
               <Slider
@@ -216,13 +214,29 @@ export default function ToolBrushSettingsPopover({
             </div>
         )}
 
+        {tool === 'flowers' && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <LabelWithTooltip tooltip={t('mapGrid.toolBrushSettingsPopover.grassTooltip')}>
+                {t('mapGrid.toolBrushSettingsPopover.grass')}
+              </LabelWithTooltip>
+              <span className="text-xs text-muted-foreground">{Math.round(grassChance * 100)}%</span>
+            </div>
+            <Slider
+              min={0} max={1} step={0.01}
+              value={[grassChance]}
+              onValueChange={([v]) => onGrassChanceChange(v)}
+            />
+          </div>
+        )}
+
         {tool !== 'squad' && tool !== 'resource' && (
           <div className="flex items-center justify-between">
             <LabelWithTooltip
               htmlFor={`${tool}-high-contrast`}
-              tooltip="When off, a cross-biome pick only lands on a visually compatible biome — Grass/Autumn/Dirt mix freely with each other. Snow also takes Grass pine trees, Deathland and Dirt; Lava also takes Deathland and Grass. Sand and Deathland mix with nothing else."
+              tooltip={t('mapGrid.toolBrushSettingsPopover.whenOffACrossBiome')}
             >
-              Allow high-contrast biomes
+              {t('mapGrid.toolBrushSettingsPopover.allowHighContrastBiomes')}
             </LabelWithTooltip>
             <Switch
               id={`${tool}-high-contrast`}
@@ -236,9 +250,9 @@ export default function ToolBrushSettingsPopover({
           <div className="flex items-center justify-between">
             <LabelWithTooltip
               htmlFor="squad-resource-above"
-              tooltip="Also places a random resource pickup on the tile directly north of the squad — an easy way to auto-generate a guarded resource."
+              tooltip={t('mapGrid.toolBrushSettingsPopover.alsoPlacesARandomResource')}
             >
-              Place resource on tile above
+              {t('mapGrid.toolBrushSettingsPopover.placeResourceOnTileAbove')}
             </LabelWithTooltip>
             <Switch
               id="squad-resource-above"

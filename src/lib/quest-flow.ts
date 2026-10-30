@@ -9,6 +9,7 @@
 import { graphlib, layout as dagreLayout } from '@dagrejs/dagre'
 import { MarkerType, type Node, type Edge } from '@xyflow/react'
 import type { ScenarioFile, Action } from '@/types/scenario'
+import i18n from '@/lib/i18n'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -63,10 +64,12 @@ export type FlowEdge        = Edge
 
 // ─── Internal edge spec ───────────────────────────────────────────────────────
 
+type EdgeLabel = 'next' | 'activate' | 'nextQuest' | 'end' | 'done' | 'afterGroup'
+
 interface EdgeSpec {
   source: string
   target: string
-  label: string
+  label: EdgeLabel
   dash: string | undefined // strokeDasharray value, undefined = solid
 }
 
@@ -132,12 +135,12 @@ function deriveEdges(scenario: ScenarioFile): EdgeSpec[] {
                 const local = quest.subQuests.findIndex((sq) => sq.sid === val)
                 tgt = local !== -1 ? `sq-${qi}-${local}` : findSqIdBySid(scenario, val)
               }
-              if (tgt) add({ source: src, target: tgt, label: 'Next', dash: undefined })
+              if (tgt) add({ source: src, target: tgt, label: 'next', dash: undefined })
               break
             }
             case 'SubQuestActivate': {
               const tgt = findSqId(scenario, p[0] ?? '', p[1] ?? '')
-              if (tgt) add({ source: src, target: tgt, label: 'Activate', dash: undefined })
+              if (tgt) add({ source: src, target: tgt, label: 'activate', dash: undefined })
               break
             }
             case 'NextQuest': {
@@ -145,24 +148,24 @@ function deriveEdges(scenario: ScenarioFile): EdgeSpec[] {
               if (tqi !== -1) {
                 const tsqi = scenario.quests[tqi].subQuests.findIndex((sq) => sq.activeOnStart)
                 if (tsqi !== -1)
-                  add({ source: src, target: `sq-${tqi}-${tsqi}`, label: 'Next Quest', dash: undefined })
+                  add({ source: src, target: `sq-${tqi}-${tsqi}`, label: 'nextQuest', dash: undefined })
               }
               break
             }
             case 'EndQuest': {
               const tqi = scenario.quests.findIndex((q) => q.sid === (p[0] ?? ''))
-              if (tqi !== -1) add({ source: src, target: `end-${tqi}`, label: 'End', dash: '6 3' })
+              if (tqi !== -1) add({ source: src, target: `end-${tqi}`, label: 'end', dash: '6 3' })
               break
             }
             case 'SubQuestDone': {
               const tgt = findSqId(scenario, p[0] ?? '', p[1] ?? '')
-              if (tgt) add({ source: src, target: tgt, label: 'Done', dash: '2 4' })
+              if (tgt) add({ source: src, target: tgt, label: 'done', dash: '2 4' })
               break
             }
             case 'NextAfterGroup': {
               // p[1] = next subquest SID
               const tgt = findSqIdBySid(scenario, p[1] ?? '')
-              if (tgt) add({ source: src, target: tgt, label: 'After Group', dash: undefined })
+              if (tgt) add({ source: src, target: tgt, label: 'afterGroup', dash: undefined })
               break
             }
           }
@@ -367,7 +370,7 @@ export function buildQuestFlow(scenario: ScenarioFile): {
       source: spec.source,
       target: spec.target,
       type: 'smoothstep',
-      label: spec.label,
+      label: i18n.t(`common.questFlowDialog.edges.${spec.label}`),
       labelStyle: { fontSize: 10 },
       labelBgStyle: { fill: 'hsl(var(--card))', opacity: 0.85 },
       style: spec.dash ? { strokeDasharray: spec.dash } : undefined,

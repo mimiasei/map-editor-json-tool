@@ -7,6 +7,7 @@
 
 import type { GameCatalog, CatalogCityBuilding } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
+import i18n from '@/lib/i18n'
 
 /** Resolves the faction of a "Castle entity" param's current value from the
  *  loaded .map's placed objects. Undefined means unassigned/random (or the
@@ -39,11 +40,11 @@ const LEVEL_SUFFIX = ['', ' II', ' III', ' IV', ' V']
  *  the game has no generic term for it at all. */
 function genericLevelNames(building: CatalogCityBuilding): string[] {
   if (building.category === 'main') {
-    return building.levelNames.map((_, i) => `Town Hall${LEVEL_SUFFIX[i] ?? ''}`)
+    return building.levelNames.map((_, i) => `${i18n.t('shared.buildingNames.townHall')}${LEVEL_SUFFIX[i] ?? ''}`)
   }
   if (building.category === 'dwelling') {
     const tier = building.sid.match(/Tier_(\d+)/)?.[1] ?? '?'
-    return building.levelNames.map((_, i) => `Tier ${tier} Garrison${LEVEL_SUFFIX[i] ?? ''}`)
+    return building.levelNames.map((_, i) => `${i18n.t('shared.buildingNames.garrison', { tier })}${LEVEL_SUFFIX[i] ?? ''}`)
   }
   return building.levelNames
 }

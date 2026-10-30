@@ -24,21 +24,24 @@ import { Textarea } from '@/components/ui/textarea'
 import { Settings2 } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { readMapSettings, type MapSettingsPatch } from '@/lib/map-write'
+import { useTranslation } from 'react-i18next'
 
-const BOOLEAN_FIELDS: { key: keyof Omit<MapSettingsPatch, 'title' | 'desc'>; label: string; hint?: string }[] = [
-  { key: 'isTournamentRules', label: 'Tournament rules', hint: 'Gates whether a captured Game Zone opens for flight/teleport once its guard is defeated.' },
-  { key: 'enableHeroHireBan', label: 'Hero hire ban' },
-  { key: 'enableCustomHeroMaxLevel', label: 'Custom hero max level' },
-  { key: 'disableWeekEffect', label: 'Disable week effect' },
-  { key: 'disableFactionLaws', label: 'Disable faction laws' },
-  { key: 'disableMagicGuild', label: 'Disable Magic Guild' },
-  { key: 'disableMagicCustomLearning', label: 'Disable custom magic learning' },
-  { key: 'disableAutoBattleAgainstEnemyHeroes', label: 'Disable auto-battle vs. enemy heroes' },
-  { key: 'cantRewriteTurnMode', label: "Can't rewrite turn mode" },
-  { key: 'enableCustomAI', label: 'Custom AI' },
-]
+// Labels live in en.json under mapGrid.mapGameSettingsDialog.fields.<key>.label.
+const BOOLEAN_FIELDS = [
+  'isTournamentRules',
+  'enableHeroHireBan',
+  'enableCustomHeroMaxLevel',
+  'disableWeekEffect',
+  'disableFactionLaws',
+  'disableMagicGuild',
+  'disableMagicCustomLearning',
+  'disableAutoBattleAgainstEnemyHeroes',
+  'cantRewriteTurnMode',
+  'enableCustomAI',
+] as const satisfies readonly (keyof Omit<MapSettingsPatch, 'title' | 'desc'>)[]
 
 export default function MapGameSettingsDialog() {
+  const { t } = useTranslation()
   const container = useMapDocumentStore((s) => s.container)
   const applyEdit = useMapDocumentStore((s) => s.applyEdit)
 
@@ -69,15 +72,15 @@ export default function MapGameSettingsDialog() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" title="Map settings" data-nodrag>
+        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" title={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag>
           <Settings2 className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto" data-nodrag>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Map Settings</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</p>
 
         <div className="space-y-1.5">
-          <Label htmlFor="map-settings-title" className="text-xs">Title</Label>
+          <Label htmlFor="map-settings-title" className="text-xs">{t('mapGrid.mapGameSettingsDialog.title')}</Label>
           <Input
             id="map-settings-title"
             value={titleInput}
@@ -88,7 +91,7 @@ export default function MapGameSettingsDialog() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="map-settings-desc" className="text-xs">Description</Label>
+          <Label htmlFor="map-settings-desc" className="text-xs">{t('mapGrid.mapGameSettingsDialog.description')}</Label>
           <Textarea
             id="map-settings-desc"
             value={descInput}
@@ -99,11 +102,11 @@ export default function MapGameSettingsDialog() {
         </div>
 
         <div className="border-t border-border pt-3 space-y-3">
-          {BOOLEAN_FIELDS.map(({ key, label, hint }) => (
+          {BOOLEAN_FIELDS.map((key) => (
             <div key={key} className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <Label htmlFor={`map-settings-${key}`} className="text-xs cursor-pointer">{label}</Label>
-                {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+                <Label htmlFor={`map-settings-${key}`} className="text-xs cursor-pointer">{t(`mapGrid.mapGameSettingsDialog.fields.${key}.label`)}</Label>
+                {key === 'isTournamentRules' && <p className="text-[11px] text-muted-foreground">{t('mapGrid.mapGameSettingsDialog.fields.isTournamentRules.hint')}</p>}
               </div>
               <Switch
                 id={`map-settings-${key}`}

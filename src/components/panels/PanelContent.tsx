@@ -8,6 +8,7 @@ import { GuidesContent } from '@/components/guides/GuidesPanel'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import { terrainLabel } from '@/lib/map-grid/terrain-colors'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useTranslation } from 'react-i18next'
 
 // The mapGridCell panel is the one case here that needs the game catalog
 // (for icons/category labels) — unlike scenario/dialogs/localization, the
@@ -17,6 +18,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 // own component, not inlined into the switch below, so its hooks are never
 // conditionally called depending on panelId.
 function MapGridCellPanel({ state }: { state: PanelState }) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   useEffect(() => { useCatalogStore.getState().load() }, [])
 
@@ -24,7 +26,7 @@ function MapGridCellPanel({ state }: { state: PanelState }) {
   if (!mapContext || selectedGridNode === null) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground p-4 text-center">
-        Click a tile in the Map Grid window to see its info here.
+        {t('panels.panelContent.clickATileInThe')}
       </div>
     )
   }
@@ -50,6 +52,7 @@ interface Props {
  * the local Zustand store (which is empty in undocked windows).
  */
 export default function PanelContent({ panelId, state, sendAction }: Props) {
+  const { t } = useTranslation()
   const { scenario, selectedType: _selectedType, selectedPath: _selectedPath } = state
 
   switch (panelId) {
@@ -105,7 +108,7 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
     default:
       return (
         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-          Unknown panel: {panelId}
+          {t('panels.panelContent.unknownPanel', { panelId })}
         </div>
       )
   }

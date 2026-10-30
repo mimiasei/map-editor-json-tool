@@ -1,0 +1,78 @@
+{
+  "categories": [
+    {
+      "id": "basic",
+      "label": "Basique"
+    },
+    {
+      "id": "advanced",
+      "label": "Avancé"
+    }
+  ],
+  "templates": [
+    {
+      "id": "simple-kill-quest",
+      "name": "Quête d'élimination simple",
+      "description": "Se termine quand le joueur vainc un peloton neutre précis. Récompense en or à la fin."
+    },
+    {
+      "id": "counter-based-quest",
+      "name": "Quête à compteur",
+      "description": "Une quête en plusieurs étapes qui suit sa progression avec un compteur. Montre comment enchaîner des sous-quêtes."
+    },
+    {
+      "id": "timed-event",
+      "name": "Événement chronométré",
+      "description": "Déclenche un dialogue et une conséquence après un nombre de tours donné. Utilise la condition StartTurn."
+    },
+    {
+      "id": "dialog-driven-quest",
+      "name": "Quête pilotée par dialogue",
+      "description": "Une quête d'interaction avec un PNJ : le joueur clique sur un objet, voit un dialogue et reçoit une tâche."
+    }
+  ],
+  "annotations": {
+    "simple-kill-quest": {
+      "counters[0]": "Indique si la cible a été vaincue (0 = en vie, 1 = morte). Remplacez 'quest_target_killed' par un SID descriptif pour votre quête.",
+      "quests[0]": "La quête principale. Remplacez 'kill_quest' par le SID de votre quête. Définissez les jetons de localisation du nom et de la description dans la boîte de dialogue Localisation.",
+      "quests[0].subQuests[0]": "L'unique étape : vaincre la cible. Remplacez 'kill_quest_1' par le SID de votre sous-quête.",
+      "quests[0].subQuests[0].triggers[0]": "Se déclenche quand le peloton est vaincu. Remplacez 'E_Squad_Target' par le SID d'entité attribué au groupe neutre dans l'éditeur de cartes.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Marque le compteur de victoire comme atteint. Vous pouvez l'utiliser dans d'autres déclencheurs pour vérifier si la quête est terminée.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "Récompense le joueur de 500 d'or. Ajustez le montant selon vos besoins.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Termine la sous-quête en cours, ce qui met fin à la quête.",
+      "quests[0].subQuests[0].triggers[0].actions[3]": "Affiche un dialogue de fin. Remplacez 'kill_quest_complete' par l'ID de votre dialogue, ou supprimez cette action."
+    },
+    "counter-based-quest": {
+      "counters[0]": "Suit l'étape actuelle de la quête (0 = pas commencée, 1 = étape 1 terminée, 2 = terminée). Adaptez le SID et utilisez-le dans toutes les conditions Counter ci-dessous.",
+      "quests[0]": "Le conteneur de la quête principale. Remplacez le SID et définissez les jetons de localisation du nom et de la description.",
+      "quests[0].subQuests[0]": "Étape 1 : vaincre la première cible. Cette sous-quête est active dès le départ.",
+      "quests[0].subQuests[0].triggers[0]": "Se déclenche quand le peloton de l'étape 1 est vaincu. Fait passer le compteur à 1 et active l'étape 2.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "CounterSet marque l'étape 1 comme terminée. La condition Counter du déclencheur de l'étape 2 utilise cette valeur.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Termine cette sous-quête dans le journal de quêtes.",
+      "quests[0].subQuests[1]": "Étape 2 : l'objectif suivant. Remplacez 'E_Squad_Target2' par le SID d'entité du peloton de l'étape 2.",
+      "quests[0].subQuests[1].triggers[0]": "Se déclenche quand le peloton de l'étape 2 est vaincu ET que le compteur d'étape vaut 1 (c.-à-d. que l'étape 1 est terminée). La logique AND garantit le bon ordre.",
+      "quests[0].subQuests[1].triggers[0].actions[2]": "Fixe le compteur à 2, ce qui marque toute la quête comme terminée. D'autres quêtes peuvent vérifier cette valeur."
+    },
+    "timed-event": {
+      "counters[0]": "Compte les tours écoulés depuis le début de la carte. Augmenté à chaque tour par le déclencheur répétitif.",
+      "quests[0]": "Cette quête s'exécute silencieusement en arrière-plan : elle n'a ni nom ni description visibles du joueur. Elle sert de conteneur à la logique de la minuterie.",
+      "quests[0].subQuests[0]": "La sous-quête de la minuterie. S'exécute pendant toute la durée de la fenêtre de l'événement.",
+      "quests[0].subQuests[0].triggers[0]": "Déclencheur répétitif : se déclenche à chaque tour (StartTurn sans paramètres = n'importe quel tour, n'importe quel joueur). Augmente le compteur de tours.",
+      "quests[0].subQuests[0].triggers[1]": "Déclencheur d'échéance : se déclenche quand le compteur de tours atteint 10. Remplacez 10 par le nombre de tours voulu.",
+      "quests[0].subQuests[0].triggers[1].actions[0]": "Affiche un dialogue quand l'échéance est atteinte. Remplacez 'timed_event_deadline' par l'ID de votre dialogue.",
+      "quests[0].subQuests[0].triggers[1].actions[1]": "À remplacer ou à supprimer. Exemple : GameLose pour une condition de défaite, ou toute autre conséquence."
+    },
+    "dialog-driven-quest": {
+      "counters[0]": "Indique si le joueur a parlé au PNJ (0 = pas encore, 1 = a parlé).",
+      "counters[1]": "Indique si la tâche de la quête est accomplie (0 = incomplète, 1 = terminée).",
+      "quests[0]": "La quête principale. Définissez les jetons de localisation du nom et de la description.",
+      "quests[0].subQuests[0]": "Étape 1 : le joueur doit interagir avec l'objet PNJ pour recevoir le briefing de la quête.",
+      "quests[0].subQuests[0].triggers[0]": "Se déclenche quand le joueur interagit avec l'objet PNJ. Remplacez 'npc_quest_giver' par le SID d'entité de votre PNJ.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Affiche le dialogue de briefing de la quête. Remplacez 'dialog_quest_start' par l'ID de votre dialogue.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Active l'étape 2 une fois que le joueur a parlé au PNJ.",
+      "quests[0].subQuests[1]": "Étape 2 : la tâche proprement dite (ici : vaincre un peloton). Adaptez-la à votre objectif de quête.",
+      "quests[0].subQuests[1].triggers[0]": "Se déclenche quand la tâche est accomplie. Remplacez 'E_Squad_QuestTarget' par le SID d'entité de votre objectif.",
+      "quests[0].subQuests[1].triggers[0].actions[1]": "Affiche le dialogue de fin de quête. Remplacez 'dialog_quest_done' par l'ID de votre dialogue."
+    }
+  }
+}

@@ -7,6 +7,7 @@
 //   'hero'     — one tile per hero, returns the hero SID (quest parameter fields).
 //   'portrait' — every portrait the game ships, returns the avatar icon path (Dialog Editor).
 
+import { localNameById } from '@/lib/catalog/local-name'
 import { useMemo, useState } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -17,7 +18,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { STATIC_HEROES } from '@/lib/catalog/static-catalog'
 import { PortraitThumb, thumbnailPath, heroPortraitPath } from '@/lib/catalog/thumbnails'
-import { factionDisplayName, groupByFaction } from '@/lib/factions'
+import { factionDisplayName, factionLabel, groupByFaction } from '@/lib/factions'
 import { buildPortraitEntries, type PortraitEntry } from '@/lib/catalog/portraits'
 import { assetLeafName, heroAvatarIcon } from '@/lib/catalog/icon-requests'
 import HeroPickerFilter, {
@@ -28,6 +29,7 @@ import HeroPickerFilter, {
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 export type PickerMode = 'hero' | 'portrait'
 
@@ -55,13 +57,14 @@ export default function HeroPickerDialog({
   title,
   lockedFaction,
 }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   const customHeroes = useScenarioStore((s) => s.customHeroes)
   const localization = useScenarioStore((s) => s.localization)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PortraitFilterState>(loadPortraitFilter)
 
-  const heading = title ?? (mode === 'portrait' ? 'Choose a portrait' : 'Choose a hero')
+  const heading = title ?? (mode === 'portrait' ? t('catalog.heroPickerDialog.choosePortrait') : t('catalog.heroPickerDialog.chooseHero'))
 
   // Candidate entries for this mode.
   //
@@ -108,6 +111,9 @@ export default function HeroPickerDialog({
     ]
   }, [catalog, mode, customHeroes, localization])
 
+  // Display only: picking still passes the entry with its English name on to the caller, which writes it into the map.
+  const shownName = (e: PortraitEntry) => (e.heroId ? localNameById(catalog, 'heroes', e.heroId, e.name) : e.name)
+
   const factionOf = (e: PortraitEntry) =>
     factionDisplayName(e.fraction, catalog?.factions) || 'Neutral'
 
@@ -116,7 +122,7 @@ export default function HeroPickerDialog({
     const matching = entries.filter((e) => {
       if (
         q &&
-        !e.name.toLowerCase().includes(q) &&
+        !e.name.toLowerCase().includes(q) && !shownName(e).toLowerCase().includes(q) &&
         !e.sublabel.toLowerCase().includes(q) &&
         !assetLeafName(e.icon).toLowerCase().includes(q)
       ) {
@@ -156,7 +162,7 @@ export default function HeroPickerDialog({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, SID or icon…"
+              placeholder={t('catalog.heroPickerDialog.searchNameSIDOrIcon')}
               className="pl-7 h-7 text-xs"
             />
           </div>
@@ -179,13 +185,13 @@ export default function HeroPickerDialog({
           <div className="p-3 space-y-4">
             {entries.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No portraits to browse — load Core.zip via Game Data.
+                {t('catalog.heroPickerDialog.noPortraitsToBrowseLoad')}
               </p>
             )}
 
             {entries.length > 0 && shown === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                Nothing matches the current search and filter.
+                {t('catalog.heroPickerDialog.nothingMatchesTheCurrentSearch')}
               </p>
             )}
 
@@ -193,7 +199,7 @@ export default function HeroPickerDialog({
               <div key={faction} className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {faction}
+                    {factionLabel(faction, catalog)}
                   </span>
                   <span className="text-[10px] text-muted-foreground/60">({items.length})</span>
                   <div className="flex-1 border-t border-border/60" />
@@ -209,7 +215,7 @@ export default function HeroPickerDialog({
                         key={entry.key}
                         type="button"
                         onClick={() => handlePick(entry)}
-                        title={`${entry.sublabel}${entry.variant ? ` · ${entry.variant} art` : ''}`}
+                        title={`${entry.sublabel}${entry.variant ? t('catalog.heroPickerDialog.variantArt', { variant: entry.variant }) : ''}`}
                         className={`flex flex-col items-center gap-1 rounded border p-2 text-center transition-colors ${
                           selected
                             ? 'border-primary bg-primary/10'
@@ -223,7 +229,7 @@ export default function HeroPickerDialog({
                         {mode === 'portrait' ? (
                           <PortraitThumb
                             iconId={entry.icon}
-                            name={entry.name}
+                            name={shownName(entry)}
                             size={72}
                             height={72}
                             previewSize={280}
@@ -232,7 +238,7 @@ export default function HeroPickerDialog({
                         ) : (
                           <PortraitThumb
                             iconId={entry.heroIcon}
-                            name={entry.name}
+                            name={shownName(entry)}
                             size={72}
                             height={72}
                             previewSize={280}
@@ -240,7 +246,7 @@ export default function HeroPickerDialog({
                           />
                         )}
                         <span className="w-full truncate text-xs font-medium leading-tight">
-                          {entry.name}
+                          {shownName(entry)}
                         </span>
                         <span className="w-full truncate font-mono text-[9px] text-muted-foreground">
                           {entry.variant ? `· ${entry.variant}` : entry.sublabel}

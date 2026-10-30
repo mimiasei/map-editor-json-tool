@@ -4,6 +4,7 @@
 // a second copy of the same switch markup.
 
 import { Switch } from '@/components/ui/switch'
+import { useTranslation } from 'react-i18next'
 
 export interface FilterGroup {
   showAll: boolean
@@ -55,6 +56,7 @@ interface Props {
 }
 
 export default function FilterRows({ label, group, keys, labelFor, onChange }: Props) {
+  const { t } = useTranslation()
   const toggleShowAll = () => onChange({ ...group, showAll: !group.showAll })
   const toggleKey = (k: string) =>
     onChange({ ...group, enabled: { ...group.enabled, [k]: !group.enabled[k] } })
@@ -65,7 +67,7 @@ export default function FilterRows({ label, group, keys, labelFor, onChange }: P
         {label}
       </p>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs">Show all</span>
+        <span className="text-xs">{t('catalog.filterRows.showAll')}</span>
         <Switch checked={group.showAll} onCheckedChange={toggleShowAll} />
       </div>
       {keys.map((k) => (

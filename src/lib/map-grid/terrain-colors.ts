@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 // ─── Map grid — terrain fill colors ──────────────────────────────────────────
 // Biome IDs and names come straight from Core/DB/map/tiles/tiles.json (issue
 // #122 follow-up: fill every grid cell with its terrain, not just occupied
@@ -30,13 +31,23 @@ export const BIOME_BASE_COLORS: Record<BiomeId, string> = {
   7: '#4e3617', // Dirt — brown
 }
 
-/** Water overlay (DB/map/waters/waters.json, id 1-7 all render the same blue here). */
-const WATER_BASE_COLOR = '#2197ea'
+/** Water overlay colour per water id (DB/map/waters/waters.json has no colour data). Estimated by eye from an
+ *  in-game screenshot of the test map water_colors.map (one lake per id), not read from game data. */
+const WATER_BASE_COLORS: Record<number, string> = {
+  1: '#8a6a48', // Dirt — muddy brown
+  2: '#16877f', // Sand — teal
+  3: '#2c2858', // Death — dark violet
+  4: '#2e6082', // Snow — steel blue
+  5: '#1f9a62', // Fallen — green
+  6: '#7c2006', // Lava — dark red-brown
+  7: '#1f3f7a', // Grass — deep navy
+}
+
+/** Fallback for a water id outside 1-7 (not seen in real maps). */
+const WATER_FALLBACK_COLOR = '#2197ea'
 
 /** Real names from Core/DB/map/waters/waters.json — used by the Water
- *  flood-fill tool's swatch (issue #193 Phase 2). All 7 render the same
- *  WATER_BASE_COLOR above (confirmed: no per-id color data exists, same
- *  situation as biomes), so the swatch differentiates by label only. */
+ *  flood-fill tool's swatch (issue #193 Phase 2). */
 export const WATER_TYPE_NAMES: Record<number, string> = {
   1: 'Water (Dirt)',
   2: 'Water (Sand)',
@@ -58,7 +69,7 @@ export const ROAD_TYPE_NAMES: Record<number, string> = {
 }
 
 // Chosen to be unambiguous against every other color already on this
-// canvas — every BIOME_BASE_COLORS entry, WATER_BASE_COLOR, and every
+// canvas — every BIOME_BASE_COLORS entry, WATER_BASE_COLORS, and every
 // GROUP_COLORS category swatch (units/artifacts/spawners/interactables/
 // resources/decorations/zones, MapGridDialog.tsx) — not just "close to
 // real dirt/stone," since a road/river tile can sit right next to any of
@@ -70,7 +81,7 @@ export const ROAD_BASE_COLORS: Record<number, string> = {
 }
 
 /** Vivid yellow — no other color on this canvas is yellow, so it can't be
- *  confused with WATER_BASE_COLOR/Snow's pale blue or anything else, unlike
+ *  confused with WATER_BASE_COLORS/Snow's pale blue or anything else, unlike
  *  an earlier blue-family pick that was too close to Water's own blue. */
 export const RIVER_BASE_COLOR = '#25eaf1'
 
@@ -93,6 +104,12 @@ function mixWithWhite(hex: string, amount: number, alpha = 1): string {
   return alpha < 1 ? `rgba(${mix(r)}, ${mix(g)}, ${mix(b)}, ${alpha})` : `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
 }
 
+/** Colour of one water type as a translucent overlay (the Map Grid's water plane). */
+export function waterOverlayColor(waterId: number, alpha: number): string {
+  const [r, g, b] = hexToRgb(WATER_BASE_COLORS[waterId] ?? WATER_FALLBACK_COLOR)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 export function isBiomeId(id: number): id is BiomeId {
   return id >= 1 && id <= 7
 }
@@ -110,7 +127,7 @@ export function terrainFillColor(
   blendAmount: number = DEFAULT_TERRAIN_BLEND,
   alpha = 1,
 ): string {
-  if (waterId) return mixWithWhite(WATER_BASE_COLOR, blendAmount, alpha)
+  if (waterId) return mixWithWhite(WATER_BASE_COLORS[waterId] ?? WATER_FALLBACK_COLOR, blendAmount, alpha)
   if (tileId === undefined || !isBiomeId(tileId)) return mixWithWhite(UNKNOWN_BASE_COLOR, blendAmount, alpha)
   return mixWithWhite(BIOME_BASE_COLORS[tileId], blendAmount, alpha)
 }
@@ -133,9 +150,16 @@ export function terrainLabel(
 ): string {
   const tileId = tilesMap[node]
   const waterId = waterMap[node]
-  const biome = tileId !== undefined && isBiomeId(tileId) ? BIOME_NAMES[tileId] : 'Unknown'
-  const suffix = waterId ? ' (Water)' : ''
-  const levelSuffix = levelsMap ? `, Level ${levelsMap[node] ?? 0}` : ''
-  const rampSuffix = rampDirection ? `, Ramp (${rampDirection})` : ''
-  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)}) (${node}) ${levelSuffix}${rampSuffix}`
+  // A water tile is named by its water type (Water (Snow)), not by the ground biome underneath it.
+  const biome = waterId && waterId in WATER_TYPE_NAMES
+    ? i18n.t(`shared.waterTypes.${waterId as 1}`)
+    : tileId !== undefined && isBiomeId(tileId) ? i18n.t(`shared.biomes.${tileId}`) : i18n.t('mapGrid.tileInfo.unknown')
+  return i18n.t('mapGrid.tileInfo.line', {
+    biome,
+    x: node % sizeX,
+    y: Math.floor(node / sizeX),
+    node,
+    level: levelsMap ? i18n.t('mapGrid.tileInfo.level', { n: levelsMap[node] ?? 0 }) : '',
+    ramp: rampDirection ? i18n.t('mapGrid.tileInfo.ramp', { direction: rampDirection }) : '',
+  })
 }

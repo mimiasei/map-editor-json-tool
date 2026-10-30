@@ -30,6 +30,7 @@
 // picker lets the user borrow any real artifact's mesh — same "visual
 // decoupled from behavior" idea Custom Map Objects' from-scratch mode uses.
 
+import { localName, localNameById } from '@/lib/catalog/local-name'
 import { useState } from 'react'
 import {
   Dialog,
@@ -63,6 +64,8 @@ import LocalizedTextField from '@/components/common/LocalizedTextField'
 import FieldInfo from '@/components/common/FieldInfo'
 import { mintCustomSid } from '@/lib/zip-export'
 import { isArtifactIdTaken } from '@/lib/custom-artifact-authoring'
+import { useTranslation, Trans } from 'react-i18next'
+import { rarityName } from '@/lib/game-labels'
 
 interface CustomArtifactEditorDialogProps {
   open: boolean
@@ -110,6 +113,7 @@ export default function CustomArtifactEditorDialog({
   editingId,
   existingSids,
 }: CustomArtifactEditorDialogProps) {
+  const { t } = useTranslation()
   const localization = useScenarioStore((s) => s.localization)
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
   const removeLocalizationToken = useScenarioStore((s) => s.removeLocalizationToken)
@@ -160,8 +164,8 @@ export default function CustomArtifactEditorDialog({
     existingDefinition?.template ?? (mode === 'clone' ? baseCatalogArtifact?.raw ?? null : SCRATCH_ARTIFACT_BASE)
   const mapObjectTemplateBase: Record<string, unknown> | undefined =
     existingDefinition?.mapObjectTemplate ?? (mode === 'clone' ? baseMapObject?.raw : groundVisualCatalogObject?.raw)
-  const baseDisplayName = baseCatalogArtifact?.name ?? sourceArtifactId
-  const groundVisualDisplayName = catalog?.mapObjects.find((o) => o.id === groundVisualId)?.name ?? groundVisualId
+  const baseDisplayName = baseCatalogArtifact ? localName(catalog, 'artifacts', baseCatalogArtifact) : sourceArtifactId
+  const groundVisualDisplayName = localNameById(catalog, 'mapObjects', groundVisualId, catalog?.mapObjects.find((o) => o.id === groundVisualId)?.name ?? groundVisualId)
   const catalogMissing = mode === 'clone' && !!sourceArtifactId && !existingDefinition && !baseCatalogArtifact
   // Once true, the full form renders — either a base/definition to seed from
   // exists, or "Build from scratch" was explicitly chosen (which needs none).
@@ -352,25 +356,22 @@ export default function CustomArtifactEditorDialog({
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>{existingDefinition ? 'Edit custom artifact' : 'New custom artifact'}</DialogTitle>
+          <DialogTitle>{existingDefinition ? t('tree.customArtifactEditorDialog.editCustomArtifact') : t('tree.customArtifactEditorDialog.newCustomArtifact')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Clones a real artifact's definition under a brand-new id, or builds one from scratch —
-            the same "clone, edit, ship" mechanism custom objects and heroes use. This app authors
-            and ships the definition only; grant it via a script action (e.g. Give Item to Hero) or
-            place it on the map in the official Unfrozen map editor once it recognizes the shipped ZIP.
+            {t('tree.customArtifactEditorDialog.clonesARealArtifactsDefinition')}
           </p>
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-1">
-              <Label>Mode</Label>
-              <FieldInfo text="Clone one artifact: every field starts from a real artifact's own values. Build from scratch: no base artifact — item stats/bonuses start blank, and an optional separate pick supplies just the ground-placement mesh. Switchable at any time." />
+              <Label>{t('shared.mode')}</Label>
+              <FieldInfo text={t('tree.customArtifactEditorDialog.cloneOneArtifactEveryField')} />
             </div>
             <div className="flex gap-1.5">
               <Button type="button" aria-pressed={mode === 'clone'} variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
-                Clone one artifact
+                {t('tree.customArtifactEditorDialog.cloneOneArtifact')}
               </Button>
               <Button
                 type="button"
@@ -379,7 +380,7 @@ export default function CustomArtifactEditorDialog({
                 className="h-7 text-xs"
                 onClick={() => { setMode('scratch'); setSourceArtifactId(''); setSourcePickerValue('') }}
               >
-                Build from scratch
+                {t('shared.buildFromScratch')}
               </Button>
             </div>
           </div>
@@ -387,14 +388,14 @@ export default function CustomArtifactEditorDialog({
           {mode === 'clone' && !sourceArtifactId && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1">
-                <Label>Base artifact</Label>
-                <FieldInfo text="The real artifact whose definition this custom artifact clones. Everything except id/name/description/narrative description/icon is copied verbatim, including its mechanical bonuses and 3D model." />
+                <Label>{t('tree.customArtifactEditorDialog.baseArtifact')}</Label>
+                <FieldInfo text={t('tree.customArtifactEditorDialog.theRealArtifactWhoseDefinition')} />
               </div>
               <EntityCombobox
                 value={sourcePickerValue}
                 onChange={handlePickSource}
                 category="artifact"
-                placeholder="Search for an artifact to clone…"
+                placeholder={t('tree.customArtifactEditorDialog.searchForAnArtifactTo')}
               />
             </div>
           )}
@@ -402,8 +403,8 @@ export default function CustomArtifactEditorDialog({
           {mode === 'scratch' && readyToEdit && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1">
-                <Label>Ground visual (optional)</Label>
-                <FieldInfo text="Borrow another real artifact's 3D model/footprint so this one can be placed loose on the map — independent of the item stats/bonuses below. Leave unset if it should only ever be granted via script action." />
+                <Label>{t('tree.customArtifactEditorDialog.groundVisualOptional')}</Label>
+                <FieldInfo text={t('tree.customArtifactEditorDialog.borrowAnotherRealArtifacts3D')} />
               </div>
               {groundVisualId ? (
                 <div className="flex items-center justify-between gap-2">
@@ -415,7 +416,7 @@ export default function CustomArtifactEditorDialog({
                     onClick={() => { setGroundVisualId(''); setGroundVisualPickerValue('') }}
                     className="shrink-0 text-xs text-muted-foreground underline hover:text-foreground"
                   >
-                    Change
+                    {t('mapGrid.mapGridDialog.change')}
                   </button>
                 </div>
               ) : (
@@ -423,7 +424,7 @@ export default function CustomArtifactEditorDialog({
                   value={groundVisualPickerValue}
                   onChange={handlePickGroundVisual}
                   category="artifact"
-                  placeholder="Search for an artifact to borrow a ground model from…"
+                  placeholder={t('tree.customArtifactEditorDialog.searchForAnArtifactTo2')}
                 />
               )}
             </div>
@@ -433,7 +434,7 @@ export default function CustomArtifactEditorDialog({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="ml-2">
-                Load the Core.zip catalog (Game Database) to look up and clone this artifact's base definition.
+                {t('tree.customArtifactEditorDialog.loadTheCoreZipCatalog')}
               </AlertDescription>
             </Alert>
           )}
@@ -443,12 +444,9 @@ export default function CustomArtifactEditorDialog({
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
                   {mode === 'clone' && sourceArtifactId ? (
-                    <>
-                      Based on: <span className="font-medium text-foreground">{baseDisplayName}</span>
-                      {existingDefinition && ' (already customized)'}
-                    </>
+                    <Trans i18nKey={existingDefinition ? 'shared.basedOnCustomized' : 'shared.basedOn'} values={{ name: baseDisplayName }} components={{ v: <span className="font-medium text-foreground" /> }} />
                   ) : (
-                    'Building from scratch — item stats and bonuses start blank below.'
+                    t('tree.customArtifactEditorDialog.buildingFromScratchItemStats')
                   )}
                 </p>
                 {mode === 'clone' && sourceArtifactId && (
@@ -456,7 +454,7 @@ export default function CustomArtifactEditorDialog({
                     type="button"
                     onClick={handleChangeBase}
                     className="shrink-0 rounded border border-transparent p-0.5 hover:border-border hover:bg-accent"
-                    title="Click to change the base artifact"
+                    title={t('tree.customArtifactEditorDialog.clickToChangeTheBase')}
                   >
                     <CatalogIcon iconId={baseCatalogArtifact?.icon} name={baseDisplayName} size={24} />
                   </button>
@@ -465,8 +463,8 @@ export default function CustomArtifactEditorDialog({
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>Icon</Label>
-                  <FieldInfo text="The 2D icon shown in inventory/UI. Every real artifact has one — pick any known artifact icon, or keep the base's own." />
+                  <Label>{t('shared.icon')}</Label>
+                  <FieldInfo text={t('tree.customArtifactEditorDialog.the2DIconShownIn')} />
                 </div>
                 <button
                   type="button"
@@ -474,14 +472,14 @@ export default function CustomArtifactEditorDialog({
                   className="flex items-center gap-2 rounded-md border border-border p-2 hover:bg-accent/50"
                 >
                   <CatalogIcon iconId={icon} name={baseDisplayName} size={32} />
-                  <span className="text-xs text-muted-foreground">Click to change…</span>
+                  <span className="text-xs text-muted-foreground">{t('shared.clickToChange')}</span>
                 </button>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="artifact-editor-id">Id</Label>
-                  <FieldInfo text="The unique id this custom artifact ships under — also becomes the filename basis (DB/items/items/custom_maps/{mapName}_artifacts.json entry, and a matching DB/map/objects/custom_maps/{mapName}_artifact_objects.json entry if the base artifact can be placed on the ground). Must not match any artifact id already in the game." />
+                  <Label htmlFor="artifact-editor-id">{t('shared.id')}</Label>
+                  <FieldInfo text={t('tree.customArtifactEditorDialog.theUniqueIdThisCustom')} />
                 </div>
                 <Input
                   id="artifact-editor-id"
@@ -492,16 +490,16 @@ export default function CustomArtifactEditorDialog({
                 {idTaken && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="ml-2">"{trimmedId}" is already used by another artifact.</AlertDescription>
+                    <AlertDescription className="ml-2">{t('tree.customArtifactEditorDialog.isAlreadyUsedByAnother', { trimmedId })}</AlertDescription>
                   </Alert>
                 )}
               </div>
 
               <LocalizedTextField
                 idPrefix="artifact-editor-name"
-                managedSidLabel="Naming SID"
-                unmanagedLabel="Artifact name (written directly, no localization)"
-                textLabel="Artifact name text"
+                managedSidLabel={t('shared.namingSID')}
+                unmanagedLabel={t('tree.customArtifactEditorDialog.artifactNameWrittenDirectlyNo')}
+                textLabel={t('tree.customArtifactEditorDialog.artifactNameText')}
                 sidValue={nameField.sidValue}
                 textValue={nameField.textValue}
                 autoManageLoc
@@ -512,9 +510,9 @@ export default function CustomArtifactEditorDialog({
               />
               <LocalizedTextField
                 idPrefix="artifact-editor-desc"
-                managedSidLabel="Description SID"
-                unmanagedLabel="Description (written directly, no localization)"
-                textLabel="Description text"
+                managedSidLabel={t('shared.descriptionSID')}
+                unmanagedLabel={t('tree.customArtifactEditorDialog.descriptionWrittenDirectlyNoLocalization')}
+                textLabel={t('shared.descriptionText')}
                 sidValue={descField.sidValue}
                 textValue={descField.textValue}
                 autoManageLoc
@@ -526,9 +524,9 @@ export default function CustomArtifactEditorDialog({
               />
               <LocalizedTextField
                 idPrefix="artifact-editor-narrative"
-                managedSidLabel="Narrative description SID"
-                unmanagedLabel="Narrative description (written directly, no localization)"
-                textLabel="Narrative description text"
+                managedSidLabel={t('tree.customArtifactEditorDialog.narrativeDescriptionSID')}
+                unmanagedLabel={t('tree.customArtifactEditorDialog.narrativeDescriptionWrittenDirectlyNo')}
+                textLabel={t('tree.customArtifactEditorDialog.narrativeDescriptionText')}
                 sidValue={narrativeField.sidValue}
                 textValue={narrativeField.textValue}
                 autoManageLoc
@@ -541,9 +539,9 @@ export default function CustomArtifactEditorDialog({
 
               <LocalizedTextField
                 idPrefix="artifact-editor-upgrade-desc"
-                managedSidLabel="Upgrade description SID"
-                unmanagedLabel="Upgrade description (written directly, no localization)"
-                textLabel="Upgrade description text"
+                managedSidLabel={t('tree.customArtifactEditorDialog.upgradeDescriptionSID')}
+                unmanagedLabel={t('tree.customArtifactEditorDialog.upgradeDescriptionWrittenDirectlyNo')}
+                textLabel={t('tree.customArtifactEditorDialog.upgradeDescriptionText')}
                 sidValue={upgradeDescField.sidValue}
                 textValue={upgradeDescField.textValue}
                 autoManageLoc
@@ -556,10 +554,10 @@ export default function CustomArtifactEditorDialog({
 
               {/* ── Item stats ───────────────────────────────────────────── */}
               <div className="border-t border-border pt-3 space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Item stats</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('tree.customArtifactEditorDialog.itemStats')}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Slot</Label>
+                    <Label>{t('common.artifactBanDialog.slot')}</Label>
                     <Select value={slot} onValueChange={setSlot}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -568,11 +566,11 @@ export default function CustomArtifactEditorDialog({
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Rarity</Label>
+                    <Label>{t('common.artifactBanDialog.rarity')}</Label>
                     <Select value={rarity} onValueChange={setRarity}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+                        {RARITY_OPTIONS.map((r) => <SelectItem key={r} value={r}>{rarityName(r.charAt(0).toUpperCase() + r.slice(1))}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -580,22 +578,22 @@ export default function CustomArtifactEditorDialog({
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label>Goods value</Label>
-                      <FieldInfo text="Sale/scroll-market value." />
+                      <Label>{t('tree.customArtifactEditorDialog.goodsValue')}</Label>
+                      <FieldInfo text={t('tree.customArtifactEditorDialog.saleScrollMarketValue')} />
                     </div>
                     <Input type="number" value={goodsValue} onChange={(e) => setGoodsValue(Number(e.target.value) || 0)} className="h-8 text-xs" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label>Max level</Label>
-                      <FieldInfo text="How many times this item can be upgraded (item sets/enchanting)." />
+                      <Label>{t('tree.customArtifactEditorDialog.maxLevel')}</Label>
+                      <FieldInfo text={t('tree.customArtifactEditorDialog.howManyTimesThisItem')} />
                     </div>
                     <Input type="number" value={maxLevel} onChange={(e) => setMaxLevel(Number(e.target.value) || 1)} className="h-8 text-xs" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label>Reward for destroy</Label>
-                      <FieldInfo text="Gold granted when this item is disenchanted/destroyed." />
+                      <Label>{t('tree.customArtifactEditorDialog.rewardForDestroy')}</Label>
+                      <FieldInfo text={t('tree.customArtifactEditorDialog.goldGrantedWhenThisItem')} />
                     </div>
                     <Input type="number" value={rewardForDestroy} onChange={(e) => setRewardForDestroy(Number(e.target.value) || 0)} className="h-8 text-xs" />
                   </div>
@@ -603,15 +601,15 @@ export default function CustomArtifactEditorDialog({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label>Cost base</Label>
-                      <FieldInfo text="Shop/reward-pool base cost (resource-equivalent value used for balancing, not gold spent directly)." />
+                      <Label>{t('tree.customArtifactEditorDialog.costBase')}</Label>
+                      <FieldInfo text={t('tree.customArtifactEditorDialog.shopRewardPoolBaseCost')} />
                     </div>
                     <Input type="number" value={costBase} onChange={(e) => setCostBase(Number(e.target.value) || 0)} className="h-8 text-xs" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
-                      <Label>Cost per level</Label>
-                      <FieldInfo text="Added to cost base per upgrade level." />
+                      <Label>{t('tree.customArtifactEditorDialog.costPerLevel')}</Label>
+                      <FieldInfo text={t('tree.customArtifactEditorDialog.addedToCostBasePer')} />
                     </div>
                     <Input type="number" value={costPerLevel} onChange={(e) => setCostPerLevel(Number(e.target.value) || 0)} className="h-8 text-xs" />
                   </div>
@@ -621,16 +619,15 @@ export default function CustomArtifactEditorDialog({
               {/* ── Bonuses ──────────────────────────────────────────────── */}
               <div className="border-t border-border pt-3 space-y-1.5">
                 <div className="flex items-center gap-1">
-                  <Label>Bonuses</Label>
-                  <FieldInfo text="The mechanical effects this item grants while equipped/held. Each has a type (e.g. heroStat, sideRes, heroMagicAddition) and its own parameters." />
+                  <Label>{t('tree.customArtifactEditorDialog.bonuses')}</Label>
+                  <FieldInfo text={t('tree.customArtifactEditorDialog.theMechanicalEffectsThisItem')} />
                 </div>
                 <ArtifactBonusesEditor bonuses={bonuses} onChange={setBonuses} />
               </div>
 
               {!mapObjectTemplateBase && (
                 <p className="text-xs text-muted-foreground border-t border-border pt-3">
-                  This base artifact has no ground-placement entry (e.g. a magic scroll item) — the
-                  clone can still be granted via a script action, but can't be placed loose on the map.
+                  {t('tree.customArtifactEditorDialog.thisBaseArtifactHasNo')}
                 </p>
               )}
             </>
@@ -646,11 +643,11 @@ export default function CustomArtifactEditorDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave || saving}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Save
+            {t('shared.save')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -658,7 +655,7 @@ export default function CustomArtifactEditorDialog({
       <IconBrowserDialog
         open={iconBrowserOpen}
         onOpenChange={setIconBrowserOpen}
-        title="Choose an artifact icon"
+        title={t('tree.customArtifactEditorDialog.chooseAnArtifactIcon')}
         options={iconBrowserOptions}
         currentIconId={icon}
         onPick={setIcon}

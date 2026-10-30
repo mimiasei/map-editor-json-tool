@@ -45,6 +45,8 @@ import {
   displayToPercent,
   type AttributeDef,
 } from '@/lib/artifact-bonus-catalog'
+import { useTranslation } from 'react-i18next'
+import { resourceName } from '@/lib/game-labels'
 
 type RawBonus = Record<string, unknown>
 
@@ -249,12 +251,13 @@ function AttributeSelect({ attributes, value, onChange }: { attributes: Attribut
 }
 
 function AttributeValueInput({ attr, value, onChange }: { attr: AttributeDef; value: string | undefined; onChange: (v: string) => void }) {
+  const { t } = useTranslation()
   if (attr.valueKind === 'boolean') {
     const trueVal = attr.trueValue ?? 'true'
     return (
       <label className="flex items-center gap-1.5 text-xs shrink-0">
         <Checkbox checked={value === trueVal} onCheckedChange={(c) => onChange(c ? trueVal : 'false')} />
-        On
+        {t('shared.on')}
       </label>
     )
   }
@@ -302,6 +305,7 @@ function AllegianceToggle({ value, options, onChange }: { value: string; options
 // ─── Per-effect fields ────────────────────────────────────────────────────────
 
 function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bonus: RawBonus; onChange: (bonus: RawBonus) => void }) {
+  const { t } = useTranslation()
   const type = typeOf(bonus)
   const p = paramsOf(bonus)
   const setParams = (parameters: string[]) => onChange({ ...bonus, parameters })
@@ -330,21 +334,21 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
       )
 
     case 'grant-skill':
-      return <EntityCombobox category="skill" value={p[0] ?? ''} onChange={(v) => setParams([v])} placeholder="Skill…" />
+      return <EntityCombobox category="skill" value={p[0] ?? ''} onChange={(v) => setParams([v])} placeholder={t('shared.skill')} />
 
     case 'grant-spell':
       return (
         <div className="space-y-1.5">
-          <EntityCombobox category="spell" value={p[1] ?? ''} onChange={(v) => setParams(['magicSidSet', v, '3'])} placeholder="Spell…" />
-          <p className="text-xs text-muted-foreground">Adds the max-level version of this spell to the hero's Spellbook, permanently.</p>
+          <EntityCombobox category="spell" value={p[1] ?? ''} onChange={(v) => setParams(['magicSidSet', v, '3'])} placeholder={t('tree.artifactBonusesEditor.spell')} />
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.addsTheMaxLevelVersion')}</p>
         </div>
       )
 
     case 'free-cast-spell':
       return (
         <div className="space-y-1.5">
-          <EntityCombobox category="spell" value={p[1] ?? ''} onChange={(v) => setParams(['magicCostSidSet', v, '-999', '0'])} placeholder="Spell…" />
-          <p className="text-xs text-muted-foreground">Makes this spell free to cast on the adventure map.</p>
+          <EntityCombobox category="spell" value={p[1] ?? ''} onChange={(v) => setParams(['magicCostSidSet', v, '-999', '0'])} placeholder={t('tree.artifactBonusesEditor.spell')} />
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.makesThisSpellFreeTo')}</p>
         </div>
       )
 
@@ -357,7 +361,7 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
               {MAGIC_SCHOOL_OPTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">+1 level to all spells of this school while worn.</p>
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.1LevelToAllSpells')}</p>
         </div>
       )
 
@@ -371,8 +375,7 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Lets the hero cast this school's spells without triggering the "same school twice in a row" restriction.
-            The real Ancient Idol artifact adds one of these bonuses per school to cover all five.
+            {t('tree.artifactBonusesEditor.letsTheHeroCastThis')}
           </p>
         </div>
       )
@@ -386,18 +389,18 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             <Select value={school} onValueChange={(v) => setParams([v, 'any', tier])}>
               <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Any school</SelectItem>
+                <SelectItem value="any">{t('tree.artifactBonusesEditor.anySchool')}</SelectItem>
                 {MAGIC_SCHOOL_OPTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={tier} onValueChange={(v) => setParams([school, 'any', v])}>
               <SelectTrigger className="h-7 text-xs w-32 shrink-0"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SPELL_TIER_OPTIONS.map((t) => <SelectItem key={t} value={t}>{t === 'any' ? 'Any tier' : `Tier ${t}`}</SelectItem>)}
+                {SPELL_TIER_OPTIONS.map((tr) => <SelectItem key={tr} value={tr}>{tr === 'any' ? t('tree.artifactBonusesEditor.anyTier') : `Tier ${tr}`}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <p className="text-xs text-muted-foreground">Makes all matching spells available to the hero (a fixed set, not random) — pairs school/tier filters, or "Any" for no filter.</p>
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.makesAllMatchingSpellsAvailable')}</p>
         </div>
       )
     }
@@ -406,11 +409,11 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
       return (
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <EntityCombobox category="spell" value={p[0] ?? ''} onChange={(v) => setParamAt(0, v)} placeholder="Replace this spell…" />
+            <EntityCombobox category="spell" value={p[0] ?? ''} onChange={(v) => setParamAt(0, v)} placeholder={t('tree.artifactBonusesEditor.replaceThisSpell')} />
             <span className="text-xs text-muted-foreground shrink-0">→</span>
-            <EntityCombobox category="spell" value={p[1] ?? ''} onChange={(v) => setParamAt(1, v)} placeholder="…with this spell" />
+            <EntityCombobox category="spell" value={p[1] ?? ''} onChange={(v) => setParamAt(1, v)} placeholder={t('tree.artifactBonusesEditor.withThisSpell')} />
           </div>
-          <p className="text-xs text-muted-foreground">Whenever the hero would know the first spell, they know the second one instead.</p>
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.wheneverTheHeroWouldKnow')}</p>
         </div>
       )
 
@@ -426,10 +429,10 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             onValueChange={(v) => setParamAt(1, v)}
           />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground shrink-0">Affects:</span>
+            <span className="text-xs text-muted-foreground shrink-0">{t('tree.artifactBonusesEditor.affects')}</span>
             <AllegianceToggle
               value={allegiance}
-              options={[{ id: 'ally', label: 'Your creatures' }, { id: 'enemy', label: 'Enemy creatures' }]}
+              options={[{ id: 'ally', label: t('tree.artifactBonusesEditor.allegiance.ally') }, { id: 'enemy', label: t('tree.artifactBonusesEditor.allegiance.enemy') }]}
               onChange={(v) => setAllegiance('receiverAllegiance', v === 'enemy' ? 'enemy' : null)}
             />
           </div>
@@ -454,7 +457,7 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Applies to the wearer's own creatures. Negative reduces damage taken/dealt as applicable; positive increases it.
+            {t('tree.artifactBonusesEditor.appliesToTheWearersOwn')}
           </p>
         </div>
       )
@@ -465,9 +468,9 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
         <div className="space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs">
             <Checkbox checked={p[1] === 'true'} onCheckedChange={(c) => setParams(['alwaysCounter', c ? 'true' : 'false'])} />
-            Always Counterattack
+            {t('tree.artifactBonusesEditor.alwaysCounterattack')}
           </label>
-          <p className="text-xs text-muted-foreground">Friendly creatures can counterattack even against an attacker with "Swift Strike."</p>
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.friendlyCreaturesCanCounterattackEven')}</p>
         </div>
       )
 
@@ -486,7 +489,7 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             <Select value={selected} onValueChange={onSelectChange}>
               <SelectTrigger className="h-7 text-xs flex-1 min-w-0"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="magicSchoolSet">Reduce Enemy Spell School Level</SelectItem>
+                <SelectItem value="magicSchoolSet">{t('tree.artifactBonusesEditor.reduceEnemySpellSchoolLevel')}</SelectItem>
                 {BATTLE_HERO_ATTRIBUTES.map((a) => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -502,13 +505,13 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {isSchool ? "-1 level to the target's spells of this school, for this battle only." : battleAttr.description}
+            {isSchool ? t('tree.artifactBonusesEditor.1LevelToTheTargets') : battleAttr.description}
           </p>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground shrink-0">Affects:</span>
+            <span className="text-xs text-muted-foreground shrink-0">{t('tree.artifactBonusesEditor.affects')}</span>
             <AllegianceToggle
               value={allegiance}
-              options={[{ id: 'enemy', label: 'Enemy hero' }, { id: 'all', label: 'Both heroes' }]}
+              options={[{ id: 'enemy', label: t('tree.artifactBonusesEditor.allegiance.enemyHero') }, { id: 'all', label: t('tree.artifactBonusesEditor.allegiance.bothHeroes') }]}
               onChange={(v) => setAllegiance('receiverAllegiance', v)}
             />
           </div>
@@ -527,12 +530,11 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
               </SelectContent>
             </Select>
             <div className="flex-1 min-w-0">
-              <EntityCombobox category="buff" value={p[1] ?? ''} onChange={(v) => setParamAt(1, v)} placeholder="Buff…" />
+              <EntityCombobox category="buff" value={p[1] ?? ''} onChange={(v) => setParamAt(1, v)} placeholder={t('shared.buff')} />
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Grants a buff/status effect during battle — pick a real or custom buff (see Custom Buffs in
-            the sidebar), or type a short unique id if you're hand-authoring a matching buff yourself.
+            {t('tree.artifactBonusesEditor.grantsABuffStatusEffect')}
           </p>
         </div>
       )
@@ -543,11 +545,11 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
           <Select value={p[0] ?? BASIC_RESOURCE_IDS[0]} onValueChange={(v) => setParamAt(0, v)}>
             <SelectTrigger className="h-7 text-xs w-28 shrink-0"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>)}
+              {BASIC_RESOURCE_IDS.map((r) => <SelectItem key={r} value={r}>{resourceName(r)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Input type="number" className="h-7 w-24 text-xs" value={p[1] ?? '0'} onChange={(e) => setParamAt(1, e.target.value)} />
-          <span className="text-xs text-muted-foreground">per day</span>
+          <span className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.perDay')}</span>
         </div>
       )
 
@@ -555,7 +557,7 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
       return (
         <div className="space-y-1.5">
           <Input type="number" className="h-7 w-24 text-xs" value={p[0] ?? '1'} onChange={(e) => setParamAt(0, e.target.value)} />
-          <p className="text-xs text-muted-foreground">Produces this much of the wearer's faction's special resource (Gems, Crystals, or Mercury, depending on faction) each day.</p>
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.producesThisMuchOfThe')}</p>
         </div>
       )
 
@@ -566,12 +568,12 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
             <Input type="number" className="h-7 w-20 text-xs" value={percentToDisplay(p[1])} onChange={(e) => setParams(['all', displayToPercent(e.target.value)])} />
             <span className="text-xs text-muted-foreground">%</span>
           </div>
-          <p className="text-xs text-muted-foreground">+X% to all creature growth, in every city you own.</p>
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.xToAllCreatureGrowth')}</p>
         </div>
       )
 
     case 'no-effect':
-      return <p className="text-xs text-muted-foreground">No fields — this bonus only exists to be one of several rolled by a random-reward pool.</p>
+      return <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.noFieldsThisBonusOnly')}</p>
 
     case 'raw':
     default:
@@ -579,12 +581,12 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
         <div className="space-y-1.5">
           <Input
             className="h-7 text-xs"
-            placeholder="Raw bonus type (e.g. heroStat)"
+            placeholder={t('tree.artifactBonusesEditor.rawBonusTypeEG')}
             value={type}
             onChange={(e) => onChange({ ...bonus, type: e.target.value })}
           />
-          <StringListEditor values={p} onChange={setParams} addLabel="+ Add parameter" placeholder="Raw parameter value" />
-          <p className="text-xs text-muted-foreground">This bonus doesn't match a known effect shape — edit its raw type/parameters directly.</p>
+          <StringListEditor values={p} onChange={setParams} addLabel={t('tree.artifactBonusesEditor.addParameter')} placeholder={t('tree.artifactBonusesEditor.rawParameterValue')} />
+          <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.thisBonusDoesntMatchA')}</p>
         </div>
       )
   }
@@ -598,6 +600,7 @@ interface ArtifactBonusesEditorProps {
 }
 
 export default function ArtifactBonusesEditor({ bonuses, onChange }: ArtifactBonusesEditorProps) {
+  const { t } = useTranslation()
   const groupedEffects = useMemo(
     () => EFFECT_GROUPS.map((group) => [group, EFFECT_DEFS.filter((d) => d.group === group)] as const),
     [],
@@ -679,9 +682,9 @@ export default function ArtifactBonusesEditor({ bonuses, onChange }: ArtifactBon
         className="text-xs text-primary hover:underline"
         onClick={() => onChange([...bonuses, EFFECT_DEFS[0].makeDefault()])}
       >
-        + Add bonus
+        {t('tree.artifactBonusesEditor.addBonus')}
       </button>
-      {bonuses.length === 0 && <p className="text-xs text-muted-foreground">No bonuses.</p>}
+      {bonuses.length === 0 && <p className="text-xs text-muted-foreground">{t('tree.artifactBonusesEditor.noBonuses')}</p>}
     </div>
   )
 }

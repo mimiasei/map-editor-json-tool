@@ -6,25 +6,10 @@ import type { Tone } from '@/lib/script-templates/text-gen/phrases'
 
 export type CustomBeatKind = 'intro' | 'visit' | 'capture' | 'defeat' | 'resources' | 'timer' | 'reward' | 'choice'
 
-export const CUSTOM_BEAT_LABELS: Record<CustomBeatKind, { label: string; hint: string }> = {
-  intro: { label: 'Introduction', hint: 'A dialog that sets the scene' },
-  visit: { label: 'Visit places', hint: 'Visit a few objects, one clue each' },
-  capture: { label: 'Capture a town', hint: 'Take a town to move on' },
-  defeat: { label: 'Defeat an army', hint: 'Beat a chosen army to move on' },
-  resources: { label: 'Gather gold', hint: 'Reach an amount of gold' },
-  timer: { label: 'Survive / wait', hint: 'Hold out for a number of days' },
-  reward: { label: 'Reward', hint: 'A dialog that pays out gold' },
-  choice: { label: 'Player choice', hint: 'The player picks an option that matters later' },
-}
+export const CUSTOM_BEAT_KINDS: CustomBeatKind[] = ['intro', 'visit', 'capture', 'defeat', 'resources', 'timer', 'reward', 'choice']
 
 export const CHOICE_PRESETS = ['mercy', 'trade', 'approach'] as const
 export type ChoicePreset = (typeof CHOICE_PRESETS)[number]
-
-export const CHOICE_PRESET_LABELS: Record<ChoicePreset, string> = {
-  mercy: 'Mercy or might',
-  trade: 'Pay or profit',
-  approach: 'Bold, careful or clever',
-}
 
 export interface CustomBeat {
   kind: CustomBeatKind

@@ -6,6 +6,7 @@ import { X } from '@/components/ui/icons'
 import { cn } from "@/lib/utils"
 import { DialogPortal, DialogOverlay } from "@/components/ui/dialog"
 import { readDialogGeometry, writeDialogGeometry } from "@/lib/dialog-geometry"
+import { useTranslation } from 'react-i18next'
 
 // ---------------------------------------------------------------------------
 // Context — lets DraggableDialogDragHandle reach the pointer handlers without
@@ -104,6 +105,7 @@ export const DraggableDialogContent = React.forwardRef<
     // query consistently lost the race and saw "closed", silently reintroducing
     // the close-the-whole-dialog bug this effect exists to prevent. Capturing
     // the state before Radix's own handler runs sidesteps the race entirely.
+    const { t } = useTranslation()
     const hadOpenPopupRef = React.useRef(false)
     React.useEffect(() => {
       const captureOpenState = () => {
@@ -392,7 +394,7 @@ export const DraggableDialogContent = React.forwardRef<
             {/* ---- Close button (always on top) ---- */}
             <DialogPrimitive.Close className="absolute right-4 top-3.5 z-40 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t('ui.close')}</span>
             </DialogPrimitive.Close>
 
             {children}

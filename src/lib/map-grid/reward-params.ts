@@ -8,6 +8,9 @@
 // decoded at extraction time.
 
 import type { GameCatalog } from '@/lib/catalog/types'
+import i18n from '@/lib/i18n'
+import { localName } from '@/lib/catalog/local-name'
+import { resourceName } from '@/lib/game-labels'
 
 /** One reward slot, classified — shared by the read-only formatter
  *  (formatRewardParam) and the editor (RewardSlotEditor, issue #143), so
@@ -59,14 +62,14 @@ export function encodeRewardParam(c: RewardParamClass): string {
 export function formatRewardParam(param: string, catalog: GameCatalog | null): string {
   const c = classifyRewardParam(param, catalog)
   if (c.kind === 'empty') return '—'
-  if (c.kind === 'resource') return `${c.amount} ${c.resource.charAt(0).toUpperCase()}${c.resource.slice(1)}`
+  if (c.kind === 'resource') return `${c.amount} ${resourceName(c.resource)}`
   if (c.kind === 'artifact') {
     const artifact = catalog?.artifacts.find((a) => a.id === c.sid)
-    if (artifact) return `${artifact.name} (artifact)`
+    if (artifact) return i18n.t('mapGrid.rewardParam.artifact', { name: localName(catalog, 'artifacts', artifact) })
   }
   if (c.kind === 'skill') {
     const skill = catalog?.skills.find((s) => s.id === c.sid)
-    if (skill) return `${skill.name} (skill)`
+    if (skill) return i18n.t('mapGrid.rewardParam.skill', { name: localName(catalog, 'skills', skill) })
   }
   return c.sid ?? param
 }

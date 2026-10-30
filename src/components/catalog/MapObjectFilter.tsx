@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useState, useEffect } from 'react'
 import type { CatalogMapObject } from '@/lib/catalog/types'
+import { useTranslation } from 'react-i18next'
 
 // ─── Filter state ─────────────────────────────────────────────────────────────
 
@@ -58,17 +59,7 @@ function saveFilter(f: MapObjectFilterState): void {
 
 // ─── Category labels ──────────────────────────────────────────────────────────
 
-const CATEGORY_LABELS: Record<MapObjectCategory, string> = {
-  interactables: 'Interactables',
-  resources: 'Resources',
-  environments: 'Environments',
-  spawns: 'Spawns',
-  animals: 'Animals',
-  fxs: 'FX',
-  artifacts: 'Artifact pickups',
-  blocks: 'Blocks',
-  test: 'Test (debug objects)',
-}
+const CATEGORIES: MapObjectCategory[] = ['interactables', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'artifacts', 'blocks', 'test']
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -90,6 +81,7 @@ export default function MapObjectFilter({
   filteredCount,
 }: Props) {
   // Local draft state — only committed on Apply
+  const { t } = useTranslation()
   const [draft, setDraft] = useState<MapObjectFilterState>(filter)
 
   useEffect(() => {
@@ -117,7 +109,7 @@ export default function MapObjectFilter({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xs">
         <DialogHeader>
-          <DialogTitle className="text-sm">Filter Map Objects</DialogTitle>
+          <DialogTitle className="text-sm">{t('catalog.mapObjectFilter.filterMapObjects')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 text-sm">
@@ -129,7 +121,7 @@ export default function MapObjectFilter({
               onCheckedChange={(v) => setDraft((prev) => ({ ...prev, interactableOnly: Boolean(v) }))}
             />
             <Label htmlFor="filter-interactable" className="cursor-pointer">
-              Interactable only
+              {t('catalog.mapObjectFilter.interactableOnly')}
             </Label>
           </div>
 
@@ -138,9 +130,9 @@ export default function MapObjectFilter({
           {/* Category toggles */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Categories
+              {t('catalog.mapObjectFilter.categories')}
             </p>
-            {(Object.keys(CATEGORY_LABELS) as MapObjectCategory[]).map((cat) => (
+            {CATEGORIES.map((cat) => (
               <div key={cat} className="flex items-center gap-2">
                 <Checkbox
                   id={`filter-cat-${cat}`}
@@ -148,7 +140,7 @@ export default function MapObjectFilter({
                   onCheckedChange={() => toggleCategory(cat)}
                 />
                 <Label htmlFor={`filter-cat-${cat}`} className="cursor-pointer">
-                  {CATEGORY_LABELS[cat]}
+                  {t(`catalog.mapCategories.${cat}`)}
                 </Label>
               </div>
             ))}
@@ -156,16 +148,16 @@ export default function MapObjectFilter({
 
           {/* Result count */}
           <p className="text-xs text-muted-foreground">
-            Showing approximately {filteredCount} of {totalCount} objects
+            {t('catalog.mapObjectFilter.showingApproximatelyOfObjects', { filteredCount, totalCount })}
           </p>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" size="sm" onClick={handleReset}>
-            Reset
+            {t('shared.reset')}
           </Button>
           <Button size="sm" onClick={handleApply}>
-            Apply
+            {t('mapGrid.objectActionsEditor.apply')}
           </Button>
         </DialogFooter>
       </DialogContent>

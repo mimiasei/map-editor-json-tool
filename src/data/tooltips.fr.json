@@ -1,0 +1,600 @@
+{
+  "actions": {
+    "GameVictory": {
+      "summary": "Déclenche l'écran de victoire du joueur.",
+      "tip": "À utiliser à la fin de votre dernière quête pour terminer la carte. Assurez-vous que tous les objectifs critiques sont accomplis avant de l'appeler."
+    },
+    "GameLose": {
+      "summary": "Déclenche l'écran de défaite du joueur.",
+      "tip": "Couramment utilisé dans des déclencheurs ObjectLose ou HeroKill pour imposer des conditions d'échec."
+    },
+    "Dialog": {
+      "summary": "Affiche un dialogue d'histoire par clé.",
+      "params": {
+        "0": "Clé du dialogue : doit correspondre à un identifiant de dialogue dans le dossier DB/dialogs/ du ZIP de votre carte."
+      },
+      "tip": "Le JSON du dialogue et ses jetons de localisation doivent figurer dans le ZIP compagnon de votre carte. Utilisez Exporter le ZIP pour les regrouper."
+    },
+    "RandomDialog": {
+      "summary": "Joue un dialogue choisi au hasard dans la liste de clés donnée.",
+      "params": {
+        "0": "Clé de dialogue 1 (obligatoire).",
+        "1": "Clé de dialogue 2 (facultatif).",
+        "2": "Clé de dialogue 3 (facultatif).",
+        "3": "Clé de dialogue 4 (facultatif).",
+        "4": "Clé de dialogue 5 (facultatif)."
+      },
+      "tip": "Pratique pour donner de la variété aux PNJ. Tous les dialogues listés doivent exister dans le ZIP de votre carte."
+    },
+    "Print": {
+      "summary": "Affiche un message de débogage ou de succès.",
+      "params": {
+        "0": "Chaîne de message ou SID de localisation."
+      },
+      "tip": "Surtout utilisé pour le débogage pendant le développement. Le message apparaît dans le journal du jeu."
+    },
+    "CurrentSubQuestDone": {
+      "summary": "Marque la sous-quête actuellement active comme terminée.",
+      "tip": "Utilisez-la à la place de SubQuestDone quand vous êtes dans le déclencheur de la sous-quête elle-même : c'est plus simple et évite de coder en dur des identifiants de quête."
+    },
+    "SubQuestActivate": {
+      "summary": "Active une sous-quête précise d'une quête.",
+      "params": {
+        "0": "SID de la quête : la quête qui possède la sous-quête.",
+        "1": "SID ou index de la sous-quête : la sous-quête à activer."
+      },
+      "tip": "À utiliser pour débloquer une quête secondaire depuis le déclencheur d'une autre quête. Pour une progression linéaire, préférez NextSubQuest."
+    },
+    "SubQuestDeactivate": {
+      "summary": "Désactive une sous-quête précise d'une quête.",
+      "params": {
+        "0": "SID de la quête.",
+        "1": "SID ou index de la sous-quête."
+      }
+    },
+    "NextQuest": {
+      "summary": "Passe à la quête suivante d'une série.",
+      "params": {
+        "0": "SID de la quête : la quête à faire avancer."
+      }
+    },
+    "EndQuest": {
+      "summary": "Termine (ferme) une quête.",
+      "params": {
+        "0": "SID de la quête."
+      },
+      "tip": "La quête disparaît du journal de quêtes. À utiliser une fois toutes les sous-quêtes terminées."
+    },
+    "NextSubQuest": {
+      "summary": "Active la sous-quête suivante par SID ou par index numérique.",
+      "params": {
+        "0": "SID de la sous-quête ou index (à partir de 0)."
+      }
+    },
+    "SubQuestDone": {
+      "summary": "Marque une sous-quête précise comme terminée depuis l'extérieur de sa propre quête.",
+      "params": {
+        "0": "SID de la quête.",
+        "1": "SID de la sous-quête."
+      },
+      "tip": "À utiliser quand une quête doit terminer une sous-quête d'une autre quête."
+    },
+    "NextAfterGroup": {
+      "summary": "Active la sous-quête suivante une fois toutes les sous-quêtes d'un groupe terminées.",
+      "params": {
+        "0": "SID du groupe.",
+        "1": "SID de la sous-quête suivante à activer."
+      },
+      "tip": "Utile pour les objectifs secondaires facultatifs : attendez-les tous avant de poursuivre la ligne principale."
+    },
+    "CounterSet": {
+      "summary": "Définit un compteur à une valeur précise.",
+      "params": {
+        "0": "SID du compteur.",
+        "1": "Nouvelle valeur (entier)."
+      },
+      "tip": "Les compteurs doivent être déclarés dans l'onglet Compteurs avant utilisation."
+    },
+    "CounterPlus": {
+      "summary": "Incrémente un compteur de la quantité donnée.",
+      "params": {
+        "0": "SID du compteur.",
+        "1": "Quantité à ajouter (généralement 1)."
+      }
+    },
+    "CounterMinus": {
+      "summary": "Décrémente un compteur de la quantité donnée.",
+      "params": {
+        "0": "SID du compteur.",
+        "1": "Quantité à soustraire."
+      }
+    },
+    "CounterSetRandom": {
+      "summary": "Définit un compteur à un entier aléatoire entre le minimum et le maximum (inclus).",
+      "params": {
+        "0": "SID du compteur.",
+        "1": "Valeur minimale.",
+        "2": "Valeur maximale."
+      }
+    },
+    "GiveUnitHero": {
+      "summary": "Ajoute des unités à l'armée d'un héros.",
+      "params": {
+        "0": "SID de l'unité : le type de créature à donner.",
+        "1": "Nombre d'unités.",
+        "2": "SID du héros : le héros qui les reçoit."
+      },
+      "tip": "Les unités s'ajoutent à celles que le héros possède déjà. Si le héros n'a aucun emplacement libre, les unités vont dans le premier emplacement disponible."
+    },
+    "GiveUnitHeroPerWeek": {
+      "summary": "Ajoute des unités à l'armée d'un héros chaque semaine.",
+      "params": {
+        "0": "SID de l'unité.",
+        "1": "Nombre par semaine.",
+        "2": "SID du héros."
+      },
+      "tip": "Cela se répète automatiquement. Placez-le dans un déclencheur StartWeek sans condition, ou protégez-le avec un Counter si vous voulez l'arrêter."
+    },
+    "RemoveUnitHero": {
+      "summary": "Retire des unités de l'armée d'un héros.",
+      "params": {
+        "0": "SID de l'unité.",
+        "1": "Nombre à retirer, ou 'all' pour retirer toutes les unités de ce type.",
+        "2": "SID du héros."
+      }
+    },
+    "GiveStatsHero": {
+      "summary": "Ajoute des points de caractéristique à un héros.",
+      "params": {
+        "0": "Nom de la caractéristique : offence, defence, spellPower, intelligence, movementBonus ou moral.",
+        "1": "SID du héros.",
+        "2": "Quantité à ajouter."
+      }
+    },
+    "GiveExpHero": {
+      "summary": "Donne des points d'expérience à un héros.",
+      "params": {
+        "0": "Quantité d'expérience.",
+        "1": "SID du héros (facultatif : omettez-le pour donner au héros du joueur actuel)."
+      }
+    },
+    "GiveItemHero": {
+      "summary": "Donne un artefact à un héros.",
+      "params": {
+        "0": "SID de l'artefact.",
+        "1": "SID du héros."
+      },
+      "tip": "Le héros doit exister sur la carte. Si le sac à dos du héros est plein, l'objet peut être perdu."
+    },
+    "AddSkillHero": {
+      "summary": "Ajoute un niveau d'une compétence à un héros.",
+      "params": {
+        "0": "SID de la compétence.",
+        "1": "SID du héros."
+      },
+      "tip": "Appelez cette action plusieurs fois pour ajouter plusieurs niveaux de la même compétence."
+    },
+    "AddSpellHero": {
+      "summary": "Enseigne un sort à un héros.",
+      "params": {
+        "0": "SID du sort.",
+        "1": "SID du héros."
+      }
+    },
+    "AddBuffHeroDays": {
+      "summary": "Applique un effet (buff) à un héros pendant N jours.",
+      "params": {
+        "0": "SID de l'effet.",
+        "1": "SID du héros.",
+        "2": "Durée en jours. Utilisez -1 pour un effet permanent."
+      }
+    },
+    "RemoveBuffHero": {
+      "summary": "Retire un effet (buff) d'un héros.",
+      "params": {
+        "0": "SID de l'effet.",
+        "1": "SID du héros (facultatif : laissez vide pour le retirer de tous les héros)."
+      }
+    },
+    "HeroResetMovePointsMax": {
+      "summary": "Rétablit les points de mouvement d'un héros à leur maximum.",
+      "params": {
+        "0": "SID du héros."
+      },
+      "tip": "Utile après HeroStop ou au début d'une séquence cinématique."
+    },
+    "SpawnHero": {
+      "summary": "Fait apparaître un héros sur la carte à un nœud donné pour un joueur précis.",
+      "params": {
+        "0": "SID du héros.",
+        "1": "ID du nœud : le nœud de la carte où le faire apparaître.",
+        "2": "Index du joueur (à partir de 1 : 1 = premier joueur)."
+      }
+    },
+    "DeleteHero": {
+      "summary": "Retire définitivement un héros de la carte.",
+      "params": {
+        "0": "SID du héros."
+      },
+      "tip": "Cela ne déclenche pas les conditions HeroKill."
+    },
+    "DisableAiHero": {
+      "summary": "Désactive le contrôle par l'IA d'un héros.",
+      "params": {
+        "0": "SID du héros."
+      }
+    },
+    "TeleportHero": {
+      "summary": "Téléporte instantanément un héros vers un nœud de la carte.",
+      "params": {
+        "0": "SID du héros.",
+        "1": "ID du nœud de destination."
+      }
+    },
+    "HeroToNode": {
+      "summary": "Déplace un héros vers un nœud de la carte (par recherche de chemin, pas instantané).",
+      "params": {
+        "0": "SID du héros.",
+        "1": "ID du nœud de destination."
+      }
+    },
+    "HeroToHero": {
+      "summary": "Déplace un héros vers un autre par recherche de chemin.",
+      "params": {
+        "0": "SID du héros qui se déplace.",
+        "1": "SID du héros cible."
+      }
+    },
+    "HeroStop": {
+      "summary": "Arrête le chemin de déplacement en cours du héros.",
+      "tip": "Appelez-la avant de lancer une cinématique ou une séquence scriptée importante pour éviter que le héros s'éloigne."
+    },
+    "ChangeManaHero": {
+      "summary": "Définit le mana d'un héros à la valeur donnée.",
+      "params": {
+        "0": "SID du héros.",
+        "1": "Quantité de mana."
+      }
+    },
+    "SetHeroMovePoints": {
+      "summary": "Définit les points de mouvement d'un héros à une valeur précise.",
+      "params": {
+        "0": "SID du héros.",
+        "1": "Valeur des points de mouvement."
+      }
+    },
+    "ResurrectHero": {
+      "summary": "Ressuscite un héros vaincu à un nœud de la carte.",
+      "params": {
+        "0": "SID du héros.",
+        "1": "ID du nœud où le ressusciter.",
+        "2": "Indicateur (généralement 0)."
+      }
+    },
+    "GiveRes": {
+      "summary": "Donne au joueur une quantité précise d'une ressource.",
+      "params": {
+        "0": "Type de ressource : gold, wood, ore, crystals, mercury, gemstones ou dust.",
+        "1": "Quantité."
+      }
+    },
+    "RemoveRes": {
+      "summary": "Retire une ressource du stock du joueur.",
+      "params": {
+        "0": "Type de ressource.",
+        "1": "Quantité à retirer."
+      },
+      "tip": "Ne vérifie pas que le joueur en a assez : retirer plus que disponible ramène la ressource à 0."
+    },
+    "MoveCamera": {
+      "summary": "Déplace la caméra pour cadrer un nœud de la carte.",
+      "params": {
+        "0": "ID du nœud à cadrer."
+      }
+    },
+    "RevealFogOfWar": {
+      "summary": "Révèle le brouillard de guerre autour d'un nœud.",
+      "params": {
+        "0": "ID du nœud central.",
+        "1": "Rayon de révélation en cases de la carte."
+      }
+    },
+    "DeleteEntity": {
+      "summary": "Retire définitivement une entité de la carte (objet bloquant, décor, zone).",
+      "params": {
+        "0": "SID d'entité de l'objet à retirer. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour l'objet placé."
+      }
+    },
+    "SpawnObject": {
+      "summary": "Fait apparaître un objet interactif à un nœud.",
+      "params": {
+        "0": "SID du type d'objet.",
+        "1": "ID du nœud où le faire apparaître.",
+        "2": "Indicateur (généralement false).",
+        "3": "SID d'entité à attribuer à l'objet créé (facultatif). Définissez-le pour le référencer plus tard via d'autres actions. Doit être unique sur la carte."
+      }
+    },
+    "SpawnMapObject": {
+      "summary": "Fait apparaître un décor ou un objet non interactif à un nœud.",
+      "params": {
+        "0": "SID du type d'objet.",
+        "1": "ID du nœud où le faire apparaître.",
+        "2": "Indicateur (généralement 0)."
+      }
+    },
+    "SetActivePortal": {
+      "summary": "Active ou désactive un portail.",
+      "params": {
+        "0": "SID d'entité du portail. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour le portail placé.",
+        "1": "true pour activer, false pour désactiver."
+      }
+    },
+    "EntityActionsOff": {
+      "summary": "Désactive toutes les interactions avec une entité de la carte (la rend non cliquable).",
+      "params": {
+        "0": "SID d'entité de l'objet à désactiver. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes."
+      }
+    },
+    "SetQuestMarker": {
+      "summary": "Attache un effet visuel de marqueur de quête à une entité de la carte.",
+      "params": {
+        "0": "SID d'entité de l'objet de la carte auquel attacher le marqueur. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes.",
+        "1": "Chemin de l'effet visuel (p. ex. effects/global_map/quest_mark_silver_01)."
+      }
+    },
+    "SetActiveQuestMarker": {
+      "summary": "Affiche ou masque un marqueur de quête déjà attaché à une entité.",
+      "params": {
+        "0": "SID d'entité de l'objet de la carte auquel le marqueur est attaché.",
+        "1": "true pour afficher, false pour masquer."
+      }
+    },
+    "CreateVFX": {
+      "summary": "Crée un effet visuel à un nœud.",
+      "params": {
+        "0": "SID du type d'effet visuel.",
+        "1": "ID du nœud.",
+        "2": "Indicateur 1 (généralement false).",
+        "3": "Indicateur 2 (généralement true).",
+        "4": "SID d'entité à attribuer à cette instance d'effet visuel (facultatif). Permet de l'activer ou le désactiver plus tard via SetActiveVFX. Doit être unique sur la carte."
+      }
+    },
+    "SetActiveVFX": {
+      "summary": "Affiche ou masque une entité d'effet visuel.",
+      "params": {
+        "0": "SID d'entité de l'effet visuel à afficher ou masquer.",
+        "1": "true pour afficher, false pour masquer."
+      }
+    },
+    "SetActiveMarker": {
+      "summary": "Affiche ou masque une zone ou un marqueur d'interaction.",
+      "params": {
+        "0": "SID d'entité de la zone ou du marqueur à afficher ou masquer. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes.",
+        "1": "true pour afficher, false pour masquer."
+      }
+    },
+    "IncreaseStrengthSquad": {
+      "summary": "Améliore la force d'un peloton neutre.",
+      "params": {
+        "0": "SID d'entité du peloton neutre à améliorer. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour la pile placée.",
+        "1": "Chaîne d'amélioration au format 'rang,niveau' (p. ex. '0,2' = améliorer de 2 niveaux)."
+      }
+    },
+    "DeleteSquad": {
+      "summary": "Retire un peloton neutre de la carte.",
+      "params": {
+        "0": "SID d'entité du peloton neutre à retirer. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour la pile placée.",
+        "1": "Indicateur (généralement 1)."
+      }
+    },
+    "TriggerClearCustom": {
+      "summary": "Efface/réinitialise un déclencheur précis pour qu'il puisse se déclencher à nouveau.",
+      "params": {
+        "0": "SID de la quête.",
+        "1": "Index de la sous-quête (à partir de 0).",
+        "2": "Index du déclencheur (à partir de 0).",
+        "3": "Indicateur : 0 ou 1."
+      },
+      "tip": "Utile pour les déclencheurs répétés qui ne se déclenchent normalement qu'une fois."
+    },
+    "EnableInterruption": {
+      "summary": "Active une interruption par SID.",
+      "params": {
+        "0": "SID de l'interruption."
+      }
+    },
+    "DisableInterruption": {
+      "summary": "Désactive une interruption par SID.",
+      "params": {
+        "0": "SID de l'interruption."
+      }
+    },
+    "ChangeCampaignOneStep": {
+      "summary": "Fait avancer la campagne d'une étape.",
+      "params": {
+        "0": "true ou false."
+      }
+    },
+    "AiBanArea": {
+      "summary": "Interdit aux héros de l'IA d'entrer dans la zone autour d'un nœud.",
+      "params": {
+        "0": "ID du nœud central."
+      }
+    },
+    "AiUnbanArea": {
+      "summary": "Lève l'interdiction de déplacement de l'IA dans la zone autour d'un nœud.",
+      "params": {
+        "0": "ID du nœud central."
+      }
+    }
+  },
+  "conditions": {
+    "StartTurn": {
+      "summary": "Se déclenche au début d'un tour précis pour un joueur précis.",
+      "params": {
+        "0": "Numéro du tour (facultatif : omettez-le pour se déclencher à chaque tour).",
+        "1": "Index du joueur (facultatif : omettez-le pour n'importe quel joueur)."
+      },
+      "tip": "Sans paramètre, se déclenche au début de chaque tour pour chaque joueur. Utilisez le champ supplémentaire Counter pour exiger que N tours se soient écoulés."
+    },
+    "StartWeek": {
+      "summary": "Se déclenche au début de n'importe quelle semaine.",
+      "tip": "Les semaines durent 7 tours. À utiliser pour des événements périodiques comme des renforts hebdomadaires."
+    },
+    "AnyStartTurn": {
+      "summary": "Se déclenche au début du tour de n'importe quel joueur.",
+      "tip": "Plus permissif que StartTurn. Généralement utilisé avec des conditions Counter pour chronométrer des événements."
+    },
+    "Counter": {
+      "summary": "Compare la valeur d'un compteur à un seuil.",
+      "params": {
+        "0": "SID du compteur : le compteur à vérifier.",
+        "1": "Opérateur de comparaison : =, >, <, >=, <=, !=",
+        "2": "Valeur de comparaison."
+      },
+      "tip": "Les compteurs doivent être déclarés dans l'onglet Compteurs. Cette condition est généralement combinée à d'autres avec la logique ET."
+    },
+    "HeroKill": {
+      "summary": "Se déclenche quand le héros indiqué est tué au combat.",
+      "params": {
+        "0": "SID du héros."
+      },
+      "tip": "Se déclenche quand le héros est vaincu, pas forcément retiré de la carte. À associer à GameLose pour les conditions de défaite."
+    },
+    "SquadKill": {
+      "summary": "Se déclenche quand un peloton neutre précis est vaincu.",
+      "params": {
+        "0": "SID d'entité de la pile neutre : défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour la pile placée. Ce n'est pas le SID du type d'unité."
+      },
+      "tip": "Le SID d'entité est défini dans l'éditeur de cartes quand vous placez la pile neutre, pas le nom du type d'unité (p. ex. utilisez 'E_Squad_Dragon', pas 'Dragon')."
+    },
+    "ObjectLose": {
+      "summary": "Se déclenche quand le joueur perd un objet précis de la carte (p. ex. une ville).",
+      "params": {
+        "0": "SID d'entité de l'objet de la carte. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour l'objet placé."
+      }
+    },
+    "ObjectInteractionBefore": {
+      "summary": "Se déclenche avant que le joueur interagisse avec un objet de la carte.",
+      "params": {
+        "0": "SID d'entité de l'objet de la carte. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour l'objet placé."
+      },
+      "tip": "Utilisez 'Before' quand vous voulez intercepter l'interaction et afficher un dialogue avant le déclenchement de l'événement par défaut."
+    },
+    "ObjectInteractionAfter": {
+      "summary": "Se déclenche après que le joueur a interagi avec un objet de la carte.",
+      "params": {
+        "0": "SID d'entité de l'objet de la carte. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour l'objet placé."
+      }
+    },
+    "ObjectCaptureEntity": {
+      "summary": "Se déclenche quand le joueur capture une entité de la carte (mine, ville, etc.).",
+      "params": {
+        "0": "SID d'entité de l'objet capturable. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour l'objet placé."
+      }
+    },
+    "NodeRevealed": {
+      "summary": "Se déclenche quand un nœud précis de la carte est révélé (brouillard de guerre levé).",
+      "params": {
+        "0": "ID du nœud."
+      }
+    },
+    "SquadInteraction": {
+      "summary": "Se déclenche quand le joueur interagit avec (s'approche d') un peloton neutre.",
+      "params": {
+        "0": "SID d'entité de la pile neutre. Défini via le champ Entité du panneau de propriétés de l'éditeur de cartes pour la pile placée."
+      },
+      "tip": "Se déclenche avant le début du combat. Utile pour les séquences de dialogue avant bataille."
+    },
+    "UnitOwnSide": {
+      "summary": "Vérifie combien d'unités d'un type le camp du joueur possède dans toutes ses armées.",
+      "params": {
+        "0": "SID du type d'unité.",
+        "1": "Opérateur de comparaison.",
+        "2": "Valeur seuil."
+      }
+    },
+    "UnitOwnHero": {
+      "summary": "Vérifie combien d'unités d'un type un héros précis possède.",
+      "params": {
+        "0": "SID du héros.",
+        "1": "SID du type d'unité.",
+        "2": "Opérateur de comparaison.",
+        "3": "Valeur seuil."
+      }
+    },
+    "UnitKill": {
+      "summary": "Se déclenche quand un type d'unité est tué.",
+      "params": {
+        "0": "SID du type d'unité."
+      },
+      "tip": "Utilisez le champ supplémentaire Counter pour exiger N victimes avant que cette condition se déclenche (p. ex. tuer 10 gobelins)."
+    },
+    "UnitLose": {
+      "summary": "Se déclenche quand un type d'unité est perdu (tué dans votre camp).",
+      "params": {
+        "0": "SID du type d'unité."
+      },
+      "tip": "Utilisez le champ supplémentaire Counter pour définir un seuil de pertes."
+    },
+    "UnitHire": {
+      "summary": "Se déclenche quand un type d'unité est recruté.",
+      "params": {
+        "0": "SID du type d'unité."
+      },
+      "tip": "Utilisez le champ supplémentaire Counter pour exiger N recrutements."
+    },
+    "ResCounter": {
+      "summary": "Compare le stock de ressources du joueur à une valeur.",
+      "params": {
+        "0": "Type de ressource : gold, wood, ore, crystals, mercury, gemstones, dust.",
+        "1": "Opérateur de comparaison.",
+        "2": "Valeur seuil."
+      }
+    },
+    "ItemOwnSide": {
+      "summary": "Vérifie si le camp du joueur possède un artefact précis.",
+      "params": {
+        "0": "SID de l'artefact.",
+        "1": "Opérateur de comparaison.",
+        "2": "Quantité (généralement 0 pour 'n'en a pas', 1 pour 'en a au moins un')."
+      }
+    },
+    "DifficultyCustomMap": {
+      "summary": "Vérifie le réglage de difficulté de la carte personnalisée.",
+      "params": {
+        "0": "Type : Neutral (force des neutres), Economy (ressources de départ) ou Ai (force de l'IA).",
+        "1": "Niveau : 1 (facile), 2 (moyen) ou 3 (difficile)."
+      },
+      "tip": "À utiliser pour adapter la force des ennemis ou les récompenses à chaque niveau de difficulté."
+    },
+    "PlayerDefeated": {
+      "summary": "Se déclenche quand un joueur précis est vaincu.",
+      "params": {
+        "0": "Index du joueur : 0, 1, 2 ou 3."
+      }
+    }
+  },
+  "fields": {
+    "quest.sid": "Identifiant unique de cette quête. Référencé par les actions et conditions liées aux quêtes.",
+    "quest.name": "SID de localisation affiché comme nom de la quête dans le journal de quêtes du jeu. Doit avoir un jeton correspondant dans customMaps.json.",
+    "quest.description": "SID de localisation affiché comme description de la quête dans le journal de quêtes. Doit avoir un jeton correspondant dans customMaps.json.",
+    "quest.sharing": "Détermine à qui appartient la quête. 'Clone' crée une copie distincte par joueur (par défaut). 'Ai' réserve la quête aux joueurs IA. Exigé par le moteur.",
+    "quest.comment": "Note de développeur attachée à cette quête. Ignorée par le moteur du jeu : réservée à l'auteur de la carte.",
+    "quest.activeOnStart": "Si true, cette quête est active au chargement de la carte. Si false, elle doit être activée via une action ActivateQuest.",
+    "quest.main": "Marque cette quête comme objectif principal. Affichée en évidence dans le journal de quêtes du joueur.",
+    "quest.hidden": "Si true, cette quête n'est jamais affichée dans le journal de quêtes du joueur, même active. Utile pour des quêtes internes de suivi.",
+    "subquest.sid": "Identifiant unique de cette étape de sous-quête. Référencé par les actions SubQuestActivate et SubQuestDeactivate.",
+    "subquest.name": "SID de localisation affiché comme nom de la sous-quête dans le journal de quêtes. Doit avoir un jeton correspondant dans customMaps.json.",
+    "subquest.comment": "Note de développeur attachée à cette sous-quête. Ignorée par le moteur du jeu : réservée à l'auteur de la carte.",
+    "subquest.activeOnStart": "Si true, cette étape de sous-quête est active au démarrage de la quête. Si false, activez-la manuellement via SubQuestActivate.",
+    "trigger.conditionsLogic": "'And' exige que toutes les conditions soient vraies avant que le déclencheur se déclenche. 'Or' se déclenche dès qu'une seule condition est vraie.",
+    "trigger.repeat": "Si true, ce déclencheur se déclenche chaque fois que ses conditions sont remplies, pas seulement la première fois. À utiliser avec précaution : un déclencheur répété sans garde peut se déclencher de nombreuses fois par tour.",
+    "counter.sid": "Identifiant unique de ce compteur. Utilisé dans CounterSet, CounterPlus, CounterMinus et les conditions Counter.",
+    "counter.value": "Valeur initiale du compteur au chargement de la carte. Généralement 0.",
+    "interruption.sid": "Identifiant unique de cette interruption. Utilisé par les actions EnableInterruption et DisableInterruption.",
+    "interruption.interruption": "L'événement de combat que ce crochet écoute. Options : BeforeIamVsHero, AfterIamWinVsHero, BeforeHeroVsHero, AfterHeroWinVsHero.",
+    "interruption.activeOnStart": "Si true, ce crochet d'interruption est actif au chargement de la carte. Si false, il doit être activé via une action EnableInterruption.",
+    "interruption.p": "Paramètres de cette interruption. Pour les quatre types d'interruption connus, p[0] est le SID d'entité d'un héros précis placé sur la carte (défini via le champ Entité dans l'éditeur de cartes). Laissez vide pour correspondre à n'importe quel héros."
+  }
+}

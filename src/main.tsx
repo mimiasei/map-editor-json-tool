@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { isTauri } from '@/lib/native-fs'
+import '@/lib/i18n'
 import HeadlessGenerate from './components/headless/HeadlessGenerate.tsx'
 
 // Forward any stray console.* calls from third-party libs to the log file on desktop

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useTooltips } from '@/hooks/useGuideData'
 import type { TooltipEntry } from '@/hooks/useGuideData'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -19,6 +20,7 @@ interface HelpTooltipProps {
  * Renders nothing if no tooltip entry exists for the given id (graceful degradation).
  */
 export default function HelpTooltip({ category, id, paramIndex, className }: HelpTooltipProps) {
+  const { t } = useTranslation()
   const tooltips = useTooltips()
 
   let entry: TooltipEntry | string | undefined
@@ -40,7 +42,7 @@ export default function HelpTooltip({ category, id, paramIndex, className }: Hel
           <button
             type="button"
             className={`inline-flex items-center text-muted-foreground hover:text-foreground transition-colors ${className ?? ''}`}
-            aria-label="Help"
+            aria-label={t('ui.help')}
           >
             <Info className="h-3 w-3" />
           </button>
@@ -62,7 +64,7 @@ export default function HelpTooltip({ category, id, paramIndex, className }: Hel
           <button
             type="button"
             className={`inline-flex items-center text-muted-foreground hover:text-foreground transition-colors ${className ?? ''}`}
-            aria-label="Parameter help"
+            aria-label={t('ui.parameterHelp')}
           >
             <Info className="h-3 w-3" />
           </button>
@@ -83,7 +85,7 @@ export default function HelpTooltip({ category, id, paramIndex, className }: Hel
         <button
           type="button"
           className={`inline-flex items-center text-muted-foreground hover:text-foreground transition-colors ${className ?? ''}`}
-          aria-label="Help"
+          aria-label={t('ui.help')}
         >
           <Info className="h-3 w-3" />
         </button>
@@ -95,7 +97,7 @@ export default function HelpTooltip({ category, id, paramIndex, className }: Hel
         {/* Parameter hints */}
         {hasParams && (
           <div className="space-y-1">
-            <p className="text-muted-foreground font-medium uppercase tracking-wide text-[10px]">Parameters</p>
+            <p className="text-muted-foreground font-medium uppercase tracking-wide text-[10px]">{t('ui.parameters')}</p>
             {Object.entries(entry.params!).map(([idx, hint]) => (
               <div key={idx} className="flex gap-1.5">
                 <span className="text-muted-foreground shrink-0">p[{idx}]</span>

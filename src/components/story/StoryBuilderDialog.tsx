@@ -27,9 +27,10 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import type { MapContext } from '@/types/map-context'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
-import { TONES, TONE_LABELS, type Tone } from '@/lib/script-templates/text-gen/phrases'
+import { TONES, toneLabel, type Tone } from '@/lib/script-templates/text-gen/phrases'
+import { beatHint, beatLabel, presetLabel, storyBlurb, storyTitle } from '@/lib/stories/story-display'
 import { GAME_LANGUAGES, TRANSLATABLE_LANGUAGES, languageLabel } from '@/lib/languages'
-import type { StoryDef, StoryInput, TextKind, TextLength, TextSpec } from '@/types/story'
+import type { StoryDef, StoryInput, TextLength, TextSpec } from '@/types/story'
 import { STORY_LIBRARY } from '@/lib/stories/library'
 import { buildStory, validateStoryInput } from '@/lib/stories/build'
 import { entityNameMap, suggestSlots } from '@/lib/stories/suggest'
@@ -37,8 +38,7 @@ import { draftToStoryDef } from '@/lib/stories/import'
 import {
   buildCustomStory,
   CHOICE_PRESETS,
-  CHOICE_PRESET_LABELS,
-  CUSTOM_BEAT_LABELS,
+  CUSTOM_BEAT_KINDS,
   DEFAULT_AMOUNTS,
   type ChoicePreset,
   type CustomBeat,
@@ -58,6 +58,7 @@ import {
 import SlotPicker from './SlotPicker'
 import TextWriterSettingsDialog from './TextWriterSettingsDialog'
 import { useStoryTexts } from './useStoryTexts'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -73,25 +74,9 @@ type Step = 'pick' | 'import' | 'build' | 'bind' | 'style' | 'preview' | 'done'
 const CUSTOM_ID = '__custom__'
 const IMPORT_ID = '__import__'
 
-const KIND_LABEL: Record<TextKind, string> = {
-  quest_name: 'Quest title',
-  quest_desc: 'Quest description',
-  intro: 'Introduction',
-  clue: 'Story moment',
-  choice_prompt: 'The choice',
-  answer: 'Answer',
-  outcome: 'What happens',
-  reward: 'Reward',
-  finale: 'Ending',
-}
-
-const LENGTH_LABEL: Record<TextLength, string> = { short: 'Short', medium: 'Medium' }
-
-const AMOUNT_LABEL: Partial<Record<CustomBeatKind, string>> = {
-  resources: 'Gold needed',
-  timer: 'Days',
-  reward: 'Gold reward',
-}
+// Labels live in en.json under story.storyBuilderDialog.{kinds,lengths,amounts}.<key>.
+type AmountKind = 'resources' | 'timer' | 'reward'
+const isAmountKind = (k: CustomBeatKind): k is AmountKind => k === 'resources' || k === 'timer' || k === 'reward'
 
 function newSeed(): number {
   return 1 + Math.floor(Math.random() * 999_999)
@@ -107,6 +92,7 @@ function mapSids(ctx: MapContext | null): Set<string> {
 }
 
 export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, discardToken = 0 }: Props) {
+  const { t } = useTranslation()
   const saved = useMemo(() => loadStoryBuilderSettings(), [])
 
   const [step, setStep] = useState<Step>('pick')
@@ -290,7 +276,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
       const draft = await importStoryDraft(ideaText, lang)
       const result = draftToStoryDef(draft)
       if ('error' in result) {
-        setImportError('That idea could not be turned into a story. Try adding more detail.')
+        setImportError(t('story.storyBuilderDialog.ideaNotStory'))
         return
       }
       setImportedDef(result.def)
@@ -299,7 +285,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
       setSlots(suggestSlots(result.def, mapContext))
       setStep(result.def.slots.length > 0 ? 'bind' : 'style')
     } catch (e) {
-      setImportError(describeError(e as TextWriterError) ?? 'The text writer is not available right now.')
+      setImportError(describeError(e as TextWriterError) ?? t('story.storyBuilderDialog.writerUnavailable'))
     } finally {
       setImportBusy(false)
     }
@@ -320,7 +306,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
           )
           extraResults[target] = res
         } catch (e) {
-          notes.push(`${languageLabel(target)} could not be written (${describeError(e as TextWriterError) ?? 'not available'}).`)
+          notes.push(t('story.storyBuilderDialog.languageNotWritten', { language: languageLabel(target), reason: describeError(e as TextWriterError) ?? t('story.storyBuilderDialog.notAvailable') }))
         }
       }
     }
@@ -355,13 +341,13 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
   }
 
   const title: Record<Step, string> = {
-    pick: 'Story Builder',
-    import: 'Your own idea',
-    build: 'Build your own story',
-    bind: def?.title ?? 'Story',
-    style: def?.title ?? 'Story',
-    preview: def?.title ?? 'Story',
-    done: 'Story created',
+    pick: t('story.storyBuilderDialog.steps.pick'),
+    import: t('story.storyBuilderDialog.steps.import'),
+    build: t('story.storyBuilderDialog.steps.build'),
+    bind: def ? storyTitle(def) : t('story.storyBuilderDialog.steps.story'),
+    style: def ? storyTitle(def) : t('story.storyBuilderDialog.steps.story'),
+    preview: def ? storyTitle(def) : t('story.storyBuilderDialog.steps.story'),
+    done: t('story.storyBuilderDialog.steps.done'),
   }
 
   const moveBeat = (i: number, dir: -1 | 1) => {
@@ -383,7 +369,8 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
   const supported = textWriterSupported()
 
   const renderLine = (spec: TextSpec) => {
-    const label = `${KIND_LABEL[spec.kind]}${spec.intent ? ` · ${spec.intent}` : ''}`
+    const kindLabel = t(`story.storyBuilderDialog.kinds.${spec.kind}`)
+    const label = spec.intent ? t('story.storyBuilderDialog.kindWithIntent', { kind: kindLabel, intent: spec.intent }) : kindLabel
     const indent = spec.kind === 'answer' || spec.kind === 'outcome' ? 'ml-5' : ''
     const rows = spec.kind === 'answer' ? 1 : 2
     return (
@@ -398,7 +385,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
             disabled={texts.busy}
             onClick={() => void texts.another(spec)}
           >
-            <Dices className="h-3 w-3" /> Another
+            <Dices className="h-3 w-3" /> {t('story.storyBuilderDialog.another')}
           </Button>
         </div>
         {texts.nonEnglish ? (
@@ -414,7 +401,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
             </div>
             <div className="space-y-0.5">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] text-muted-foreground">English</p>
+                <p className="text-[11px] text-muted-foreground">{t('story.storyBuilderDialog.english')}</p>
                 {texts.stale.has(spec.id) && (
                   <button
                     type="button"
@@ -422,7 +409,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                     disabled={texts.busy}
                     onClick={() => void texts.updateEnglish(spec)}
                   >
-                    Out of date · update
+                    {t('story.storyBuilderDialog.outOfDateUpdate')}
                   </button>
                 )}
               </div>
@@ -457,13 +444,12 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
           {step === 'pick' && (
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground">
-                Choose a story. It adds connected quests and dialogs to your map, with choices the player
-                makes along the way. You only point at places on your map; the text is written for you.
+                {t('story.storyBuilderDialog.chooseAStoryItAdds')}
               </p>
 
               <div className="flex flex-wrap items-center gap-2">
                 <Label htmlFor="story-language" className="text-xs">
-                  Write in
+                  {t('story.storyBuilderDialog.writeIn')}
                 </Label>
                 <select
                   id="story-language"
@@ -473,12 +459,12 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 >
                   {GAME_LANGUAGES.map((l) => (
                     <option key={l.id} value={l.id} disabled={l.id !== 'english' && !ready}>
-                      {l.label}
+                      {languageLabel(l.id)}
                     </option>
                   ))}
                 </select>
                 <span className="text-xs text-muted-foreground">
-                  {lang === 'english' ? 'English' : `${languageLabel(lang)} + English`}
+                  {lang === 'english' ? t('story.storyBuilderDialog.english') : `${languageLabel(lang)} + English`}
                 </span>
                 {supported && (
                   <button
@@ -487,7 +473,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                     onClick={() => setSettingsOpen(true)}
                   >
                     <Settings2 className="h-3.5 w-3.5" />
-                    {ready ? 'Text writer is on' : 'Set up the text writer for richer text and other languages'}
+                    {ready ? t('story.storyBuilderDialog.textWriterIsOn') : t('story.storyBuilderDialog.setUpTheTextWriter')}
                   </button>
                 )}
               </div>
@@ -504,13 +490,12 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{s.title}</p>
-                      <Badge variant="secondary">{TONE_LABELS[s.tone]}</Badge>
+                      <p className="text-sm font-medium">{storyTitle(s)}</p>
+                      <Badge variant="secondary">{toneLabel(s.tone)}</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{s.blurb}</p>
+                    <p className="text-xs text-muted-foreground">{storyBlurb(s)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {s.beats.length} quests
-                      {s.beats.some((b) => b.kind === 'choice') ? ' · player choices' : ''}
+                      {t(s.beats.some((b) => b.kind === 'choice') ? 'story.storyBuilderDialog.questsWithChoices' : 'story.storyBuilderDialog.questCount', { count: s.beats.length })}
                     </p>
                   </button>
                 ))}
@@ -522,9 +507,9 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                     'border-border hover:border-primary/50 hover:bg-accent/50',
                   )}
                 >
-                  <p className="text-sm font-medium">Build my own</p>
+                  <p className="text-sm font-medium">{t('story.storyBuilderDialog.buildMyOwn')}</p>
                   <p className="text-xs text-muted-foreground">
-                    Stack steps like visiting places, capturing a town and making a choice.
+                    {t('story.storyBuilderDialog.stackStepsLikeVisitingPlaces')}
                   </p>
                 </button>
                 <button
@@ -536,11 +521,11 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                     'border-border hover:border-primary/50 hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border disabled:hover:bg-transparent',
                   )}
                 >
-                  <p className="text-sm font-medium">I have my own idea</p>
+                  <p className="text-sm font-medium">{t('story.storyBuilderDialog.iHaveMyOwnIdea')}</p>
                   <p className="text-xs text-muted-foreground">
                     {ready
-                      ? 'Describe a story in your own words, in any language, and it is turned into quests and choices.'
-                      : 'Needs the text writer. Set it up above to use this.'}
+                      ? t('story.storyBuilderDialog.describeAStoryInYour')
+                      : t('story.storyBuilderDialog.needsTheTextWriterSet')}
                   </p>
                 </button>
               </div>
@@ -550,15 +535,14 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
           {step === 'import' && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Describe your story: who is in it, what happens, and where the player gets to decide. Write in{' '}
-                {languageLabel(lang)}. You can adjust everything afterwards.
+                {t('story.storyBuilderDialog.describeStory', { language: languageLabel(lang) })}
               </p>
               <Textarea
                 rows={9}
                 maxLength={MAX_IDEA_CHARS}
                 value={ideaText}
                 onChange={(e) => setIdeaText(e.target.value)}
-                placeholder="A young heir has vanished from a haunted moor. The player follows rumours to three old places, then must decide whom to trust…"
+                placeholder={t('story.storyBuilderDialog.aYoungHeirHasVanished')}
               />
               <p className="text-right text-xs text-muted-foreground">
                 {ideaText.length} / {MAX_IDEA_CHARS}
@@ -575,19 +559,19 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
           {step === 'build' && (
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground">
-                Add steps in the order they should happen. An ending is added for you.
+                {t('story.storyBuilderDialog.addStepsInTheOrder')}
               </p>
               <div className="space-y-2">
                 {customBeats.map((b, i) => (
                   <div key={i} className="flex flex-wrap items-center gap-2 rounded-md border border-border p-2">
                     <span className="w-5 text-xs text-muted-foreground">{i + 1}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm">{CUSTOM_BEAT_LABELS[b.kind].label}</p>
-                      <p className="text-xs text-muted-foreground">{CUSTOM_BEAT_LABELS[b.kind].hint}</p>
+                      <p className="text-sm">{beatLabel(b.kind)}</p>
+                      <p className="text-xs text-muted-foreground">{beatHint(b.kind)}</p>
                     </div>
-                    {AMOUNT_LABEL[b.kind] && (
+                    {isAmountKind(b.kind) && (
                       <div className="flex items-center gap-1.5">
-                        <Label className="text-xs">{AMOUNT_LABEL[b.kind]}</Label>
+                        <Label className="text-xs">{t(`story.storyBuilderDialog.amounts.${b.kind}`)}</Label>
                         <Input
                           type="number"
                           min={1}
@@ -613,7 +597,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                       >
                         {CHOICE_PRESETS.map((p) => (
                           <option key={p} value={p}>
-                            {CHOICE_PRESET_LABELS[p]}
+                            {presetLabel(p)}
                           </option>
                         ))}
                       </select>
@@ -646,9 +630,9 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 ))}
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {(Object.keys(CUSTOM_BEAT_LABELS) as CustomBeatKind[]).map((k) => (
+                {CUSTOM_BEAT_KINDS.map((k) => (
                   <Button key={k} type="button" variant="outline" size="sm" className="gap-1" onClick={() => addBeat(k)}>
-                    <Plus className="h-3 w-3" /> {CUSTOM_BEAT_LABELS[k].label}
+                    <Plus className="h-3 w-3" /> {beatLabel(k)}
                   </Button>
                 ))}
               </div>
@@ -657,12 +641,12 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
 
           {step === 'bind' && def && (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">{def.blurb}</p>
+              <p className="text-xs text-muted-foreground">{storyBlurb(def)}</p>
               {!mapContext && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="ml-2">
-                    Open a .map file first so places on your map can be picked. You can also type object names.
+                    {t('story.storyBuilderDialog.openAMapFileFirst')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -670,9 +654,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="ml-2">
-                    {removedPicks.length === 1 ? 'A pick is' : `${removedPicks.length} picks are`} no longer on the map (
-                    {removedPicks.map((s) => entityNameMap(mapContext)[s] ?? s).join(', ')}). Choose{' '}
-                    {removedPicks.length === 1 ? 'another' : 'new ones'} below.
+                    {t('story.storyBuilderDialog.removedPicks', { count: removedPicks.length, names: removedPicks.map((s) => entityNameMap(mapContext)[s] ?? s).join(', ') })}
                   </AlertDescription>
                 </Alert>
               )}
@@ -697,37 +679,36 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
           {step === 'style' && def && (
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Tone</Label>
+                <Label>{t('story.storyBuilderDialog.tone')}</Label>
                 <div className="flex flex-wrap gap-1.5">
-                  {TONES.map((t) => (
+                  {TONES.map((tn) => (
                     <Button
-                      key={t}
+                      key={tn}
                       type="button"
                       size="sm"
-                      aria-pressed={tone === t} variant={tone === t ? 'default' : 'outline'}
-                      onClick={() => setTone(t)}
+                      aria-pressed={tone === tn} variant={tone === tn ? 'default' : 'outline'}
+                      onClick={() => setTone(tn)}
                     >
-                      {TONE_LABELS[t]}
+                      {toneLabel(tn)}
                     </Button>
                   ))}
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Text length</Label>
+                <Label>{t('story.storyBuilderDialog.textLength')}</Label>
                 <div className="flex gap-1.5">
                   {(['short', 'medium'] as TextLength[]).map((l) => (
                     <Button key={l} type="button" size="sm" aria-pressed={length === l} variant={length === l ? 'default' : 'outline'} onClick={() => setLength(l)}>
-                      {LENGTH_LABEL[l]}
+                      {t(`story.storyBuilderDialog.lengths.${l}`)}
                     </Button>
                   ))}
                 </div>
               </div>
               {ready && (
                 <div className="space-y-1.5">
-                  <Label>Also write it in</Label>
+                  <Label>{t('story.storyBuilderDialog.alsoWriteItIn')}</Label>
                   <p className="text-xs text-muted-foreground">
-                    {lang === 'english' ? 'English' : `${languageLabel(lang)} + English`} are always included. Added
-                    languages are translated drafts; check them before publishing.
+                    {lang === 'english' ? t('story.storyBuilderDialog.alwaysIncludedEnglish') : t('story.storyBuilderDialog.alwaysIncludedBoth', { language: languageLabel(lang) })}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {TRANSLATABLE_LANGUAGES.filter((l) => l.id !== lang).map((l) => (
@@ -740,7 +721,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                           setExtraLangs((cur) => (cur.includes(l.id) ? cur.filter((x) => x !== l.id) : [...cur, l.id]))
                         }
                       >
-                        {l.label}
+                        {languageLabel(l.id)}
                       </Button>
                     ))}
                   </div>
@@ -750,7 +731,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="ml-2">
-                    Your map has no name yet. Set one in Map Settings so the story&apos;s ids are unique to your map.
+                    {t('story.storyBuilderDialog.yourMapHasNoName')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -761,9 +742,11 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {generated.quests.length} quests · {generated.dialogFlows.length} dialogs
-                  {generated.variables.length > 0 &&
-                    ` · tracks: ${generated.variables.map((v) => v.label).join(', ')}`}
+                  {t(generated.variables.length > 0 ? 'story.storyBuilderDialog.summaryTracks' : 'story.storyBuilderDialog.summary', {
+                    quests: t('story.storyBuilderDialog.questCount', { count: generated.quests.length }),
+                    dialogs: t('story.storyBuilderDialog.dialogCount', { count: generated.dialogFlows.length }),
+                    variables: generated.variables.map((v) => v.label).join(', '),
+                  })}
                 </p>
                 <Button
                   type="button"
@@ -773,17 +756,17 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                   disabled={texts.busy}
                   onClick={() => setSeed(newSeed())}
                 >
-                  <Dices className="h-3.5 w-3.5" /> Rewrite all
+                  <Dices className="h-3.5 w-3.5" /> {t('story.storyBuilderDialog.rewriteAll')}
                 </Button>
               </div>
               {texts.busy && (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Writing dialog…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('story.storyBuilderDialog.writingDialog')}
                 </p>
               )}
               {texts.note && <p className="text-xs text-muted-foreground">{texts.note}</p>}
               <p className="text-xs text-muted-foreground">
-                Edit any text, or ask for another version of one line. Nothing is added until you press Create story.
+                {t('story.storyBuilderDialog.editAnyTextOrAsk')}
               </p>
               <div className="space-y-3">{generated.textSpecs.map(renderLine)}</div>
             </div>
@@ -791,7 +774,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
 
           {step === 'done' && (
             <div className="space-y-3">
-              <p className="text-sm">Your story was added to the project.</p>
+              <p className="text-sm">{t('story.storyBuilderDialog.yourStoryWasAddedTo')}</p>
               {doneNote && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
@@ -804,41 +787,41 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
           <DialogFooter>
             {backStep[step] && (
               <Button variant="ghost" onClick={() => setStep(backStep[step]!)}>
-                Back
+                {t('tree.scriptTemplateDialog.back')}
               </Button>
             )}
             {step !== 'done' && (
               <Button variant="ghost" onClick={closeAndReset}>
-                {hasDraft ? 'Discard draft' : 'Cancel'}
+                {hasDraft ? t('story.storyBuilderDialog.discardDraft') : t('shared.cancel')}
               </Button>
             )}
             {hasDraft && !importBusy && (
-              <Button variant="outline" onClick={() => onOpenChange(false)} title="Close this window and keep the draft, so you can edit the map and come back">
-                Hide to edit map
+              <Button variant="outline" onClick={() => onOpenChange(false)} title={t('story.storyBuilderDialog.closeThisWindowAndKeep')}>
+                {t('story.storyBuilderDialog.hideToEditMap')}
               </Button>
             )}
             {step === 'import' && (
               <Button onClick={() => void runImport()} disabled={importBusy || ideaText.trim().length < 20}>
-                {importBusy ? 'Reading your idea…' : 'Build my story'}
+                {importBusy ? t('story.storyBuilderDialog.readingYourIdea') : t('story.storyBuilderDialog.buildMyStory')}
               </Button>
             )}
             {step === 'build' && (
               <Button onClick={finishBuild} disabled={customBeats.length === 0}>
-                Next
+                {t('story.storyBuilderDialog.next')}
               </Button>
             )}
             {step === 'bind' && (
               <Button onClick={() => setStep('style')} disabled={inputErrors.length > 0}>
-                Next
+                {t('story.storyBuilderDialog.next')}
               </Button>
             )}
-            {step === 'style' && <Button onClick={() => setStep('preview')}>Preview</Button>}
+            {step === 'style' && <Button onClick={() => setStep('preview')}>{t('story.storyBuilderDialog.preview')}</Button>}
             {step === 'preview' && (
               <Button onClick={() => void handleCreate()} disabled={!generated || creating || texts.busy}>
-                {creating ? 'Creating…' : 'Create story'}
+                {creating ? t('common.newMapDialog.creating') : t('story.storyBuilderDialog.createStory')}
               </Button>
             )}
-            {step === 'done' && <Button onClick={closeAndReset}>Close</Button>}
+            {step === 'done' && <Button onClick={closeAndReset}>{t('ui.close')}</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

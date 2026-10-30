@@ -71,3 +71,4 @@ src-tauri/sidecar/extract_thumbnails-x86_64-unknown-linux-gnu
 gme-mod/bin/
 gme-mod/obj/
 src-tauri/gme-mod/
+HANDOVER.md

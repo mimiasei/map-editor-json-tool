@@ -90,7 +90,7 @@ export function deriveThemeColors(hexes: readonly [string, string, string, strin
 // Curated from colorhunt.co/palettes/{popular,pastel,vintage,nature,light},
 // 3 per category. Hex order as listed on Color Hunt (not pre-sorted).
 
-export type PresetCategory = 'Popular' | 'Pastel' | 'Vintage' | 'Nature' | 'Light'
+export type PresetCategory = 'Popular' | 'Pastel' | 'Vintage' | 'Nature' | 'Light' | 'Factions' | 'Terrain' | 'Relics & Artifacts'
 
 interface PaletteSource {
   id: string
@@ -120,9 +120,30 @@ const PALETTE_SOURCES: PaletteSource[] = [
   { id: 'powder-blue', name: 'Powder Blue', category: 'Light', hexes: ['#F9E8A2', '#B4E1EB', '#95BDD7', '#78A4CB'] },
   { id: 'rosewater', name: 'Rosewater', category: 'Light', hexes: ['#FBEFEF', '#FFE2E2', '#F5CBCB', '#C5B3D3'] },
   { id: 'cottage-blush', name: 'Cottage Blush', category: 'Light', hexes: ['#C0E1D2', '#E5EEE4', '#F6F4E8', '#DC9B9B'] },
+  // Popular
+{ id: 'parchment-scroll', name: 'Parchment Scroll', category: 'Popular', hexes: ['#EAE5D9', '#DFD9C8', '#D4CDB7', '#C9C2A6'] },
+{ id: 'foggy-outpost', name: 'Foggy Outpost', category: 'Popular', hexes: ['#E2E8F0', '#CBD5E1', '#94A3B8', '#E2E8F0'] },
+{ id: 'faded-stone', name: 'Faded Stone', category: 'Popular', hexes: ['#E5E5E5', '#D4D4D4', '#A3A3A3', '#E5E5E5'] },
+
+// Factions (Muted Archetypes)
+{ id: 'order-ivory', name: 'Order Ivory', category: 'Factions', hexes: ['#F7F4EB', '#EDE6D4', '#E3D8BD', '#D9CBA6'] },
+{ id: 'crypt-ash', name: 'Crypt Ash', category: 'Factions', hexes: ['#EAEAEA', '#DFE2E2', '#CCD1D1', '#BDC5C5'] },
+{ id: 'overlord-rust', name: 'Overlord Rust', category: 'Factions', hexes: ['#EBE6E4', '#DECFC9', '#D0B9AF', '#C2A395'] },
+
+// Terrain (Low-Contrast Topography)
+{ id: 'wilted-steppe', name: 'Wilted Steppe', category: 'Terrain', hexes: ['#E2E7D9', '#CEE6C5', '#BED6B5', '#AEC6A5'] },
+{ id: 'dry-clay', name: 'Dry Clay', category: 'Terrain', hexes: ['#EADEC9', '#DECBA6', '#D2B883', '#C6A560'] },
+{ id: 'pale-taiga', name: 'Pale Taiga', category: 'Terrain', hexes: ['#E6ECEB', '#D2DFDE', '#BED2D1', '#AAC5C4'] },
+
+// Relics & Artifacts (Soft Accents)
+{ id: 'weathered-bronze', name: 'Weathered Bronze', category: 'Relics & Artifacts', hexes: ['#E6EAD8', '#D3DCB9', '#C0CE9A', '#ADC07B'] },
+{ id: 'tarnished-silver', name: 'Tarnished Silver', category: 'Relics & Artifacts', hexes: ['#E9EBEC', '#D4D9DB', '#C0C7CA', '#ACB5B9'] },
+{ id: 'clouded-amber', name: 'Clouded Amber', category: 'Relics & Artifacts', hexes: ['#ECE5D8', '#DCCEB9', '#CDB79B', '#BDA07D'] }
+
+
 ]
 
-export const PRESET_CATEGORY_ORDER: PresetCategory[] = ['Popular', 'Pastel', 'Vintage', 'Nature', 'Light']
+export const PRESET_CATEGORY_ORDER: PresetCategory[] = ['Popular', 'Pastel', 'Vintage', 'Nature', 'Light', 'Factions', 'Terrain', 'Relics & Artifacts']
 
 export const PRESET_THEMES: ThemeSettings[] = PALETTE_SOURCES.map((source) => ({
   id: `preset-${source.id}`,

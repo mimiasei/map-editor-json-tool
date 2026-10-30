@@ -13,19 +13,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import SubQuestGroupList from './SubQuestGroupList'
+import { useTranslation } from 'react-i18next'
 
 // The official guide documents a closed set of `sharing` values with real behavioral
 // differences: Clone/Shared/Ai/All apply per-scope, and Side0-Side7 pin the quest to one
 // specific player index. Kept as a dropdown-with-custom-fallback (same pattern as
 // InterruptionEditor's type field) so existing free-text values still display correctly.
-const SHARING_OPTIONS: { value: string; hint: string }[] = [
-  { value: 'Clone', hint: 'Cloned for every human player' },
-  { value: 'Shared', hint: 'One shared quest for all human players' },
-  { value: 'Ai', hint: 'Works for the first AI player in turn after the human player' },
-  { value: 'All', hint: 'Shared for all players' },
-]
+// Hints live in en.json under editors.questEditor.sharingHints.<value>.
+const SHARING_OPTIONS = ['Clone', 'Shared', 'Ai', 'All'] as const
 const SHARING_SIDE_OPTIONS = Array.from({ length: 8 }, (_, i) => `Side${i}`)
-const KNOWN_SHARING_VALUES = [...SHARING_OPTIONS.map((o) => o.value), ...SHARING_SIDE_OPTIONS]
+const KNOWN_SHARING_VALUES = [...SHARING_OPTIONS, ...SHARING_SIDE_OPTIONS]
 
 interface Props {
   index: number
@@ -33,6 +30,7 @@ interface Props {
 }
 
 export default function QuestEditor({ index, quest }: Props) {
+  const { t } = useTranslation()
   const { updateQuest } = useScenarioStore()
 
   if (!quest) return null
@@ -42,42 +40,42 @@ export default function QuestEditor({ index, quest }: Props) {
   return (
     <div className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Quest
+        {t('dialogs.localizationDialog.quest')}
       </h2>
 
       <div className="space-y-1">
-        <Label>SID</Label>
+        <Label>{t('shared.sID')}</Label>
         <Input
           value={quest.sid}
           onChange={(e) => update({ sid: e.target.value })}
-          placeholder="e.g. main_quest_line"
+          placeholder={t('editors.questEditor.eGMainQuestLine')}
         />
       </div>
 
       <div className="space-y-1">
-        <Label>Name (localization key)</Label>
+        <Label>{t('editors.questEditor.nameLocalizationKey')}</Label>
         <Input
           value={quest.name ?? ''}
           onChange={(e) => update({ name: e.target.value || undefined })}
-          placeholder="e.g. my_quest_name"
+          placeholder={t('editors.questEditor.eGMyQuestName')}
         />
-        <p className="text-xs text-muted-foreground">Shown in the in-game quest log.</p>
+        <p className="text-xs text-muted-foreground">{t('editors.questEditor.shownInTheInGame')}</p>
       </div>
 
       <div className="space-y-1">
-        <Label>Description (localization key)</Label>
+        <Label>{t('editors.questEditor.descriptionLocalizationKey')}</Label>
         <Input
           value={quest.desc ?? ''}
           onChange={(e) => update({ desc: e.target.value || undefined })}
-          placeholder="e.g. my_quest_description"
+          placeholder={t('editors.questEditor.eGMyQuestDescription')}
         />
         <p className="text-xs text-muted-foreground">
-          Additional narrative/gameplay text shown in the quest log, separate from the name.
+          {t('editors.questEditor.additionalNarrativeGameplayTextShown')}
         </p>
       </div>
 
       <div className="space-y-1">
-        <Label>Sharing</Label>
+        <Label>{t('shared.sharing')}</Label>
         {(() => {
           const isCustom = !!quest.sharing && !KNOWN_SHARING_VALUES.includes(quest.sharing)
           return (
@@ -89,26 +87,26 @@ export default function QuestEditor({ index, quest }: Props) {
                 }}
               >
                 <SelectTrigger className="w-56">
-                  <SelectValue placeholder="Not set" />
+                  <SelectValue placeholder={t('mapGrid.mapGridCellContent.notSet')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     {SHARING_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.value} — {o.hint}
+                      <SelectItem key={o} value={o}>
+                        {t('editors.questEditor.sharingOption', { value: o, hint: t(`editors.questEditor.sharingHints.${o}`) })}
                       </SelectItem>
                     ))}
                   </SelectGroup>
                   <SelectGroup>
-                    <SelectLabel>Specific player index</SelectLabel>
+                    <SelectLabel>{t('editors.questEditor.specificPlayerIndex')}</SelectLabel>
                     {SHARING_SIDE_OPTIONS.map((v, i) => (
                       <SelectItem key={v} value={v}>
-                        {v} — Only Player {i + 1}
+                        {t('editors.questEditor.sharingSide', { value: v, n: i + 1 })}
                       </SelectItem>
                     ))}
                   </SelectGroup>
                   <SelectGroup>
-                    <SelectItem value="__custom__">Custom…</SelectItem>
+                    <SelectItem value="__custom__">{t('shared.custom')}</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -116,7 +114,7 @@ export default function QuestEditor({ index, quest }: Props) {
                 <Input
                   value={quest.sharing ?? ''}
                   onChange={(e) => update({ sharing: e.target.value || undefined })}
-                  placeholder="Custom sharing value"
+                  placeholder={t('editors.questEditor.customSharingValue')}
                   className="flex-1"
                 />
               )}
@@ -126,11 +124,11 @@ export default function QuestEditor({ index, quest }: Props) {
       </div>
 
       <div className="space-y-1">
-        <Label>Developer comment</Label>
+        <Label>{t('shared.developerComment')}</Label>
         <Input
           value={quest.comment ?? ''}
           onChange={(e) => update({ comment: e.target.value || undefined })}
-          placeholder="Optional note (not used by game engine)"
+          placeholder={t('editors.questEditor.optionalNoteNotUsedBy')}
         />
       </div>
 
@@ -141,7 +139,7 @@ export default function QuestEditor({ index, quest }: Props) {
             checked={quest.activeOnStart}
             onCheckedChange={(v) => update({ activeOnStart: !!v })}
           />
-          <Label htmlFor="quest-active">Active on start</Label>
+          <Label htmlFor="quest-active">{t('shared.activeOnStart')}</Label>
         </div>
         <div className="flex items-center gap-2">
           <Checkbox
@@ -149,7 +147,7 @@ export default function QuestEditor({ index, quest }: Props) {
             checked={quest.main ?? false}
             onCheckedChange={(v) => update({ main: !!v || undefined })}
           />
-          <Label htmlFor="quest-main">Main quest (visible as primary objective)</Label>
+          <Label htmlFor="quest-main">{t('editors.questEditor.mainQuestVisibleAsPrimary')}</Label>
         </div>
         <div className="flex items-center gap-2">
           <Checkbox
@@ -157,15 +155,14 @@ export default function QuestEditor({ index, quest }: Props) {
             checked={quest.hidden ?? false}
             onCheckedChange={(v) => update({ hidden: !!v || undefined })}
           />
-          <Label htmlFor="quest-hidden">Hidden from quest log</Label>
+          <Label htmlFor="quest-hidden">{t('editors.questEditor.hiddenFromQuestLog')}</Label>
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label>Subquest Groups</Label>
+        <Label>{t('editors.questEditor.subquestGroups')}</Label>
         <p className="text-xs text-muted-foreground">
-          Gate a subquest (or another group) on several subquests finishing together, via
-          NextAfterGroup / NextQuestAfterGroup / NextSubGroupAfterGroup.
+          {t('editors.questEditor.gateASubquestOrAnother')}
         </p>
         <SubQuestGroupList
           subQuests={quest.subQuests}

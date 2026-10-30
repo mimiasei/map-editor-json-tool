@@ -1,11 +1,14 @@
+import { biomeName, waterTypeName } from '@/lib/map-grid/terrain-names'
 import { useEffect, useMemo, useState } from 'react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { openFile, saveFile } from '@/lib/native-fs'
-import { BIOME_NAMES, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { useTranslation } from 'react-i18next'
+import { localName } from '@/lib/catalog/local-name'
 
 export interface ImportedImage {
   name: string
@@ -93,7 +96,7 @@ function quantizeRgba(data: Uint8ClampedArray, colorLimit: 8 | 16 | 32): Uint8Cl
 
 function objectLabel(sid: string, catalog: GameCatalog | null): string {
   const object = catalog?.mapObjects.find((entry) => entry.id === sid)
-  return object ? `${object.name} (${object.id})` : sid
+  return object ? `${localName(catalog, 'mapObjects', object)} (${object.id})` : sid
 }
 
 function objectMatches(entry: { id: string; name: string; category: string }, family: 'forest' | 'mountain'): boolean {
@@ -103,6 +106,7 @@ function objectMatches(entry: { id: string; name: string; category: string }, fa
 }
 
 export default function ImageColorMappingDialog({ open, onOpenChange, image, sizeX, sizeZ, catalog, onApply }: Props) {
+  const { t } = useTranslation()
   const [entries, setEntries] = useState<ColorEntry[]>([])
   const [pixels, setPixels] = useState<string[]>([])
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 })
@@ -144,7 +148,7 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
         canvas.width = bitmap.width
         canvas.height = bitmap.height
         const context = canvas.getContext('2d')
-        if (!context) throw new Error('Could not read the image pixels.')
+        if (!context) throw new Error(t('mapGrid.imageColorMappingDialog.cannotReadPixels'))
         context.drawImage(bitmap, 0, 0)
         bitmap.close()
         const data = quantizeRgba(context.getImageData(0, 0, canvas.width, canvas.height).data, colorLimit)
@@ -180,7 +184,7 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
 
   const saveMapping = async () => {
     const payload: SerializedImageMapping = { version: 1, name: image?.name ?? 'image', mappings: mapping }
-    await saveFile(JSON.stringify(payload, null, 2), 'image2map-mapping.json', { name: 'Image2Map mapping', extensions: ['json'] })
+    await saveFile(JSON.stringify(payload, null, 2), 'image2map-mapping.json', { name: t('shared.fileFilters.imageMapping'), extensions: ['json'] })
   }
 
   const loadMapping = async () => {
@@ -188,7 +192,7 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
     if (!picked) return
     try {
       const parsed = JSON.parse(picked.content) as Partial<SerializedImageMapping>
-      if (parsed.version !== 1 || !parsed.mappings || typeof parsed.mappings !== 'object') throw new Error('Not a valid Image2Map mapping file.')
+      if (parsed.version !== 1 || !parsed.mappings || typeof parsed.mappings !== 'object') throw new Error(t('mapGrid.imageColorMappingDialog.invalidMappingFile'))
       const validMappings: Record<string, ImageColorTarget> = {}
       for (const [key, target] of Object.entries(parsed.mappings)) {
         if (!/^\d+,\d+,\d+,\d+$/.test(key) || !target || typeof target !== 'object') continue
@@ -262,70 +266,70 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Map image colors to the map</DialogTitle>
+          <DialogTitle>{t('mapGrid.imageColorMappingDialog.mapImageColorsToThe')}</DialogTitle>
         </DialogHeader>
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>{image?.name} · {imageSize.width || '?'} × {imageSize.height || '?'} pixels → {sizeX} × {sizeZ} map tiles</p>
-          <p>Colors are reduced to at most {colorLimit} colors before mapping. Unmapped colors are ignored.</p>
+          <p>{t('mapGrid.imageColorMappingDialog.sizeSummary', { name: image?.name, w: imageSize.width || '?', h: imageSize.height || '?', sx: sizeX, sz: sizeZ })}</p>
+          <p>{t('mapGrid.imageColorMappingDialog.colorsAreReducedToAt', { colorLimit })}</p>
         </div>
         <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/20 p-2">
           <div className="space-y-1 min-w-0">
-            <p className="text-xs font-medium">Loaded image</p>
+            <p className="text-xs font-medium">{t('mapGrid.imageColorMappingDialog.loadedImage')}</p>
             {sourceImageUrl && (
-              <img src={sourceImageUrl} alt="Loaded source" className="block w-full h-28 rounded border border-border object-contain bg-background" />
+              <img src={sourceImageUrl} alt={t('mapGrid.imageColorMappingDialog.loadedSource')} className="block w-full h-28 rounded border border-border object-contain bg-background" />
             )}
           </div>
           <div className="space-y-1 min-w-0">
-            <p className="text-xs font-medium">Quantized preview ({colorLimit} colors)</p>
+            <p className="text-xs font-medium">{t('mapGrid.imageColorMappingDialog.quantizedPreviewColors', { colorLimit })}</p>
             {quantizedImageUrl && (
-              <img src={quantizedImageUrl} alt={`Quantized to ${colorLimit} colors`} className="block w-full h-28 rounded border border-border object-contain bg-background image-render-pixelated" />
+              <img src={quantizedImageUrl} alt={t('mapGrid.imageColorMappingDialog.quantizedAlt', { colorLimit })} className="block w-full h-28 rounded border border-border object-contain bg-background image-render-pixelated" />
             )}
           </div>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex items-center gap-2 text-xs border-b border-border pb-2 flex-wrap">
-          <span className="font-medium">Reduce colors:</span>
+          <span className="font-medium">{t('mapGrid.imageColorMappingDialog.reduceColors')}</span>
           <Select value={String(colorLimit)} onValueChange={(value) => setColorLimit(Number(value) as 8 | 16 | 32)}>
             <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="8">8 colors</SelectItem>
-              <SelectItem value="16">16 colors</SelectItem>
-              <SelectItem value="32">32 colors</SelectItem>
+              <SelectItem value="8">{t('mapGrid.imageColorMappingDialog.8Colors')}</SelectItem>
+              <SelectItem value="16">{t('mapGrid.imageColorMappingDialog.16Colors')}</SelectItem>
+              <SelectItem value="32">{t('mapGrid.imageColorMappingDialog.32Colors')}</SelectItem>
             </SelectContent>
           </Select>
-          <span className="font-medium ml-2">Assets:</span>
+          <span className="font-medium ml-2">{t('mapGrid.imageColorMappingDialog.assets')}</span>
           {(['forest', 'mountain'] as const).map((value) => (
             <button
               key={value}
               className={`px-2 py-1 rounded border ${family === value ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground'}`}
               onClick={() => setFamily(value)}
             >
-              {value === 'forest' ? 'Forest' : 'Mountain'}
+              {value === 'forest' ? t('mapGrid.imageColorMappingDialog.forest') : t('mapGrid.imageColorMappingDialog.mountain')}
             </button>
           ))}
-          <Input value={assetSearch} onChange={(event) => setAssetSearch(event.target.value)} placeholder="Search all assets…" className="h-7 w-44 text-xs" />
+          <Input value={assetSearch} onChange={(event) => setAssetSearch(event.target.value)} placeholder={t('mapGrid.imageColorMappingDialog.searchAllAssets')} className="h-7 w-44 text-xs" />
         </div>
         <div className="min-h-0 overflow-y-auto border border-border rounded-md">
           {entries.map((entry) => (
             <div key={entry.key} className="grid grid-cols-[7rem_1fr] items-center gap-3 px-3 py-2 border-b border-border last:border-b-0">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="h-5 w-5 rounded border border-border shrink-0" style={{ backgroundColor: entry.css }} />
-                <span className="text-xs tabular-nums truncate" title={entry.key}>{entry.count.toLocaleString()} px</span>
+                <span className="text-xs tabular-nums truncate" title={entry.key}>{t('mapGrid.imageColorMappingDialog.colorPixels', { n: entry.count.toLocaleString() })}</span>
               </div>
               <Select value={valueFor(entry.key)} onValueChange={(value) => setTarget(entry.key, value)}>
-                <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Ignore this color" /></SelectTrigger>
+                <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={t('mapGrid.imageColorMappingDialog.ignoreThisColor')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="skip">Ignore this color</SelectItem>
+                  <SelectItem value="skip">{t('mapGrid.imageColorMappingDialog.ignoreThisColor')}</SelectItem>
                   {BIOMES.map((biome) => (
-                    <SelectItem key={`terrain:${biome}`} value={`terrain:${biome}`}>Terrain: {BIOME_NAMES[biome]}</SelectItem>
+                    <SelectItem key={`terrain:${biome}`} value={`terrain:${biome}`}>{t('mapGrid.imageColorMappingDialog.terrainOption', { name: biomeName(biome) })}</SelectItem>
                   ))}
-                  {Object.entries(WATER_TYPE_NAMES).map(([id, name]) => (
-                    <SelectItem key={`water:${id}`} value={`water:${id}`}>Water: {name}</SelectItem>
+                  {Object.keys(WATER_TYPE_NAMES).map((id) => (
+                    <SelectItem key={`water:${id}`} value={`water:${id}`}>{t('mapGrid.imageColorMappingDialog.water', { name: waterTypeName(Number(id)) })}</SelectItem>
                   ))}
                   <SelectGroup>
-                    <SelectLabel>{family === 'forest' ? 'Forest assets' : 'Mountain assets'}</SelectLabel>
+                    <SelectLabel>{family === 'forest' ? t('mapGrid.imageColorMappingDialog.forestAssets') : t('mapGrid.imageColorMappingDialog.mountainAssets')}</SelectLabel>
                     {objectOptions.map((object) => (
-                      <SelectItem key={`object:${object.id}`} value={`object:${encodeURIComponent(object.id)}`}>Asset: {objectLabel(object.id, catalog)}</SelectItem>
+                      <SelectItem key={`object:${object.id}`} value={`object:${encodeURIComponent(object.id)}`}>{t('mapGrid.imageColorMappingDialog.assetOption', { name: objectLabel(object.id, catalog) })}</SelectItem>
                     ))}
                   </SelectGroup>
                 </SelectContent>
@@ -335,8 +339,8 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
           <div className="flex w-full items-center justify-start gap-2 border-b border-border pb-2">
-            <Button variant="outline" size="sm" onClick={() => { void loadMapping() }}>Load mapping</Button>
-            <Button variant="outline" size="sm" disabled={Object.keys(mapping).length === 0} onClick={() => { void saveMapping() }}>Save mapping</Button>
+            <Button variant="outline" size="sm" onClick={() => { void loadMapping() }}>{t('mapGrid.imageColorMappingDialog.loadMapping')}</Button>
+            <Button variant="outline" size="sm" disabled={Object.keys(mapping).length === 0} onClick={() => { void saveMapping() }}>{t('mapGrid.imageColorMappingDialog.saveMapping')}</Button>
           </div>
           <div className="flex w-full items-center justify-end gap-2">
             {applying && (
@@ -345,9 +349,9 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
                 <span>{Math.round(applyProgress * 100)}%</span>
               </div>
             )}
-            <Button variant="ghost" disabled={applying} onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="ghost" disabled={applying} onClick={() => onOpenChange(false)}>{t('shared.cancel')}</Button>
             <Button disabled={!canApply || applying} onClick={() => { void handleApply() }}>
-              Paint mapped colors
+              {t('mapGrid.imageColorMappingDialog.paintMappedColors')}
             </Button>
           </div>
         </DialogFooter>

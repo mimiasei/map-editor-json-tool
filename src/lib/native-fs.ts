@@ -4,6 +4,7 @@
 // never import @tauri-apps/plugin-* directly in UI components.
 
 import { logInfo, logWarn } from '@/lib/logger'
+import i18n from '@/lib/i18n'
 
 /** True when running inside the Tauri desktop wrapper. */
 export function isTauri(): boolean {
@@ -138,7 +139,7 @@ export async function openMapFile(): Promise<{
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Map', extensions: ['map'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.map'), extensions: ['map'] }],
     })
     if (!selected || typeof selected !== 'string') return null
     const bytes = await readFile(selected)
@@ -200,7 +201,7 @@ export async function openH3mFile(): Promise<{
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Heroes 3 Map', extensions: ['h3m'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.h3Map'), extensions: ['h3m'] }],
     })
     if (!selected || typeof selected !== 'string') return null
     const bytes = await readFile(selected)
@@ -247,7 +248,7 @@ export async function openImageFile(): Promise<{
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const selected = await open({
       multiple: false,
-      filters: [{ name: 'Image', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }],
+      filters: [{ name: i18n.t('shared.fileFilters.image'), extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }],
     })
     if (!selected || typeof selected !== 'string') return null
     const bytes = await readFile(selected)
@@ -396,7 +397,7 @@ export async function pickCoreZip(): Promise<string | null> {
   if (!isTauri()) return null
   const { open } = await import('@tauri-apps/plugin-dialog')
   const path = await open({
-    title: 'Select Core.zip',
+    title: i18n.t('common.setupDialog.selectCoreZip'),
     filters: [{ name: 'ZIP', extensions: ['zip'] }],
   })
   return typeof path === 'string' ? path : null

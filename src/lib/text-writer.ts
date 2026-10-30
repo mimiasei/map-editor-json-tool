@@ -7,6 +7,7 @@
 
 import { isTauri } from '@/lib/native-fs'
 import type { TextSpec } from '@/types/story'
+import i18n from '@/lib/i18n'
 
 export type Provider = 'gemini' | 'groq'
 
@@ -220,21 +221,21 @@ export function importStoryDraft(text: string, lang: string): Promise<StoryDraft
 export function describeError(e: TextWriterError): string | null {
   switch (e.code) {
     case 'auth':
-      return 'The text writer key was rejected. Check it in the text writer settings.'
+      return i18n.t('story.writerErrors.auth')
     case 'rate_limited':
-      return `${e.message || 'The text writer has reached its usage limit for now.'} Built-in text is used.`
+      return i18n.t('story.writerErrors.builtInUsed', { message: e.message || i18n.t('story.writerErrors.rateLimitedDefault') })
     case 'invalid':
       return e.message || null
     case 'unavailable':
     case 'no_key':
       return null
     case 'network':
-      return `${e.message || 'The text service could not be reached.'} Built-in text is used.`
+      return i18n.t('story.writerErrors.builtInUsed', { message: e.message || i18n.t('story.writerErrors.networkDefault') })
     case 'bad_response':
-      return `The text service answered, but not with usable text (${e.message || 'no details'}). Built-in text is used.`
+      return i18n.t('story.writerErrors.badResponse', { details: e.message || i18n.t('story.writerErrors.noDetails') })
     case 'store':
-      return `The saved key could not be read (${e.message || 'no details'}). Enter it again in the text writer settings.`
+      return i18n.t('story.writerErrors.store', { details: e.message || i18n.t('story.writerErrors.noDetails') })
     default:
-      return 'The text writer could not be used, so built-in text is used.'
+      return i18n.t('story.writerErrors.fallback')
   }
 }

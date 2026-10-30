@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 // ─── Map Grid — Interactables sub-categories (issue #130) ───────────────────
 // Core/DB/map/objects/4_interactables.json has no useful categorical field —
 // all 315 entries share tag:"Interact" (confirmed during issue #130's
@@ -37,21 +38,9 @@ export const INTERACTABLE_SUBCATEGORY_ORDER: InteractableSubcategory[] = [
   'other',
 ]
 
-export const INTERACTABLE_SUBCATEGORY_LABELS: Record<InteractableSubcategory, string> = {
-  dwellings: 'Dwellings',
-  portals: 'Portals',
-  resourceStorage: 'Resource Storage',
-  mines: 'Mines',
-  altarsOfMagic: 'Altars of Magic',
-  magicAmplifiers: 'Magic Amplifiers',
-  shrines: 'Shrines',
-  unitTrade: 'Unit Trade',
-  campaignOnly: 'Campaign-only',
-  adventureSites: 'Adventure Sites',
-  treasureAwards: 'Treasures & Awards',
-  marketsTrade: 'Markets & Trade',
-  special: 'Special',
-  other: 'Other',
+/** Display name of a subcategory in the UI language. */
+export function interactableSubcategoryName(sub: InteractableSubcategory): string {
+  return i18n.t(`shared.interactableSubcategories.${sub}`)
 }
 
 export const ADVENTURE_SITE_SIDS = new Set([

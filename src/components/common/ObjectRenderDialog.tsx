@@ -14,6 +14,7 @@ import { AlertTriangle, Loader2 } from '@/components/ui/icons'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import { refreshPendingCounts, runAllRenderJobs } from '@/lib/object-render/render-job'
 import { emptyIndex, saveRenderIndex } from '@/lib/object-render/render-index'
+import { useTranslation } from 'react-i18next'
 
 export const RENDER_PROMPT_OFF_KEY = 'oe-object-render-prompt-off'
 
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function ObjectRenderDialog({ open, onOpenChange, startup }: Props) {
+  const { t } = useTranslation()
   const pending = useObjectRenderStore((s) => s.pending)
   const job = useObjectRenderStore((s) => s.job)
   const [dontAsk, setDontAsk] = useState(false)
@@ -62,41 +64,36 @@ export default function ObjectRenderDialog({ open, onOpenChange, startup }: Prop
     <Dialog open={open} onOpenChange={(v) => { if (!v) { remember(); onOpenChange(false) } }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Nicer object images for the Map Grid</DialogTitle>
+          <DialogTitle>{t('common.objectRenderDialog.nicerObjectImagesForThe')}</DialogTitle>
           <DialogDescription>
-            Draw every mine, building, tree and rock on the map as a clean picture instead of a small icon.
+            {t('common.objectRenderDialog.drawEveryMineBuildingTree')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 text-sm">
           {total === null && !running && (
             <p className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Checking which objects need an image…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t('common.objectRenderDialog.checkingWhichObjectsNeedAn')}
             </p>
           )}
 
           {total !== null && total > 0 && !running && (
             <>
               <p>
-                The map will look a lot nicer and cleaner: objects get proper pictures with soft shadows, so you can tell
-                them apart at a glance and see how a map really fits together.
+                {t('common.objectRenderDialog.theMapWillLookA')}
               </p>
               <p className="text-muted-foreground">
-                The pictures are made on this computer from your own copy of the game, so nothing is downloaded and
-                nothing from the game is shared. It runs in the background while you keep working (the progress bar is at
-                the bottom of the window), usually takes a few minutes, and uses your graphics card. You can cancel at any
-                time and continue later from More &gt; Render Object Images.
+                {t('common.objectRenderDialog.thePicturesAreMadeOn')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Waiting: {pending!.interactables} map objects, then {pending!.decorations} decorations (trees, rocks,
-                animals), then {pending!.cliffs} cliff pieces (the edges of raised ground), then {pending!.rivers} river pieces.
+                {t('common.objectRenderDialog.waiting', { interactables: pending!.interactables, decorations: pending!.decorations, cliffs: pending!.cliffs, rivers: pending!.rivers })}
               </p>
             </>
           )}
 
-          {total === 0 && !running && <p>All object images are already made. New game objects are picked up automatically.</p>}
+          {total === 0 && !running && <p>{t('common.objectRenderDialog.allObjectImagesAreAlready')}</p>}
 
-          {running && <p>Rendering is running in the background, see the progress bar at the bottom of the window.</p>}
+          {running && <p>{t('common.objectRenderDialog.renderingIsRunningInThe')}</p>}
 
           {job.phase === 'error' && (
             <Alert variant="destructive" className="py-2">
@@ -110,19 +107,19 @@ export default function ObjectRenderDialog({ open, onOpenChange, startup }: Prop
           {startup && !running && total !== 0 ? (
             <div className="flex items-center gap-2">
               <Checkbox id="render-dont-ask" checked={dontAsk} onCheckedChange={(v) => setDontAsk(v === true)} />
-              <Label htmlFor="render-dont-ask" className="text-xs text-muted-foreground">Don&apos;t ask again at startup</Label>
+              <Label htmlFor="render-dont-ask" className="text-xs text-muted-foreground">{t('common.objectRenderDialog.dontAskAgainAtStartup')}</Label>
             </div>
           ) : (
             <span />
           )}
           <div className="flex gap-2">
             {total === 0 && !running && (
-              <Button variant="ghost" onClick={() => void renderAgain()}>Render everything again</Button>
+              <Button variant="ghost" onClick={() => void renderAgain()}>{t('common.objectRenderDialog.renderEverythingAgain')}</Button>
             )}
             <Button variant="ghost" onClick={() => { remember(); onOpenChange(false) }}>
-              {total !== null && total > 0 && !running ? 'Not now' : 'Close'}
+              {total !== null && total > 0 && !running ? t('common.objectRenderDialog.notNow') : t('ui.close')}
             </Button>
-            {total !== null && total > 0 && !running && <Button onClick={start}>Render now</Button>}
+            {total !== null && total > 0 && !running && <Button onClick={start}>{t('common.objectRenderDialog.renderNow')}</Button>}
           </div>
         </DialogFooter>
       </DialogContent>

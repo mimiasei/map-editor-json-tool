@@ -33,6 +33,10 @@ import {
   HelpCircle,
   type AppIcon,
 } from '@/components/ui/icons'
+import i18n from '@/lib/i18n'
+import { resourceName } from '@/lib/game-labels'
+import { squadDifficultyName } from '@/lib/map-grid/squad-pool'
+import { localName } from '@/lib/catalog/local-name'
 
 // ─── UI-only condition categories ────────────────────────────────────────────
 // A friendlier, consolidated regrouping of schema/conditions.ts's comment
@@ -42,20 +46,22 @@ import {
 // including the Tutorial bucket, which stays defined (for icon lookups on
 // existing scenario data) even though the add-picker hides it by default.
 
+export type UiCategoryId = 'progress' | 'time' | 'economy' | 'army' | 'heroMap' | 'tutorial'
+
 export interface UiCategory {
-  label: string
+  id: UiCategoryId
   icon: AppIcon
   types: string[]
 }
 
 export const CONDITION_UI_CATEGORIES: UiCategory[] = [
   {
-    label: 'Progress & Counters',
+    id: 'progress',
     icon: Hash,
     types: ['Counter', 'CompareCounters', 'CounterEqualityInDays', 'StoryCounter', 'QuestCompleted'],
   },
   {
-    label: 'Time & Turns',
+    id: 'time',
     icon: Clock,
     types: [
       'StartTurn', 'AnyStartTurn', 'StartWeek', 'Difficulty', 'DifficultyCustomMap', 'NodeRevealed',
@@ -63,12 +69,12 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
   {
-    label: 'Economy & Buildings',
+    id: 'economy',
     icon: Coins,
     types: ['ResCounter', 'BuildingConstruct', 'BuildingOwn'],
   },
   {
-    label: 'Army, Items & Heroes',
+    id: 'army',
     icon: Crown,
     types: [
       'SpellCast', 'ItemOwnSide', 'ItemDestroyed', 'UnitOwnSide', 'UnitHire', 'UnitLose', 'UnitKill',
@@ -76,7 +82,7 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
   {
-    label: 'Hero & Map Events',
+    id: 'heroMap',
     icon: MapPin,
     types: [
       'HeroKill', 'ObjectInteractionBefore', 'ObjectInteractionAfter', 'ObjectCaptureEntity',
@@ -84,7 +90,7 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
   {
-    label: 'Tutorial & UI Prompts',
+    id: 'tutorial',
     icon: GraduationCap,
     types: [
       'TutorialMovePoints', 'TutorialOpenCity', 'TutorialShowTooltipSquad', 'TutorialShowTooltipWO',
@@ -218,23 +224,16 @@ function q(v: string): string {
   return v ? `"${v}"` : ''
 }
 
-const OPERATOR_WORDS: Record<string, string> = {
-  '=': 'equal to',
-  '>': 'greater than',
-  '<': 'less than',
-  '>=': 'at least',
-  '<=': 'at most',
-}
-
 function opWord(sym: string): string {
-  return OPERATOR_WORDS[sym] ?? sym
+  const key = `triggers.sentence.ops.${sym}`
+  return i18n.exists(key) ? i18n.t(key as 'triggers.sentence.ops.=') : sym
 }
 
 const DIFFICULTY_NAMES = ['Easy', 'Normal', 'Difficult', 'Impossible', 'Lethal']
 
 function difficultyName(index: string): string {
   const n = Number(index)
-  return DIFFICULTY_NAMES[n] ?? index
+  return DIFFICULTY_NAMES[n] ? squadDifficultyName(DIFFICULTY_NAMES[n]) : index
 }
 
 function fallbackSentence(label: string, params: ParamDef[], values: string[]): string {
@@ -259,147 +258,137 @@ function buildingLabel(sid: string, level: string, castleEntitySid: string, ctx?
   const faction = resolveCastleFaction(ctx?.placedObjects, castleEntitySid)
   const names = getBuildingLevelNames(ctx?.catalog ?? null, sid, faction)
   const name = names[Number(level) - 1]
-  return name ? q(name) : `${q(sid)}${level ? ` (level ${level})` : ''}`
+  return name ? q(name) : `${q(sid)}${level ? i18n.t('triggers.sentence.buildingLevel', { n: level }) : ''}`
 }
 
 export function formatConditionSentence(condition: Condition, ctx?: SentenceCtx): string {
   const p = (i: number) => val(condition, i)
   switch (condition.c) {
     case 'Counter':
-      return `${q(p(0))} is ${opWord(p(1))} ${p(2)}`
+      return i18n.t('triggers.sentence.condition.Counter', { q0: q(p(0)), op1: opWord(p(1)), p2: p(2) })
     case 'CompareCounters':
-      return `${q(p(0))} is ${opWord(p(1))} ${q(p(2))}`
+      return i18n.t('triggers.sentence.condition.CompareCounters', { q0: q(p(0)), op1: opWord(p(1)), q2: q(p(2)) })
     case 'CounterEqualityInDays':
-      return `${q(p(0))} hasn't changed for ${p(1)} days`
+      return i18n.t('triggers.sentence.condition.CounterEqualityInDays', { q0: q(p(0)), p1: p(1) })
     case 'StoryCounter':
-      return `Campaign counter ${q(p(0))} is ${opWord(p(1))} ${p(2)}`
+      return i18n.t('triggers.sentence.condition.StoryCounter', { q0: q(p(0)), op1: opWord(p(1)), p2: p(2) })
     case 'QuestCompleted':
-      return `Quest ${q(p(0))} is completed`
-
+      return i18n.t('triggers.sentence.condition.QuestCompleted', { q0: q(p(0)) })
     case 'Difficulty':
-      return `The difficulty is ${difficultyName(p(0))}`
+      return i18n.t('triggers.sentence.condition.Difficulty', { diff0: difficultyName(p(0)) })
     case 'DifficultyCustomMap':
-      return `The ${p(0)} difficulty is ${difficultyName(p(1))}`
-
+      return i18n.t('triggers.sentence.condition.DifficultyCustomMap', { p0: p(0), diff1: difficultyName(p(1)) })
+    case 'StartWeek':
+      return i18n.t('triggers.sentence.condition.StartWeek')
+    case 'NodeRevealed':
+      return i18n.t('triggers.sentence.condition.NodeRevealed', { p0: p(0) })
+    case 'PlayerDefeated':
+      return i18n.t('triggers.sentence.condition.PlayerDefeated', { p0: p(0) })
+    case 'CheckLoseIfHeroKilled':
+      return i18n.t('triggers.sentence.condition.CheckLoseIfHeroKilled', { p0: p(0) })
+    case 'CheckLoseIfCityLost':
+      return i18n.t('triggers.sentence.condition.CheckLoseIfCityLost', { p0: p(0) })
+    case 'ResCounter':
+      return i18n.t('triggers.sentence.condition.ResCounter', { op1: opWord(p(1)), p2: p(2), res0: resourceName(p(0)) })
+    case 'BuildingConstruct':
+      return p(2) ? i18n.t('triggers.sentence.condition.BuildingConstruct_In', { bld: buildingLabel(p(0), p(1), p(2), ctx), q2: q(p(2)) }) : i18n.t('triggers.sentence.condition.BuildingConstruct', { bld: buildingLabel(p(0), p(1), p(2), ctx) })
+    case 'BuildingOwn':
+      return p(2) ? i18n.t('triggers.sentence.condition.BuildingOwn_In', { bld: buildingLabel(p(0), p(1), p(2), ctx), q2: q(p(2)) }) : i18n.t('triggers.sentence.condition.BuildingOwn', { bld: buildingLabel(p(0), p(1), p(2), ctx) })
+    case 'SpellCast':
+      return i18n.t('triggers.sentence.condition.SpellCast', { q0: q(p(0)) })
+    case 'ItemOwnSide':
+      return p(0) ? i18n.t('triggers.sentence.condition.ItemOwnSide_Item', { op1: opWord(p(1)), p2: p(2), q0: q(p(0)) }) : i18n.t('triggers.sentence.condition.ItemOwnSide_Any', { op1: opWord(p(1)), p2: p(2) })
+    case 'ItemDestroyed':
+      return i18n.t('triggers.sentence.condition.ItemDestroyed', { q0: q(p(0)) })
+    case 'UnitOwnSide':
+      return i18n.t('triggers.sentence.condition.UnitOwnSide', { op1: opWord(p(1)), p2: p(2), q0: q(p(0)) })
+    case 'UnitHire':
+      return i18n.t('triggers.sentence.condition.UnitHire', { q0: q(p(0)) })
+    case 'UnitLose':
+      return i18n.t('triggers.sentence.condition.UnitLose', { q0: q(p(0)) })
+    case 'UnitKill':
+      return i18n.t('triggers.sentence.condition.UnitKill', { q0: q(p(0)) })
+    case 'HeroKill':
+      return i18n.t('triggers.sentence.condition.HeroKill', { q0: q(p(0)) })
+    case 'ItemOwnHero':
+      return p(0) ? i18n.t('triggers.sentence.condition.ItemOwnHero_Item', { q1: q(p(1)), q0: q(p(0)) }) : i18n.t('triggers.sentence.condition.ItemOwnHero_Any', { q1: q(p(1)) })
+    case 'UnitOwnHero':
+      return i18n.t('triggers.sentence.condition.UnitOwnHero', { q0: q(p(0)), q1: q(p(1)), op2: opWord(p(2)), p3: p(3) })
+    case 'HeroStat':
+      return p(0) ? i18n.t('triggers.sentence.condition.HeroStat_Hero', { q0: q(p(0)), p1: p(1), op2: opWord(p(2)), p3: p(3) }) : i18n.t('triggers.sentence.condition.HeroStat_Selected', { p1: p(1), op2: opWord(p(2)), p3: p(3) })
+    case 'ObjectInteractionBefore':
+      return p(1) ? i18n.t('triggers.sentence.condition.ObjectInteractionBefore_Hero', { q1: q(p(1)), q0: q(p(0)) }) : i18n.t('triggers.sentence.condition.ObjectInteractionBefore_Any', { q0: q(p(0)) })
+    case 'ObjectInteractionAfter':
+      return p(1) ? i18n.t('triggers.sentence.condition.ObjectInteractionAfter_Hero', { q1: q(p(1)), q0: q(p(0)) }) : i18n.t('triggers.sentence.condition.ObjectInteractionAfter_Any', { q0: q(p(0)) })
+    case 'ObjectCaptureEntity':
+      return i18n.t('triggers.sentence.condition.ObjectCaptureEntity', { q0: q(p(0)) })
+    case 'ObjectCaptureSid':
+      return i18n.t('triggers.sentence.condition.ObjectCaptureSid', { q0: q(p(0)) })
+    case 'MultipleObjectOwn':
+      return i18n.t('triggers.sentence.condition.MultipleObjectOwn', { op1: opWord(p(1)), p2: p(2), q0: q(p(0)) })
+    case 'ObjectLose':
+      return i18n.t('triggers.sentence.condition.ObjectLose', { q0: q(p(0)) })
+    case 'SquadInteraction':
+      return p(1) ? i18n.t('triggers.sentence.condition.SquadInteraction_Hero', { q1: q(p(1)), q0: q(p(0)) }) : i18n.t('triggers.sentence.condition.SquadInteraction_Any', { q0: q(p(0)) })
+    case 'SquadKill':
+      return i18n.t('triggers.sentence.condition.SquadKill', { q0: q(p(0)) })
+    case 'TutorialMovePoints':
+      return i18n.t('triggers.sentence.condition.TutorialMovePoints', { op1: opWord(p(1)), p0: p(0) })
+    case 'TutorialOpenCity':
+      return i18n.t('triggers.sentence.condition.TutorialOpenCity')
+    case 'TutorialShowTooltipSquad':
+      return i18n.t('triggers.sentence.condition.TutorialShowTooltipSquad')
+    case 'TutorialShowTooltipWO':
+      return i18n.t('triggers.sentence.condition.TutorialShowTooltipWO')
+    case 'TutorialResChange':
+      return i18n.t('triggers.sentence.condition.TutorialResChange', { res0: resourceName(p(0)) })
+    case 'TutorialLevelUp':
+      return i18n.t('triggers.sentence.condition.TutorialLevelUp')
+    case 'TutorialHeroUI':
+      return i18n.t('triggers.sentence.condition.TutorialHeroUI')
+    case 'TutorialMagicGuild':
+      return i18n.t('triggers.sentence.condition.TutorialMagicGuild')
+    case 'TutorialOpenFractionLaws':
+      return i18n.t('triggers.sentence.condition.TutorialOpenFractionLaws')
+    case 'TutorialLevelUppedFractionLaws':
+      return i18n.t('triggers.sentence.condition.TutorialLevelUppedFractionLaws')
+    case 'TutorialOpenMagicBookMap':
+      return i18n.t('triggers.sentence.condition.TutorialOpenMagicBookMap')
+    case 'TutorialHeroInteractWithAllyHero':
+      return i18n.t('triggers.sentence.condition.TutorialHeroInteractWithAllyHero')
+    case 'TutorialStartBattleForMap':
+      return i18n.t('triggers.sentence.condition.TutorialStartBattleForMap')
+    case 'TutorialStartBattleForCity':
+      return i18n.t('triggers.sentence.condition.TutorialStartBattleForCity')
+    case 'TutorialStartBattleForWorldObject':
+      return i18n.t('triggers.sentence.condition.TutorialStartBattleForWorldObject')
+    case 'TutorialStartTurnUnit':
+      return i18n.t('triggers.sentence.condition.TutorialStartTurnUnit')
+    case 'TutorialOpenMagicBookBattle':
+      return i18n.t('triggers.sentence.condition.TutorialOpenMagicBookBattle')
+    case 'TutorialBattleEnergy':
+      return i18n.t('triggers.sentence.condition.TutorialBattleEnergy')
+    case 'TutorialUnitUI':
+      return i18n.t('triggers.sentence.condition.TutorialUnitUI')
     case 'StartTurn': {
       const week = p(0)
       const day = p(1)
-      if (!week && !day) return 'Any turn starts'
-      const parts = [week && `week ${week}`, day && `day ${day}`].filter(Boolean)
-      return `It's ${parts.join(', ')}`
+      if (!week && !day) return i18n.t('triggers.sentence.condition.StartTurnAny')
+      const parts = [week && i18n.t('triggers.sentence.parts.week', { n: week }), day && i18n.t('triggers.sentence.parts.day', { n: day })].filter(Boolean)
+      return i18n.t('triggers.sentence.condition.StartTurn', { parts: parts.join(', ') })
     }
     case 'AnyStartTurn': {
       const [month, week, day] = [p(0), p(1), p(2)]
       const parts = [
-        month && month !== '-1' && `month ${month}`,
-        week && week !== '-1' && `week ${week}`,
-        day && day !== '-1' && `day ${day}`,
+        month && month !== '-1' && i18n.t('triggers.sentence.parts.month', { n: month }),
+        week && week !== '-1' && i18n.t('triggers.sentence.parts.week', { n: week }),
+        day && day !== '-1' && i18n.t('triggers.sentence.parts.day', { n: day }),
       ].filter(Boolean)
-      return parts.length ? `It's ${parts.join(', ')}` : 'The nearest turn starts'
+      return parts.length ? i18n.t('triggers.sentence.condition.StartTurn', { parts: parts.join(', ') }) : i18n.t('triggers.sentence.condition.AnyStartTurnNearest')
     }
-    case 'StartWeek':
-      return 'A new week begins'
-    case 'NodeRevealed':
-      return `Node ${p(0)} is revealed`
-    case 'PlayerDefeated':
-      return `Player ${p(0)} is defeated`
-    case 'CheckLoseIfHeroKilled':
-      return `Player ${p(0)} has no heroes or castles left (hero check)`
-    case 'CheckLoseIfCityLost':
-      return `Player ${p(0)} has no heroes or castles left (city check)`
-
-    case 'ResCounter':
-      return `The player has ${opWord(p(1))} ${p(2)} ${p(0)}`
-    case 'BuildingConstruct':
-      return `${buildingLabel(p(0), p(1), p(2), ctx)} is built${p(2) ? ` in ${q(p(2))}` : ''}`
-    case 'BuildingOwn':
-      return `The player owns ${buildingLabel(p(0), p(1), p(2), ctx)}${p(2) ? ` in ${q(p(2))}` : ''}`
-
-    case 'SpellCast':
-      return `The player casts ${q(p(0))}`
-
-    case 'ItemOwnSide':
-      return `The player owns ${opWord(p(1))} ${p(2)} of ${p(0) ? q(p(0)) : 'any artifact'}`
-    case 'ItemDestroyed':
-      return `Item ${q(p(0))} is destroyed`
-
-    case 'UnitOwnSide':
-      return `The player owns ${opWord(p(1))} ${p(2)} ${q(p(0))}`
-    case 'UnitHire':
-      return `The player hires ${q(p(0))}`
-    case 'UnitLose':
-      return `The player loses ${q(p(0))}`
-    case 'UnitKill':
-      return `The player kills ${q(p(0))}`
-
-    case 'HeroKill':
-      return `Hero ${q(p(0))} is killed or removed`
-    case 'ItemOwnHero':
-      return `Hero ${q(p(1))} has ${p(0) ? q(p(0)) : 'any artifact'}`
-    case 'UnitOwnHero':
-      return `Hero ${q(p(0))}'s ${q(p(1))} count is ${opWord(p(2))} ${p(3)}`
-    case 'HeroStat':
-      return `${p(0) ? `Hero ${q(p(0))}'s` : 'The selected hero\'s'} ${p(1)} is ${opWord(p(2))} ${p(3)}`
-
-    case 'ObjectInteractionBefore':
-      return `${p(1) ? `The hero ${q(p(1))}` : 'A hero'} is about to interact with ${q(p(0))}`
-    case 'ObjectInteractionAfter':
-      return `${p(1) ? `The hero ${q(p(1))}` : 'A hero'} finishes interacting with ${q(p(0))}`
-    case 'ObjectCaptureEntity':
-      return `${q(p(0))} is captured`
-    case 'ObjectCaptureSid':
-      return `A ${q(p(0))} is captured`
-    case 'MultipleObjectOwn':
-      return `The player owns ${opWord(p(1))} ${p(2)} ${q(p(0))}`
-    case 'ObjectLose':
-      return `${q(p(0))} is lost`
-    case 'SquadInteraction':
-      return `${p(1) ? `The hero ${q(p(1))}` : 'A hero'} is about to fight ${q(p(0))}`
-    case 'SquadKill':
-      return `${q(p(0))} is defeated`
-
-    case 'TutorialMovePoints':
-      return `A hero's movement points are ${opWord(p(1))} ${p(0)}`
-    case 'TutorialOpenCity':
-      return 'The player opens a city screen for the first time'
-    case 'TutorialShowTooltipSquad':
-      return "The player opens a squad's tooltip for the first time"
-    case 'TutorialShowTooltipWO':
-      return "The player opens an object's tooltip for the first time"
-    case 'TutorialResChange':
-      return `The player's ${p(0)} changes for the first time`
-    case 'TutorialLevelUp':
-      return 'A hero levels up for the first time'
-    case 'TutorialHeroUI':
-      return 'The player opens the hero screen for the first time'
-    case 'TutorialMagicGuild':
-      return 'The player opens the magic observatory for the first time'
-    case 'TutorialOpenFractionLaws':
-      return 'The player opens the faction laws window for the first time'
-    case 'TutorialLevelUppedFractionLaws':
-      return 'The player unlocks a faction law for the first time'
-    case 'TutorialOpenMagicBookMap':
-      return 'The player opens the spellbook on the map for the first time'
-    case 'TutorialHeroInteractWithAllyHero':
-      return 'The player interacts with an allied hero for the first time'
-    case 'TutorialStartBattleForMap':
-      return 'The player enters combat for the first time'
-    case 'TutorialStartBattleForCity':
-      return 'The player enters a siege battle for the first time'
-    case 'TutorialStartBattleForWorldObject':
-      return "The player enters a bank's guard battle for the first time"
-    case 'TutorialStartTurnUnit':
-      return "The player's unit takes its first turn in battle"
-    case 'TutorialOpenMagicBookBattle':
-      return 'The player opens the spellbook in combat for the first time'
-    case 'TutorialBattleEnergy':
-      return 'The player accumulates their first energy cell'
-    case 'TutorialUnitUI':
-      return 'The player opens the detailed unit view for the first time'
-
     default: {
       const def = CONDITION_REGISTRY[condition.c]
-      return def ? fallbackSentence(def.label, def.params, condition.p ?? []) : (condition.c || 'Choose a condition…')
+      return def ? fallbackSentence(def.label, def.params, condition.p ?? []) : (condition.c || i18n.t('triggers.sentence.chooseCondition'))
     }
   }
 }
@@ -408,248 +397,236 @@ export function formatActionSentence(action: Action, ctx?: SentenceCtx): string 
   const p = (i: number) => val(action, i)
   switch (action.a) {
     case 'NextQuest':
-      return p(0) ? `Start quest ${q(p(0))}` : 'End the current quest'
+      return p(0) ? i18n.t('triggers.sentence.action.NextQuest_Start', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.NextQuest_End')
     case 'EndQuest':
-      return `End quest(s): ${[p(0), p(1), p(2)].filter(Boolean).map(q).join(', ')}`
+      return i18n.t('triggers.sentence.action.EndQuest', { list: [p(0), p(1), p(2)].filter(Boolean).map(q).join(', ') })
     case 'NextSubQuest':
-      return `Switch to subquest(s): ${[p(0), p(1), p(2)].filter(Boolean).map(q).join(', ')}`
+      return i18n.t('triggers.sentence.action.NextSubQuest', { list: [p(0), p(1), p(2)].filter(Boolean).map(q).join(', ') })
     case 'SubQuestActivate':
-      return `Activate subquest ${q(p(1))} in quest ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.SubQuestActivate', { q1: q(p(1)), q0: q(p(0)) })
     case 'SubQuestDeactivate':
-      return `Deactivate subquest ${q(p(1))} in quest ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.SubQuestDeactivate', { q1: q(p(1)), q0: q(p(0)) })
     case 'CurrentSubQuestDone':
-      return 'Mark the current subquest as done'
+      return i18n.t('triggers.sentence.action.CurrentSubQuestDone')
     case 'SubQuestDone':
-      return `Mark subquest ${q(p(1))} as done`
+      return i18n.t('triggers.sentence.action.SubQuestDone', { q1: q(p(1)) })
     case 'NextAfterGroup':
-      return `When group ${q(p(0))} finishes, activate subquest ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.NextAfterGroup', { q0: q(p(0)), q1: q(p(1)) })
     case 'NextQuestAfterGroup':
-      return `When group ${q(p(0))} finishes, start quest ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.NextQuestAfterGroup', { q0: q(p(0)), q1: q(p(1)) })
     case 'NextSubGroupAfterGroup':
-      return `When group ${q(p(0))} finishes, activate group ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.NextSubGroupAfterGroup', { q0: q(p(0)), q1: q(p(1)) })
     case 'TriggerClear':
-      return `Reset all conditions on trigger #${p(2)} of ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.TriggerClear', { p2: p(2), q1: q(p(1)) })
     case 'TriggerClearCustom':
-      return `Reset condition #${p(3)} on trigger #${p(2)} of ${q(p(1))}`
-
+      return i18n.t('triggers.sentence.action.TriggerClearCustom', { p3: p(3), p2: p(2), q1: q(p(1)) })
     case 'AutoSave':
-      return 'Force an autosave'
+      return i18n.t('triggers.sentence.action.AutoSave')
     case 'Print':
-      return `Log a debug message: ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.Print', { q0: q(p(0)) })
     case 'EnableInterruption':
-      return `Enable interruption ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.EnableInterruption', { q0: q(p(0)) })
     case 'DisableInterruption':
-      return `Disable interruption ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DisableInterruption', { q0: q(p(0)) })
     case 'BreakInterruptions':
-      return 'Break the current interruption'
-
+      return i18n.t('triggers.sentence.action.BreakInterruptions')
     case 'CounterPlus':
-      return `Increase counter ${q(p(0))} by ${p(1)}`
+      return i18n.t('triggers.sentence.action.CounterPlus', { q0: q(p(0)), p1: p(1) })
     case 'CounterMinus':
-      return `Decrease counter ${q(p(0))} by ${p(1)}`
+      return i18n.t('triggers.sentence.action.CounterMinus', { q0: q(p(0)), p1: p(1) })
     case 'CounterSet':
-      return `Set counter ${q(p(0))} to ${p(1)}`
+      return i18n.t('triggers.sentence.action.CounterSet', { q0: q(p(0)), p1: p(1) })
     case 'CounterSetRandom':
-      return `Set counter ${q(p(0))} to a random value between ${p(1)} and ${p(2)}`
+      return i18n.t('triggers.sentence.action.CounterSetRandom', { q0: q(p(0)), p1: p(1), p2: p(2) })
     case 'StoryCounterPlus':
-      return `Increase campaign counter ${q(p(0))} by ${p(1)}`
+      return i18n.t('triggers.sentence.action.StoryCounterPlus', { q0: q(p(0)), p1: p(1) })
     case 'StoryCounterMinus':
-      return `Decrease campaign counter ${q(p(0))} by ${p(1)}`
+      return i18n.t('triggers.sentence.action.StoryCounterMinus', { q0: q(p(0)), p1: p(1) })
     case 'StoryCounterSet':
-      return `Set campaign counter ${q(p(0))} to ${p(1)}`
-
+      return i18n.t('triggers.sentence.action.StoryCounterSet', { q0: q(p(0)), p1: p(1) })
     case 'Dialog':
-      return `Show dialog ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.Dialog', { q0: q(p(0)) })
     case 'DialogIfHero':
-      return `If the hero is ${q(p(1))}, show dialog ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DialogIfHero', { q1: q(p(1)), q0: q(p(0)) })
     case 'DialogIfRes':
-      return `If the player has ${opWord(p(2))} ${p(3)} ${p(1)}, show dialog ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DialogIfRes', { op2: opWord(p(2)), p3: p(3), res1: resourceName(p(1)), q0: q(p(0)) })
     case 'DialogIfCounter':
-      return `If counter ${q(p(1))} is ${opWord(p(2))} ${p(3)}, show dialog ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DialogIfCounter', { q1: q(p(1)), op2: opWord(p(2)), p3: p(3), q0: q(p(0)) })
     case 'DialogIfItem':
-      return `If the hero has ${q(p(1))}, show dialog ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DialogIfItem', { q1: q(p(1)), q0: q(p(0)) })
     case 'RandomDialog':
-      return `Show a random dialog from: ${[p(0), p(1), p(2), p(3), p(4)].filter(Boolean).map(q).join(', ')}`
+      return i18n.t('triggers.sentence.action.RandomDialog', { list: [p(0), p(1), p(2), p(3), p(4)].filter(Boolean).map(q).join(', ') })
     case 'DialogOne':
-      return `Show dialog ${q(p(0))} (only once)`
+      return i18n.t('triggers.sentence.action.DialogOne', { q0: q(p(0)) })
     case 'DialogOneIfHero':
-      return `If the hero is ${q(p(1))}, show dialog ${q(p(0))} (only once)`
+      return i18n.t('triggers.sentence.action.DialogOneIfHero', { q1: q(p(1)), q0: q(p(0)) })
     case 'DialogOneIfRes':
-      return `If the player has ${opWord(p(2))} ${p(3)} ${p(1)}, show dialog ${q(p(0))} (only once)`
+      return i18n.t('triggers.sentence.action.DialogOneIfRes', { op2: opWord(p(2)), p3: p(3), res1: resourceName(p(1)), q0: q(p(0)) })
     case 'DialogOneIfCounter':
-      return `If counter ${q(p(1))} is ${opWord(p(2))} ${p(3)}, show dialog ${q(p(0))} (only once)`
-
+      return i18n.t('triggers.sentence.action.DialogOneIfCounter', { q1: q(p(1)), op2: opWord(p(2)), p3: p(3), q0: q(p(0)) })
     case 'ShowFloatingUI':
-      return `Show floating text ${q(p(1))} above the selected hero`
+      return i18n.t('triggers.sentence.action.ShowFloatingUI', { q1: q(p(1)) })
     case 'OpenUI':
-      return `Open the ${p(0)} screen`
+      return i18n.t('triggers.sentence.action.OpenUI', { p0: p(0) })
     case 'Guide':
-      return `Open tutorial guide ${q(p(0))}`
-
+      return i18n.t('triggers.sentence.action.Guide', { q0: q(p(0)) })
     case 'GameVictory':
-      return 'Force the player to win'
+      return i18n.t('triggers.sentence.action.GameVictory')
     case 'GameLose':
-      return 'Force the player to lose'
+      return i18n.t('triggers.sentence.action.GameLose')
     case 'SideLose':
-      return `Force player ${p(0)} to lose`
+      return i18n.t('triggers.sentence.action.SideLose', { p0: p(0) })
     case 'ChangeCampaignOneStep':
-      return `${p(0) === 'true' ? 'Enable' : 'Disable'} single-turn mode`
+      return p(0) === 'true' ? i18n.t('triggers.sentence.action.ChangeCampaignOneStep_On') : i18n.t('triggers.sentence.action.ChangeCampaignOneStep_Off')
     case 'AddGlobalBuff':
-      return `Apply global buff ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.AddGlobalBuff', { q0: q(p(0)) })
     case 'RemoveGlobalBuff':
-      return `Remove global buff ${q(p(0))}`
-
+      return i18n.t('triggers.sentence.action.RemoveGlobalBuff', { q0: q(p(0)) })
     case 'MoveCamera':
-      return `Move the camera to node ${p(0)}`
+      return i18n.t('triggers.sentence.action.MoveCamera', { p0: p(0) })
     case 'MoveCameraToSelectHero':
-      return 'Move the camera to the selected hero'
+      return i18n.t('triggers.sentence.action.MoveCameraToSelectHero')
     case 'RevealFogOfWar':
-      return `Reveal fog of war around node ${p(0)}`
+      return i18n.t('triggers.sentence.action.RevealFogOfWar', { p0: p(0) })
     case 'CreateFogOfWar':
-      return `Create fog of war around node ${p(0)}`
-
+      return i18n.t('triggers.sentence.action.CreateFogOfWar', { p0: p(0) })
     case 'GiveRes':
-      return `Give ${p(1)} ${p(0)} to the player`
+      return i18n.t('triggers.sentence.action.GiveRes', { p1: p(1), res0: resourceName(p(0)) })
     case 'RemoveRes':
-      return `Take ${p(1)} ${p(0)} from the player`
+      return i18n.t('triggers.sentence.action.RemoveRes', { p1: p(1), res0: resourceName(p(0)) })
     case 'UnlockSpell':
-      return `Unlock spell ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.UnlockSpell', { q0: q(p(0)) })
     case 'UnlockBuildingCity':
-      return `Unlock building ${buildingLabel(p(0), p(1), p(2), ctx)} in ${q(p(2))}`
+      return i18n.t('triggers.sentence.action.UnlockBuildingCity', { bld: buildingLabel(p(0), p(1), p(2), ctx), q2: q(p(2)) })
     case 'CreateBuildingCity':
-      return `Build ${buildingLabel(p(0), p(1), p(2), ctx)} in ${q(p(2))}`
+      return i18n.t('triggers.sentence.action.CreateBuildingCity', { bld: buildingLabel(p(0), p(1), p(2), ctx), q2: q(p(2)) })
     case 'CaptureObject':
-      return `Capture ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.CaptureObject', { q0: q(p(0)) })
     case 'LoseObject':
-      return `Make ${q(p(0))} neutral`
-
+      return i18n.t('triggers.sentence.action.LoseObject', { q0: q(p(0)) })
     case 'SpawnObject':
-      return `Create object ${q(p(0))} at node ${p(1)}`
+      return i18n.t('triggers.sentence.action.SpawnObject', { q0: q(p(0)), p1: p(1) })
     case 'SpawnMapObject':
-      return `Create decoration ${q(p(0))} at node ${p(1)}`
+      return i18n.t('triggers.sentence.action.SpawnMapObject', { q0: q(p(0)), p1: p(1) })
     case 'CreateVFX':
-      return `Create ${getVfxDisplayName(ctx?.catalog, p(0))} effect at node ${p(1)}`
+      return i18n.t('triggers.sentence.action.CreateVFX', { vfx: getVfxDisplayName(ctx?.catalog, p(0)), p1: p(1) })
     case 'EventBankRefresh':
-      return `Recharge ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.EventBankRefresh', { q0: q(p(0)) })
     case 'SetActiveVFX':
-      return `${p(1) === 'true' ? 'Show' : 'Hide'} effect ${q(p(0))}`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.SetActiveVFX_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.SetActiveVFX_Off', { q0: q(p(0)) })
     case 'SetQuestMarker':
-      return `Add a quest marker to ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.SetQuestMarker', { q0: q(p(0)) })
     case 'SetActiveQuestMarker':
-      return `${p(1) === 'true' ? 'Show' : 'Hide'} the quest marker on ${q(p(0))}`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.SetActiveQuestMarker_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.SetActiveQuestMarker_Off', { q0: q(p(0)) })
     case 'SetActivePortal':
-      return `${p(1) === 'true' ? 'Enable' : 'Disable'} portal ${q(p(0))}`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.SetActivePortal_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.SetActivePortal_Off', { q0: q(p(0)) })
     case 'SetActiveMarker':
-      return `${p(1) === 'true' ? 'Enable' : 'Disable'} trigger zone ${q(p(0))}`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.SetActiveMarker_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.SetActiveMarker_Off', { q0: q(p(0)) })
     case 'DeleteEntity':
-      return `Delete ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DeleteEntity', { q0: q(p(0)) })
     case 'DeleteMarkerByNode':
-      return `Delete the trigger zone at node ${p(0)}`
+      return i18n.t('triggers.sentence.action.DeleteMarkerByNode', { p0: p(0) })
     case 'EntityActionsOff':
-      return `Disable all triggers on ${q(p(0))}`
-
+      return i18n.t('triggers.sentence.action.EntityActionsOff', { q0: q(p(0)) })
     case 'SpawnSquad':
-      return `Spawn a neutral squad ${q(p(0))} at node ${p(1)}`
+      return i18n.t('triggers.sentence.action.SpawnSquad', { q0: q(p(0)), p1: p(1) })
     case 'SpawnSquadNPC':
-      return `Spawn an NPC squad ${q(p(0))} at node ${p(1)}`
+      return i18n.t('triggers.sentence.action.SpawnSquadNPC', { q0: q(p(0)), p1: p(1) })
     case 'SetFlagEscape':
-      return `${p(1) === 'true' ? 'Allow' : 'Prevent'} ${q(p(0))} from fleeing`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.SetFlagEscape_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.SetFlagEscape_Off', { q0: q(p(0)) })
     case 'SetFlagAutobattle':
-      return `${p(1) === 'true' ? 'Allow' : 'Prevent'} ${q(p(0))} from auto-battling`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.SetFlagAutobattle_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.SetFlagAutobattle_Off', { q0: q(p(0)) })
     case 'ChangeCampaignDiplomacy':
-      return `${p(1) === 'true' ? 'Enable' : 'Disable'} guaranteed free join for ${q(p(0))}`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.ChangeCampaignDiplomacy_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.ChangeCampaignDiplomacy_Off', { q0: q(p(0)) })
     case 'ChangeAlwaysDiplomacy':
-      return `${p(1) === 'true' ? 'Enable' : 'Disable'} diplomacy offers for ${q(p(0))}`
+      return p(1) === 'true' ? i18n.t('triggers.sentence.action.ChangeAlwaysDiplomacy_On', { q0: q(p(0)) }) : i18n.t('triggers.sentence.action.ChangeAlwaysDiplomacy_Off', { q0: q(p(0)) })
     case 'ChangeSquadReactionType':
-      return `Set ${q(p(0))}'s mood to ${p(1)}`
+      return i18n.t('triggers.sentence.action.ChangeSquadReactionType', { q0: q(p(0)), p1: p(1) })
     case 'IncreaseStrengthSquad':
-      return `Increase ${q(p(0))}'s strength by ${p(1)}`
+      return i18n.t('triggers.sentence.action.IncreaseStrengthSquad', { q0: q(p(0)), p1: p(1) })
     case 'ReduceStrengthSquad':
-      return `Reduce ${q(p(0))}'s strength by ${p(1)}`
+      return i18n.t('triggers.sentence.action.ReduceStrengthSquad', { q0: q(p(0)), p1: p(1) })
     case 'DeleteSquad':
-      return `Remove squad ${q(p(0))}`
-
+      return i18n.t('triggers.sentence.action.DeleteSquad', { q0: q(p(0)) })
     case 'SpawnHero':
-      return `Spawn hero ${q(p(0))} for player ${p(2)} at node ${p(1)}`
+      return i18n.t('triggers.sentence.action.SpawnHero', { q0: q(p(0)), p2: p(2), p1: p(1) })
     case 'DeleteHero':
-      return `Remove hero ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DeleteHero', { q0: q(p(0)) })
     case 'GiveUnitHero':
-      return `Give ${p(1)} ${p(0)} to hero ${q(p(2))}`
+      return i18n.t('triggers.sentence.action.GiveUnitHero', { p1: p(1), p0: p(0), q2: q(p(2)) })
     case 'GiveUnitHeroPerWeek':
-      return `Give (${p(1)} × week) ${p(0)} to hero ${q(p(2))}`
+      return i18n.t('triggers.sentence.action.GiveUnitHeroPerWeek', { p1: p(1), p0: p(0), q2: q(p(2)) })
     case 'GiveUnitHeroPerMonth':
-      return `Give (${p(1)} × month) ${p(0)} to hero ${q(p(2))}`
+      return i18n.t('triggers.sentence.action.GiveUnitHeroPerMonth', { p1: p(1), p0: p(0), q2: q(p(2)) })
     case 'RemoveUnitHero':
-      return `Remove ${p(1)} ${p(0)} from hero ${q(p(2))}`
+      return i18n.t('triggers.sentence.action.RemoveUnitHero', { p1: p(1), p0: p(0), q2: q(p(2)) })
     case 'GiveExpHero':
-      return `Give ${p(0)} experience to hero ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.GiveExpHero', { p0: p(0), q1: q(p(1)) })
     case 'GiveStatsHero':
-      return `Give ${p(2)} ${p(0)} to ${p(1) ? `hero ${q(p(1))}` : 'the selected hero'}`
+      return p(1) ? i18n.t('triggers.sentence.action.GiveStatsHero_Hero', { p2: p(2), p0: p(0), q1: q(p(1)) }) : i18n.t('triggers.sentence.action.GiveStatsHero_Selected', { p2: p(2), p0: p(0) })
     case 'GiveManaHero':
-      return `Give ${p(1)} mana to ${p(0) ? `hero ${q(p(0))}` : 'the selected hero'}`
+      return p(0) ? i18n.t('triggers.sentence.action.GiveManaHero_Hero', { p1: p(1), q0: q(p(0)) }) : i18n.t('triggers.sentence.action.GiveManaHero_Selected', { p1: p(1) })
     case 'ChangeManaHero':
-      return `Set ${p(0) ? `hero ${q(p(0))}'s` : "the selected hero's"} mana to ${p(1)}`
+      return p(0) ? i18n.t('triggers.sentence.action.ChangeManaHero_Hero', { q0: q(p(0)), p1: p(1) }) : i18n.t('triggers.sentence.action.ChangeManaHero_Selected', { p1: p(1) })
     case 'AddSpellHero':
-      return `Teach spell ${q(p(0))} to hero ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.AddSpellHero', { q0: q(p(0)), q1: q(p(1)) })
     case 'AddSkillHero':
-      return `Add skill ${q(p(0))} to hero ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.AddSkillHero', { q0: q(p(0)), q1: q(p(1)) })
     case 'AddSkillAll':
-      return `Add skill ${q(p(0))} to all heroes`
+      return i18n.t('triggers.sentence.action.AddSkillAll', { q0: q(p(0)) })
     case 'GiveItemHero':
-      return `Give item ${q(p(0))} to ${p(1) ? `hero ${q(p(1))}` : 'the selected hero'}`
+      return p(1) ? i18n.t('triggers.sentence.action.GiveItemHero_Hero', { q0: q(p(0)), q1: q(p(1)) }) : i18n.t('triggers.sentence.action.GiveItemHero_Selected', { q0: q(p(0)) })
     case 'RemoveItem':
-      return `Remove item ${q(p(0))} from the player`
+      return i18n.t('triggers.sentence.action.RemoveItem', { q0: q(p(0)) })
     case 'AddBuffHeroDays':
-      return `Apply buff ${q(p(0))} to ${p(1) ? `hero ${q(p(1))}` : 'the selected hero'}`
+      return p(1) ? i18n.t('triggers.sentence.action.AddBuffHeroDays_Hero', { q0: q(p(0)), q1: q(p(1)) }) : i18n.t('triggers.sentence.action.AddBuffHeroDays_Selected', { q0: q(p(0)) })
     case 'RemoveBuffHero':
-      return `Remove buff ${q(p(0))} from ${p(1) ? `hero ${q(p(1))}` : 'the selected hero'}`
+      return p(1) ? i18n.t('triggers.sentence.action.RemoveBuffHero_Hero', { q0: q(p(0)), q1: q(p(1)) }) : i18n.t('triggers.sentence.action.RemoveBuffHero_Selected', { q0: q(p(0)) })
     case 'SetHeroMovePoints':
-      return `Set ${p(0) ? `hero ${q(p(0))}'s` : "the selected hero's"} movement points to ${p(1)}`
+      return p(0) ? i18n.t('triggers.sentence.action.SetHeroMovePoints_Hero', { q0: q(p(0)), p1: p(1) }) : i18n.t('triggers.sentence.action.SetHeroMovePoints_Selected', { p1: p(1) })
     case 'HeroResetMovePointsMax':
-      return `Zero out hero ${q(p(0))}'s max movement`
+      return i18n.t('triggers.sentence.action.HeroResetMovePointsMax', { q0: q(p(0)) })
     case 'HeroStop':
-      return 'Stop the selected hero'
+      return i18n.t('triggers.sentence.action.HeroStop')
     case 'StepBack':
-      return 'Step the selected hero back'
+      return i18n.t('triggers.sentence.action.StepBack')
     case 'HeroToNode':
-      return `Move hero ${q(p(0))} to node ${p(1)}`
+      return i18n.t('triggers.sentence.action.HeroToNode', { q0: q(p(0)), p1: p(1) })
     case 'HeroToHero':
-      return `Move hero ${q(p(0))} toward hero ${q(p(1))}`
+      return i18n.t('triggers.sentence.action.HeroToHero', { q0: q(p(0)), q1: q(p(1)) })
     case 'TeleportHero':
-      return `Teleport hero ${q(p(0))} to node ${[p(1), p(2), p(3), p(4), p(5)].filter(Boolean).join(' or ')}`
+      return i18n.t('triggers.sentence.action.TeleportHero', { q0: q(p(0)), nodes: [p(1), p(2), p(3), p(4), p(5)].filter(Boolean).join(i18n.t('triggers.sentence.or')) })
     case 'InitiateInteract':
-      return `Interact with ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.InitiateInteract', { q0: q(p(0)) })
     case 'InitiateAttack':
-      return `Attack ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.InitiateAttack', { q0: q(p(0)) })
     case 'ForceLastInteractObject':
-      return 'Interact with the last object again'
+      return i18n.t('triggers.sentence.action.ForceLastInteractObject')
     case 'ForceLastInteractSquad':
-      return 'Interact with the last squad again'
+      return i18n.t('triggers.sentence.action.ForceLastInteractSquad')
     case 'HeroInteractWorldObject':
-      return `Have hero ${q(p(0))} interact with the nearest object`
+      return i18n.t('triggers.sentence.action.HeroInteractWorldObject', { q0: q(p(0)) })
     case 'ResurrectHero':
-      return `Resurrect hero ${q(p(0))} at node ${p(1)}`
-
+      return i18n.t('triggers.sentence.action.ResurrectHero', { q0: q(p(0)), p1: p(1) })
     case 'AiBanArea':
-      return `Ban the AI from the area around node ${p(0)}`
+      return i18n.t('triggers.sentence.action.AiBanArea', { p0: p(0) })
     case 'AiUnbanArea':
-      return `Unban the AI for the area around node ${p(0)}`
+      return i18n.t('triggers.sentence.action.AiUnbanArea', { p0: p(0) })
     case 'AiClearBanArea':
-      return 'Clear all AI area bans'
+      return i18n.t('triggers.sentence.action.AiClearBanArea')
     case 'AiOnSelectHero':
-      return "Recalculate the AI's objectives"
+      return i18n.t('triggers.sentence.action.AiOnSelectHero')
     case 'DisableAIHero':
-      return `Disable AI for hero ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.DisableAIHero', { q0: q(p(0)) })
     case 'EnableAIHero':
-      return `Enable AI for hero ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.EnableAIHero', { q0: q(p(0)) })
     case 'EnableAiResurrect':
-      return `Enable auto-resurrection for hero ${q(p(0))}`
+      return i18n.t('triggers.sentence.action.EnableAiResurrect', { q0: q(p(0)) })
     case 'DisableAiResurrect':
-      return `Disable auto-resurrection for hero ${q(p(0))}`
-
+      return i18n.t('triggers.sentence.action.DisableAiResurrect', { q0: q(p(0)) })
     default: {
       const def = ACTION_REGISTRY[action.a]
-      return def ? fallbackSentence(def.label, def.params, action.p ?? []) : (action.a || 'Choose an action…')
+      return def ? fallbackSentence(def.label, def.params, action.p ?? []) : (action.a || i18n.t('triggers.sentence.chooseAction'))
     }
   }
 }
@@ -688,7 +665,8 @@ const ENTITY_DB_TAB: Partial<Record<EntityCategory, string>> = {
 }
 
 function resolveHeroName(sid: string, catalog: GameCatalog | null | undefined): string | undefined {
-  return catalog?.heroes.find((h) => h.id === sid)?.name ?? STATIC_HEROES.find((h) => h.id === sid)?.name
+  const hero = catalog?.heroes.find((h) => h.id === sid)
+  return hero ? localName(catalog, 'heroes', hero) : STATIC_HEROES.find((h) => h.id === sid)?.name
 }
 
 function resolveMapEntityCatalogSid(placedObjects: PlacedObject[] | undefined, entitySid: string): string | undefined {

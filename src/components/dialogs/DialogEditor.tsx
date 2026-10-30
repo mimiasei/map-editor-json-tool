@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
-import { RESULT_DIALOG_VALUES, AVATAR_POSITIONS, POSITION_LABELS } from '@/types/dialog'
+import { RESULT_DIALOG_VALUES, AVATAR_POSITIONS } from '@/types/dialog'
 import type { Action } from '@/types/scenario'
 import type { DialogCondition } from '@/types/dialog'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -30,6 +30,8 @@ import AssetCombobox from './AssetCombobox'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import FieldInfo from '@/components/common/FieldInfo'
 import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from '@/components/ui/icons'
+import { useTranslation, Trans } from 'react-i18next'
+import { avatarPositionName } from '@/lib/game-labels'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -76,6 +78,7 @@ function LogicToggle({
   value: 'And' | 'Or' | undefined
   onChange: (v: 'And' | 'Or' | undefined) => void
 }) {
+  const { t } = useTranslation()
   return (
     <Select
       value={value ?? 'And'}
@@ -85,8 +88,8 @@ function LogicToggle({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="And" className="text-xs">And</SelectItem>
-        <SelectItem value="Or" className="text-xs">Or</SelectItem>
+        <SelectItem value="And" className="text-xs">{t('dialogs.dialogEditor.and')}</SelectItem>
+        <SelectItem value="Or" className="text-xs">{t('dialogs.dialogEditor.or')}</SelectItem>
       </SelectContent>
     </Select>
   )
@@ -115,6 +118,7 @@ function AnswerEditor({
   onChange: (answer: DialogAnswer) => void
   onRemove: () => void
 }) {
+  const { t } = useTranslation()
   const locText = answer.text ? localization[answer.text] : undefined
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
 
@@ -146,7 +150,7 @@ function AnswerEditor({
   return (
     <div className="rounded border border-border bg-background p-2 space-y-2">
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground shrink-0">Answer {answerIndex + 1}</span>
+        <span className="text-xs text-muted-foreground shrink-0">{t('dialogs.dialogEditor.answerN', { n: answerIndex + 1 })}</span>
         <div className="flex-1 space-y-1">
           <Input
             value={answer.text}
@@ -159,11 +163,11 @@ function AnswerEditor({
               type="button"
               onClick={() => openLocalizationFor(answer.text)}
               className="flex w-full items-center gap-1 text-left text-xs text-muted-foreground italic hover:text-foreground hover:not-italic"
-              title="Edit this text in Localization"
+              title={t('dialogs.dialogEditor.editThisTextInLocalization')}
             >
               <PenLine className="h-3 w-3 shrink-0 not-italic" />
               <span className="truncate">
-                {locText || <span className="text-amber-500">missing translation — click to add</span>}
+                {locText || <span className="text-amber-500">{t('dialogs.dialogEditor.missingTranslationClickToAdd')}</span>}
               </span>
             </button>
           )}
@@ -180,7 +184,7 @@ function AnswerEditor({
 
       {/* Where picking this answer leads */}
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Leads to</Label>
+        <Label className="text-xs text-muted-foreground">{t('dialogs.dialogEditor.leadsTo')}</Label>
         <div className="flex items-center gap-4 text-xs">
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
@@ -189,7 +193,7 @@ function AnswerEditor({
               onChange={() => setGoTarget(goTarget)}
               className="accent-primary"
             />
-            Go to slide
+            {t('dialogs.dialogEditor.goToSlide')}
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
@@ -198,7 +202,7 @@ function AnswerEditor({
               onChange={() => setEndDialog(endBreak)}
               className="accent-primary"
             />
-            End dialog
+            {t('dialogs.dialogEditor.endDialog')}
           </label>
         </div>
         {isGoTo ? (
@@ -224,7 +228,7 @@ function AnswerEditor({
               checked={endBreak}
               onCheckedChange={(checked) => setEndDialog(checked === true)}
             />
-            <span className="text-xs">Interrupt subsequent game logic after this dialog ends</span>
+            <span className="text-xs">{t('dialogs.dialogEditor.interruptSubsequentGameLogicAfter')}</span>
           </label>
         )}
 
@@ -233,8 +237,8 @@ function AnswerEditor({
         {restActions.length > 0 ? (
           <div className="space-y-1 pt-1">
             <Label className="text-xs text-muted-foreground">
-              Additional actions
-              <span className="ml-1 text-muted-foreground/70">— Guide / Story Counters</span>
+              {t('dialogs.dialogEditor.additionalActions')}
+              <span className="ml-1 text-muted-foreground/70">{t('dialogs.dialogEditor.guideStoryCounters')}</span>
             </Label>
             <ActionList
               actions={restActions}
@@ -254,7 +258,7 @@ function AnswerEditor({
             className="text-xs text-primary hover:underline"
             onClick={() => updateRestActions([{ a: 'Guide', p: [] }])}
           >
-            + Add Guide / Story Counter action
+            {t('dialogs.dialogEditor.addGuideStoryCounterAction')}
           </button>
         )}
       </div>
@@ -262,7 +266,7 @@ function AnswerEditor({
       {/* Availability conditions — the game hides the answer when these fail */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Requirements</Label>
+          <Label className="text-xs text-muted-foreground">{t('dialogs.dialogEditor.requirements')}</Label>
           {(answer.requests?.length ?? 0) > 1 && (
             <LogicToggle
               value={answer.conditionsLogic}
@@ -292,8 +296,8 @@ function AnswerEditor({
       {/* Map actions fired when this answer is picked */}
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">
-          Map actions
-          <span className="ml-1 text-muted-foreground/70">— Story Counters go in "Additional actions" above instead</span>
+          {t('dialogs.dialogEditor.mapActions')}
+          <span className="ml-1 text-muted-foreground/70">{t('dialogs.dialogEditor.storyCountersGoInAdditional')}</span>
         </Label>
         <ActionList
           actions={answer.mapActions ?? []}
@@ -337,15 +341,16 @@ function SlideEditor({
   onChange: (slide: DialogSlide) => void
   onRemove: () => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(slideIndex === 0)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const catalog = useCatalogStore((s) => s.catalog)
   const locText = slide.text ? localization[slide.text] : undefined
   const hasIssues = slide.text && !localization[slide.text]
 
-  const speakerSuggestions = (catalog?.speakerTitles ?? []).map((t) => ({
-    value: t.sid,
-    label: t.name,
+  const speakerSuggestions = (catalog?.speakerTitles ?? []).map((st) => ({
+    value: st.sid,
+    label: st.name,
   }))
 
   // Fields hidden behind "Advanced" that are already set — surfaced in the summary
@@ -365,7 +370,7 @@ function SlideEditor({
    *  to Narrator the moment it's switched on, before a SID is typed. */
   const hasSpeaker = !!slide.title
   const titleSid = slide.title?.sid ?? ''
-  const builtInSpeaker = (catalog?.speakerTitles ?? []).find((t) => t.sid === titleSid)
+  const builtInSpeaker = (catalog?.speakerTitles ?? []).find((st) => st.sid === titleSid)
   const isBuiltInSpeaker = !!builtInSpeaker
   const builtInSpeakerName = builtInSpeaker?.name
   const speakerName = isBuiltInSpeaker
@@ -480,8 +485,7 @@ function SlideEditor({
     const n = slide.answers?.length ?? 0
     if (n > 0) {
       const ok = window.confirm(
-        `Switching away from "Player choices" will delete ${n} answer${n === 1 ? '' : 's'} and everything in ` +
-          `${n === 1 ? 'it' : 'them'} (actions, requirements, map actions). This isn't covered by Ctrl+Z.\n\nContinue?`,
+        t('dialogs.dialogEditor.confirmSwitchAway', { count: n }),
       )
       if (!ok) return
     }
@@ -513,21 +517,21 @@ function SlideEditor({
         onClick={() => setOpen((v) => !v)}
       >
         {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
-        <span className="font-mono text-xs font-semibold text-primary">{slide.id || '(no id)'}</span>
+        <span className="font-mono text-xs font-semibold text-primary">{slide.id || t('dialogs.dialogEditor.noId')}</span>
         {slide.text && (
           <span className="text-xs text-muted-foreground truncate flex-1">
-            {locText ? locText : <span className="text-amber-500">missing: {slide.text}</span>}
+            {locText ? locText : <span className="text-amber-500">{t('dialogs.dialogEditor.missing', { text: slide.text })}</span>}
           </span>
         )}
         {hasIssues && <Badge variant="secondary" className="text-amber-500 text-xs">!</Badge>}
         {(slide.avatars?.length ?? 0) > 0 && (
           <Badge variant="secondary" className="text-xs shrink-0">
-            {slide.avatars!.length} avatar{slide.avatars!.length !== 1 ? 's' : ''}
+            {t('dialogs.dialogEditor.avatarCount', { count: slide.avatars!.length })}
           </Badge>
         )}
-        {flowMode === 'end' && <Badge variant="secondary" className="text-xs">END</Badge>}
+        {flowMode === 'end' && <Badge variant="secondary" className="text-xs">{t('dialogs.dialogEditor.eND')}</Badge>}
         {flowMode === 'answers' && (
-          <Badge variant="secondary" className="text-xs">{slide.answers?.length ?? 0} choices</Badge>
+          <Badge variant="secondary" className="text-xs">{t('dialogs.dialogEditor.choiceCount', { count: slide.answers?.length ?? 0 })}</Badge>
         )}
         {flowMode === 'next' && slide.next && (
           <span className="text-xs text-muted-foreground flex items-center gap-0.5">
@@ -549,16 +553,16 @@ function SlideEditor({
           {/* Slide ID + Text SID */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs">Slide ID</Label>
+              <Label className="text-xs">{t('dialogs.dialogEditor.slideID')}</Label>
               <Input
                 value={slide.id}
                 onChange={(e) => onChange({ ...slide, id: e.target.value })}
                 className="h-7 text-xs font-mono"
-                placeholder="start"
+                placeholder={t('dialogs.dialogEditor.start')}
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Text SID</Label>
+              <Label className="text-xs">{t('dialogs.dialogEditor.textSID')}</Label>
               <Input
                 value={slide.text ?? ''}
                 onChange={(e) => onChange({ ...slide, text: e.target.value || undefined })}
@@ -575,18 +579,18 @@ function SlideEditor({
               type="button"
               onClick={() => openLocalizationFor(slide.text!)}
               className="flex w-full items-center gap-1.5 rounded border-l-2 border-border pl-2 py-0.5 text-left text-xs text-muted-foreground italic hover:border-primary hover:text-foreground hover:not-italic"
-              title="Edit this text in Localization"
+              title={t('dialogs.dialogEditor.editThisTextInLocalization')}
             >
               <PenLine className="h-3 w-3 shrink-0 not-italic" />
               <span className="truncate">
-                {locText || <span className="text-amber-500">missing translation — click to add</span>}
+                {locText || <span className="text-amber-500">{t('dialogs.dialogEditor.missingTranslationClickToAdd')}</span>}
               </span>
             </button>
           )}
 
           {/* Character vs Narrator */}
           <div className="space-y-1">
-            <Label className="text-xs">Dialog type</Label>
+            <Label className="text-xs">{t('dialogs.dialogEditor.dialogType')}</Label>
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -595,7 +599,7 @@ function SlideEditor({
                   onChange={() => onChange({ ...slide, title: { sid: '', position: defaultTitlePosition() } })}
                   className="accent-primary"
                 />
-                Character
+                {t('dialogs.dialogEditor.character')}
               </label>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -611,12 +615,12 @@ function SlideEditor({
                   }}
                   className="accent-primary"
                 />
-                Narrator
+                {t('dialogs.dialogEditor.narrator')}
               </label>
             </div>
             {!hasSpeaker && (
               <p className="text-[10px] text-muted-foreground">
-                Plain informational text — no speaker name or portrait shown.
+                {t('dialogs.dialogEditor.plainInformationalTextNoSpeaker')}
               </p>
             )}
           </div>
@@ -627,8 +631,8 @@ function SlideEditor({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
-                  <Label className="text-xs">Speaker SID (title.sid)</Label>
-                  <FieldInfo text="The localization token id for this speaker's name — not the name itself. Typing a new sid mints a fresh token (edit its text via Speaker name or Localization). Picking one of the base game's own sids (e.g. dungeon_hero_5) reuses that character's existing name, which the game ignores map overrides of." />
+                  <Label className="text-xs">{t('dialogs.dialogEditor.speakerSIDTitleSid')}</Label>
+                  <FieldInfo text={t('dialogs.dialogEditor.theLocalizationTokenIdFor')} />
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 min-w-0">
@@ -641,7 +645,7 @@ function SlideEditor({
                         })
                       }
                       suggestions={speakerSuggestions}
-                      placeholder="dialogue_title_hero_dungeon"
+                      placeholder={t('dialogs.dialogEditor.dialogueTitleHeroDungeon')}
                     />
                   </div>
                   <Button
@@ -652,29 +656,29 @@ function SlideEditor({
                     disabled={!heroesLoaded}
                     title={
                       heroesLoaded
-                        ? 'Browse portraits to name this speaker'
-                        : 'Load Core.zip via Game Data to browse portraits'
+                        ? t('dialogs.dialogEditor.browsePortraitsToNameThis')
+                        : t('dialogs.dialogEditor.loadCoreZipViaGame')
                     }
                   >
                     <LayoutGrid className="h-3.5 w-3.5" />
-                    Portraits…
+                    {t('dialogs.dialogEditor.portraits')}
                   </Button>
-                  <FieldInfo text="Opens a visual browser of hero/unit/NPC portraits. Picking one names this speaker (writes the localization text below) and places that portrait in the avatar strip in Advanced, at the current Speaker position." />
+                  <FieldInfo text={t('dialogs.dialogEditor.opensAVisualBrowserOf')} />
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
                   <Label className="text-xs">
-                    Speaker name
-                    <span className="ml-1 text-muted-foreground/70">— shown in game</span>
+                    {t('dialogs.dialogEditor.speakerName')}
+                    <span className="ml-1 text-muted-foreground/70">{t('dialogs.dialogEditor.shownInGame')}</span>
                   </Label>
-                  <FieldInfo text="The text shown above the dialog box next to the portrait — edits the localization token that Speaker SID points to, in the map's default language. Disabled for a built-in game speaker: the game ignores map overrides of its own tokens." />
+                  <FieldInfo text={t('dialogs.dialogEditor.theTextShownAboveThe')} />
                 </div>
                 <Input
                   value={speakerName}
                   onChange={(e) => onSpeakerNameChange(e.target.value)}
                   className="h-7 text-xs"
-                  placeholder={isBuiltInSpeaker ? '(from the base game)' : 'Mouaren'}
+                  placeholder={isBuiltInSpeaker ? t('dialogs.dialogEditor.fromTheBaseGame') : t('dialogs.dialogEditor.mouaren')}
                   disabled={isBuiltInSpeaker}
                 />
               </div>
@@ -686,23 +690,21 @@ function SlideEditor({
               <p className="flex items-start gap-1.5 rounded border border-amber-600/40 bg-amber-500/10 p-2 text-xs text-amber-600">
                 <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
                 <span className="flex-1">
-                  <code className="font-mono">{titleSid}</code> is a built-in game name
-                  {builtInSpeakerName ? ` (“${builtInSpeakerName}”)` : ''}. The game ignores map
-                  overrides of its own tokens, so you cannot rename it.
+                  <Trans i18nKey={builtInSpeakerName ? 'dialogs.dialogEditor.builtInSpeakerNamed' : 'dialogs.dialogEditor.builtInSpeaker'} values={{ sid: titleSid, name: builtInSpeakerName }} components={{ c: <code className="font-mono" /> }} />
                 </span>
                 <button
                   type="button"
                   className="shrink-0 font-medium underline underline-offset-2 hover:no-underline"
                   onClick={useCustomSpeakerSid}
                 >
-                  Use a custom name
+                  {t('dialogs.dialogEditor.useACustomName')}
                 </button>
               </p>
             )}
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Speaker position</Label>
+                <Label className="text-xs">{t('dialogs.dialogEditor.speakerPosition')}</Label>
                 <Select
                   disabled={!titleSid}
                   value={slide.title?.position ? String(slide.title.position) : '__unset__'}
@@ -727,13 +729,13 @@ function SlideEditor({
                   }}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue placeholder={titleSid ? '(none)' : 'Set a Speaker SID first'} />
+                    <SelectValue placeholder={titleSid ? t('dialogs.dialogEditor.none') : t('dialogs.dialogEditor.setASpeakerSIDFirst')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__unset__">(none)</SelectItem>
+                    <SelectItem value="__unset__">{t('dialogs.dialogEditor.none')}</SelectItem>
                     {AVATAR_POSITIONS.map((position) => (
                       <SelectItem key={position} value={String(position)}>
-                        {POSITION_LABELS[position]}
+                        {avatarPositionName(position)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -747,10 +749,10 @@ function SlideEditor({
               }`}
               title={
                 hasAvatarAtSpeakerPos
-                  ? 'Remove the portrait at this position — the name label stays'
+                  ? t('dialogs.dialogEditor.removeThePortraitAtThis')
                   : lastPortraitIcon
-                    ? 'Show the portrait again'
-                    : 'Pick a portrait to show one again'
+                    ? t('dialogs.dialogEditor.showThePortraitAgain')
+                    : t('dialogs.dialogEditor.pickAPortraitToShow')
               }
             >
               <Checkbox
@@ -762,7 +764,7 @@ function SlideEditor({
                   else setSpeakerPickerOpen(true)
                 }}
               />
-              <span className="text-xs">Name only (no portrait)</span>
+              <span className="text-xs">{t('dialogs.dialogEditor.nameOnlyNoPortrait')}</span>
             </label>
           </div>
           )}
@@ -771,13 +773,13 @@ function SlideEditor({
             open={speakerPickerOpen}
             onOpenChange={setSpeakerPickerOpen}
             mode="portrait"
-            title="Choose a portrait to name this speaker"
+            title={t('dialogs.dialogEditor.chooseAPortraitToName')}
             onSelect={(entry) => pickSpeakerPortrait(entry.name, entry.icon)}
           />
 
           {/* Flow mode */}
           <div className="space-y-2">
-            <Label className="text-xs">Flow</Label>
+            <Label className="text-xs">{t('dialogs.dialogEditor.flow')}</Label>
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -786,7 +788,7 @@ function SlideEditor({
                   onChange={() => switchFlowMode('next')}
                   className="accent-primary"
                 />
-                Next slide
+                {t('dialogs.dialogEditor.nextSlide')}
               </label>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -795,7 +797,7 @@ function SlideEditor({
                   onChange={() => switchFlowMode('end')}
                   className="accent-primary"
                 />
-                End dialog
+                {t('dialogs.dialogEditor.endDialog')}
               </label>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
@@ -804,13 +806,13 @@ function SlideEditor({
                   onChange={addAnswer}
                   className="accent-primary"
                 />
-                Player choices
+                {t('dialogs.dialogEditor.playerChoices')}
               </label>
             </div>
 
             {flowMode === 'next' && (
               <div className="space-y-1">
-                <Label className="text-xs">Next slide ID</Label>
+                <Label className="text-xs">{t('dialogs.dialogEditor.nextSlideID')}</Label>
                 <Input
                   value={slide.next ?? ''}
                   onChange={(e) => onChange({ ...slide, next: e.target.value || undefined })}
@@ -833,9 +835,9 @@ function SlideEditor({
           {flowMode === 'answers' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Player choices</Label>
+                <Label className="text-xs">{t('dialogs.dialogEditor.playerChoices')}</Label>
                 <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={addAnswer}>
-                  <Plus className="h-3 w-3" /> Add choice
+                  <Plus className="h-3 w-3" /> {t('dialogs.dialogEditor.addChoice')}
                 </Button>
               </div>
               {(slide.answers ?? []).map((answer, ai) => (
@@ -858,9 +860,9 @@ function SlideEditor({
           {/* Map actions */}
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">
-              Map actions
+              {t('dialogs.dialogEditor.mapActions')}
               <span className="ml-1 text-muted-foreground/70">
-                — fire when the slide opens; Story Counters go in Advanced → "Global actions" instead
+                {t('dialogs.dialogEditor.fireWhenTheSlideOpens')}
               </span>
             </Label>
             <ActionList
@@ -882,7 +884,7 @@ function SlideEditor({
               }
             />
             <Label htmlFor={`invoke-only-${slide.id}`} className="text-xs">
-              Invoke only actions (silent slide — no dialog UI shown)
+              {t('dialogs.dialogEditor.invokeOnlyActionsSilentSlide')}
             </Label>
           </div>
 
@@ -898,7 +900,7 @@ function SlideEditor({
               ) : (
                 <ChevronRight className="h-3 w-3 shrink-0" />
               )}
-              <span className="text-xs text-muted-foreground">Advanced</span>
+              <span className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.advanced')}</span>
               {!advancedOpen && advancedInUse.length > 0 && (
                 <span className="truncate text-[10px] text-muted-foreground/70">
                   {advancedInUse.join(', ')}
@@ -915,29 +917,29 @@ function SlideEditor({
                     written as "" by serializeDialogFile in case the engine expects
                     the key, and any value in an imported file round-trips untouched. */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Voice line (sound)</Label>
+                  <Label className="text-xs">{t('dialogs.dialogEditor.voiceLineSound')}</Label>
                   <Input
                     value={slide.sound ?? ''}
                     onChange={(e) => onChange({ ...slide, sound: e.target.value || undefined })}
                     className="h-7 text-xs font-mono"
-                    placeholder="sounds/locale/dialogs/…"
+                    placeholder={t('dialogs.dialogEditor.soundsLocaleDialogs')}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">Notification</Label>
+                    <Label className="text-xs">{t('dialogs.dialogEditor.notification')}</Label>
                     <Input
                       value={slide.notification ?? ''}
                       onChange={(e) =>
                         onChange({ ...slide, notification: e.target.value || undefined })
                       }
                       className="h-7 text-xs font-mono"
-                      placeholder="start"
+                      placeholder={t('dialogs.dialogEditor.start')}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Duration (seconds)</Label>
+                    <Label className="text-xs">{t('dialogs.dialogEditor.durationSeconds')}</Label>
                     <Input
                       type="number"
                       value={slide.notificationDuration ?? ''}
@@ -957,7 +959,7 @@ function SlideEditor({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">Result</Label>
+                    <Label className="text-xs">{t('dialogs.dialogEditor.result')}</Label>
                     <Select
                       value={slide.resultDialog ?? 'unset'}
                       onValueChange={(v) =>
@@ -969,12 +971,12 @@ function SlideEditor({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="unset" className="text-xs">
-                          (not set)
+                          {t('dialogs.dialogEditor.notSet')}
                         </SelectItem>
                         {RESULT_DIALOG_VALUES.map((v) => (
                           <SelectItem key={v} value={v} className="text-xs">
                             {v}
-                            {v === 'Interrupt' ? ' — halt queued logic' : ''}
+                            {v === 'Interrupt' ? t('dialogs.dialogEditor.haltQueuedLogic') : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -990,7 +992,7 @@ function SlideEditor({
                         }
                       />
                       <Label htmlFor={`anim-now-${slide.id}`} className="text-xs">
-                        Play animations immediately
+                        {t('dialogs.dialogEditor.playAnimationsImmediately')}
                       </Label>
                     </div>
                   </div>
@@ -998,7 +1000,7 @@ function SlideEditor({
 
                 {/* Avatars */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Avatars</Label>
+                  <Label className="text-xs">{t('dialogs.dialogEditor.avatars')}</Label>
                   <AvatarStrip
                     avatars={slide.avatars ?? []}
                     onChange={(avatars) =>
@@ -1018,9 +1020,9 @@ function SlideEditor({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Label className="text-xs">
-                      Play conditions
+                      {t('dialogs.dialogEditor.playConditions')}
                       <span className="ml-1 text-muted-foreground/70">
-                        — slide is skipped when these fail
+                        {t('dialogs.dialogEditor.slideIsSkippedWhenThese')}
                       </span>
                     </Label>
                     {(slide.dialogPlayConditions?.length ?? 0) > 1 && (
@@ -1060,9 +1062,9 @@ function SlideEditor({
                 {/* Global actions on show — the restricted Guide/StoryCounter vocabulary */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
-                    Global actions
+                    {t('dialogs.dialogEditor.globalActions')}
                     <span className="ml-1 text-muted-foreground/70">
-                      — Guide / Story Counters only, fire when the slide is shown
+                      {t('dialogs.dialogEditor.guideStoryCountersOnlyFire')}
                     </span>
                   </Label>
                   <ActionList
@@ -1091,8 +1093,8 @@ function SlideEditor({
                 {/* Global actions on close — same restricted vocabulary as above */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
-                    Global actions on dialog close
-                    <span className="ml-1 text-muted-foreground/70">— Guide / Story Counters only</span>
+                    {t('dialogs.dialogEditor.globalActionsOnClose')}
+                    <span className="ml-1 text-muted-foreground/70">{t('dialogs.dialogEditor.guideStoryCountersOnly')}</span>
                   </Label>
                   <ActionList
                     actions={slide.closeActions ?? []}
@@ -1120,9 +1122,9 @@ function SlideEditor({
                 {/* Map actions on close — general vocabulary, Story Counters excluded */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
-                    Map actions on dialog close
+                    {t('dialogs.dialogEditor.mapActionsOnClose')}
                     <span className="ml-1 text-muted-foreground/70">
-                      — Story Counters go in "Global actions on dialog close" above instead
+                      {t('dialogs.dialogEditor.storyCountersGoInGlobal')}
                     </span>
                   </Label>
                   <ActionList
@@ -1159,6 +1161,7 @@ function SlideEditor({
 // ─── Main DialogEditor ───────────────────────────────────────────────────────────
 
 export default function DialogEditor() {
+  const { t } = useTranslation()
   const {
     dialogEditorOpenId,
     dialogs,
@@ -1228,7 +1231,7 @@ export default function DialogEditor() {
         <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-muted-foreground">Dialog ID</Label>
+              <Label className="text-xs text-muted-foreground">{t('dialogs.dialogEditor.dialogID')}</Label>
               <Input
                 value={currentFlow.id}
                 onChange={(e) => {
@@ -1242,13 +1245,13 @@ export default function DialogEditor() {
                   }
                 }}
                 className="font-mono h-8"
-                placeholder="my_map_intro"
+                placeholder={t('dialogs.dialogEditor.myMapIntro')}
               />
             </div>
-            <DialogTitle className="sr-only">Dialog Editor</DialogTitle>
+            <DialogTitle className="sr-only">{t('dialogs.dialogEditor.dialogEditor')}</DialogTitle>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            File: <code>DB/dialogs/dialogs/custom_maps/&lt;map&gt;/{currentFlow.id}.json</code>
+            {t('dialogs.dialogEditor.fileLabel')} <code>{t('dialogs.dialogEditor.dBDialogsDialogsCustomMaps', { id: currentFlow.id })}</code>
           </p>
         </DraggableDialogDragHandle>
 
@@ -1258,7 +1261,7 @@ export default function DialogEditor() {
           <div className="py-4 space-y-3">
             {currentFlow.slides.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No slides yet. Add one to start building the dialog.
+                {t('dialogs.dialogEditor.noSlidesYetAddOne')}
               </p>
             )}
             {currentFlow.slides.map((slide, i) => (
@@ -1278,7 +1281,7 @@ export default function DialogEditor() {
 
         <div className="px-6 py-3 border-t border-border shrink-0">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={addSlide}>
-            <Plus className="h-3.5 w-3.5" /> Add Slide
+            <Plus className="h-3.5 w-3.5" /> {t('dialogs.dialogEditor.addSlide')}
           </Button>
         </div>
       </DraggableDialogContent>

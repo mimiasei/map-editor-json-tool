@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n'
 // ─── Quest text phrase banks ────────────────────────────────────────────────
 // Slot syntax: {giver} {task} {reward}. Each tone has several variants per
 // line kind, picked with a seeded RNG so the same seed always yields the same text.
@@ -5,11 +6,9 @@
 export const TONES = ['heroic', 'grim', 'humorous', 'mysterious'] as const
 export type Tone = (typeof TONES)[number]
 
-export const TONE_LABELS: Record<Tone, string> = {
-  heroic: 'Heroic',
-  grim: 'Grim',
-  humorous: 'Humorous',
-  mysterious: 'Mysterious',
+/** Display name of a tone in the UI language. The tone ids themselves are what is stored and sent. */
+export function toneLabel(tone: Tone): string {
+  return i18n.t(`story.tones.${tone}`)
 }
 
 export type LineKind = 'title' | 'desc' | 'intro' | 'success'

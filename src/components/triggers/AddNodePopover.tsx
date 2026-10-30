@@ -20,6 +20,7 @@ import {
   HIDDEN_ACTION_TYPES,
 } from '@/lib/trigger-visual'
 import { SUBJECT_DEFS, type SubjectKey } from '@/lib/trigger-subjects'
+import { useTranslation } from 'react-i18next'
 
 interface Item {
   type: string
@@ -66,13 +67,14 @@ function matchTier(item: Item, q: string): MatchTier {
 }
 
 export default function AddNodePopover({ kind, onPick, children, subjectKey }: Props) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
 
   const groups = useMemo<Group[]>(() => {
     if (kind === 'condition') {
       return CONDITION_UI_CATEGORIES.map((cat) => ({
-        label: cat.label,
+        label: t(`triggers.conditionCategories.${cat.id}`),
         icon: cat.icon,
         items: CONDITION_LIST.filter((c) => cat.types.includes(c.type) && !HIDDEN_CONDITION_TYPES.has(c.type)).map(toItem),
       }))
@@ -82,7 +84,7 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
       icon: getActionCategoryIcon(cat),
       items: ACTION_LIST.filter((a) => a.category === cat && !HIDDEN_ACTION_TYPES.has(a.type)).map(toItem),
     }))
-  }, [kind])
+  }, [kind, t])
 
   const recent = useMemo<Item[]>(() => {
     if (!open) return []
@@ -145,11 +147,11 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder={`Search ${kind}s…`} value={query} onValueChange={setQuery} />
+          <CommandInput placeholder={t(kind === 'condition' ? 'triggers.addNodePopover.searchConditions' : 'triggers.addNodePopover.searchActions')} value={query} onValueChange={setQuery} />
           <CommandList className="max-h-80">
-            <CommandEmpty>No matches.</CommandEmpty>
+            <CommandEmpty>{t('catalog.gameDatabaseDialog.noMatches')}</CommandEmpty>
             {shownSuggested.length > 0 && subjectKey && (
-              <CommandGroup heading={SUBJECT_DEFS[subjectKey].label}>
+              <CommandGroup heading={t(`triggers.subjects.${subjectKey}`)}>
                 {shownSuggested.map((item) => (
                   <CommandItem
                     key={`suggested-${item.type}`}
@@ -162,7 +164,7 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
               </CommandGroup>
             )}
             {shownRecent.length > 0 && (
-              <CommandGroup heading="Recently used">
+              <CommandGroup heading={t('triggers.addNodePopover.recentlyUsed')}>
                 {shownRecent.map((item) => (
                   <CommandItem
                     key={`recent-${item.type}`}

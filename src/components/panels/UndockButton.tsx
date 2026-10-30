@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   panelId: string
@@ -20,6 +21,7 @@ interface Props {
  * the button is opacity-0 by default and opacity-100 on group-hover.
  */
 export default function UndockButton({ panelId: _panelId, onUndock, disabled }: Props) {
+  const { t } = useTranslation()
   if (!isTauri()) return null
 
   return (
@@ -29,12 +31,12 @@ export default function UndockButton({ panelId: _panelId, onUndock, disabled }: 
           className="pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 focus:opacity-100 focus:pointer-events-auto transition-opacity h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:pointer-events-none disabled:opacity-30"
           onClick={onUndock}
           disabled={disabled}
-          aria-label="Pop out into separate window"
+          aria-label={t('panels.undockButton.popOutIntoSeparateWindow')}
         >
           <SquareArrowOutUpRight className="h-3.5 w-3.5" />
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom">Pop out into separate window</TooltipContent>
+      <TooltipContent side="bottom">{t('panels.undockButton.popOutIntoSeparateWindow')}</TooltipContent>
     </Tooltip>
   )
 }

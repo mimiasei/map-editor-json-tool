@@ -76,6 +76,7 @@ import {
   LeafIcon,
   ListChecksIcon,
   ListIcon,
+  MoreHorizontalIcon,
   LoaderCircleIcon,
   MapIcon,
   MapPinIcon,
@@ -214,6 +215,7 @@ export const List = make(ListIcon, 'List')
 export const ListChecks = make(ListChecksIcon, 'ListChecks')
 export const Loader2 = make(LoaderCircleIcon, 'Loader2')
 export const Map = make(MapIcon, 'Map')
+export const MoreHorizontal = make(MoreHorizontalIcon, 'MoreHorizontal')
 export const MapPin = make(MapPinIcon, 'MapPin')
 export const Maximize2 = make(MaximizeScreenIcon, 'Maximize2')
 export const MessageSquare = make(MessageSquareIcon, 'MessageSquare')

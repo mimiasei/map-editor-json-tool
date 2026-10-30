@@ -27,6 +27,7 @@ import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
 import { logError, logInfo } from '@/lib/logger'
 import { saveFile } from '@/lib/native-fs'
 import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
+import { useTranslation, Trans } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -193,6 +194,7 @@ function detailCsvFileName(result: ImportH3mResult): string {
 }
 
 export default function ImportH3mDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
 
   const [phase, setPhase] = useState<Phase>('idle')
@@ -248,35 +250,32 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import Heroes of Might & Magic III Map</DialogTitle>
+          <DialogTitle>{t('common.importH3mDialog.importHeroesOfMightMagic')}</DialogTitle>
         </DialogHeader>
 
         {/* ── Idle ── */}
         {(phase === 'idle' || phase === 'error') && (
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Convert a Heroes of Might and Magic III (.h3m) map into a new Olden Era map:
-              terrain, decoration (with randomized visual variety), towns, monsters,
-              resources, and — where the source map's win condition is supported —
-              a working victory quest. The result opens as a new, unsaved map here in TSE;
-              save it wherever you like afterward.
+              {t('common.importH3mDialog.convertAHeroesOfMight')}
             </p>
             <hr />
-            <p className="text-sm text-muted-foreground">
-              <span>Credit goes to </span>
-              <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie">Levi Ritchie</a>
-              <span> for his work on the </span>
-              <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie/homm3-olden-stock-translator">homm3-olden-stock-translator</a>
-              <span> which has been a great reference and inspiration for this tool.</span>
-            </p>
-            <p className="text-center">Thank you! 🙏</p>
+            <Trans
+              i18nKey="common.importH3mDialog.credit"
+              components={{
+                credit: <p className="text-sm text-muted-foreground" />,
+                author: <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie" />,
+                repo: <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie/homm3-olden-stock-translator" />,
+                thanks: <p className="text-center" />,
+              }}
+            />
             <hr />
 
             {!catalog && (
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  Load Game Data first (More → Game Data) so scenery and objects can be resolved.
+                  {t('common.importH3mDialog.loadGameDataFirstMore')}
                 </AlertDescription>
               </Alert>
             )}
@@ -294,7 +293,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
         {phase === 'running' && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
             <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-            <span>Converting…</span>
+            <span>{t('common.importH3mDialog.converting')}</span>
           </div>
         )}
 
@@ -303,36 +302,35 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
           <div className="space-y-3 text-sm max-h-[60vh] overflow-y-auto pr-1">
             <p className="text-green-600 dark:text-green-400 font-medium flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
-              Imported "{report.sourceTitle || result.name}" — opened as a new map.
+              {t('common.importH3mDialog.imported', { title: report.sourceTitle || result.name })}
             </p>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <div>Map size</div>
-              <div className="text-foreground">{report.atlasWidth} × {report.atlasHeight} (source {report.sourceSize}, {report.sourceLayers} layer{report.sourceLayers !== 1 ? 's' : ''})</div>
-              <div>Players</div>
+              <div>{t('common.importH3mDialog.mapSize')}</div>
+              <div className="text-foreground">{t('common.importH3mDialog.sizeSummary', { width: report.atlasWidth, height: report.atlasHeight, size: report.sourceSize, count: report.sourceLayers })}</div>
+              <div>{t('shared.players')}</div>
               <div className="text-foreground">{report.playersCount}</div>
-              <div>Scenery placed</div>
+              <div>{t('common.importH3mDialog.sceneryPlaced')}</div>
               <div className="text-foreground">{report.sceneryPlaced}</div>
-              <div>Other objects placed</div>
+              <div>{t('common.importH3mDialog.otherObjectsPlaced')}</div>
               <div className="text-foreground">{report.objectsPlaced}</div>
-              <div>River tiles</div>
+              <div>{t('common.importH3mDialog.riverTiles')}</div>
               <div className="text-foreground">{report.riverTilesConverted}</div>
-              <div>Victory quest</div>
-              <div className="text-foreground">{report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}</div>
-              <div>Portals linked</div>
+              <div>{t('common.importH3mDialog.victoryQuest')}</div>
+              <div className="text-foreground">{report.hasVictoryQuest ? t('common.importH3mDialog.yesDefeatAllEnemies') : t('common.importH3mDialog.noneUnsupportedWinCondition')}</div>
+              <div>{t('common.importH3mDialog.portalsLinked')}</div>
               <div className="text-foreground">{report.portalsLinked}</div>
-              <div>Accessibility fixes</div>
-              <div className="text-foreground">{report.accessibilityDecorRemoved} removed, {report.accessibilityTargetsNudged} nudged</div>
-              <div>Ground-truth floor fixes</div>
-              <div className="text-foreground">{report.groundTruthDecorRemoved} removed</div>
+              <div>{t('common.importH3mDialog.accessibilityFixes')}</div>
+              <div className="text-foreground">{t('common.importH3mDialog.removedNudged', { accessibilityDecorRemoved: report.accessibilityDecorRemoved, accessibilityTargetsNudged: report.accessibilityTargetsNudged })}</div>
+              <div>{t('common.importH3mDialog.groundTruthFloorFixes')}</div>
+              <div className="text-foreground">{t('common.importH3mDialog.removed', { groundTruthDecorRemoved: report.groundTruthDecorRemoved })}</div>
             </div>
 
             {report.portalsUnpaired > 0 && (
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  {report.portalsUnpaired} portal{report.portalsUnpaired !== 1 ? 's were' : ' was'} placed with no same-color partner to link to —
-                  {' '}likely inert in-game.
+                  {t('common.importH3mDialog.portalsUnpaired', { count: report.portalsUnpaired })}
                 </AlertDescription>
               </Alert>
             )}
@@ -341,9 +339,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  {report.accessibilityStillUnreachable} item/resource/interactable{report.accessibilityStillUnreachable !== 1 ? 's' : ''} could not
-                  be made reachable automatically — often because the source map guarded them with water, rock, or a gate/quest
-                  mechanic this importer doesn't yet emit. Worth checking manually with the Map Grid's blocked-tile overlay.
+                  {t('common.importH3mDialog.unreachableItems', { count: report.accessibilityStillUnreachable })}
                 </AlertDescription>
               </Alert>
             )}
@@ -353,13 +349,12 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
                   <p>
-                    Final reachability check found {result.unreachablePlacements.length} placement{result.unreachablePlacements.length !== 1 ? 's' : ''}
-                    {' '}(including squads) still unreachable from any player start after auto-fix:
+                    {t('common.importH3mDialog.unreachablePlacements', { count: result.unreachablePlacements.length })}
                   </p>
                   <ul className="list-disc pl-4 mt-1">
                     {result.unreachablePlacements.slice(0, 10).map((issue, i) => <li key={i}>{describeUnreachablePlacement(issue)}</li>)}
                   </ul>
-                  {result.unreachablePlacements.length > 10 && <p>…and {result.unreachablePlacements.length - 10} more.</p>}
+                  {result.unreachablePlacements.length > 10 && <p>{t('common.importH3mDialog.andMore', { count: result.unreachablePlacements.length - 10 })}</p>}
                 </AlertDescription>
               </Alert>
             )}
@@ -369,8 +364,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
                   <p>
-                    {result.isolatedPlayerStarts.length} player start{result.isolatedPlayerStarts.length !== 1 ? 's are' : ' is'} isolated from every
-                    other player — not auto-fixable, needs a manual road/bridge/portal:
+                    {t('common.importH3mDialog.isolatedStarts', { count: result.isolatedPlayerStarts.length })}
                   </p>
                   <ul className="list-disc pl-4 mt-1">
                     {result.isolatedPlayerStarts.map((issue, i) => <li key={i}>{describeIsolatedPlayerStart(issue)}</li>)}
@@ -383,9 +377,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  {report.groundTruthStillBlocked} tile{report.groundTruthStillBlocked !== 1 ? 's' : ''} the source map's own data says
-                  {' '}should be walkable floor {report.groundTruthStillBlocked !== 1 ? 'remain' : 'remains'} unreachable — no decorative
-                  {' '}object was found nearby to safely remove, often a genuine diagonal-only pinch point in a narrow tunnel.
+                  {t('common.importH3mDialog.groundTruthBlocked', { count: report.groundTruthStillBlocked })}
                 </AlertDescription>
               </Alert>
             )}
@@ -394,8 +386,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  {report.unboundOrphanOwners.length} player{report.unboundOrphanOwners.length !== 1 ? 's' : ''} had no town to bind to a start —
-                  {' '}they have no start point on the converted map.
+                  {t('common.importH3mDialog.orphanOwners', { count: report.unboundOrphanOwners.length })}
                 </AlertDescription>
               </Alert>
             )}
@@ -404,7 +395,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs">
-                  {report.outOfEnvelopeCount} object{report.outOfEnvelopeCount !== 1 ? 's' : ''} sat outside the source map's own bounds and were skipped.
+                  {t('common.importH3mDialog.outOfEnvelope', { count: report.outOfEnvelopeCount })}
                 </AlertDescription>
               </Alert>
             )}
@@ -424,18 +415,18 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <Alert variant="destructive" className="py-2">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2 text-xs space-y-1">
-                  <p>{result.validationErrors.length} structural validation issue{result.validationErrors.length !== 1 ? 's' : ''} found in the converted map:</p>
+                  <p>{t('common.importH3mDialog.validationIssues', { count: result.validationErrors.length })}</p>
                   <ul className="list-disc pl-4 space-y-0.5">
                     {result.validationErrors.slice(0, 10).map((e, i) => <li key={i}>{e}</li>)}
                   </ul>
-                  {result.validationErrors.length > 10 && <p>…and {result.validationErrors.length - 10} more.</p>}
+                  {result.validationErrors.length > 10 && <p>{t('common.importH3mDialog.andMore', { count: result.validationErrors.length - 10 })}</p>}
                 </AlertDescription>
               </Alert>
             )}
 
             {variants.length > 0 && (
               <details className="text-xs">
-                <summary className="cursor-pointer text-muted-foreground">Scenery variety ({variants.length} kind{variants.length !== 1 ? 's' : ''})</summary>
+                <summary className="cursor-pointer text-muted-foreground">{t('common.importH3mDialog.sceneryVariety', { count: variants.length })}</summary>
                 <ul className="mt-1 space-y-0.5 pl-3">
                   {variants.map(([sid, count]) => (
                     <li key={sid} className="flex justify-between gap-2">
@@ -450,7 +441,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
             {omitted.length > 0 && (
               <details className="text-xs">
                 <summary className="cursor-pointer text-muted-foreground">
-                  Not converted ({totalOmitted} object{totalOmitted !== 1 ? 's' : ''}, {omitted.length} reason{omitted.length !== 1 ? 's' : ''})
+                  {t('common.importH3mDialog.notConverted', { objects: t('common.importH3mDialog.objectCount', { count: totalOmitted }), reasons: t('common.importH3mDialog.reasonCount', { count: omitted.length }) })}
                 </summary>
                 <ul className="mt-1 space-y-0.5 pl-3">
                   {omitted.map(([reason, count]) => (
@@ -466,7 +457,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
             {sourceObjects.length > 0 && (
               <details className="text-xs">
                 <summary className="cursor-pointer text-muted-foreground">
-                  Source objects ({sourceObjects.length} kind{sourceObjects.length !== 1 ? 's' : ''} found in the H3 map)
+                  {t('common.importH3mDialog.sourceObjects', { count: sourceObjects.length })}
                 </summary>
                 <ul className="mt-1 space-y-0.5 pl-3">
                   {sourceObjects.map(([name, count]) => (
@@ -490,23 +481,23 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                 onCheckedChange={(v) => setDontShowAgain(!!v)}
               />
               <Label htmlFor="import-h3m-dont-show" className="text-xs text-muted-foreground cursor-pointer">
-                Don't show this again
+                {t('common.importH3mDialog.dontShowThisAgain')}
               </Label>
             </div>
           )}
           <div className="flex gap-2 sm:ml-auto">
             {(phase === 'idle' || phase === 'error') && (
               <>
-                <Button variant="ghost" onClick={handleClose}>Cancel</Button>
+                <Button variant="ghost" onClick={handleClose}>{t('shared.cancel')}</Button>
                 <Button onClick={handleImport} disabled={!catalog}>
-                  Choose File &amp; Import…
+                  {t('common.importH3mDialog.chooseFileImport')}
                 </Button>
               </>
             )}
             {phase === 'running' && (
               <Button variant="ghost" disabled>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Converting…
+                {t('common.importH3mDialog.converting')}
               </Button>
             )}
             {phase === 'done' && result && (
@@ -522,7 +513,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                     )
                   }}
                 >
-                  Save detail (CSV)…
+                  {t('common.importH3mDialog.saveDetailCSV')}
                 </Button>
                 <Button
                   variant="outline"
@@ -530,14 +521,14 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                     void saveFile(
                       buildReportText(result),
                       reportFileName(result),
-                      { name: 'Text', extensions: ['txt'] },
+                      { name: t('shared.fileFilters.text'), extensions: ['txt'] },
                       'text/plain',
                     )
                   }}
                 >
-                  Save report…
+                  {t('common.importH3mDialog.saveReport')}
                 </Button>
-                <Button onClick={handleClose}>Close</Button>
+                <Button onClick={handleClose}>{t('ui.close')}</Button>
               </>
             )}
           </div>

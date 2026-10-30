@@ -28,6 +28,7 @@ import {
   Package,
   Upload,
 } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   open: boolean
@@ -53,6 +54,7 @@ function TargetRow({
   reason?: string
   onChoose: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="rounded border border-border bg-card p-2 space-y-1">
       <div className="flex items-center gap-2">
@@ -60,12 +62,12 @@ function TargetRow({
         <span className="text-xs font-medium">{label}</span>
         {path && exists && (
           <Badge variant="secondary" className="text-amber-500 text-xs">
-            overwrites
+            {t('common.publishDialog.overwrites')}
           </Badge>
         )}
         {path && !exists && (
           <Badge variant="secondary" className="text-xs">
-            new file
+            {t('common.publishDialog.newFile')}
           </Badge>
         )}
         <Button
@@ -75,7 +77,7 @@ function TargetRow({
           onClick={onChoose}
         >
           <FolderOpen className="h-3 w-3" />
-          {path ? 'Change…' : 'Choose…'}
+          {path ? t('common.publishDialog.change') : t('common.publishDialog.choose')}
         </Button>
       </div>
       {path ? (
@@ -90,6 +92,7 @@ function TargetRow({
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
 export default function PublishDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation()
   const { scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, sidecarPath, currentFilePath, mapFilePath, markClean, markZipPublished } =
     useScenarioStore()
 
@@ -124,7 +127,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
     const picked = await pickSavePath(
       targets?.json.path ?? 'scenario.json',
       { name: 'JSON', extensions: ['json'] },
-      'Where to write the scenario JSON',
+      t('common.publishDialog.pickJsonTitle'),
     )
     if (picked) {
       setTargets((t) => (t ? { ...t, json: { path: picked, exists: false } } : t))
@@ -134,8 +137,8 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
   const chooseZip = useCallback(async () => {
     const picked = await pickSavePath(
       targets?.zip.path ?? mapZipFileName(mapName || 'map'),
-      { name: 'ZIP Archive', extensions: ['zip'] },
-      'Where to write the map ZIP',
+      { name: t('shared.fileFilters.zipArchive'), extensions: ['zip'] },
+      t('common.publishDialog.pickZipTitle'),
     )
     if (picked) {
       setTargets((t) => (t ? { ...t, zip: { path: picked, exists: false } } : t))
@@ -186,9 +189,9 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
-          <DialogTitle>Publish map</DialogTitle>
+          <DialogTitle>{t('common.publishDialog.publishMap')}</DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Embeds the quests in your .map file, writes the scenario JSON next to it and the ZIP into StreamingAssets.
+            {t('common.publishDialog.embedsTheQuestsInYour')}
           </p>
         </DraggableDialogDragHandle>
 
@@ -198,7 +201,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
               <div className="flex items-start gap-2 rounded border border-green-600/40 bg-green-500/10 p-3">
                 <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
                 <div className="space-y-1 text-xs">
-                  <p className="font-medium text-green-600">Published.</p>
+                  <p className="font-medium text-green-600">{t('common.publishDialog.published')}</p>
                   <code className="block break-all text-muted-foreground">
                     {targets?.json.path}
                   </code>
@@ -208,8 +211,10 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                   {/* Name the language files that landed — a missing translation
                       used to fail silently. */}
                   <p className="text-muted-foreground">
-                    {shipped.length} language file{shipped.length !== 1 ? 's' : ''}:{' '}
-                    {shipped.map(languageLabel).join(', ')}
+                    {t('common.publishDialog.languageFilesList', {
+                      files: t('common.publishDialog.languageFiles', { count: shipped.length }),
+                      languages: shipped.map(languageLabel).join(', '),
+                    })}
                   </p>
                 </div>
               </div>
@@ -217,13 +222,13 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
               <>
                 {!targets ? (
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Resolving destinations…
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('common.publishDialog.resolvingDestinations')}
                   </p>
                 ) : (
                   <>
                     <TargetRow
                       icon={<FileJson className="h-3.5 w-3.5 text-muted-foreground" />}
-                      label="Scenario JSON"
+                      label={t('common.publishDialog.scenarioJSON')}
                       path={targets.json.path}
                       exists={targets.json.exists}
                       reason={targets.json.reason}
@@ -231,7 +236,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                     />
                     <TargetRow
                       icon={<Package className="h-3.5 w-3.5 text-muted-foreground" />}
-                      label="Map ZIP"
+                      label={t('common.publishDialog.mapZIP')}
                       path={targets.zip.path}
                       exists={targets.zip.exists}
                       reason={targets.zip.reason}
@@ -243,15 +248,14 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                 {/* What goes into the ZIP */}
                 <div className="rounded border border-border bg-muted/30 p-2 text-xs text-muted-foreground space-y-0.5">
                   <p>
-                    {Object.keys(dialogs).length} dialog
-                    {Object.keys(dialogs).length !== 1 ? 's' : ''}
-                    {' · '}
-                    {Object.keys(localization).length} English token
-                    {Object.keys(localization).length !== 1 ? 's' : ''}
+                    {t('common.publishDialog.zipContents', {
+                      dialogs: t('common.publishDialog.dialogs', { count: Object.keys(dialogs).length }),
+                      tokens: t('common.publishDialog.englishTokens', { count: Object.keys(localization).length }),
+                    })}
                   </p>
                   {extraLanguages.length > 0 && (
                     <p>
-                      Also shipping: {extraLanguages.map(languageLabel).join(', ')}
+                      {t('common.publishDialog.alsoShipping', { languages: extraLanguages.map(languageLabel).join(', ') })}
                     </p>
                   )}
                 </div>
@@ -261,8 +265,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                   <div className="rounded border border-destructive/40 bg-destructive/10 p-2 space-y-1 text-xs text-destructive">
                     <p className="flex items-center gap-1.5 font-medium">
                       <AlertTriangle className="h-3 w-3" />
-                      {validation.errors.length} error
-                      {validation.errors.length !== 1 ? 's' : ''} — fix before publishing
+                      {t('common.publishDialog.errorsBlock', { count: validation.errors.length })}
                     </p>
                     {validation.errors.slice(0, 6).map((m, i) => (
                       <p key={i} className="pl-4">
@@ -271,7 +274,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                     ))}
                     {validation.errors.length > 6 && (
                       <p className="pl-4 opacity-70">
-                        …and {validation.errors.length - 6} more
+                        {t('common.publishDialog.andMore', { count: validation.errors.length - 6 })}
                       </p>
                     )}
                   </div>
@@ -279,8 +282,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                 {!blocked && validation.warnings.length > 0 && (
                   <p className="flex items-center gap-1.5 rounded border border-amber-600/40 bg-amber-500/10 p-2 text-xs text-amber-600">
                     <AlertTriangle className="h-3 w-3 shrink-0" />
-                    {validation.warnings.length} warning
-                    {validation.warnings.length !== 1 ? 's' : ''} — publishing anyway is fine
+                    {t('common.publishDialog.warnings', { count: validation.warnings.length })}
                   </p>
                 )}
 
@@ -297,7 +299,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
         <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            {phase === 'done' ? 'Close' : 'Cancel'}
+            {phase === 'done' ? t('ui.close') : t('shared.cancel')}
           </Button>
           {phase !== 'done' && (
             <Button
@@ -311,7 +313,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
               ) : (
                 <Upload className="h-3.5 w-3.5" />
               )}
-              Publish
+              {t('common.publishDialog.publish')}
             </Button>
           )}
         </div>

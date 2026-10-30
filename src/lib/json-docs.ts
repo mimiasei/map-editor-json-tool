@@ -18,6 +18,7 @@ import type { CustomBuffDefinition } from '@/types/custom-buff'
 import { exportScenario } from '@/lib/export'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import { collectShippedSids, mapNameSnakeCase } from '@/lib/zip-export'
+import i18n from '@/lib/i18n'
 import { BASE_LANGUAGE, languageLabel, resolveToken, shippedLanguages, type TranslationMap } from '@/lib/languages'
 
 /** Document id for the scenario itself. Dialog docs use `dialog:<id>`. */
@@ -88,7 +89,7 @@ export function buildJsonDocs(
     {
       id: SCENARIO_DOC_ID,
       kind: 'scenario',
-      label: 'Map scenario',
+      label: i18n.t('common.jsonPreview.docs.scenario'),
       pathHint: '<map>.json',
       text: exportScenario(scenario),
     },
@@ -99,7 +100,7 @@ export function buildJsonDocs(
     docs.push({
       id: dialogDocId(id),
       kind: 'dialog',
-      label: id,
+      label: i18n.t('common.jsonPreview.docs.dialog', { label: id }),
       pathHint: `DB/dialogs/dialogs/custom_maps/${mapSegment}/${id}.json`,
       text: serializeDialogFile(dialogs[id]),
       dialogId: id,
@@ -115,7 +116,7 @@ export function buildJsonDocs(
     docs.push({
       id: `localization:${lang}`,
       kind: 'localization',
-      label: `Localization: ${languageLabel(lang)}`,
+      label: i18n.t('common.jsonPreview.docs.localization', { language: languageLabel(lang) }),
       pathHint: `Lang/${lang}/texts/${locFileName}`,
       text: JSON.stringify({ tokens }, null, '\t'),
       lang,
@@ -127,7 +128,7 @@ export function buildJsonDocs(
     docs.push({
       id: `customHero:${heroSid}`,
       kind: 'customHero',
-      label: `Hero: ${heroSid}`,
+      label: i18n.t('common.jsonPreview.docs.hero', { sid: heroSid }),
       pathHint: `DB/heroes/custom_maps/${heroSid}.json`,
       text: JSON.stringify({ array: [customHeroes[heroSid].definition] }, null, '\t'),
       heroSid,
@@ -140,7 +141,7 @@ export function buildJsonDocs(
     docs.push({
       id: 'customMapObjectTemplates',
       kind: 'customMapObjectTemplates',
-      label: 'Custom map objects',
+      label: i18n.t('common.jsonPreview.docs.customObjects'),
       pathHint: `DB/map/objects/custom_maps/${mapNameBase}_objects.json`,
       text: JSON.stringify({ array: objectTemplates }, null, '\t'),
     })
@@ -150,7 +151,7 @@ export function buildJsonDocs(
     docs.push({
       id: `customMapObjectLogic:${obj.id}`,
       kind: 'customMapObjectLogic',
-      label: `Object logic: ${obj.id}`,
+      label: i18n.t('common.jsonPreview.docs.objectLogic', { id: obj.id }),
       pathHint: `DB/objects_logic/${obj.logicSourcePath}/${obj.id}.json`,
       text: JSON.stringify({ array: [obj.logic] }, null, '\t'),
       objectId: obj.id,
@@ -163,7 +164,7 @@ export function buildJsonDocs(
     docs.push({
       id: 'customArtifactTemplates',
       kind: 'customArtifactTemplates',
-      label: 'Custom artifacts',
+      label: i18n.t('common.jsonPreview.docs.customArtifacts'),
       pathHint: `DB/items/items/custom_maps/${mapNameBase}_artifacts.json`,
       text: JSON.stringify({ array: artifactTemplates }, null, '\t'),
     })
@@ -175,7 +176,7 @@ export function buildJsonDocs(
     docs.push({
       id: 'customArtifactMapObjects',
       kind: 'customArtifactMapObjects',
-      label: 'Custom artifact ground objects',
+      label: i18n.t('common.jsonPreview.docs.artifactObjects'),
       pathHint: `DB/map/objects/custom_maps/${mapNameBase}_artifact_objects.json`,
       text: JSON.stringify({ array: artifactMapObjects }, null, '\t'),
     })
@@ -187,7 +188,7 @@ export function buildJsonDocs(
     docs.push({
       id: 'customBuffTemplates',
       kind: 'customBuffTemplates',
-      label: 'Custom buffs',
+      label: i18n.t('common.jsonPreview.docs.customBuffs'),
       pathHint: `DB/buffs/custom_maps/${mapNameBase}_buffs.json`,
       text: JSON.stringify({ array: buffTemplates }, null, '\t'),
     })
@@ -199,7 +200,7 @@ export function buildJsonDocs(
       docs.push({
         id: `mapActions:${which}`,
         kind: 'mapActions',
-        label: `Map: Actions ${which === 'before' ? 'Before' : 'After'}`,
+        label: i18n.t(which === 'before' ? 'common.jsonPreview.docs.actionsBefore' : 'common.jsonPreview.docs.actionsAfter'),
         pathHint: `<map>.map · Block 2 · objectsProperties.propActions${which === 'before' ? 'Before' : 'After'}`,
         text: JSON.stringify({ array: mapActions[which] }, null, '	'),
         actionTable: which,
