@@ -74,7 +74,6 @@ import {
   Palette,
   RefreshCw,
   Save,
-  LayoutGrid,
   Wand2,
   UploadCloud,
   FileInput,
@@ -174,7 +173,6 @@ export default function Toolbar({
     setCustomBuff,
   } = useScenarioStore()
 
-  const mapLoaded = useMapContextStore((s) => s.context !== null)
   const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
@@ -938,23 +936,7 @@ export default function Toolbar({
             <TooltipContent>{t('common.generateRandomMapDialog.generateRandomMap')}</TooltipContent>
           </Tooltip>
 
-          {/* Needs a loaded .map for anything to show (issue #122) */}
-          {mapLoaded && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={onMapGridOpen}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('mapGrid.mapGridDialog.titlePlain')}</TooltipContent>
-            </Tooltip>
-          )}
-
+          {/* The Map Grid is opened from the view tabs (ViewTabs.tsx) now. */}
           <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>

@@ -2173,6 +2173,13 @@
       "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
       "resavedBackupKept": "Re-saved {{bytes}} bytes.\nBackup: {{path}} (already existed — not overwritten)"
     },
+    "viewTabs": {
+      "label": "Views",
+      "mapGrid": "Map Grid",
+      "scenario": "Scenario",
+      "randomMap": "Random Map",
+      "needsMap": "Open a .map file to edit it in the Map Grid."
+    },
     "appShell": {
       "undockedPlaceholder": "{{label}} is open in a separate window",
       "confirmNew": "You have unsaved changes. Start a new scenario anyway?",

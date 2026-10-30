@@ -2173,6 +2173,13 @@
       "resaved": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}}",
       "resavedBackupKept": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}} (bestand bereits — nicht überschrieben)"
     },
+    "viewTabs": {
+      "label": "Ansichten",
+      "mapGrid": "Kartenraster",
+      "scenario": "Szenario",
+      "randomMap": "Zufallskarte",
+      "needsMap": "Öffnen Sie eine .map-Datei, um sie im Kartenraster zu bearbeiten."
+    },
     "appShell": {
       "undockedPlaceholder": "{{label}} ist in einem separaten Fenster geöffnet",
       "confirmNew": "Sie haben ungespeicherte Änderungen. Trotzdem ein neues Szenario beginnen?",

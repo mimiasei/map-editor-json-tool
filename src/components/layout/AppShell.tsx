@@ -30,6 +30,7 @@ import UpdateDialog from '@/components/common/UpdateDialog'
 import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
 import MapValidationErrorDialog from '@/components/common/MapValidationErrorDialog'
 import Toolbar from './Toolbar'
+import ViewTabs from './ViewTabs'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
 import JsonPreview from '@/components/common/JsonPreview'
@@ -763,6 +764,7 @@ export default function AppShell() {
           onDismiss={() => setUpdateDismissed(true)}
         />
       )}
+      <ViewTabs />
       <UpdateDialog
         open={updateDialogOpen}
         onOpenChange={setUpdateDialogOpen}

@@ -2208,6 +2208,13 @@
       "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
       "resavedBackupKept": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}} (existait déjà — non écrasée)"
     },
+    "viewTabs": {
+      "label": "Vues",
+      "mapGrid": "Grille de carte",
+      "scenario": "Scénario",
+      "randomMap": "Carte aléatoire",
+      "needsMap": "Ouvrez un fichier .map pour le modifier dans la grille de carte."
+    },
     "appShell": {
       "undockedPlaceholder": "{{label}} est ouvert dans une fenêtre séparée",
       "confirmNew": "Vous avez des modifications non enregistrées. Démarrer quand même un nouveau scénario ?",
