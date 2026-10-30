@@ -31,13 +31,23 @@ export const BIOME_BASE_COLORS: Record<BiomeId, string> = {
   7: '#4e3617', // Dirt — brown
 }
 
-/** Water overlay (DB/map/waters/waters.json, id 1-7 all render the same blue here). */
-const WATER_BASE_COLOR = '#2197ea'
+/** Water overlay colour per water id (DB/map/waters/waters.json has no colour data). Estimated by eye from an
+ *  in-game screenshot of the test map water_colors.map (one lake per id), not read from game data. */
+const WATER_BASE_COLORS: Record<number, string> = {
+  1: '#8a6a48', // Dirt — muddy brown
+  2: '#16877f', // Sand — teal
+  3: '#2c2858', // Death — dark violet
+  4: '#2e6082', // Snow — steel blue
+  5: '#1f9a62', // Fallen — green
+  6: '#7c2006', // Lava — dark red-brown
+  7: '#1f3f7a', // Grass — deep navy
+}
+
+/** Fallback for a water id outside 1-7 (not seen in real maps). */
+const WATER_FALLBACK_COLOR = '#2197ea'
 
 /** Real names from Core/DB/map/waters/waters.json — used by the Water
- *  flood-fill tool's swatch (issue #193 Phase 2). All 7 render the same
- *  WATER_BASE_COLOR above (confirmed: no per-id color data exists, same
- *  situation as biomes), so the swatch differentiates by label only. */
+ *  flood-fill tool's swatch (issue #193 Phase 2). */
 export const WATER_TYPE_NAMES: Record<number, string> = {
   1: 'Water (Dirt)',
   2: 'Water (Sand)',
@@ -59,7 +69,7 @@ export const ROAD_TYPE_NAMES: Record<number, string> = {
 }
 
 // Chosen to be unambiguous against every other color already on this
-// canvas — every BIOME_BASE_COLORS entry, WATER_BASE_COLOR, and every
+// canvas — every BIOME_BASE_COLORS entry, WATER_BASE_COLORS, and every
 // GROUP_COLORS category swatch (units/artifacts/spawners/interactables/
 // resources/decorations/zones, MapGridDialog.tsx) — not just "close to
 // real dirt/stone," since a road/river tile can sit right next to any of
@@ -71,7 +81,7 @@ export const ROAD_BASE_COLORS: Record<number, string> = {
 }
 
 /** Vivid yellow — no other color on this canvas is yellow, so it can't be
- *  confused with WATER_BASE_COLOR/Snow's pale blue or anything else, unlike
+ *  confused with WATER_BASE_COLORS/Snow's pale blue or anything else, unlike
  *  an earlier blue-family pick that was too close to Water's own blue. */
 export const RIVER_BASE_COLOR = '#25eaf1'
 
@@ -111,7 +121,7 @@ export function terrainFillColor(
   blendAmount: number = DEFAULT_TERRAIN_BLEND,
   alpha = 1,
 ): string {
-  if (waterId) return mixWithWhite(WATER_BASE_COLOR, blendAmount, alpha)
+  if (waterId) return mixWithWhite(WATER_BASE_COLORS[waterId] ?? WATER_FALLBACK_COLOR, blendAmount, alpha)
   if (tileId === undefined || !isBiomeId(tileId)) return mixWithWhite(UNKNOWN_BASE_COLOR, blendAmount, alpha)
   return mixWithWhite(BIOME_BASE_COLORS[tileId], blendAmount, alpha)
 }

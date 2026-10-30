@@ -2,7 +2,7 @@
 // Purely an editor-UI choice (no color data exists in the .map format for
 // this — same situation as terrain-colors.ts's biome/road/river swatches).
 // Chosen distinct from every other color already on the Map Grid canvas
-// (BIOME_BASE_COLORS, WATER_BASE_COLOR, ROAD_BASE_COLORS, RIVER_BASE_COLOR,
+// (BIOME_BASE_COLORS, WATER_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR,
 // GROUP_COLORS in MapGridDialog.tsx) so a painted zone reads as its own
 // feature regardless of what terrain/objects sit under it.
 
