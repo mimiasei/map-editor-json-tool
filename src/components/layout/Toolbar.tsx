@@ -409,6 +409,7 @@ export default function Toolbar({
           setImportWarnings(result.warnings)
           setImportFeedbackOpen(true)
         }
+        onMapGridOpen?.()   // a .map opens in the Map Grid, its main workspace
       } else {
         const content = await readTextFileAt(entry.path)
         if (content === null) throw new Error(`Could not read ${entry.path}. It may have been moved or deleted.`)
@@ -437,6 +438,7 @@ export default function Toolbar({
         setImportWarnings(result.warnings)
         setImportFeedbackOpen(true)
       }
+      onMapGridOpen?.()   // a .map opens in the Map Grid, its main workspace
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       console.error('[Toolbar] openAndLoadMapFile threw:', e)
