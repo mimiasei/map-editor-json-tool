@@ -1,0 +1,78 @@
+{
+  "categories": [
+    {
+      "id": "basic",
+      "label": "Grunnleggende"
+    },
+    {
+      "id": "advanced",
+      "label": "Avansert"
+    }
+  ],
+  "templates": [
+    {
+      "id": "simple-kill-quest",
+      "name": "Enkelt drapsoppdrag",
+      "description": "Fullføres når spilleren beseirer en bestemt nøytral tropp. Belønner med gull ved fullføring."
+    },
+    {
+      "id": "counter-based-quest",
+      "name": "Tellerbasert oppdrag",
+      "description": "Et oppdrag i flere trinn som sporer fremdrift med en teller. Viser hvordan underoppdrag settes i rekkefølge."
+    },
+    {
+      "id": "timed-event",
+      "name": "Tidsstyrt hendelse",
+      "description": "Utløser en dialog og en konsekvens etter et bestemt antall turer. Bruker StartTurn-betingelsen."
+    },
+    {
+      "id": "dialog-driven-quest",
+      "name": "Dialogstyrt oppdrag",
+      "description": "Et oppdrag med NPC-samhandling: spilleren klikker på et objekt, ser en dialog og får en oppgave."
+    }
+  ],
+  "annotations": {
+    "simple-kill-quest": {
+      "counters[0]": "Sporer om målet er beseiret (0 = i live, 1 = død). Bytt ut «quest_target_killed» med en beskrivende SID for oppdraget ditt.",
+      "quests[0]": "Hovedoppdraget. Bytt ut «kill_quest» med oppdrags-SID-en din. Angi lokaliseringstokenene for navn/beskrivelse i Lokalisering-dialogen.",
+      "quests[0].subQuests[0]": "Det eneste trinnet: beseire målet. Bytt ut «kill_quest_1» med underoppdrags-SID-en din.",
+      "quests[0].subQuests[0].triggers[0]": "Utløses når troppen er beseiret. Bytt ut «E_Squad_Target» med entitets-SID-en du ga den nøytrale stabelen i kartredigereren.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Markerer drapstelleren som ferdig. Du kan bruke den i andre utløsere for å sjekke om oppdraget er fullført.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "Belønner spilleren med 500 gull. Juster beløpet etter behov.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Fullfører det gjeldende underoppdraget, som avslutter oppdraget.",
+      "quests[0].subQuests[0].triggers[0].actions[3]": "Viser en fullføringsdialog. Bytt ut «kill_quest_complete» med ID-en til dialogen din, eller fjern denne handlingen."
+    },
+    "counter-based-quest": {
+      "counters[0]": "Sporer gjeldende oppdragstrinn (0 = ikke startet, 1 = trinn 1 ferdig, 2 = fullført). Juster SID-en og bruk den i alle Counter-betingelsene nedenfor.",
+      "quests[0]": "Hovedoppdragsbeholderen. Bytt ut SID-en og angi lokaliseringstokens for navn/beskrivelse.",
+      "quests[0].subQuests[0]": "Trinn 1: beseire det første målet. Dette underoppdraget er aktivt fra start.",
+      "quests[0].subQuests[0].triggers[0]": "Utløses når trinn 1-troppen er beseiret. Setter telleren til 1 og aktiverer trinn 2.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "CounterSet markerer trinn 1 som ferdig. Counter-betingelsen på trinn 2-utløseren bruker denne verdien.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Fullfører dette underoppdraget i oppdragsloggen.",
+      "quests[0].subQuests[1]": "Trinn 2: oppfølgingsmålet. Bytt ut «E_Squad_Target2» med entitets-SID-en til trinn 2-troppen.",
+      "quests[0].subQuests[1].triggers[0]": "Utløses når trinn 2-troppen er beseiret OG trinntelleren er på 1 (dvs. trinn 1 er ferdig). OG-logikken sikrer riktig rekkefølge.",
+      "quests[0].subQuests[1].triggers[0].actions[2]": "Setter telleren til 2 — markerer hele oppdraget som ferdig. Andre oppdrag kan sjekke denne verdien."
+    },
+    "timed-event": {
+      "counters[0]": "Teller turer som har gått siden kartet startet. Økes hver tur av den gjentakende utløseren.",
+      "quests[0]": "Dette oppdraget kjører stille i bakgrunnen — det har ikke noe navn/beskrivelse som er synlig for spilleren. Brukes som beholder for tidtakerlogikken.",
+      "quests[0].subQuests[0]": "Tidtaker-underoppdraget. Kjører så lenge hendelsesvinduet varer.",
+      "quests[0].subQuests[0].triggers[0]": "Gjentakende utløser: utløses hver tur (StartTurn uten parametere = hvilken som helst tur, hvilken som helst spiller). Øker turtelleren.",
+      "quests[0].subQuests[0].triggers[1]": "Fristutløser: utløses når turtelleren når 10. Bytt ut 10 med ønsket antall turer.",
+      "quests[0].subQuests[0].triggers[1].actions[0]": "Vis en dialog når fristen nås. Bytt ut «timed_event_deadline» med dialog-ID-en din.",
+      "quests[0].subQuests[0].triggers[1].actions[1]": "Bytt ut eller fjern denne. Eksempel: GameLose for en tapsbetingelse, eller en hvilken som helst annen konsekvens."
+    },
+    "dialog-driven-quest": {
+      "counters[0]": "Sporer om spilleren har snakket med NPC-en (0 = ikke ennå, 1 = har snakket).",
+      "counters[1]": "Sporer om oppdragsoppgaven er fullført (0 = ufullstendig, 1 = ferdig).",
+      "quests[0]": "Hovedoppdraget. Angi lokaliseringstokens for navn og beskrivelse.",
+      "quests[0].subQuests[0]": "Trinn 1: spilleren må samhandle med NPC-objektet for å få oppdragsbriefingen.",
+      "quests[0].subQuests[0].triggers[0]": "Utløses når spilleren samhandler med NPC-objektet. Bytt ut «npc_quest_giver» med NPC-ens entitets-SID.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Vis dialogen med oppdragsbriefingen. Bytt ut «dialog_quest_start» med dialog-ID-en din.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Aktiver trinn 2 etter at spilleren har snakket med NPC-en.",
+      "quests[0].subQuests[1]": "Trinn 2: selve oppgaven (her: beseire en tropp). Tilpass med oppdragsmålet ditt.",
+      "quests[0].subQuests[1].triggers[0]": "Utløses når oppgaven er fullført. Bytt ut «E_Squad_QuestTarget» med entitets-SID-en til målet ditt.",
+      "quests[0].subQuests[1].triggers[0].actions[1]": "Vis dialogen for fullført oppdrag. Bytt ut «dialog_quest_done» med dialog-ID-en din."
+    }
+  }
+}
