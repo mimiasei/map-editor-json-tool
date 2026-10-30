@@ -43,9 +43,6 @@ const WATER_BASE_COLORS: Record<number, string> = {
   7: '#1f3f7a', // Grass — deep navy
 }
 
-/** Water id 6 ("Lava" in waters.json): drawn with a glowing rim. */
-export const LAVA_WATER_ID = 6
-
 /** Fallback for a water id outside 1-7 (not seen in real maps). */
 const WATER_FALLBACK_COLOR = '#2197ea'
 

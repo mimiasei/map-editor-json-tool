@@ -59,11 +59,11 @@ import {
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
-import { terrainLabel, waterOverlayColor, LAVA_WATER_ID, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainLabel, waterOverlayColor, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { enclosedBlockedTiles } from '@/lib/map-grid/zone-fill'
 import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
-import { fadeWaterShore, glowLavaRim, useWaterSurface, waterSurfacePattern, WATER_SURFACE_ALPHA } from '@/lib/map-grid/water-surface'
+import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_ALPHA } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
@@ -2900,7 +2900,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       lctx.fill(path)
     }
     fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
-    glowLavaRim(lctx, (node) => waterMap[node] === LAVA_WATER_ID, sizeX, sizeZ, scale)
     waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
     ctx.drawImage(layer, 0, 0)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
