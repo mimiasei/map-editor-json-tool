@@ -1,0 +1,78 @@
+{
+  "categories": [
+    {
+      "id": "basic",
+      "label": "Grundlagen"
+    },
+    {
+      "id": "advanced",
+      "label": "Fortgeschritten"
+    }
+  ],
+  "templates": [
+    {
+      "id": "simple-kill-quest",
+      "name": "Einfache Jagdaufgabe",
+      "description": "Wird abgeschlossen, wenn der Spieler einen bestimmten neutralen Trupp besiegt. Belohnt mit Gold bei Abschluss."
+    },
+    {
+      "id": "counter-based-quest",
+      "name": "Zählerbasierte Aufgabe",
+      "description": "Eine mehrstufige Aufgabe, die ihren Fortschritt mit einem Zähler verfolgt. Zeigt, wie Teilaufgaben aneinandergereiht werden."
+    },
+    {
+      "id": "timed-event",
+      "name": "Zeitgesteuertes Ereignis",
+      "description": "Löst nach einer festgelegten Anzahl von Zügen einen Dialog und eine Konsequenz aus. Verwendet die Bedingung StartTurn."
+    },
+    {
+      "id": "dialog-driven-quest",
+      "name": "Dialoggesteuerte Aufgabe",
+      "description": "Eine Aufgabe mit NPC-Interaktion: Der Spieler klickt auf ein Objekt, sieht einen Dialog und erhält eine Aufgabe."
+    }
+  ],
+  "annotations": {
+    "simple-kill-quest": {
+      "counters[0]": "Verfolgt, ob das Ziel besiegt wurde (0 = lebt, 1 = tot). Ersetzen Sie „quest_target_killed“ durch eine aussagekräftige SID für Ihre Aufgabe.",
+      "quests[0]": "Die Hauptaufgabe. Ersetzen Sie „kill_quest“ durch Ihre Aufgaben-SID. Legen Sie die Lokalisierungstokens für Name/Beschreibung im Dialog Lokalisierung fest.",
+      "quests[0].subQuests[0]": "Die einzige Stufe: das Ziel besiegen. Ersetzen Sie „kill_quest_1“ durch Ihre Teilaufgaben-SID.",
+      "quests[0].subQuests[0].triggers[0]": "Feuert, wenn der Trupp besiegt wird. Ersetzen Sie „E_Squad_Target“ durch die Entitäts-SID, die Sie dem neutralen Stapel im Karteneditor zugewiesen haben.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Markiert den Kill-Zähler als erledigt. Sie können ihn in anderen Auslösern nutzen, um zu prüfen, ob die Aufgabe abgeschlossen ist.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "Belohnt den Spieler mit 500 Gold. Passen Sie den Betrag nach Bedarf an.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Schließt die aktuelle Teilaufgabe ab, was die Aufgabe beendet.",
+      "quests[0].subQuests[0].triggers[0].actions[3]": "Zeigt einen Abschlussdialog. Ersetzen Sie „kill_quest_complete“ durch die ID Ihres Dialogs oder entfernen Sie diese Aktion."
+    },
+    "counter-based-quest": {
+      "counters[0]": "Verfolgt die aktuelle Aufgabenstufe (0 = nicht begonnen, 1 = Stufe 1 erledigt, 2 = abgeschlossen). Passen Sie die SID an und verwenden Sie sie in allen Counter-Bedingungen unten.",
+      "quests[0]": "Der Container der Hauptaufgabe. Ersetzen Sie die SID und legen Sie Lokalisierungstokens für Name/Beschreibung fest.",
+      "quests[0].subQuests[0]": "Stufe 1: das erste Ziel besiegen. Diese Teilaufgabe ist von Anfang an aktiv.",
+      "quests[0].subQuests[0].triggers[0]": "Feuert, wenn der Trupp der Stufe 1 besiegt wird. Setzt den Zähler auf 1 und aktiviert Stufe 2.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "CounterSet markiert Stufe 1 als erledigt. Die Counter-Bedingung des Auslösers von Stufe 2 nutzt diesen Wert.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Schließt diese Teilaufgabe im Aufgabenbuch ab.",
+      "quests[0].subQuests[1]": "Stufe 2: das Folgeziel. Ersetzen Sie „E_Squad_Target2“ durch die Entitäts-SID des Trupps von Stufe 2.",
+      "quests[0].subQuests[1].triggers[0]": "Feuert, wenn der Trupp der Stufe 2 besiegt wird UND der Stufenzähler bei 1 steht (d. h. Stufe 1 ist erledigt). Die UND-Logik stellt die richtige Reihenfolge sicher.",
+      "quests[0].subQuests[1].triggers[0].actions[2]": "Setzt den Zähler auf 2 — markiert die ganze Aufgabe als erledigt. Andere Aufgaben können diesen Wert prüfen."
+    },
+    "timed-event": {
+      "counters[0]": "Zählt die seit Kartenbeginn vergangenen Züge. Wird in jedem Zug vom wiederholenden Auslöser erhöht.",
+      "quests[0]": "Diese Aufgabe läuft still im Hintergrund — sie hat keinen für den Spieler sichtbaren Namen und keine Beschreibung. Sie dient als Container für die Timer-Logik.",
+      "quests[0].subQuests[0]": "Die Timer-Teilaufgabe. Läuft für die Dauer des Ereigniszeitfensters.",
+      "quests[0].subQuests[0].triggers[0]": "Wiederholender Auslöser: feuert in jedem Zug (StartTurn ohne Parameter = beliebiger Zug, beliebiger Spieler). Erhöht den Zugzähler.",
+      "quests[0].subQuests[0].triggers[1]": "Fristauslöser: feuert, wenn der Zugzähler 10 erreicht. Ersetzen Sie 10 durch die gewünschte Anzahl Züge.",
+      "quests[0].subQuests[0].triggers[1].actions[0]": "Zeigt einen Dialog, wenn die Frist erreicht ist. Ersetzen Sie „timed_event_deadline“ durch Ihre Dialog-ID.",
+      "quests[0].subQuests[0].triggers[1].actions[1]": "Ersetzen oder entfernen. Beispiel: GameLose für eine Niederlagebedingung oder eine beliebige andere Konsequenz."
+    },
+    "dialog-driven-quest": {
+      "counters[0]": "Verfolgt, ob der Spieler mit dem NPC gesprochen hat (0 = noch nicht, 1 = gesprochen).",
+      "counters[1]": "Verfolgt, ob die Aufgabe erledigt ist (0 = unerledigt, 1 = erledigt).",
+      "quests[0]": "Die Hauptaufgabe. Legen Sie Lokalisierungstokens für Name und Beschreibung fest.",
+      "quests[0].subQuests[0]": "Stufe 1: Der Spieler muss mit dem NPC-Objekt interagieren, um die Aufgabenbesprechung zu erhalten.",
+      "quests[0].subQuests[0].triggers[0]": "Feuert, wenn der Spieler mit dem NPC-Objekt interagiert. Ersetzen Sie „npc_quest_giver“ durch die Entitäts-SID Ihres NPCs.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Zeigt den Dialog der Aufgabenbesprechung. Ersetzen Sie „dialog_quest_start“ durch Ihre Dialog-ID.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Aktiviert Stufe 2, nachdem der Spieler mit dem NPC gesprochen hat.",
+      "quests[0].subQuests[1]": "Stufe 2: die eigentliche Aufgabe (hier: einen Trupp besiegen). Passen Sie sie an Ihr Aufgabenziel an.",
+      "quests[0].subQuests[1].triggers[0]": "Feuert, wenn die Aufgabe erledigt ist. Ersetzen Sie „E_Squad_QuestTarget“ durch die Entitäts-SID Ihres Ziels.",
+      "quests[0].subQuests[1].triggers[0].actions[1]": "Zeigt den Dialog zum Aufgabenabschluss. Ersetzen Sie „dialog_quest_done“ durch Ihre Dialog-ID."
+    }
+  }
+}
