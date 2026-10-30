@@ -96,7 +96,7 @@ export function waterSurfacePattern(ctx: CanvasRenderingContext2D, surface: HTML
 
 /** How far the plane's own shore fade reaches into a water tile, as a share of the tile. */
 const SHORE_REACH_TILES = 0.8
-const SHORE_STEPS = 64
+const SHORE_STEPS = 32
 /** Share of the plane that is erased right at the shore (1 = fully see-through there). */
 const SHORE_EDGE_ERASE = 4.0
 
@@ -137,5 +137,46 @@ export function fadeWaterShore(ctx: CanvasRenderingContext2D, isWater: (node: nu
     passed = left
     ctx.fill(path)
   })
+  ctx.restore()
+}
+
+/** How far the lava's glowing rim reaches into a tile, as a share of the tile, and its colour and opacity right at the rim. */
+const GLOW_REACH_TILES = 0.35
+const GLOW_STEPS = 8
+const GLOW_EDGE_ALPHA = 0.9
+export const LAVA_GLOW_COLOR = '#ffb41e'
+
+/**
+ * Lava glows yellow-orange along its rim (the game's lava shows a bright edge where it meets rock). Nested strips along every tile edge
+ * that meets a non-lava tile, each adding a little opacity, so it is strongest at the rim and fades inward. Drawn after fadeWaterShore,
+ * which would erase it, and not at the map border.
+ */
+export function glowLavaRim(ctx: CanvasRenderingContext2D, isLava: (node: number) => boolean, sizeX: number, sizeZ: number, pxPerTile: number): void {
+  const strips = Array.from({ length: GLOW_STEPS }, () => new Path2D())
+  const reach = GLOW_REACH_TILES * pxPerTile
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x < sizeX; x++) {
+      if (!isLava(z * sizeX + x)) continue
+      const left = x * pxPerTile
+      const top = (sizeZ - 1 - z) * pxPerTile
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1]] as const) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ || isLava(nz * sizeX + nx)) continue
+        for (let step = 0; step < GLOW_STEPS; step++) {
+          const w = (reach * (GLOW_STEPS - step)) / GLOW_STEPS
+          if (dx === -1) strips[step].rect(left, top, w, pxPerTile)
+          else if (dx === 1) strips[step].rect(left + pxPerTile - w, top, w, pxPerTile)
+          else if (dz === 1) strips[step].rect(left, top, pxPerTile, w)
+          else strips[step].rect(left, top + pxPerTile - w, pxPerTile, w)
+        }
+      }
+    }
+  }
+  // The layers add up: the strip that reaches farthest alone is one step's opacity, the rim itself has all of them, i.e. GLOW_EDGE_ALPHA.
+  ctx.save()
+  ctx.fillStyle = LAVA_GLOW_COLOR
+  ctx.globalAlpha = 1 - Math.pow(1 - GLOW_EDGE_ALPHA, 1 / GLOW_STEPS)
+  for (const path of strips) ctx.fill(path)
   ctx.restore()
 }

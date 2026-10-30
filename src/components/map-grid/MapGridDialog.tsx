@@ -59,11 +59,11 @@ import {
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
-import { terrainLabel, waterOverlayColor, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainLabel, waterOverlayColor, LAVA_WATER_ID, BIOME_BASE_COLORS, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { enclosedBlockedTiles } from '@/lib/map-grid/zone-fill'
 import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
-import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_ALPHA } from '@/lib/map-grid/water-surface'
+import { fadeWaterShore, glowLavaRim, useWaterSurface, waterSurfacePattern, WATER_SURFACE_ALPHA } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
@@ -2865,7 +2865,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     waterCanvasEl.height = sizeZ * scale
     const ctx = waterCanvasEl.getContext('2d')
     if (!ctx || !settings.waterSurface || !iconsVisibleForSwatch || !waterSurface) return
-    // The shore fade (64 strips over every shore edge) is what makes this slow, so the finished layer is kept and only copied back when the
+    // The shore fade (32 strips over every shore edge) is what makes this slow, so the finished layer is kept and only copied back when the
     // layer is switched on again or the canvas is remounted; it is rebuilt only when the water, its size or the texture changed.
     const cached = waterLayerCacheRef.current
     if (cached && cached.waterMap === waterMap && cached.surface === waterSurface && cached.scale === scale && cached.sizeX === sizeX && cached.sizeZ === sizeZ) {
@@ -2900,6 +2900,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       lctx.fill(path)
     }
     fadeWaterShore(lctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
+    glowLavaRim(lctx, (node) => waterMap[node] === LAVA_WATER_ID, sizeX, sizeZ, scale)
     waterLayerCacheRef.current = { canvas: layer, waterMap, surface: waterSurface, scale, sizeX, sizeZ }
     ctx.drawImage(layer, 0, 0)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
