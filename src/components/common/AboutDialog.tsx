@@ -73,7 +73,7 @@ export default function AboutDialog({ open, onOpenChange }: Props) {
           <div className="p-4 space-y-3">
             <div>
               <p className="text-base font-semibold leading-tight">{about.app}</p>
-              <p className="text-xs text-muted-foreground">{about.tagline}</p>
+              <p className="text-xs text-muted-foreground">{t('common.aboutDialog.tagline')}</p>
             </div>
 
             <div className="rounded border border-border bg-card px-3 py-2">
@@ -83,7 +83,7 @@ export default function AboutDialog({ open, onOpenChange }: Props) {
               <Row label={t('common.aboutDialog.built')}>{formatDate(__BUILD_DATE__)}</Row>
               <Row label={t('common.aboutDialog.game')}>{about.game}</Row>
               <Row label={t('common.aboutDialog.createdBy')}>{about.creator}</Row>
-              <Row label={t('common.aboutDialog.license')}>{about.license}</Row>
+              <Row label={t('common.aboutDialog.license')}>{t('common.aboutDialog.licenseText')}</Row>
             </div>
 
             <div className="space-y-1">

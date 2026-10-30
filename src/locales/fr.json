@@ -22,7 +22,9 @@
       "license": "Licence",
       "builtWith": "Réalisé avec",
       "repository": "Dépôt",
-      "reportAnIssue": "Signaler un problème"
+      "reportAnIssue": "Signaler un problème",
+      "tagline": "Éditeur visuel pour le JSON de scénarisation",
+      "licenseText": "Open source — contributions bienvenues"
     },
     "artifactBanDialog": {
       "searchAllArtifactsByName": "Rechercher parmi tous les artefacts par nom ou SID…",
@@ -3235,5 +3237,25 @@
       "singleExitWarn": "Le joueur {{player}} n’a qu’une seule sortie hors de sa zone.",
       "noConcerns": "Aucun problème d’équilibre détecté."
     }
+  },
+  "nativeMenu": {
+    "file": "Fichier",
+    "edit": "Édition",
+    "help": "Aide",
+    "new": "Nouveau",
+    "open": "Ouvrir…",
+    "openMap": "Ouvrir une carte…",
+    "recent": "Ouvrir un fichier récent",
+    "importH3m": "Importer une carte H3…",
+    "save": "Sauvegarder",
+    "saveAs": "Sauvegarder sous…",
+    "quit": "Quitter",
+    "undo": "Annuler",
+    "redo": "Rétablir",
+    "whatsNew": "Nouveautés",
+    "about": "À propos",
+    "checkUpdates": "Rechercher des mises à jour…",
+    "recentNone": "Aucun fichier récent",
+    "clearRecent": "Effacer les fichiers récents"
   }
 }

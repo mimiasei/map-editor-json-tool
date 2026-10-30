@@ -11,7 +11,9 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { commitMapWithPathPrompt } from '@/lib/map-file'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
-import { clearRecentFiles, syncRecentMenu } from '@/lib/recent-files'
+import { clearRecentFiles } from '@/lib/recent-files'
+import { syncNativeMenu } from '@/lib/native-menu'
+import i18n from '@/lib/i18n'
 import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META, panelTitle } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
@@ -591,6 +593,7 @@ export default function AppShell() {
 
     let unlistenMenu: (() => void) | undefined
     let unlistenClose: (() => void) | undefined
+    const onLanguageChanged = () => { void syncNativeMenu() }
 
     ;(async () => {
       const { listen } = await import('@tauri-apps/api/event')
@@ -630,8 +633,9 @@ export default function AppShell() {
         }
       })
 
-      // The native File > Open Recent submenu starts as a placeholder; fill it from the stored list.
-      syncRecentMenu()
+      // The native menu starts in English with a placeholder Open Recent list; send it the UI-language labels (which also redraws the list).
+      void syncNativeMenu()
+      i18n.on('languageChanged', onLanguageChanged)
 
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
       const win = getCurrentWindow()
@@ -672,6 +676,7 @@ export default function AppShell() {
     return () => {
       unlistenMenu?.()
       unlistenClose?.()
+      i18n.off('languageChanged', onLanguageChanged)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

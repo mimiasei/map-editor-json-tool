@@ -22,7 +22,9 @@
       "license": "License",
       "builtWith": "Built with",
       "repository": "Repository",
-      "reportAnIssue": "Report an issue"
+      "reportAnIssue": "Report an issue",
+      "tagline": "Visual editor for scenario scripting JSON",
+      "licenseText": "Open source — contributions welcome"
     },
     "artifactBanDialog": {
       "searchAllArtifactsByName": "Search all artifacts by name or sid…",
@@ -3189,5 +3191,25 @@
       "singleExitWarn": "Player {{player}} has only a single way out of their zone.",
       "noConcerns": "No balance concerns found."
     }
+  },
+  "nativeMenu": {
+    "file": "File",
+    "edit": "Edit",
+    "help": "Help",
+    "new": "New",
+    "open": "Open...",
+    "openMap": "Open Map...",
+    "recent": "Open Recent",
+    "importH3m": "Import H3 Map...",
+    "save": "Save",
+    "saveAs": "Save As...",
+    "quit": "Quit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "whatsNew": "What's new",
+    "about": "About",
+    "checkUpdates": "Check for Updates...",
+    "recentNone": "No recent files",
+    "clearRecent": "Clear Recent Files"
   }
 }

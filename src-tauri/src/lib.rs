@@ -1,7 +1,8 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
-    Emitter, Manager, Wry,
+    menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
+    AppHandle, Emitter, Manager, Wry,
 };
 
 mod game_dir;
@@ -15,6 +16,16 @@ use text_writer::{GeneratedText, Provider, StoryDraft, TextRequest, WriterError}
 
 struct RecentMenu(Mutex<Option<Submenu<Wry>>>);
 
+// ─── Menu language ───────────────────────────────────────────────────────────
+// The labels come from the frontend (set_menu_labels, keyed by menu id) so the native menu follows the UI language. Ids are stable and
+// are what the frontend switches on; a missing label falls back to the English text passed to label().
+
+struct MenuLabels(Mutex<HashMap<String, String>>);
+
+fn label(labels: &HashMap<String, String>, id: &str, english: &str) -> String {
+    labels.get(id).cloned().unwrap_or_else(|| english.to_string())
+}
+
 #[derive(serde::Deserialize)]
 struct RecentEntry {
     path: String,
@@ -25,15 +36,17 @@ struct RecentEntry {
 fn set_recent_files(
     app: tauri::AppHandle,
     state: tauri::State<RecentMenu>,
+    labels: tauri::State<MenuLabels>,
     files: Vec<RecentEntry>,
 ) -> Result<(), String> {
+    let labels = labels.0.lock().map_err(|e| e.to_string())?.clone();
     let guard = state.0.lock().map_err(|e| e.to_string())?;
     let Some(menu) = guard.as_ref() else { return Ok(()) };
     for item in menu.items().map_err(|e| e.to_string())? {
         menu.remove(&item).map_err(|e| e.to_string())?;
     }
     if files.is_empty() {
-        let none = MenuItemBuilder::with_id("recent-none", "No recent files")
+        let none = MenuItemBuilder::with_id("recent-none", label(&labels, "recent-none", "No recent files"))
             .enabled(false)
             .build(&app)
             .map_err(|e| e.to_string())?;
@@ -48,10 +61,112 @@ fn set_recent_files(
     }
     let separator = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
     menu.append(&separator).map_err(|e| e.to_string())?;
-    let clear = MenuItemBuilder::with_id("clear-recent", "Clear Recent Files")
+    let clear = MenuItemBuilder::with_id("clear-recent", label(&labels, "clear-recent", "Clear Recent Files"))
         .build(&app)
         .map_err(|e| e.to_string())?;
     menu.append(&clear).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<Menu<Wry>> {
+    let new_item = MenuItemBuilder::with_id("new", label(labels, "new", "New"))
+        .accelerator("CmdOrCtrl+N")
+        .build(app)?;
+    let open_item = MenuItemBuilder::with_id("open", label(labels, "open", "Open..."))
+        .accelerator("CmdOrCtrl+O")
+        .build(app)?;
+    // issue #160: the header's "Import Map"/"Open Map" button is redundant
+    // with the native File menu on desktop (same as New/Open/Save/Save As
+    // already were) — this gives it a native home instead of removing the
+    // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
+    let open_map_item = MenuItemBuilder::with_id("open-map", label(labels, "open-map", "Open Map...")).build(app)?;
+    // Filled by the frontend through set_recent_files once it has loaded; until then (and when empty) a disabled placeholder.
+    let recent_placeholder = MenuItemBuilder::with_id("recent-none", label(labels, "recent-none", "No recent files"))
+        .enabled(false)
+        .build(app)?;
+    let recent_menu = SubmenuBuilder::new(app, label(labels, "recent", "Open Recent"))
+        .item(&recent_placeholder)
+        .build()?;
+    *app.state::<RecentMenu>().0.lock().expect("recent menu lock") = Some(recent_menu.clone());
+    // Same rationale as open_map_item above: gives the "More" dropdown's
+    // existing Import H3 Map action (Toolbar.tsx) a second, native home
+    // rather than replacing it.
+    let import_h3m_item =
+        MenuItemBuilder::with_id("import-h3m", label(labels, "import-h3m", "Import H3 Map...")).build(app)?;
+    let save_item = MenuItemBuilder::with_id("save", label(labels, "save", "Save"))
+        .accelerator("CmdOrCtrl+S")
+        .build(app)?;
+    let save_as_item = MenuItemBuilder::with_id("save-as", label(labels, "save-as", "Save As..."))
+        .accelerator("CmdOrCtrl+Shift+S")
+        .build(app)?;
+    // A custom item, not PredefinedMenuItem::quit — the predefined one
+    // calls the app's native exit directly, bypassing onCloseRequested
+    // entirely (confirmed: quitting from this menu item, or Cmd+Q, never
+    // showed the unsaved-changes prompt). Relayed to the frontend like
+    // every other item here instead, which just calls win.close() — that
+    // still fires closeRequested, reusing the exact same dirty-check flow
+    // the window's own [x] button already goes through.
+    let quit_item = MenuItemBuilder::with_id("quit", label(labels, "quit", "Quit"))
+        .accelerator("CmdOrCtrl+Q")
+        .build(app)?;
+
+    let file_menu = SubmenuBuilder::new(app, label(labels, "file", "File"))
+        .item(&new_item)
+        .item(&open_item)
+        .item(&open_map_item)
+        .item(&recent_menu)
+        .item(&import_h3m_item)
+        .separator()
+        .item(&save_item)
+        .item(&save_as_item)
+        .separator()
+        .item(&quit_item)
+        .build()?;
+
+    let undo_item = MenuItemBuilder::with_id("undo", label(labels, "undo", "Undo"))
+        .accelerator("CmdOrCtrl+Z")
+        .build(app)?;
+    let redo_item = MenuItemBuilder::with_id("redo", label(labels, "redo", "Redo"))
+        .accelerator("CmdOrCtrl+Shift+Z")
+        .build(app)?;
+
+    let edit_menu = SubmenuBuilder::new(app, label(labels, "edit", "Edit"))
+        .item(&undo_item)
+        .item(&redo_item)
+        .build()?;
+
+    // "About" is handled in the frontend (AboutDialog) rather than by
+    // PredefinedMenuItem::about, so the same dialog appears on every platform
+    // and can show the build date and stack from src/data/about.json.
+    let whats_new_item = MenuItemBuilder::with_id("whats-new", label(labels, "whats-new", "What's new")).build(app)?;
+    let about_item = MenuItemBuilder::with_id("about", label(labels, "about", "About")).build(app)?;
+    let updates_item =
+        MenuItemBuilder::with_id("check-updates", label(labels, "check-updates", "Check for Updates...")).build(app)?;
+
+    let help_menu = SubmenuBuilder::new(app, label(labels, "help", "Help"))
+        .item(&updates_item)
+        .separator()
+        .item(&whats_new_item)
+        .item(&about_item)
+        .build()?;
+
+    let menu = MenuBuilder::new(app)
+        .item(&file_menu)
+        .item(&edit_menu)
+        .item(&help_menu)
+        .build()?;
+    Ok(menu)
+}
+
+#[tauri::command]
+fn set_menu_labels(
+    app: AppHandle,
+    state: tauri::State<MenuLabels>,
+    labels: HashMap<String, String>,
+) -> Result<(), String> {
+    let menu = build_menu(&app, &labels).map_err(|e| e.to_string())?;
+    app.set_menu(menu).map_err(|e| e.to_string())?;
+    *state.0.lock().map_err(|e| e.to_string())? = labels;
     Ok(())
 }
 
@@ -394,7 +509,8 @@ pub fn run() {
             text_writer_test,
             text_writer_generate,
             story_import,
-            set_recent_files
+            set_recent_files,
+            set_menu_labels
         ])
         .setup(|app| {
             // ── Auto-update (desktop only) ───────────────────────────────────
@@ -452,93 +568,10 @@ pub fn run() {
             }
 
             // ── Native menu bar ──────────────────────────────────────────────
-            let new_item = MenuItemBuilder::with_id("new", "New")
-                .accelerator("CmdOrCtrl+N")
-                .build(app)?;
-            let open_item = MenuItemBuilder::with_id("open", "Open...")
-                .accelerator("CmdOrCtrl+O")
-                .build(app)?;
-            // issue #160: the header's "Import Map"/"Open Map" button is redundant
-            // with the native File menu on desktop (same as New/Open/Save/Save As
-            // already were) — this gives it a native home instead of removing the
-            // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
-            let open_map_item = MenuItemBuilder::with_id("open-map", "Open Map...").build(app)?;
-            // Filled by the frontend through set_recent_files once it has loaded; until then (and when empty) a disabled placeholder.
-            let recent_placeholder = MenuItemBuilder::with_id("recent-none", "No recent files")
-                .enabled(false)
-                .build(app)?;
-            let recent_menu = SubmenuBuilder::new(app, "Open Recent")
-                .item(&recent_placeholder)
-                .build()?;
-            app.manage(RecentMenu(Mutex::new(Some(recent_menu.clone()))));
-            // Same rationale as open_map_item above: gives the "More" dropdown's
-            // existing Import H3 Map action (Toolbar.tsx) a second, native home
-            // rather than replacing it.
-            let import_h3m_item =
-                MenuItemBuilder::with_id("import-h3m", "Import H3 Map...").build(app)?;
-            let save_item = MenuItemBuilder::with_id("save", "Save")
-                .accelerator("CmdOrCtrl+S")
-                .build(app)?;
-            let save_as_item = MenuItemBuilder::with_id("save-as", "Save As...")
-                .accelerator("CmdOrCtrl+Shift+S")
-                .build(app)?;
-            // A custom item, not PredefinedMenuItem::quit — the predefined one
-            // calls the app's native exit directly, bypassing onCloseRequested
-            // entirely (confirmed: quitting from this menu item, or Cmd+Q, never
-            // showed the unsaved-changes prompt). Relayed to the frontend like
-            // every other item here instead, which just calls win.close() — that
-            // still fires closeRequested, reusing the exact same dirty-check flow
-            // the window's own [x] button already goes through.
-            let quit_item = MenuItemBuilder::with_id("quit", "Quit")
-                .accelerator("CmdOrCtrl+Q")
-                .build(app)?;
-
-            let file_menu = SubmenuBuilder::new(app, "File")
-                .item(&new_item)
-                .item(&open_item)
-                .item(&open_map_item)
-                .item(&recent_menu)
-                .item(&import_h3m_item)
-                .separator()
-                .item(&save_item)
-                .item(&save_as_item)
-                .separator()
-                .item(&quit_item)
-                .build()?;
-
-            let undo_item = MenuItemBuilder::with_id("undo", "Undo")
-                .accelerator("CmdOrCtrl+Z")
-                .build(app)?;
-            let redo_item = MenuItemBuilder::with_id("redo", "Redo")
-                .accelerator("CmdOrCtrl+Shift+Z")
-                .build(app)?;
-
-            let edit_menu = SubmenuBuilder::new(app, "Edit")
-                .item(&undo_item)
-                .item(&redo_item)
-                .build()?;
-
-            // "About" is handled in the frontend (AboutDialog) rather than by
-            // PredefinedMenuItem::about, so the same dialog appears on every platform
-            // and can show the build date and stack from src/data/about.json.
-            let whats_new_item = MenuItemBuilder::with_id("whats-new", "What's new").build(app)?;
-            let about_item = MenuItemBuilder::with_id("about", "About").build(app)?;
-            let updates_item =
-                MenuItemBuilder::with_id("check-updates", "Check for Updates...").build(app)?;
-
-            let help_menu = SubmenuBuilder::new(app, "Help")
-                .item(&updates_item)
-                .separator()
-                .item(&whats_new_item)
-                .item(&about_item)
-                .build()?;
-
-            let menu = MenuBuilder::new(app)
-                .item(&file_menu)
-                .item(&edit_menu)
-                .item(&help_menu)
-                .build()?;
-
+            // Built with English labels; the frontend sends the UI-language ones through set_menu_labels once it has loaded.
+            app.manage(RecentMenu(Mutex::new(None)));
+            app.manage(MenuLabels(Mutex::new(HashMap::new())));
+            let menu = build_menu(app.handle(), &HashMap::new())?;
             app.set_menu(menu)?;
 
             // Relay menu events to the frontend via a custom event
