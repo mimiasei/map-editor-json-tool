@@ -50,6 +50,75 @@ function ringedByLava(blob: Set<number>, sizeX: number, sizeZ: number, tileBiome
   return true
 }
 
+/** The water texture that matches each ground biome (waters.json ids vs BIOME_NAMES: Grass 1 -> water 7, Dirt 7 -> water 1, the rest share their id). */
+const WATER_ID_BY_BIOME: Record<number, number> = { 1: 7, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 1 }
+
+/**
+ * The water id for one body of water: the one matching the ground biome that most often borders it (the land tiles touching it,
+ * diagonals included). In the game each biome has its own water colour, so a lake reads right only next to its own ground. A lava lake
+ * needs the whole ring of lava ground (ringedByLava); otherwise the most common other biome decides. `undefined` when nothing borders it.
+ */
+export function waterIdForBody(body: Set<number>, sizeX: number, sizeZ: number, tileBiome: number[], otherWater: Set<number>): number | undefined {
+  const counts = new Map<number, number>()
+  const seen = new Set<number>()
+  for (const n of body) {
+    const x = n % sizeX
+    const z = Math.floor(n / sizeX)
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        const m = nz * sizeX + nx
+        if (body.has(m) || otherWater.has(m) || seen.has(m)) continue
+        seen.add(m)
+        const biome = tileBiome[m]
+        if (WATER_ID_BY_BIOME[biome] === undefined) continue
+        counts.set(biome, (counts.get(biome) ?? 0) + 1)
+      }
+    }
+  }
+  if (counts.size === 0) return undefined
+  const lavaAllowed = ringedByLava(body, sizeX, sizeZ, tileBiome, otherWater)
+  let best: number | undefined
+  for (const [biome, count] of counts) {
+    if (biome === LAVA_BIOME_ID && !lavaAllowed) continue
+    if (best === undefined || count > counts.get(best)!) best = biome
+  }
+  return best === undefined ? undefined : WATER_ID_BY_BIOME[best]
+}
+
+/** Splits flooded nodes into 4-connected bodies and gives each its own water id (waterIdForBody), `fallbackId` where nothing borders a body. */
+export function waterChangesByBody(nodes: Iterable<number>, sizeX: number, sizeZ: number, tileBiome: number[] | undefined, fallbackId: number): { node: number; waterId: number }[] {
+  const all = new Set(nodes)
+  const changes: { node: number; waterId: number }[] = []
+  const done = new Set<number>()
+  for (const start of all) {
+    if (done.has(start)) continue
+    const body = new Set<number>([start])
+    const queue = [start]
+    done.add(start)
+    while (queue.length > 0) {
+      const n = queue.pop()!
+      const x = n % sizeX
+      const z = Math.floor(n / sizeX)
+      for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        const m = nz * sizeX + nx
+        if (!all.has(m) || done.has(m)) continue
+        done.add(m)
+        body.add(m)
+        queue.push(m)
+      }
+    }
+    const waterId = (tileBiome && waterIdForBody(body, sizeX, sizeZ, tileBiome, new Set())) || fallbackId
+    for (const node of body) changes.push({ node, waterId })
+  }
+  return changes
+}
+
 /** Whether flooding `n` would leave a `protectedTiles` neighbor (an
  *  already-placed object's own tile) with zero remaining non-water land
  *  neighbors — i.e. fully water-locked on a 1-tile island. `protectedTiles`
@@ -274,10 +343,12 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
       if (anchorsStayConnected(anchors, new Set([...blocked, ...waterNodes, ...candidate]), sizeX, sizeZ)) { blob = candidate; break }
     }
     if (blob.size === 0) continue
-    // Lava water (id 6) only when the lake is ringed by 4+ tiles of Lava biome.
+    // The water matching the ground that mostly borders the lake. Without biome data (or nothing bordering) a random one, and lava water
+    // only when the lake is ringed by 4+ tiles of Lava biome.
+    const matched = tileBiome !== undefined ? waterIdForBody(blob, sizeX, sizeZ, tileBiome, waterNodes) : undefined
     const lavaOk = tileBiome !== undefined && ringedByLava(blob, sizeX, sizeZ, tileBiome, waterNodes)
     const ids = lavaOk ? WATER_IDS : WATER_IDS.filter((id) => id !== LAVA_WATER_ID)
-    const waterId = ids[Math.floor(rng() * ids.length)]
+    const waterId = matched ?? ids[Math.floor(rng() * ids.length)]
 
     for (const node of blob) {
       waterNodes.add(node)

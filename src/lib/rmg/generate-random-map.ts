@@ -74,7 +74,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, c
 import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
-import { scatterZoneWater } from './zone-water'
+import { scatterZoneWater, waterChangesByBody } from './zone-water'
 import type { LayoutArchetype } from './zone-archetypes'
 import { isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, mirrorObjects } from './zone-mirror'
 import { closeMirroredBorders } from './zone-mirror-border'
@@ -523,9 +523,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   } else if (waterContent === 'islands') {
     for (const node of islandFloodNodes) {
       waterNodesAll.add(node)
-      waterChangesAll.push({ node, waterId: 1 })
       levelChangesAll.push({ node, level: -1 })
     }
+    waterChangesAll.push(...waterChangesByBody(islandFloodNodes, sizeX, sizeZ, tileBiome, 1))
     // Per-edge portal placement (one island-touching zone-graph edge = one
     // portal pair, exactly mirroring how a non-island edge gets one road)
     // happens inside the road loop below, not here — see that loop's own

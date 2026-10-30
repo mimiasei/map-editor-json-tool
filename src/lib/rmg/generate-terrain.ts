@@ -62,7 +62,7 @@ import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } fro
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
 import { computeIslandZones } from './zone-islands'
-import { scatterZoneWater } from './zone-water'
+import { scatterZoneWater, waterChangesByBody } from './zone-water'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation } from './zone-elevation'
 import type { RmgZoneLayoutPick } from './rmg-schema'
@@ -475,9 +475,9 @@ export function generateTerrain(
     } else if (waterContent === 'islands') {
       for (const node of islandFloodNodes) {
         waterNodesAll.add(node)
-        waterChangesAll.push({ node, waterId: 1 })
         levelChangesAll.push({ node, level: -1 })
       }
+      waterChangesAll.push(...waterChangesByBody(islandFloodNodes, sizeX, sizeZ, state.tileBiome, 1))
     }
   }
 
@@ -487,9 +487,14 @@ export function generateTerrain(
     // (this terrain-only flow has none yet).
     const occupied = new Set<number>([...state.blocked, ...state.usedAnchors, ...zoneAnchorNode.values()])
     const zeros = new Array(sizeX * sizeZ).fill(0)
+    const idByNode = new Map(waterChangesAll.map((c) => [c.node, c.waterId]))
     for (const node of findEmptyLandSpecks(sizeX, sizeZ, waterNodesAll, occupied, zeros, zeros)) {
+      // The speck takes the water of the lake it sits in (a neighbouring tile), not of whichever lake came first.
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      const neighbour = [[-1, 0], [1, 0], [0, -1], [0, 1]].map(([dx, dz]) => idByNode.get((z + dz) * sizeX + x + dx)).find((id) => id !== undefined)
       waterNodesAll.add(node)
-      waterChangesAll.push({ node, waterId: waterChangesAll[0]?.waterId ?? 1 })
+      waterChangesAll.push({ node, waterId: neighbour ?? waterChangesAll[0]?.waterId ?? 1 })
       levelChangesAll.push({ node, level: -1 })
     }
   }
