@@ -2173,6 +2173,13 @@
       "resaved": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}}",
       "resavedBackupKept": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}} (fantes allerede — ikke overskrevet)"
     },
+    "viewTabs": {
+      "label": "Visninger",
+      "mapGrid": "Kartrutenett",
+      "scenario": "Scenario",
+      "randomMap": "Tilfeldig kart",
+      "needsMap": "Åpne en .map-fil for å redigere den i Kartrutenettet."
+    },
     "appShell": {
       "undockedPlaceholder": "{{label}} er åpent i et eget vindu",
       "confirmNew": "Du har ulagrede endringer. Starte et nytt scenario likevel?",
