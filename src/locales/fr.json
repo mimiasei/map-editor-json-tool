@@ -1359,6 +1359,8 @@
       "alsoPlacesARandomSquad": "Place aussi une garde de peloton aléatoire sur la case située juste au sud de la ressource : un moyen simple de générer automatiquement une ressource gardée.",
       "placeAGuardOnThe": "Placer une garde sur la case du dessous",
       "biomeMix": "Mélange de biomes",
+      "grass": "Herbe",
+      "grassTooltip": "Probabilité qu'un élément praticable posé soit de l'herbe plutôt que des fleurs ou des champignons. 0 % n'en pose aucune, 100 % uniquement de l'herbe.",
       "thisBiomeOnly": "Ce biome uniquement",
       "allBiomes": "Tous les biomes",
       "whenOffACrossBiome": "Désactivé, un choix inter-biomes n'atterrit que sur un biome visuellement compatible : Herbe/Automne/Terre se mélangent librement. La Neige accepte aussi les pins de l'Herbe, la Terre morte et la Terre ; la Lave accepte aussi la Terre morte et l'Herbe. Le Sable et la Terre morte ne se mélangent avec rien d'autre.",

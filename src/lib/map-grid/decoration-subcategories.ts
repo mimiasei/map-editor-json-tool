@@ -69,6 +69,12 @@ export function resolveDecorationSubcategory(sid: string, category: string | und
   return 'other'
 }
 
+/** Actual grass tufts among the walkables: `grass_` + a number (grass_1_3) or the Autumn/Desert/Deathland/Snow variants
+ *  (grass_autumn_1 ...). Every other `grass_*` sid is something else (grass_dirt_*, grass_log_1, grass_stump_1 ...), per the user. */
+export function isGrassSid(sid: string): boolean {
+  return /^grass_(\d|autumn|desert|death|snow)/.test(sid)
+}
+
 const groundCoverCache = new WeakMap<GameCatalog, Map<string, boolean>>()
 
 /** Walkable ground clutter (grass, flowers, mushrooms): a 'walkable' decoration with no solid

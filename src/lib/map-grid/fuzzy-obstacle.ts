@@ -45,7 +45,7 @@
 
 import type { BiomeId } from './terrain-colors'
 import type { CatalogEnvironmentBiome, CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
-import { isGroundCoverSid } from './decoration-subcategories'
+import { isGrassSid, isGroundCoverSid } from './decoration-subcategories'
 
 /** catalog.mapObjects' own `biome` string differs from tile-side BIOME_NAMES
  *  only at id 2 ("Desert" vs "Sand") — see CatalogMapObject.biome's doc
@@ -206,6 +206,28 @@ export function buildWalkablePools(catalog: GameCatalog): Record<BiomeId, FuzzyO
     if (biomeId) pools[biomeId].obstacles.push(obj.id)
   }
   return pools
+}
+
+/** Walkables brush "Grass" slider: makes each placed walkable grass with chance `grassChance` and flowers/mushrooms/other otherwise,
+ *  without changing where anything is placed. The sampler already chose a sid (and thereby a biome pool, which can differ from the
+ *  tile's biome on a cross-biome pick); this re-picks within that same pool, so the biome mix stays as the Biome mix slider made it.
+ *  A pool with no sid of the wanted kind keeps the sampled sid. */
+export function rebalanceGrass(
+  additions: { node: number; sid: string }[],
+  pools: Record<BiomeId, FuzzyObstaclePool>,
+  grassChance: number,
+  rng: () => number = Math.random,
+): { node: number; sid: string }[] {
+  const poolBySid = new Map<string, string[]>()
+  for (const id of ALL_BIOME_IDS) for (const sid of pools[id].obstacles) poolBySid.set(sid, pools[id].obstacles)
+  return additions.map((a) => {
+    const pool = poolBySid.get(a.sid)
+    if (!pool) return a
+    const wantGrass = rng() < grassChance
+    if (isGrassSid(a.sid) === wantGrass) return a
+    const candidates = pool.filter((sid) => isGrassSid(sid) === wantGrass)
+    return candidates.length > 0 ? { node: a.node, sid: candidates[Math.floor(rng() * candidates.length)] } : a
+  })
 }
 
 /** Real per-sid pick bias for RMG obstacle scattering (issue #240 Phase 3) —

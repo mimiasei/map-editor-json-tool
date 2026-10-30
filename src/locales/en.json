@@ -1327,6 +1327,8 @@
       "alsoPlacesARandomSquad": "Also places a random-squad guard on the tile directly south of the resource — an easy way to auto-generate a guarded resource.",
       "placeAGuardOnThe": "Place a guard on the tile below",
       "biomeMix": "Biome mix",
+      "grass": "Grass",
+      "grassTooltip": "Chance a placed walkable is actual grass rather than flowers or mushrooms. 0% places none, 100% only grass.",
       "thisBiomeOnly": "This biome only",
       "allBiomes": "All biomes",
       "whenOffACrossBiome": "When off, a cross-biome pick only lands on a visually compatible biome — Grass/Autumn/Dirt mix freely with each other. Snow also takes Grass pine trees, Deathland and Dirt; Lava also takes Deathland and Grass. Sand and Deathland mix with nothing else.",

@@ -1327,6 +1327,8 @@
       "alsoPlacesARandomSquad": "Platziert zusätzlich einen Zufallstrupp-Wächter auf der Kachel direkt südlich der Ressource — ein einfacher Weg, eine bewachte Ressource automatisch zu erzeugen.",
       "placeAGuardOnThe": "Wächter auf die Kachel darunter setzen",
       "biomeMix": "Biom-Mix",
+      "grass": "Gras",
+      "grassTooltip": "Wahrscheinlichkeit, dass ein platziertes begehbares Objekt echtes Gras statt Blumen oder Pilzen ist. 0 % setzt kein Gras, 100 % nur Gras.",
       "thisBiomeOnly": "Nur dieses Biom",
       "allBiomes": "Alle Biome",
       "whenOffACrossBiome": "Ist es aus, landet eine biomübergreifende Auswahl nur auf einem optisch passenden Biom — Gras/Herbst/Erde mischen sich frei miteinander. Schnee nimmt auch Gras-Kiefern, Todesland und Erde; Lava nimmt auch Todesland und Gras. Sand und Todesland mischen sich mit nichts anderem.",

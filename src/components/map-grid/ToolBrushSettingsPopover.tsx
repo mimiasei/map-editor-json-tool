@@ -34,6 +34,9 @@ interface Props {
    *  propRandomSquads.fraction its tile's biome maps to — see squad-pool.ts). */
   biomePurity: number
   onBiomePurityChange: (value: number) => void
+  /** Walkables only — chance a placed walkable is actual grass rather than flowers/mushrooms (0 = none, 1 = only grass). */
+  grassChance: number
+  onGrassChanceChange: (value: number) => void
   /** Obstacles/Trees/Interactable only — whether a cross-biome pick can land
    *  on a visually jarring biome (Snow decorations on Grass, Lava objects
    *  anywhere else, etc. — see areBiomesCompatible, fuzzy-obstacle.ts). Not
@@ -96,6 +99,8 @@ export default function ToolBrushSettingsPopover({
   onPoolChanceChange,
   biomePurity,
   onBiomePurityChange,
+  grassChance,
+  onGrassChanceChange,
   allowHighContrastBiomes,
   onAllowHighContrastBiomesChange,
   squadDifficulties,
@@ -207,6 +212,22 @@ export default function ToolBrushSettingsPopover({
                 onValueChange={([v]) => onBiomePurityChange(v)}
               />
             </div>
+        )}
+
+        {tool === 'flowers' && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <LabelWithTooltip tooltip={t('mapGrid.toolBrushSettingsPopover.grassTooltip')}>
+                {t('mapGrid.toolBrushSettingsPopover.grass')}
+              </LabelWithTooltip>
+              <span className="text-xs text-muted-foreground">{Math.round(grassChance * 100)}%</span>
+            </div>
+            <Slider
+              min={0} max={1} step={0.01}
+              value={[grassChance]}
+              onValueChange={([v]) => onGrassChanceChange(v)}
+            />
+          </div>
         )}
 
         {tool !== 'squad' && tool !== 'resource' && (

@@ -76,7 +76,7 @@ import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
-import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
@@ -821,6 +821,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [treeKind, setTreeKind] = useState<'trees' | 'flowers'>('trees')
   const [flowerBiomePurity, setFlowerBiomePurity] = useState(0.9)
   const [flowerAllowHighContrast, setFlowerAllowHighContrast] = useState(false)
+  // Walkables brush: chance a placed walkable is actual grass (isGrassSid) instead of flowers/mushrooms.
+  const [flowerGrassChance, setFlowerGrassChance] = useState(0.5)
 
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
@@ -946,13 +948,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const pools = treeKind === 'flowers' ? walkablePools : treePools
     if (!pools || nodes.length === 0) return []
     const distances = computeFuzzyDistances(nodes, sizeX)
-    return sampleFuzzyObstacles(distances, (n) => {
+    const sampled = sampleFuzzyObstacles(distances, (n) => {
       const v = tilesMap[n]
       return v >= 1 && v <= 7 ? (v as BiomeId) : undefined
     }, pools, treeKind === 'flowers'
       ? { crossBiomeChance: 1 - flowerBiomePurity, allowHighContrastBiomes: flowerAllowHighContrast }
       : { crossBiomeChance: 1 - treeBiomePurity, allowHighContrastBiomes: treeAllowHighContrast })
-  }, [treeKind, treePools, walkablePools, sizeX, tilesMap, treeBiomePurity, treeAllowHighContrast, flowerBiomePurity, flowerAllowHighContrast])
+    return treeKind === 'flowers' ? rebalanceGrass(sampled, pools, flowerGrassChance) : sampled
+  }, [treeKind, treePools, walkablePools, sizeX, tilesMap, treeBiomePurity, treeAllowHighContrast, flowerBiomePurity, flowerAllowHighContrast, flowerGrassChance])
   const [treeStaged, setTreeStaged] = useState<{ node: number; sid: string }[]>([])
   const previewTreeStroke = useCallback((nodes: number[]) => {
     setTreeStaged(sampleTreeAdditions(nodes))
@@ -5170,6 +5173,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       poolChance={obstaclePoolChance}
                       onPoolChanceChange={setObstaclePoolChance}
                       biomePurity={obstacleBrushActive ? obstacleBiomePurity : treesActive ? (treeKind === 'flowers' ? flowerBiomePurity : treeBiomePurity) : squadActive ? squadBiomePurity : interactableBiomePurity}
+                      grassChance={flowerGrassChance}
+                      onGrassChanceChange={setFlowerGrassChance}
                       onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? (treeKind === 'flowers' ? setFlowerBiomePurity : setTreeBiomePurity) : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
                       allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : treesActive ? (treeKind === 'flowers' ? flowerAllowHighContrast : treeAllowHighContrast) : interactableAllowHighContrast}
                       onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? (treeKind === 'flowers' ? setFlowerAllowHighContrast : setTreeAllowHighContrast) : setInteractableAllowHighContrast}
