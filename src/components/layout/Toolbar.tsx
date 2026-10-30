@@ -125,8 +125,8 @@ interface ToolbarProps {
 }
 
 // Text tabs of the view switch; the tools themselves are ToolButtons (map-grid/ToolButton.tsx), like the Map Grid's own.
-const VIEW_TAB = 'flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-40'
-const VIEW_TAB_ON = 'bg-accent text-accent-foreground'
+const VIEW_TAB = 'flex h-7 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-40'
+const VIEW_TAB_ON = 'bg-[hsl(var(--accent)/0.5)] text-foreground'
 const VIEW_TAB_OFF = 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
 
 export default function Toolbar({
@@ -675,7 +675,7 @@ export default function Toolbar({
 
   return (
     <>
-      <header className="flex h-10 items-center gap-1 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+      <header className="flex h-11 items-center gap-1 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
         {/* View switch: the Map Grid (and the random map view) versus the quests editor. Each view has its own tools below. */}
         <div className="flex items-center gap-1" role="group" aria-label={t('layout.toolbar.views')}>
           <button
