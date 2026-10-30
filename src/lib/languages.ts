@@ -38,6 +38,12 @@ export const GAME_LANGUAGES: GameLanguage[] = [
   { id: 'zhTW', label: 'Chinese (Traditional)' },
 ]
 
+/**
+ * Languages the interface can be shown in. Norwegian is here but not in GAME_LANGUAGES: the game ships no Norwegian
+ * (no Lang/norwegian in Core.zip), so a map can never carry Norwegian text and game names stay English.
+ */
+export const UI_LANGUAGES: GameLanguage[] = GAME_LANGUAGES.flatMap((l) => (l.id === 'polish' ? [{ id: 'norwegian', label: 'Norwegian' }, l] : [l]))
+
 /** Languages the user can add beside English. */
 export const TRANSLATABLE_LANGUAGES = GAME_LANGUAGES.filter((l) => l.id !== BASE_LANGUAGE)
 
@@ -108,6 +114,7 @@ const NATIVE_LABELS: Record<string, string> = {
   italian: 'Italiano',
   japanese: '日本語',
   korean: '한국어',
+  norwegian: 'Norsk',
   polish: 'Polski',
   russian: 'Русский',
   spanish: 'Español',

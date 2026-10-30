@@ -1032,6 +1032,8 @@ export async function buildCatalog(
  */
 export async function buildLocalNames(zip: JSZip, language: string, catalog: GameCatalog): Promise<GameCatalog['localNames']> {
   if (language === 'english') return undefined
+  // A UI language the game has no texts for (Norwegian): nothing to localize, names stay English.
+  if (zipFilesUnder(zip, `Lang/${language}/texts/`).length === 0) return undefined
   const english = await loadLocalization(zip)
   const locMap = await loadLocalization(zip, language, new Map(english))
   const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions] = await Promise.all([

@@ -4,6 +4,7 @@ import en from '@/locales/en.json'
 import fr from '@/locales/fr.json'
 import de from '@/locales/de.json'
 import uk from '@/locales/uk.json'
+import nb from '@/locales/nb.json'
 import { BASE_LANGUAGE } from '@/lib/base-language'
 import { useLocaleStore } from '@/store/useLocaleStore'
 
@@ -17,6 +18,8 @@ const UI_LANG_CODES: Record<string, string> = {
   french: 'fr',
   german: 'de',
   ukrainian: 'uk',
+  // Not a game language (no Lang/norwegian in Core.zip): game names stay English, see buildLocalNames.
+  norwegian: 'nb',
 }
 
 const BASE_CODE = UI_LANG_CODES[BASE_LANGUAGE]
@@ -26,6 +29,7 @@ export const UI_RESOURCES = {
   fr: { translation: fr },
   de: { translation: de },
   uk: { translation: uk },
+  nb: { translation: nb },
 }
 
 export type UiResource = typeof en

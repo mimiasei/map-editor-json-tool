@@ -28,7 +28,7 @@ import {
 import { useThemeSettingsStore, DEFAULT_LIGHT_COLORS, DEFAULT_FONT_SIZE, type ThemeColors, type ThemeSettings } from '@/store/useThemeSettingsStore'
 import { useTranslation } from 'react-i18next'
 import { useLocaleStore } from '@/store/useLocaleStore'
-import { GAME_LANGUAGES, nativeLanguageLabel } from '@/lib/languages'
+import { UI_LANGUAGES, nativeLanguageLabel } from '@/lib/languages'
 import { isUiLocaleAvailable } from '@/lib/i18n'
 import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
@@ -213,7 +213,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {GAME_LANGUAGES.filter((l) => isUiLocaleAvailable(l.id)).map((l) => (
+                {UI_LANGUAGES.filter((l) => isUiLocaleAvailable(l.id)).map((l) => (
                   <SelectItem key={l.id} value={l.id}>{nativeLanguageLabel(l.id)}</SelectItem>
                 ))}
               </SelectContent>
