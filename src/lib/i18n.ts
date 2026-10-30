@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import en from '@/locales/en.json'
 import fr from '@/locales/fr.json'
 import de from '@/locales/de.json'
+import uk from '@/locales/uk.json'
 import { BASE_LANGUAGE } from '@/lib/base-language'
 import { useLocaleStore } from '@/store/useLocaleStore'
 
@@ -15,6 +16,7 @@ const UI_LANG_CODES: Record<string, string> = {
   [BASE_LANGUAGE]: 'en',
   french: 'fr',
   german: 'de',
+  ukrainian: 'uk',
 }
 
 const BASE_CODE = UI_LANG_CODES[BASE_LANGUAGE]
@@ -23,6 +25,7 @@ export const UI_RESOURCES = {
   en: { translation: en },
   fr: { translation: fr },
   de: { translation: de },
+  uk: { translation: uk },
 }
 
 export type UiResource = typeof en
