@@ -1,7 +1,7 @@
 // ─── View tabs (Map Grid | Scenario) ─────────────────────────────────────────
 // The Map Grid, the random map generator and the scenario editor are mutually exclusive full-pane views swapped by AppShell
 // (useViewBridgeStore). This strip makes that switch visible: the Map Grid is the main workspace for a loaded .map, so its tab is
-// the largest and filled with the accent colour, instead of a small icon among the toolbar tools.
+// the largest of the tabs, instead of a small icon among the toolbar tools.
 
 import { useTranslation } from 'react-i18next'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -32,11 +32,9 @@ export default function ViewTabs() {
       aria-current={mapGridActive ? 'page' : undefined}
       onClick={() => openMapGrid()}
       className={cn(
-        'flex h-9 items-center gap-2 rounded-md border px-4 text-sm font-semibold transition-colors',
+        'flex h-9 items-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        mapGridActive
-          ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-          : 'border-primary/60 bg-primary/10 text-primary hover:bg-primary/20',
+        mapGridActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
       )}
     >
       <LayoutGrid className="h-4 w-4" />
