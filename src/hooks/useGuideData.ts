@@ -13,6 +13,7 @@ import tooltipsUk from '@/data/tooltips.uk.json'
 import templateIndexData from '@/data/templates/index.json'
 import templateIndexFr from '@/data/templates/index.fr.json'
 import templateIndexDe from '@/data/templates/index.de.json'
+import templateIndexUk from '@/data/templates/index.uk.json'
 import i18n from '@/lib/i18n'
 import {
   buildGuideIndex,
@@ -83,7 +84,7 @@ export function useGuideIndex() {
  * The translated text of the templates per UI language code: category labels, template names and descriptions, and the annotation banners.
  * Only the display text is translated; the template's quests, counters and sids are written into the user's map and stay as they are.
  */
-const TEMPLATE_TEXT_BY_LANGUAGE: Record<string, typeof templateIndexFr> = { fr: templateIndexFr, de: templateIndexDe }
+const TEMPLATE_TEXT_BY_LANGUAGE: Record<string, typeof templateIndexFr> = { fr: templateIndexFr, de: templateIndexDe, uk: templateIndexUk }
 
 /** Returns the template index (categories + template metadata) in the UI language. */
 export function useTemplateIndex(): TemplateIndex {
