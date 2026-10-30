@@ -10,6 +10,7 @@ import tooltipsData from '@/data/tooltips.json'
 import tooltipsFr from '@/data/tooltips.fr.json'
 import tooltipsDe from '@/data/tooltips.de.json'
 import tooltipsUk from '@/data/tooltips.uk.json'
+import tooltipsNb from '@/data/tooltips.nb.json'
 import templateIndexData from '@/data/templates/index.json'
 import templateIndexFr from '@/data/templates/index.fr.json'
 import templateIndexDe from '@/data/templates/index.de.json'
@@ -67,7 +68,7 @@ const templateImporters: Record<string, () => Promise<unknown>> = {
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /** The tooltip text per UI language code; the ids (action/condition types, field keys) are the same in every file. English is the fallback. */
-const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData, de: tooltipsDe as TooltipData, uk: tooltipsUk as TooltipData }
+const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData, de: tooltipsDe as TooltipData, uk: tooltipsUk as TooltipData, nb: tooltipsNb as TooltipData }
 
 /** Returns the full tooltip dataset (actions, conditions, fields) in the UI language. */
 export function useTooltips(): TooltipData {

@@ -1,0 +1,600 @@
+{
+  "actions": {
+    "GameVictory": {
+      "summary": "Utløser seierskjermen for spilleren.",
+      "tip": "Bruk denne på slutten av det siste oppdraget ditt for å fullføre kartet. Sørg for at alle kritiske mål er oppnådd før du kaller den."
+    },
+    "GameLose": {
+      "summary": "Utløser tapsskjermen for spilleren.",
+      "tip": "Brukes ofte inni ObjectLose- eller HeroKill-utløsere for å håndheve tapsbetingelser."
+    },
+    "Dialog": {
+      "summary": "Viser en historiedialog etter nøkkel.",
+      "params": {
+        "0": "Dialognøkkel — må samsvare med en dialog-ID i mappen DB/dialogs/ i kart-ZIP-en din."
+      },
+      "tip": "Dialog-JSON-en og lokaliseringstokenene må være med i kartets medfølgende ZIP. Bruk Eksporter ZIP for å pakke dem sammen."
+    },
+    "RandomDialog": {
+      "summary": "Spiller av en tilfeldig valgt dialog fra den oppgitte listen med nøkler.",
+      "params": {
+        "0": "Dialognøkkel 1 (påkrevd).",
+        "1": "Dialognøkkel 2 (valgfri).",
+        "2": "Dialognøkkel 3 (valgfri).",
+        "3": "Dialognøkkel 4 (valgfri).",
+        "4": "Dialognøkkel 5 (valgfri)."
+      },
+      "tip": "Bra for å gi NPC-er variasjon. Alle oppførte dialoger må finnes i kart-ZIP-en din."
+    },
+    "Print": {
+      "summary": "Skriver ut en feilsøkings- eller prestasjonsmelding.",
+      "params": {
+        "0": "Meldingsstreng eller lokaliserings-SID."
+      },
+      "tip": "Brukes hovedsakelig til feilsøking under utvikling. Meldingen vises i spilloggen."
+    },
+    "CurrentSubQuestDone": {
+      "summary": "Markerer det aktive underoppdraget som fullført.",
+      "tip": "Bruk denne i stedet for SubQuestDone når du er inni underoppdragets egen utløser — den er enklere og unngår hardkoding av oppdrags-ID-er."
+    },
+    "SubQuestActivate": {
+      "summary": "Aktiverer et bestemt underoppdrag i et oppdrag.",
+      "params": {
+        "0": "Oppdrags-SID — oppdraget som eier underoppdraget.",
+        "1": "Underoppdrags-SID eller indeks — underoppdraget som skal aktiveres."
+      },
+      "tip": "Bruk for å låse opp et sideoppdrag fra et annet oppdrags utløser. For lineær fremdrift, foretrekk NextSubQuest."
+    },
+    "SubQuestDeactivate": {
+      "summary": "Deaktiverer et bestemt underoppdrag i et oppdrag.",
+      "params": {
+        "0": "Oppdrags-SID.",
+        "1": "Underoppdrags-SID eller indeks."
+      }
+    },
+    "NextQuest": {
+      "summary": "Går videre til neste oppdrag i en serie.",
+      "params": {
+        "0": "Oppdrags-SID — oppdraget som skal gå videre."
+      }
+    },
+    "EndQuest": {
+      "summary": "Avslutter (lukker) et oppdrag.",
+      "params": {
+        "0": "Oppdrags-SID."
+      },
+      "tip": "Oppdraget forsvinner fra oppdragsloggen. Bruk etter at alle underoppdrag er ferdige."
+    },
+    "NextSubQuest": {
+      "summary": "Aktiverer neste underoppdrag etter SID eller numerisk indeks.",
+      "params": {
+        "0": "Underoppdrags-SID eller 0-basert indeks."
+      }
+    },
+    "SubQuestDone": {
+      "summary": "Markerer et bestemt underoppdrag som ferdig utenfra sitt eget oppdrag.",
+      "params": {
+        "0": "Oppdrags-SID.",
+        "1": "Underoppdrags-SID."
+      },
+      "tip": "Bruk når ett oppdrag må fullføre et underoppdrag i et annet oppdrag."
+    },
+    "NextAfterGroup": {
+      "summary": "Aktiverer neste underoppdrag når alle underoppdrag i en gruppe er ferdige.",
+      "params": {
+        "0": "Gruppe-SID.",
+        "1": "SID til neste underoppdrag som skal aktiveres."
+      },
+      "tip": "Nyttig for valgfrie sidemål — vent på alle før du fortsetter hovedlinjen."
+    },
+    "CounterSet": {
+      "summary": "Setter en teller til en bestemt verdi.",
+      "params": {
+        "0": "Teller-SID.",
+        "1": "Ny verdi (heltall)."
+      },
+      "tip": "Tellere må deklareres i Tellere-fanen før bruk."
+    },
+    "CounterPlus": {
+      "summary": "Øker en teller med det oppgitte beløpet.",
+      "params": {
+        "0": "Teller-SID.",
+        "1": "Beløp å legge til (vanligvis 1)."
+      }
+    },
+    "CounterMinus": {
+      "summary": "Reduserer en teller med det oppgitte beløpet.",
+      "params": {
+        "0": "Teller-SID.",
+        "1": "Beløp å trekke fra."
+      }
+    },
+    "CounterSetRandom": {
+      "summary": "Setter en teller til et tilfeldig heltall mellom min og maks (inkludert).",
+      "params": {
+        "0": "Teller-SID.",
+        "1": "Minimumsverdi.",
+        "2": "Maksimumsverdi."
+      }
+    },
+    "GiveUnitHero": {
+      "summary": "Legger til enheter i en helts hær.",
+      "params": {
+        "0": "Enhets-SID — skapningstypen som skal gis.",
+        "1": "Antall — antall enheter.",
+        "2": "Helt-SID — helten som mottar."
+      },
+      "tip": "Enhetene legges til oppå det helten allerede har. Hvis helten ikke har ledige plasser, havner enhetene i første tilgjengelige plass."
+    },
+    "GiveUnitHeroPerWeek": {
+      "summary": "Legger til enheter i en helts hær hver uke.",
+      "params": {
+        "0": "Enhets-SID.",
+        "1": "Antall per uke.",
+        "2": "Helt-SID."
+      },
+      "tip": "Dette gjentas automatisk. Legg den i en StartWeek-utløser uten betingelser, eller beskytt den med en Counter hvis du vil at den skal stoppe."
+    },
+    "RemoveUnitHero": {
+      "summary": "Fjerner enheter fra en helts hær.",
+      "params": {
+        "0": "Enhets-SID.",
+        "1": "Antall som skal fjernes, eller 'all' for å fjerne alle enheter av den typen.",
+        "2": "Helt-SID."
+      }
+    },
+    "GiveStatsHero": {
+      "summary": "Legger til statpoeng hos en helt.",
+      "params": {
+        "0": "Statnavn: offence, defence, spellPower, intelligence, movementBonus eller moral.",
+        "1": "Helt-SID.",
+        "2": "Beløp å legge til."
+      }
+    },
+    "GiveExpHero": {
+      "summary": "Gir erfaringspoeng til en helt.",
+      "params": {
+        "0": "Mengde erfaring.",
+        "1": "Helt-SID (valgfri — utelat for å gi til spillerens nåværende helt)."
+      }
+    },
+    "GiveItemHero": {
+      "summary": "Gir en artefakt til en helt.",
+      "params": {
+        "0": "Artefakt-SID.",
+        "1": "Helt-SID."
+      },
+      "tip": "Helten må finnes på kartet. Hvis heltens ryggsekk er full, kan gjenstanden gå tapt."
+    },
+    "AddSkillHero": {
+      "summary": "Legger til ett nivå av en ferdighet hos en helt.",
+      "params": {
+        "0": "Ferdighets-SID.",
+        "1": "Helt-SID."
+      },
+      "tip": "Kall denne handlingen flere ganger for å legge til flere nivåer av den samme ferdigheten."
+    },
+    "AddSpellHero": {
+      "summary": "Lærer en trylleformel til en helt.",
+      "params": {
+        "0": "Trylleformel-SID.",
+        "1": "Helt-SID."
+      }
+    },
+    "AddBuffHeroDays": {
+      "summary": "Bruker en buff på en helt i N dager.",
+      "params": {
+        "0": "Buff-SID.",
+        "1": "Helt-SID.",
+        "2": "Varighet i dager. Bruk -1 for en permanent buff."
+      }
+    },
+    "RemoveBuffHero": {
+      "summary": "Fjerner en buff fra en helt.",
+      "params": {
+        "0": "Buff-SID.",
+        "1": "Helt-SID (valgfri — la stå tom for å fjerne fra alle helter)."
+      }
+    },
+    "HeroResetMovePointsMax": {
+      "summary": "Tilbakestiller en helts bevegelsespoeng til maksimum.",
+      "params": {
+        "0": "Helt-SID."
+      },
+      "tip": "Nyttig etter HeroStop eller i starten av en filmsekvens."
+    },
+    "SpawnHero": {
+      "summary": "Spawner en helt på kartet ved en gitt node for en bestemt spiller.",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Node-ID — kartnoden det skal spawnes ved.",
+        "2": "Spillerindeks (1-basert: 1 = første spiller)."
+      }
+    },
+    "DeleteHero": {
+      "summary": "Fjerner en helt fra kartet permanent.",
+      "params": {
+        "0": "Helt-SID."
+      },
+      "tip": "Dette utløser ikke HeroKill-betingelser."
+    },
+    "DisableAiHero": {
+      "summary": "Deaktiverer AI-kontroll for en helt.",
+      "params": {
+        "0": "Helt-SID."
+      }
+    },
+    "TeleportHero": {
+      "summary": "Teleporterer en helt umiddelbart til en kartnode.",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Destinasjonsnode-ID."
+      }
+    },
+    "HeroToNode": {
+      "summary": "Flytter en helt mot en kartnode (stifinning, ikke umiddelbart).",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Destinasjonsnode-ID."
+      }
+    },
+    "HeroToHero": {
+      "summary": "Flytter en helt mot en annen ved hjelp av stifinning.",
+      "params": {
+        "0": "SID til helten som flytter seg.",
+        "1": "SID til målhelten."
+      }
+    },
+    "HeroStop": {
+      "summary": "Stopper heltens nåværende bevegelsessti.",
+      "tip": "Kall denne før en filmsekvens eller en viktig skriptet sekvens begynner, for å hindre at helten vandrer av gårde."
+    },
+    "ChangeManaHero": {
+      "summary": "Setter en helts mana til den oppgitte verdien.",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Manamengde."
+      }
+    },
+    "SetHeroMovePoints": {
+      "summary": "Setter en helts bevegelsespoeng til en bestemt verdi.",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Verdi for bevegelsespoeng."
+      }
+    },
+    "ResurrectHero": {
+      "summary": "Gjenoppliver en beseiret helt ved en kartnode.",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Node-ID der det skal gjenopplives.",
+        "2": "Flagg (vanligvis 0)."
+      }
+    },
+    "GiveRes": {
+      "summary": "Gir spilleren en bestemt mengde av en ressurs.",
+      "params": {
+        "0": "Ressurstype: gold, wood, ore, crystals, mercury, gemstones eller dust.",
+        "1": "Mengde."
+      }
+    },
+    "RemoveRes": {
+      "summary": "Fjerner en ressurs fra spillerens lager.",
+      "params": {
+        "0": "Ressurstype.",
+        "1": "Mengde som skal fjernes."
+      },
+      "tip": "Sjekker ikke om spilleren har nok — å fjerne mer enn tilgjengelig setter ressursen til 0."
+    },
+    "MoveCamera": {
+      "summary": "Flytter kameraet for å fokusere på en kartnode.",
+      "params": {
+        "0": "Node-ID å fokusere på."
+      }
+    },
+    "RevealFogOfWar": {
+      "summary": "Avdekker krigståke rundt en node.",
+      "params": {
+        "0": "Sentrumsnode-ID.",
+        "1": "Avdekkingsradius i karfliser."
+      }
+    },
+    "DeleteEntity": {
+      "summary": "Fjerner en kartentitet (blokkerende objekt, dekorasjon, sone) permanent.",
+      "params": {
+        "0": "Entity-SID for objektet som skal fjernes. Angis via Entity-feltet i egenskapspanelet i kartredigereren for det plasserte objektet."
+      }
+    },
+    "SpawnObject": {
+      "summary": "Spawner et interaktivt objekt ved en node.",
+      "params": {
+        "0": "Objekttype-SID.",
+        "1": "Node-ID å spawne ved.",
+        "2": "Flagg (vanligvis false).",
+        "3": "Entity-SID som tildeles det spawnede objektet (valgfri). Sett denne for å referere til objektet senere via andre handlinger. Må være unik på kartet."
+      }
+    },
+    "SpawnMapObject": {
+      "summary": "Spawner en kartdekorasjon eller et ikke-interaktivt objekt ved en node.",
+      "params": {
+        "0": "Objekttype-SID.",
+        "1": "Node-ID å spawne ved.",
+        "2": "Flagg (vanligvis 0)."
+      }
+    },
+    "SetActivePortal": {
+      "summary": "Aktiverer eller deaktiverer en portal.",
+      "params": {
+        "0": "Entity-SID for portalen. Angis via Entity-feltet i egenskapspanelet i kartredigereren for den plasserte portalen.",
+        "1": "true for å aktivere, false for å deaktivere."
+      }
+    },
+    "EntityActionsOff": {
+      "summary": "Deaktiverer all samhandling med en kartentitet (gjør den ikke-klikkbar).",
+      "params": {
+        "0": "Entity-SID for objektet som skal deaktiveres. Angis via Entity-feltet i egenskapspanelet i kartredigereren."
+      }
+    },
+    "SetQuestMarker": {
+      "summary": "Fester en oppdragsmarkør-VFX til en kartentitet.",
+      "params": {
+        "0": "Entity-SID for kartobjektet markøren skal festes til. Angis via Entity-feltet i egenskapspanelet i kartredigereren.",
+        "1": "VFX-sti (f.eks. effects/global_map/quest_mark_silver_01)."
+      }
+    },
+    "SetActiveQuestMarker": {
+      "summary": "Viser eller skjuler en oppdragsmarkør som allerede er festet til en entitet.",
+      "params": {
+        "0": "Entity-SID for kartobjektet markøren er festet til.",
+        "1": "true for å vise, false for å skjule."
+      }
+    },
+    "CreateVFX": {
+      "summary": "Lager en VFX-effekt ved en node.",
+      "params": {
+        "0": "VFX-type-SID.",
+        "1": "Node-ID.",
+        "2": "Flagg 1 (vanligvis false).",
+        "3": "Flagg 2 (vanligvis true).",
+        "4": "Entity-SID som tildeles denne VFX-forekomsten (valgfri). Gjør det mulig å slå den av/på senere via SetActiveVFX. Må være unik på kartet."
+      }
+    },
+    "SetActiveVFX": {
+      "summary": "Viser eller skjuler en VFX-entitet.",
+      "params": {
+        "0": "Entity-SID for VFX-en som skal vises eller skjules.",
+        "1": "true for å vise, false for å skjule."
+      }
+    },
+    "SetActiveMarker": {
+      "summary": "Viser eller skjuler en sone- eller samhandlingsmarkør.",
+      "params": {
+        "0": "Entity-SID for sonen eller markøren som skal vises eller skjules. Angis via Entity-feltet i egenskapspanelet i kartredigereren.",
+        "1": "true for å vise, false for å skjule."
+      }
+    },
+    "IncreaseStrengthSquad": {
+      "summary": "Oppgraderer styrken til en nøytral tropp.",
+      "params": {
+        "0": "Entity-SID for den nøytrale troppen som skal oppgraderes. Angis via Entity-feltet i egenskapspanelet i kartredigereren for den plasserte stabelen.",
+        "1": "Oppgraderingsstreng i formatet 'tier,level' (f.eks. '0,2' = oppgrader med 2 nivåer)."
+      }
+    },
+    "DeleteSquad": {
+      "summary": "Fjerner en nøytral tropp fra kartet.",
+      "params": {
+        "0": "Entity-SID for den nøytrale troppen som skal fjernes. Angis via Entity-feltet i egenskapspanelet i kartredigereren for den plasserte stabelen.",
+        "1": "Flagg (vanligvis 1)."
+      }
+    },
+    "TriggerClearCustom": {
+      "summary": "Tømmer/tilbakestiller en bestemt utløser slik at den kan utløses igjen.",
+      "params": {
+        "0": "Oppdrags-SID.",
+        "1": "Underoppdragsindeks (0-basert).",
+        "2": "Utløserindeks (0-basert).",
+        "3": "Flagg: 0 eller 1."
+      },
+      "tip": "Nyttig for gjentakende utløsere som vanligvis bare utløses én gang."
+    },
+    "EnableInterruption": {
+      "summary": "Aktiverer et avbrudd etter SID.",
+      "params": {
+        "0": "Avbrudds-SID."
+      }
+    },
+    "DisableInterruption": {
+      "summary": "Deaktiverer et avbrudd etter SID.",
+      "params": {
+        "0": "Avbrudds-SID."
+      }
+    },
+    "ChangeCampaignOneStep": {
+      "summary": "Går videre i kampanjen ett steg.",
+      "params": {
+        "0": "true eller false."
+      }
+    },
+    "AiBanArea": {
+      "summary": "Forbyr AI-helter å gå inn i området rundt en node.",
+      "params": {
+        "0": "Sentrumsnode-ID."
+      }
+    },
+    "AiUnbanArea": {
+      "summary": "Opphever et bevegelsesforbud for AI i området rundt en node.",
+      "params": {
+        "0": "Sentrumsnode-ID."
+      }
+    }
+  },
+  "conditions": {
+    "StartTurn": {
+      "summary": "Utløses ved starten av en bestemt tur for en bestemt spiller.",
+      "params": {
+        "0": "Turnummer (valgfri — utelat for å utløses hver tur).",
+        "1": "Spillerindeks (valgfri — utelat for hvilken som helst spiller)."
+      },
+      "tip": "Uten parametere utløses denne ved starten av hver tur for hver spiller. Bruk det ekstra Counter-feltet for å kreve at N turer har gått."
+    },
+    "StartWeek": {
+      "summary": "Utløses ved starten av en hvilken som helst uke.",
+      "tip": "Uker er hver 7. tur. Bruk denne til periodiske hendelser som ukentlige forsterkninger."
+    },
+    "AnyStartTurn": {
+      "summary": "Utløses ved starten av en hvilken som helst spillers tur.",
+      "tip": "Mer tillatende enn StartTurn. Brukes typisk sammen med Counter-betingelser for å time hendelser."
+    },
+    "Counter": {
+      "summary": "Sjekker verdien til en teller mot en terskel.",
+      "params": {
+        "0": "Teller-SID — telleren som skal sjekkes.",
+        "1": "Sammenligningsoperator: =, >, <, >=, <=, !=",
+        "2": "Verdi å sammenligne mot."
+      },
+      "tip": "Tellere må deklareres i Tellere-fanen. Denne betingelsen kombineres vanligvis med andre ved hjelp av OG-logikk."
+    },
+    "HeroKill": {
+      "summary": "Utløses når den oppgitte helten blir drept i kamp.",
+      "params": {
+        "0": "Helt-SID."
+      },
+      "tip": "Utløses når helten er beseiret, ikke nødvendigvis fjernet fra kartet. Kombiner med GameLose for tapsbetingelser."
+    },
+    "SquadKill": {
+      "summary": "Utløses når en bestemt nøytral tropp er beseiret.",
+      "params": {
+        "0": "Entity-SID for den nøytrale stabelen — angis via Entity-feltet i egenskapspanelet i kartredigereren for den plasserte stabelen. Dette er ikke enhetstype-SID-en."
+      },
+      "tip": "Entity-SID-en angis i kartredigereren når du plasserer den nøytrale stabelen, ikke enhetstypenavnet (bruk f.eks. 'E_Squad_Dragon', ikke 'Dragon')."
+    },
+    "ObjectLose": {
+      "summary": "Utløses når spilleren mister et bestemt kartobjekt (f.eks. en by).",
+      "params": {
+        "0": "Entity-SID for kartobjektet. Angis via Entity-feltet i egenskapspanelet i kartredigereren for det plasserte objektet."
+      }
+    },
+    "ObjectInteractionBefore": {
+      "summary": "Utløses før spilleren samhandler med et kartobjekt.",
+      "params": {
+        "0": "Entity-SID for kartobjektet. Angis via Entity-feltet i egenskapspanelet i kartredigereren for det plasserte objektet."
+      },
+      "tip": "Bruk 'Before' når du vil avskjære samhandlingen og vise en dialog før standardhendelsen utløses."
+    },
+    "ObjectInteractionAfter": {
+      "summary": "Utløses etter at spilleren samhandler med et kartobjekt.",
+      "params": {
+        "0": "Entity-SID for kartobjektet. Angis via Entity-feltet i egenskapspanelet i kartredigereren for det plasserte objektet."
+      }
+    },
+    "ObjectCaptureEntity": {
+      "summary": "Utløses når spilleren erobrer en kartentitet (gruve, by osv.).",
+      "params": {
+        "0": "Entity-SID for det erobrebare objektet. Angis via Entity-feltet i egenskapspanelet i kartredigereren for det plasserte objektet."
+      }
+    },
+    "NodeRevealed": {
+      "summary": "Utløses når en bestemt kartnode avdekkes (krigståken løftes).",
+      "params": {
+        "0": "Node-ID."
+      }
+    },
+    "SquadInteraction": {
+      "summary": "Utløses når spilleren samhandler med (nærmer seg) en nøytral tropp.",
+      "params": {
+        "0": "Entity-SID for den nøytrale stabelen. Angis via Entity-feltet i egenskapspanelet i kartredigereren for den plasserte stabelen."
+      },
+      "tip": "Utløses før kampen starter. Nyttig for sekvenser med dialog før kamp."
+    },
+    "UnitOwnSide": {
+      "summary": "Sjekker hvor mange enheter av en type spillerens side eier på tvers av alle hærer.",
+      "params": {
+        "0": "Enhetstype-SID.",
+        "1": "Sammenligningsoperator.",
+        "2": "Terskelverdi."
+      }
+    },
+    "UnitOwnHero": {
+      "summary": "Sjekker hvor mange enheter av en type en bestemt helt eier.",
+      "params": {
+        "0": "Helt-SID.",
+        "1": "Enhetstype-SID.",
+        "2": "Sammenligningsoperator.",
+        "3": "Terskelverdi."
+      }
+    },
+    "UnitKill": {
+      "summary": "Utløses når en enhetstype blir drept.",
+      "params": {
+        "0": "Enhetstype-SID."
+      },
+      "tip": "Bruk det ekstra Counter-feltet for å kreve N drap før denne betingelsen utløses (f.eks. drep 10 goblins)."
+    },
+    "UnitLose": {
+      "summary": "Utløses når en enhetstype går tapt (drept på din side).",
+      "params": {
+        "0": "Enhetstype-SID."
+      },
+      "tip": "Bruk det ekstra Counter-feltet for å angi en tapsgrense."
+    },
+    "UnitHire": {
+      "summary": "Utløses når en enhetstype rekrutteres/hyres.",
+      "params": {
+        "0": "Enhetstype-SID."
+      },
+      "tip": "Bruk det ekstra Counter-feltet for å kreve N hyringer."
+    },
+    "ResCounter": {
+      "summary": "Sjekker spillerens ressurslager mot en verdi.",
+      "params": {
+        "0": "Ressurstype: gold, wood, ore, crystals, mercury, gemstones, dust.",
+        "1": "Sammenligningsoperator.",
+        "2": "Terskelverdi."
+      }
+    },
+    "ItemOwnSide": {
+      "summary": "Sjekker om spillerens side eier en bestemt artefakt.",
+      "params": {
+        "0": "Artefakt-SID.",
+        "1": "Sammenligningsoperator.",
+        "2": "Antall (vanligvis 0 for «har ikke», 1 for «har minst én»)."
+      }
+    },
+    "DifficultyCustomMap": {
+      "summary": "Sjekker vanskelighetsinnstillingen for det egendefinerte kartet.",
+      "params": {
+        "0": "Type: Neutral (nøytral styrke), Economy (startressurser) eller Ai (AI-styrke).",
+        "1": "Nivå: 1 (lett), 2 (middels) eller 3 (vanskelig)."
+      },
+      "tip": "Bruk denne til å skalere fiendens styrke eller belønninger per vanskelighetsnivå."
+    },
+    "PlayerDefeated": {
+      "summary": "Utløses når en bestemt spiller er beseiret.",
+      "params": {
+        "0": "Spillerindeks: 0, 1, 2 eller 3."
+      }
+    }
+  },
+  "fields": {
+    "quest.sid": "Unik identifikator for dette oppdraget. Refereres til av oppdragsrelaterte handlinger og betingelser.",
+    "quest.name": "Lokaliserings-SID som vises som oppdragsnavn i oppdragsloggen i spillet. Må ha et samsvarende token i customMaps.json.",
+    "quest.description": "Lokaliserings-SID som vises som oppdragsbeskrivelse i oppdragsloggen. Må ha et samsvarende token i customMaps.json.",
+    "quest.sharing": "Styrer hvordan oppdraget eies. 'Clone' lager en egen kopi per spiller (standard). 'Ai' begrenser oppdraget til bare AI-spillere. Påkrevd av motoren.",
+    "quest.comment": "Utviklernotat knyttet til dette oppdraget. Ignoreres av spillmotoren — bare som referanse for kartmakeren.",
+    "quest.activeOnStart": "Hvis true, er dette oppdraget aktivt når kartet lastes. Hvis false, må det aktiveres via en ActivateQuest-handling.",
+    "quest.main": "Markerer dette oppdraget som et primærmål. Vises fremtredende i spillerens oppdragslogg.",
+    "quest.hidden": "Hvis true, vises dette oppdraget aldri i spillerens oppdragslogg, selv når det er aktivt. Nyttig for interne bokføringsoppdrag.",
+    "subquest.sid": "Unik identifikator for dette underoppdragstrinnet. Refereres til av SubQuestActivate- og SubQuestDeactivate-handlinger.",
+    "subquest.name": "Lokaliserings-SID som vises som underoppdragsnavn i oppdragsloggen. Må ha et samsvarende token i customMaps.json.",
+    "subquest.comment": "Utviklernotat knyttet til dette underoppdraget. Ignoreres av spillmotoren — bare som referanse for kartmakeren.",
+    "subquest.activeOnStart": "Hvis true, er dette underoppdragstrinnet aktivt når oppdraget starter. Hvis false, aktiver det manuelt via SubQuestActivate.",
+    "trigger.conditionsLogic": "'And' krever at alle betingelser er sanne før utløseren utløses. 'Or' utløses så snart én enkelt betingelse er sann.",
+    "trigger.repeat": "Hvis true, utløses denne utløseren hver gang betingelsene er oppfylt, ikke bare første gang. Bruk med forsiktighet — ubeskyttede gjentakende utløsere kan utløses mange ganger per tur.",
+    "counter.sid": "Unik identifikator for denne telleren. Brukes i CounterSet, CounterPlus, CounterMinus og Counter-betingelser.",
+    "counter.value": "Startverdi for telleren når kartet lastes. Vanligvis 0.",
+    "interruption.sid": "Unik identifikator for dette avbruddet. Brukes av EnableInterruption- og DisableInterruption-handlinger.",
+    "interruption.interruption": "Kamphendelsen denne kroken lytter etter. Alternativer: BeforeIamVsHero, AfterIamWinVsHero, BeforeHeroVsHero, AfterHeroWinVsHero.",
+    "interruption.activeOnStart": "Hvis true, er denne avbruddskroken aktiv når kartet lastes. Hvis false, må den aktiveres via en EnableInterruption-handling.",
+    "interruption.p": "Parametere for dette avbruddet. For alle fire kjente avbruddstyper er p[0] entity-SID-en til en bestemt helt plassert på kartet (angis via Entity-feltet i kartredigereren). La stå tom for å samsvare med hvilken som helst helt."
+  }
+}
