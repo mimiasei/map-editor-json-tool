@@ -9,6 +9,7 @@ import { Clock, Dices, FilePlus, FolderOpen, Keyboard, Upload, X } from '@/compo
 import { isTauri } from '@/lib/native-fs'
 import { getRecentFiles, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import { cn } from '@/lib/utils'
+import { useStartScreenBackground } from '@/lib/start-screen-color'
 
 function fire(name: string, detail?: string) {
   window.dispatchEvent(detail === undefined ? new Event(name) : new CustomEvent(name, { detail }))
@@ -38,6 +39,7 @@ export default function StartScreen() {
   const [version, setVersion] = useState<string | null>(null)
   const [recent, setRecent] = useState<RecentFile[]>(() => (desktop ? getRecentFiles() : []))
   const [recentOpen, setRecentOpen] = useState(false)
+  const background = useStartScreenBackground()
 
   useEffect(() => {
     if (!desktop) return
@@ -45,7 +47,7 @@ export default function StartScreen() {
   }, [desktop])
 
   return (
-    <div className="flex h-full items-start justify-center overflow-auto rounded-lg bg-[var(--column-right)] py-10 dark:bg-card">
+    <div className="flex h-full items-start justify-center overflow-auto rounded-lg py-10" style={{ backgroundColor: background }}>
       <div className="w-full max-w-[864px] space-y-6 px-4">
         <div className="grid grid-cols-3 gap-3">
           <div className="flex aspect-square flex-col justify-between p-3">
