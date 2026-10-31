@@ -45,7 +45,7 @@ export default function StartScreen() {
   }, [desktop])
 
   return (
-    <div className="flex h-full items-start justify-center overflow-auto py-10">
+    <div className="flex h-full items-start justify-center overflow-auto rounded-lg bg-[var(--column-right)] py-10 dark:bg-card">
       <div className="w-full max-w-[864px] space-y-6 px-4">
         <div className="grid grid-cols-3 gap-3">
           <div className="flex aspect-square flex-col justify-between p-3">
