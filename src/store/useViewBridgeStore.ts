@@ -146,7 +146,8 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
 
   rmgOpen: false,
   openRmg: () => set({ rmgOpen: true, mapGridOpen: false }),
-  closeRmg: () => set({ rmgOpen: false }),
+  // Random Map is opened from the Map tab, so closing it goes back there (the start screen when no map is loaded).
+  closeRmg: () => set({ rmgOpen: false, mapGridOpen: true }),
 
   pendingGeneratedWarnings: null,
   reportGeneratedWarnings: (warnings) => set({ pendingGeneratedWarnings: warnings }),
