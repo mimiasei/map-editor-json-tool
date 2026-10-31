@@ -71,14 +71,14 @@ export default function StartScreen() {
           recent.length === 0 ? (
             <p className="text-xs text-muted-foreground">{t('startScreen.noRecent')}</p>
           ) : (
-            <div className="rounded-lg border border-border bg-card">
+            <div className="flex flex-col gap-2">
               {recent.slice(0, 8).map((f) => (
-                <div key={f.path} className="flex items-center border-b border-border last:border-b-0">
+                <div key={f.path} className="flex items-center rounded-full border border-border bg-card pl-4 pr-1.5 transition-colors hover:bg-accent/50">
                   <button
                     type="button"
                     onClick={() => fire('oe:open-recent-file', f.path)}
                     title={f.path}
-                    className="min-w-0 flex-1 px-3 py-2 text-left hover:bg-accent/50"
+                    className="min-w-0 flex-1 py-2 text-left"
                   >
                     <span className="block truncate text-sm">{f.name}</span>
                     <span className="block truncate text-xs text-muted-foreground">{f.path}</span>
@@ -86,7 +86,7 @@ export default function StartScreen() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="mr-1 h-7 w-7 p-0"
+                    className="h-7 w-7 shrink-0 rounded-full p-0"
                     title={t('startScreen.removeRecent')}
                     onClick={() => { removeRecentFile(f.path); setRecent(getRecentFiles()) }}
                   >
