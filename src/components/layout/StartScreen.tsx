@@ -8,16 +8,14 @@ import { Button } from '@/components/ui/button'
 import { Clock, Dices, FilePlus, FolderOpen, Keyboard, Upload, X } from '@/components/ui/icons'
 import { isTauri } from '@/lib/native-fs'
 import { getRecentFiles, removeRecentFile, type RecentFile } from '@/lib/recent-files'
-import { comboLabel } from '@/lib/hotkeys'
 import { cn } from '@/lib/utils'
-import { useHotkeyCombo } from '@/store/useHotkeyStore'
 
 function fire(name: string, detail?: string) {
   window.dispatchEvent(detail === undefined ? new Event(name) : new CustomEvent(name, { detail }))
 }
 
-// One big square cell: the icon does most of the talking, the label and shortcut sit under it.
-function Cell({ icon, label, combo, active, onClick }: { icon: ReactNode; label: string; combo?: string; active?: boolean; onClick: () => void }) {
+// One big square cell: the icon does most of the talking, the label sits under it.
+function Cell({ icon, label, active, onClick }: { icon: ReactNode; label: string; active?: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -30,7 +28,6 @@ function Cell({ icon, label, combo, active, onClick }: { icon: ReactNode; label:
     >
       <span className="text-muted-foreground [&_svg]:h-14 [&_svg]:w-14">{icon}</span>
       <span className="text-sm font-medium">{label}</span>
-      {combo && <span className="text-xs text-muted-foreground">{comboLabel(combo)}</span>}
     </button>
   )
 }
@@ -40,9 +37,6 @@ export default function StartScreen() {
   const desktop = isTauri()
   const [version, setVersion] = useState<string | null>(null)
   const [recent, setRecent] = useState<RecentFile[]>(() => (desktop ? getRecentFiles() : []))
-  const newMapCombo = useHotkeyCombo('newMap')
-  const openMapCombo = useHotkeyCombo('openMap')
-  const randomMapCombo = useHotkeyCombo('randomMap')
   const [recentOpen, setRecentOpen] = useState(false)
 
   useEffect(() => {
@@ -61,14 +55,14 @@ export default function StartScreen() {
               <p className="text-sm font-semibold">{version ? `v${version}` : ''}</p>
             </div>
           </div>
-          {desktop && <Cell icon={<FilePlus />} label={t('layout.toolbar.newMap')} combo={newMapCombo} onClick={() => fire('oe:new-map')} />}
+          {desktop && <Cell icon={<FilePlus />} label={t('layout.toolbar.newMap')} onClick={() => fire('oe:new-map')} />}
           <Cell
             icon={desktop ? <FolderOpen /> : <Upload />}
             label={desktop ? t('startScreen.openMap') : t('layout.toolbar.importMap')}
-            combo={openMapCombo}
+           
             onClick={() => fire('oe:open-map')}
           />
-          <Cell icon={<Dices />} label={t('common.generateRandomMapDialog.generateRandomMap')} combo={randomMapCombo} onClick={() => fire('oe:random-map')} />
+          <Cell icon={<Dices />} label={t('common.generateRandomMapDialog.generateRandomMap')} onClick={() => fire('oe:random-map')} />
           {desktop && <Cell icon={<Upload />} label={t('startScreen.importH3')} onClick={() => fire('oe:import-h3m')} />}
           {desktop && <Cell icon={<Clock />} label={t('startScreen.recent')} active={recentOpen} onClick={() => { setRecent(getRecentFiles()); setRecentOpen((v) => !v) }} />}
         </div>
