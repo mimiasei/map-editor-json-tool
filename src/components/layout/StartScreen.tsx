@@ -53,7 +53,7 @@ export default function StartScreen() {
               <h1 className="text-sm font-medium text-foreground">{t('startScreen.title')}</h1>
               <div className="mt-3 flex flex-col gap-3 text-secondary">
                 <p className="text-[2rem] font-bold leading-tight">{t('startScreen.subtitle')}</p>
-                <p className="text-sm font-semibold">{version ? `v${version}` : ''}</p>
+                <p className="text-sm font-medium text-foreground">{version ? `v${version}` : ''}</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" className="-ml-2 self-start" onClick={() => fire('oe:whats-new')}>
