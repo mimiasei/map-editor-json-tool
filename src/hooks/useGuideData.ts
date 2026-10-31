@@ -12,12 +12,14 @@ import tooltipsDe from '@/data/tooltips.de.json'
 import tooltipsUk from '@/data/tooltips.uk.json'
 import tooltipsNb from '@/data/tooltips.nb.json'
 import tooltipsRu from '@/data/tooltips.ru.json'
+import tooltipsPl from '@/data/tooltips.pl.json'
 import templateIndexData from '@/data/templates/index.json'
 import templateIndexFr from '@/data/templates/index.fr.json'
 import templateIndexDe from '@/data/templates/index.de.json'
 import templateIndexUk from '@/data/templates/index.uk.json'
 import templateIndexNb from '@/data/templates/index.nb.json'
 import templateIndexRu from '@/data/templates/index.ru.json'
+import templateIndexPl from '@/data/templates/index.pl.json'
 import i18n from '@/lib/i18n'
 import {
   buildGuideIndex,
@@ -71,7 +73,7 @@ const templateImporters: Record<string, () => Promise<unknown>> = {
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /** The tooltip text per UI language code; the ids (action/condition types, field keys) are the same in every file. English is the fallback. */
-const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData, de: tooltipsDe as TooltipData, uk: tooltipsUk as TooltipData, nb: tooltipsNb as TooltipData, ru: tooltipsRu as TooltipData }
+const TOOLTIPS_BY_LANGUAGE: Record<string, TooltipData> = { en: tooltipsData as TooltipData, fr: tooltipsFr as TooltipData, de: tooltipsDe as TooltipData, uk: tooltipsUk as TooltipData, nb: tooltipsNb as TooltipData, ru: tooltipsRu as TooltipData, pl: tooltipsPl as TooltipData }
 
 /** Returns the full tooltip dataset (actions, conditions, fields) in the UI language. */
 export function useTooltips(): TooltipData {
@@ -88,7 +90,7 @@ export function useGuideIndex() {
  * The translated text of the templates per UI language code: category labels, template names and descriptions, and the annotation banners.
  * Only the display text is translated; the template's quests, counters and sids are written into the user's map and stay as they are.
  */
-const TEMPLATE_TEXT_BY_LANGUAGE: Record<string, typeof templateIndexFr> = { fr: templateIndexFr, de: templateIndexDe, uk: templateIndexUk, nb: templateIndexNb, ru: templateIndexRu }
+const TEMPLATE_TEXT_BY_LANGUAGE: Record<string, typeof templateIndexFr> = { fr: templateIndexFr, de: templateIndexDe, uk: templateIndexUk, nb: templateIndexNb, ru: templateIndexRu, pl: templateIndexPl }
 
 /** Returns the template index (categories + template metadata) in the UI language. */
 export function useTemplateIndex(): TemplateIndex {

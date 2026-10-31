@@ -1,0 +1,600 @@
+{
+  "actions": {
+    "GameVictory": {
+      "summary": "Wyświetla graczowi ekran zwycięstwa.",
+      "tip": "Użyj tego na końcu ostatniego zadania, aby ukończyć mapę. Przed wywołaniem upewnij się, że wszystkie kluczowe cele są wykonane."
+    },
+    "GameLose": {
+      "summary": "Wyświetla graczowi ekran porażki.",
+      "tip": "Zwykle używane wewnątrz wyzwalaczy ObjectLose lub HeroKill, aby wymusić warunki przegranej."
+    },
+    "Dialog": {
+      "summary": "Pokazuje dialog fabularny o podanym kluczu.",
+      "params": {
+        "0": "Klucz dialogu — musi odpowiadać ID dialogu w folderze DB/dialogs/ w pliku ZIP twojej mapy."
+      },
+      "tip": "JSON dialogu i jego tokeny lokalizacji muszą być zawarte w towarzyszącym pliku ZIP mapy. Użyj „Eksportuj ZIP”, aby je spakować."
+    },
+    "RandomDialog": {
+      "summary": "Odtwarza losowo wybrany dialog z podanej listy kluczy.",
+      "params": {
+        "0": "Klucz dialogu 1 (wymagany).",
+        "1": "Klucz dialogu 2 (opcjonalny).",
+        "2": "Klucz dialogu 3 (opcjonalny).",
+        "3": "Klucz dialogu 4 (opcjonalny).",
+        "4": "Klucz dialogu 5 (opcjonalny)."
+      },
+      "tip": "Dobre do urozmaicania postaci niezależnych. Wszystkie wymienione dialogi muszą istnieć w pliku ZIP twojej mapy."
+    },
+    "Print": {
+      "summary": "Wypisuje komunikat diagnostyczny lub komunikat o osiągnięciu.",
+      "params": {
+        "0": "Ciąg komunikatu lub SID lokalizacji."
+      },
+      "tip": "Używane głównie do debugowania podczas tworzenia. Komunikat pojawia się w dzienniku gry."
+    },
+    "CurrentSubQuestDone": {
+      "summary": "Oznacza aktualnie aktywne podzadanie jako ukończone.",
+      "tip": "Używaj tego zamiast SubQuestDone, gdy jesteś w wyzwalaczu samego podzadania — jest prostsze i pozwala uniknąć wpisywania ID zadań na stałe."
+    },
+    "SubQuestActivate": {
+      "summary": "Aktywuje wybrane podzadanie zadania.",
+      "params": {
+        "0": "SID zadania — zadania, do którego należy podzadanie.",
+        "1": "SID lub indeks podzadania — podzadanie do aktywowania."
+      },
+      "tip": "Użyj, aby odblokować zadanie poboczne z wyzwalacza innego zadania. Przy liniowym postępie lepszy jest NextSubQuest."
+    },
+    "SubQuestDeactivate": {
+      "summary": "Dezaktywuje wybrane podzadanie zadania.",
+      "params": {
+        "0": "SID zadania.",
+        "1": "SID lub indeks podzadania."
+      }
+    },
+    "NextQuest": {
+      "summary": "Przechodzi do następnego zadania w serii.",
+      "params": {
+        "0": "SID zadania — zadania, do którego należy przejść."
+      }
+    },
+    "EndQuest": {
+      "summary": "Kończy (zamyka) zadanie.",
+      "params": {
+        "0": "SID zadania."
+      },
+      "tip": "Zadanie znika z dziennika zadań. Użyj po ukończeniu wszystkich podzadań."
+    },
+    "NextSubQuest": {
+      "summary": "Aktywuje następne podzadanie według SID lub indeksu liczbowego.",
+      "params": {
+        "0": "SID podzadania lub indeks liczony od 0."
+      }
+    },
+    "SubQuestDone": {
+      "summary": "Oznacza wybrane podzadanie jako ukończone spoza jego własnego zadania.",
+      "params": {
+        "0": "SID zadania.",
+        "1": "SID podzadania."
+      },
+      "tip": "Użyj, gdy jedno zadanie ma ukończyć podzadanie w innym zadaniu."
+    },
+    "NextAfterGroup": {
+      "summary": "Aktywuje następne podzadanie, gdy wszystkie podzadania w grupie są ukończone.",
+      "params": {
+        "0": "SID grupy.",
+        "1": "SID następnego podzadania do aktywowania."
+      },
+      "tip": "Przydatne przy opcjonalnych celach pobocznych — poczekaj na wszystkie, zanim przejdziesz dalej w głównej linii."
+    },
+    "CounterSet": {
+      "summary": "Ustawia licznik na podaną wartość.",
+      "params": {
+        "0": "SID licznika.",
+        "1": "Nowa wartość (liczba całkowita)."
+      },
+      "tip": "Liczniki muszą być zadeklarowane w zakładce Liczniki przed użyciem."
+    },
+    "CounterPlus": {
+      "summary": "Zwiększa licznik o podaną wartość.",
+      "params": {
+        "0": "SID licznika.",
+        "1": "Wartość do dodania (zwykle 1)."
+      }
+    },
+    "CounterMinus": {
+      "summary": "Zmniejsza licznik o podaną wartość.",
+      "params": {
+        "0": "SID licznika.",
+        "1": "Wartość do odjęcia."
+      }
+    },
+    "CounterSetRandom": {
+      "summary": "Ustawia licznik na losową liczbę całkowitą między min a max (włącznie).",
+      "params": {
+        "0": "SID licznika.",
+        "1": "Wartość minimalna.",
+        "2": "Wartość maksymalna."
+      }
+    },
+    "GiveUnitHero": {
+      "summary": "Dodaje jednostki do armii bohatera.",
+      "params": {
+        "0": "SID jednostki — typ stworzenia do przyznania.",
+        "1": "Liczba — ile jednostek.",
+        "2": "SID bohatera — bohatera, który je otrzyma."
+      },
+      "tip": "Jednostki są dodawane do tych, które bohater już ma. Jeśli bohater nie ma wolnych miejsc, jednostki trafiają do pierwszego dostępnego."
+    },
+    "GiveUnitHeroPerWeek": {
+      "summary": "Dodaje jednostki do armii bohatera co tydzień.",
+      "params": {
+        "0": "SID jednostki.",
+        "1": "Liczba na tydzień.",
+        "2": "SID bohatera."
+      },
+      "tip": "Powtarza się automatycznie. Umieść to w wyzwalaczu StartWeek bez warunków albo zabezpiecz licznikiem, jeśli ma się zatrzymać."
+    },
+    "RemoveUnitHero": {
+      "summary": "Usuwa jednostki z armii bohatera.",
+      "params": {
+        "0": "SID jednostki.",
+        "1": "Liczba do usunięcia lub 'all', aby usunąć wszystkie jednostki tego typu.",
+        "2": "SID bohatera."
+      }
+    },
+    "GiveStatsHero": {
+      "summary": "Dodaje bohaterowi punkty statystyk.",
+      "params": {
+        "0": "Nazwa statystyki: offence, defence, spellPower, intelligence, movementBonus lub moral.",
+        "1": "SID bohatera.",
+        "2": "Wartość do dodania."
+      }
+    },
+    "GiveExpHero": {
+      "summary": "Daje bohaterowi punkty doświadczenia.",
+      "params": {
+        "0": "Ilość doświadczenia.",
+        "1": "SID bohatera (opcjonalny — pomiń, aby dać obecnemu bohaterowi gracza)."
+      }
+    },
+    "GiveItemHero": {
+      "summary": "Daje bohaterowi artefakt.",
+      "params": {
+        "0": "SID artefaktu.",
+        "1": "SID bohatera."
+      },
+      "tip": "Bohater musi istnieć na mapie. Jeśli plecak bohatera jest pełny, przedmiot może przepaść."
+    },
+    "AddSkillHero": {
+      "summary": "Dodaje bohaterowi jeden poziom umiejętności.",
+      "params": {
+        "0": "SID umiejętności.",
+        "1": "SID bohatera."
+      },
+      "tip": "Wywołaj tę akcję wielokrotnie, aby dodać kilka poziomów tej samej umiejętności."
+    },
+    "AddSpellHero": {
+      "summary": "Uczy bohatera zaklęcia.",
+      "params": {
+        "0": "SID zaklęcia.",
+        "1": "SID bohatera."
+      }
+    },
+    "AddBuffHeroDays": {
+      "summary": "Nakłada na bohatera wzmocnienie na N dni.",
+      "params": {
+        "0": "SID wzmocnienia.",
+        "1": "SID bohatera.",
+        "2": "Czas trwania w dniach. Użyj -1 dla wzmocnienia stałego."
+      }
+    },
+    "RemoveBuffHero": {
+      "summary": "Usuwa wzmocnienie z bohatera.",
+      "params": {
+        "0": "SID wzmocnienia.",
+        "1": "SID bohatera (opcjonalny — zostaw puste, aby usunąć ze wszystkich bohaterów)."
+      }
+    },
+    "HeroResetMovePointsMax": {
+      "summary": "Przywraca punkty ruchu bohatera do maksimum.",
+      "params": {
+        "0": "SID bohatera."
+      },
+      "tip": "Przydatne po HeroStop lub na początku sekwencji przerywnika."
+    },
+    "SpawnHero": {
+      "summary": "Tworzy bohatera na mapie w podanym węźle dla wybranego gracza.",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "ID węzła — węzeł mapy, w którym pojawi się bohater.",
+        "2": "Indeks gracza (liczony od 1: 1 = pierwszy gracz)."
+      }
+    },
+    "DeleteHero": {
+      "summary": "Trwale usuwa bohatera z mapy.",
+      "params": {
+        "0": "SID bohatera."
+      },
+      "tip": "Nie uruchamia to warunków HeroKill."
+    },
+    "DisableAiHero": {
+      "summary": "Wyłącza sterowanie SI dla bohatera.",
+      "params": {
+        "0": "SID bohatera."
+      }
+    },
+    "TeleportHero": {
+      "summary": "Natychmiast teleportuje bohatera do węzła mapy.",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "ID węzła docelowego."
+      }
+    },
+    "HeroToNode": {
+      "summary": "Przesuwa bohatera w stronę węzła mapy (wyznaczanie trasy, nie natychmiast).",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "ID węzła docelowego."
+      }
+    },
+    "HeroToHero": {
+      "summary": "Przesuwa jednego bohatera w stronę drugiego, wyznaczając trasę.",
+      "params": {
+        "0": "SID poruszającego się bohatera.",
+        "1": "SID bohatera docelowego."
+      }
+    },
+    "HeroStop": {
+      "summary": "Zatrzymuje bieżącą trasę ruchu bohatera.",
+      "tip": "Wywołaj to przed rozpoczęciem przerywnika lub ważnej sekwencji skryptowej, aby bohater nie odszedł."
+    },
+    "ChangeManaHero": {
+      "summary": "Ustawia manę bohatera na podaną wartość.",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "Ilość many."
+      }
+    },
+    "SetHeroMovePoints": {
+      "summary": "Ustawia punkty ruchu bohatera na podaną wartość.",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "Wartość punktów ruchu."
+      }
+    },
+    "ResurrectHero": {
+      "summary": "Wskrzesza pokonanego bohatera w węźle mapy.",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "ID węzła, w którym bohater ma zostać wskrzeszony.",
+        "2": "Flaga (zwykle 0)."
+      }
+    },
+    "GiveRes": {
+      "summary": "Daje graczowi podaną ilość zasobu.",
+      "params": {
+        "0": "Typ zasobu: gold, wood, ore, crystals, mercury, gemstones lub dust.",
+        "1": "Ilość."
+      }
+    },
+    "RemoveRes": {
+      "summary": "Odbiera zasób z zapasów gracza.",
+      "params": {
+        "0": "Typ zasobu.",
+        "1": "Ilość do odebrania."
+      },
+      "tip": "Nie sprawdza, czy gracz ma wystarczająco dużo — odebranie więcej, niż jest dostępne, ustawia zasób na 0."
+    },
+    "MoveCamera": {
+      "summary": "Przesuwa kamerę, aby skupić się na węźle mapy.",
+      "params": {
+        "0": "ID węzła, na którym ma się skupić."
+      }
+    },
+    "RevealFogOfWar": {
+      "summary": "Odsłania mgłę wojny wokół węzła.",
+      "params": {
+        "0": "ID węzła centralnego.",
+        "1": "Promień odsłonięcia w polach mapy."
+      }
+    },
+    "DeleteEntity": {
+      "summary": "Trwale usuwa element mapy (blokujący obiekt, dekorację, strefę).",
+      "params": {
+        "0": "SID encji obiektu do usunięcia. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego obiektu."
+      }
+    },
+    "SpawnObject": {
+      "summary": "Tworzy w węźle obiekt, z którym można wchodzić w interakcję.",
+      "params": {
+        "0": "SID typu obiektu.",
+        "1": "ID węzła, w którym obiekt ma się pojawić.",
+        "2": "Flaga (zwykle false).",
+        "3": "SID encji do przypisania utworzonemu obiektowi (opcjonalny). Ustaw go, aby odwoływać się do obiektu w innych akcjach. Musi być unikalny na mapie."
+      }
+    },
+    "SpawnMapObject": {
+      "summary": "Tworzy w węźle dekorację mapy lub obiekt bez interakcji.",
+      "params": {
+        "0": "SID typu obiektu.",
+        "1": "ID węzła, w którym obiekt ma się pojawić.",
+        "2": "Flaga (zwykle 0)."
+      }
+    },
+    "SetActivePortal": {
+      "summary": "Włącza lub wyłącza portal.",
+      "params": {
+        "0": "SID encji portalu. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego portalu.",
+        "1": "true, aby włączyć, false, aby wyłączyć."
+      }
+    },
+    "EntityActionsOff": {
+      "summary": "Wyłącza wszystkie interakcje z elementem mapy (nie da się go kliknąć).",
+      "params": {
+        "0": "SID encji obiektu do wyłączenia. Ustaw go w polu Encja w panelu właściwości edytora mapy."
+      }
+    },
+    "SetQuestMarker": {
+      "summary": "Dołącza do elementu mapy efekt VFX znacznika zadania.",
+      "params": {
+        "0": "SID encji obiektu mapy, do którego ma zostać dołączony znacznik. Ustaw go w polu Encja w panelu właściwości edytora mapy.",
+        "1": "Ścieżka VFX (np. effects/global_map/quest_mark_silver_01)."
+      }
+    },
+    "SetActiveQuestMarker": {
+      "summary": "Pokazuje lub ukrywa znacznik zadania już dołączony do encji.",
+      "params": {
+        "0": "SID encji obiektu mapy, do którego dołączony jest znacznik.",
+        "1": "true, aby pokazać, false, aby ukryć."
+      }
+    },
+    "CreateVFX": {
+      "summary": "Tworzy efekt VFX w węźle.",
+      "params": {
+        "0": "SID typu VFX.",
+        "1": "ID węzła.",
+        "2": "Flaga 1 (zwykle false).",
+        "3": "Flaga 2 (zwykle true).",
+        "4": "SID encji do przypisania temu egzemplarzowi VFX (opcjonalny). Pozwala później przełączać go przez SetActiveVFX. Musi być unikalny na mapie."
+      }
+    },
+    "SetActiveVFX": {
+      "summary": "Pokazuje lub ukrywa encję VFX.",
+      "params": {
+        "0": "SID encji VFX do pokazania lub ukrycia.",
+        "1": "true, aby pokazać, false, aby ukryć."
+      }
+    },
+    "SetActiveMarker": {
+      "summary": "Pokazuje lub ukrywa strefę albo znacznik interakcji.",
+      "params": {
+        "0": "SID encji strefy lub znacznika do pokazania lub ukrycia. Ustaw go w polu Encja w panelu właściwości edytora mapy.",
+        "1": "true, aby pokazać, false, aby ukryć."
+      }
+    },
+    "IncreaseStrengthSquad": {
+      "summary": "Zwiększa siłę oddziału neutralnego.",
+      "params": {
+        "0": "SID encji oddziału neutralnego do wzmocnienia. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego stosu.",
+        "1": "Ciąg wzmocnienia w formacie 'tier,level' (np. '0,2' = wzmocnienie o 2 poziomy)."
+      }
+    },
+    "DeleteSquad": {
+      "summary": "Usuwa oddział neutralny z mapy.",
+      "params": {
+        "0": "SID encji oddziału neutralnego do usunięcia. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego stosu.",
+        "1": "Flaga (zwykle 1)."
+      }
+    },
+    "TriggerClearCustom": {
+      "summary": "Czyści/resetuje wybrany wyzwalacz, aby mógł zadziałać ponownie.",
+      "params": {
+        "0": "SID zadania.",
+        "1": "Indeks podzadania (liczony od 0).",
+        "2": "Indeks wyzwalacza (liczony od 0).",
+        "3": "Flaga: 0 lub 1."
+      },
+      "tip": "Przydatne przy powtarzalnych wyzwalaczach, które normalnie działają tylko raz."
+    },
+    "EnableInterruption": {
+      "summary": "Włącza przerwanie o podanym SID.",
+      "params": {
+        "0": "SID przerwania."
+      }
+    },
+    "DisableInterruption": {
+      "summary": "Wyłącza przerwanie o podanym SID.",
+      "params": {
+        "0": "SID przerwania."
+      }
+    },
+    "ChangeCampaignOneStep": {
+      "summary": "Przesuwa kampanię o jeden krok.",
+      "params": {
+        "0": "true lub false."
+      }
+    },
+    "AiBanArea": {
+      "summary": "Zabrania bohaterom SI wstępu na obszar wokół węzła.",
+      "params": {
+        "0": "ID węzła centralnego."
+      }
+    },
+    "AiUnbanArea": {
+      "summary": "Znosi zakaz ruchu SI na obszarze wokół węzła.",
+      "params": {
+        "0": "ID węzła centralnego."
+      }
+    }
+  },
+  "conditions": {
+    "StartTurn": {
+      "summary": "Zadziała na początku określonej tury dla określonego gracza.",
+      "params": {
+        "0": "Numer tury (opcjonalny — pomiń, aby działało w każdej turze).",
+        "1": "Indeks gracza (opcjonalny — pomiń dla dowolnego gracza)."
+      },
+      "tip": "Bez parametrów działa na początku każdej tury każdego gracza. Użyj dodatkowego pola Licznik, aby wymagać upływu N tur."
+    },
+    "StartWeek": {
+      "summary": "Zadziała na początku każdego tygodnia.",
+      "tip": "Tydzień to 7 tur. Użyj tego do zdarzeń okresowych, takich jak cotygodniowe posiłki."
+    },
+    "AnyStartTurn": {
+      "summary": "Zadziała na początku tury dowolnego gracza.",
+      "tip": "Mniej restrykcyjne niż StartTurn. Zwykle używane z warunkami Counter do odmierzania czasu zdarzeń."
+    },
+    "Counter": {
+      "summary": "Porównuje wartość licznika z progiem.",
+      "params": {
+        "0": "SID licznika — licznika do sprawdzenia.",
+        "1": "Operator porównania: =, >, <, >=, <=, !=",
+        "2": "Wartość, z którą się porównuje."
+      },
+      "tip": "Liczniki muszą być zadeklarowane w zakładce Liczniki. Ten warunek zwykle łączy się z innymi logiką AND."
+    },
+    "HeroKill": {
+      "summary": "Zadziała, gdy wskazany bohater zginie w walce.",
+      "params": {
+        "0": "SID bohatera."
+      },
+      "tip": "Zadziała, gdy bohater zostanie pokonany, niekoniecznie usunięty z mapy. Połącz z GameLose dla warunków porażki."
+    },
+    "SquadKill": {
+      "summary": "Zadziała, gdy wybrany oddział neutralny zostanie pokonany.",
+      "params": {
+        "0": "SID encji stosu neutralnego — ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego stosu. To nie jest SID typu jednostki."
+      },
+      "tip": "SID encji ustawia się w edytorze mapy przy umieszczaniu stosu neutralnego, a nie jest to nazwa typu jednostki (np. użyj 'E_Squad_Dragon', nie 'Dragon')."
+    },
+    "ObjectLose": {
+      "summary": "Zadziała, gdy gracz straci wybrany obiekt mapy (np. miasto).",
+      "params": {
+        "0": "SID encji obiektu mapy. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego obiektu."
+      }
+    },
+    "ObjectInteractionBefore": {
+      "summary": "Zadziała przed interakcją gracza z obiektem mapy.",
+      "params": {
+        "0": "SID encji obiektu mapy. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego obiektu."
+      },
+      "tip": "Użyj „Before”, gdy chcesz przechwycić interakcję i pokazać dialog, zanim zadziała domyślne zdarzenie."
+    },
+    "ObjectInteractionAfter": {
+      "summary": "Zadziała po interakcji gracza z obiektem mapy.",
+      "params": {
+        "0": "SID encji obiektu mapy. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego obiektu."
+      }
+    },
+    "ObjectCaptureEntity": {
+      "summary": "Zadziała, gdy gracz zdobędzie element mapy (kopalnię, miasto itp.).",
+      "params": {
+        "0": "SID encji obiektu możliwego do zdobycia. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego obiektu."
+      }
+    },
+    "NodeRevealed": {
+      "summary": "Zadziała, gdy wybrany węzeł mapy zostanie odsłonięty (mgła wojny zniknie).",
+      "params": {
+        "0": "ID węzła."
+      }
+    },
+    "SquadInteraction": {
+      "summary": "Zadziała, gdy gracz wejdzie w interakcję z oddziałem neutralnym (zbliży się do niego).",
+      "params": {
+        "0": "SID encji stosu neutralnego. Ustaw go w polu Encja w panelu właściwości edytora mapy dla umieszczonego stosu."
+      },
+      "tip": "Uruchamia się przed rozpoczęciem walki. Przydatne w sekwencjach z dialogiem przed bitwą."
+    },
+    "UnitOwnSide": {
+      "summary": "Sprawdza, ile jednostek danego typu posiada strona gracza we wszystkich armiach.",
+      "params": {
+        "0": "SID typu jednostki.",
+        "1": "Operator porównania.",
+        "2": "Wartość progowa."
+      }
+    },
+    "UnitOwnHero": {
+      "summary": "Sprawdza, ile jednostek danego typu posiada wybrany bohater.",
+      "params": {
+        "0": "SID bohatera.",
+        "1": "SID typu jednostki.",
+        "2": "Operator porównania.",
+        "3": "Wartość progowa."
+      }
+    },
+    "UnitKill": {
+      "summary": "Zadziała, gdy jednostka danego typu zostanie zabita.",
+      "params": {
+        "0": "SID typu jednostki."
+      },
+      "tip": "Użyj dodatkowego pola Licznik, aby wymagać N zabójstw, zanim warunek zadziała (np. zabij 10 goblinów)."
+    },
+    "UnitLose": {
+      "summary": "Zadziała, gdy jednostka danego typu zostanie utracona (zabita po twojej stronie).",
+      "params": {
+        "0": "SID typu jednostki."
+      },
+      "tip": "Użyj dodatkowego pola Licznik, aby ustawić próg strat."
+    },
+    "UnitHire": {
+      "summary": "Zadziała, gdy jednostka danego typu zostanie zwerbowana/wynajęta.",
+      "params": {
+        "0": "SID typu jednostki."
+      },
+      "tip": "Użyj dodatkowego pola Licznik, aby wymagać N werbunków."
+    },
+    "ResCounter": {
+      "summary": "Porównuje zapasy zasobów gracza z wartością.",
+      "params": {
+        "0": "Typ zasobu: gold, wood, ore, crystals, mercury, gemstones, dust.",
+        "1": "Operator porównania.",
+        "2": "Wartość progowa."
+      }
+    },
+    "ItemOwnSide": {
+      "summary": "Sprawdza, czy strona gracza posiada wybrany artefakt.",
+      "params": {
+        "0": "SID artefaktu.",
+        "1": "Operator porównania.",
+        "2": "Liczba (zwykle 0 dla „nie ma”, 1 dla „ma co najmniej jeden”)."
+      }
+    },
+    "DifficultyCustomMap": {
+      "summary": "Sprawdza ustawienie poziomu trudności mapy niestandardowej.",
+      "params": {
+        "0": "Typ: Neutral (siła neutralnych), Economy (zasoby początkowe) lub Ai (siła SI).",
+        "1": "Poziom: 1 (łatwy), 2 (średni) lub 3 (trudny)."
+      },
+      "tip": "Użyj tego do skalowania siły wrogów lub nagród zależnie od poziomu trudności."
+    },
+    "PlayerDefeated": {
+      "summary": "Zadziała, gdy wybrany gracz zostanie pokonany.",
+      "params": {
+        "0": "Indeks gracza: 0, 1, 2 lub 3."
+      }
+    }
+  },
+  "fields": {
+    "quest.sid": "Unikalny identyfikator tego zadania. Odwołują się do niego akcje i warunki związane z zadaniami.",
+    "quest.name": "SID lokalizacji wyświetlany jako nazwa zadania w growym dzienniku zadań. Musi mieć pasujący token w customMaps.json.",
+    "quest.description": "SID lokalizacji wyświetlany jako opis zadania w dzienniku zadań. Musi mieć pasujący token w customMaps.json.",
+    "quest.sharing": "Określa, jak zadanie jest przypisane. 'Clone' tworzy osobną kopię dla każdego gracza (domyślnie). 'Ai' ogranicza zadanie wyłącznie do graczy SI. Wymagane przez silnik.",
+    "quest.comment": "Notatka dewelopera dołączona do tego zadania. Silnik gry ją ignoruje — tylko dla autora mapy.",
+    "quest.activeOnStart": "Jeśli true, zadanie jest aktywne po wczytaniu mapy. Jeśli false, trzeba je aktywować akcją ActivateQuest.",
+    "quest.main": "Oznacza to zadanie jako cel główny. Jest wyraźnie wyróżnione w dzienniku zadań gracza.",
+    "quest.hidden": "Jeśli true, zadanie nigdy nie jest pokazywane w dzienniku zadań gracza, nawet gdy jest aktywne. Przydatne dla zadań technicznych do księgowania stanu.",
+    "subquest.sid": "Unikalny identyfikator tego etapu podzadania. Odwołują się do niego akcje SubQuestActivate i SubQuestDeactivate.",
+    "subquest.name": "SID lokalizacji wyświetlany jako nazwa podzadania w dzienniku zadań. Musi mieć pasujący token w customMaps.json.",
+    "subquest.comment": "Notatka dewelopera dołączona do tego podzadania. Silnik gry ją ignoruje — tylko dla autora mapy.",
+    "subquest.activeOnStart": "Jeśli true, ten etap podzadania jest aktywny, gdy zadanie się zaczyna. Jeśli false, aktywuj go ręcznie przez SubQuestActivate.",
+    "trigger.conditionsLogic": "'And' wymaga, aby wszystkie warunki były prawdziwe, zanim wyzwalacz zadziała. 'Or' działa, gdy tylko jeden warunek jest prawdziwy.",
+    "trigger.repeat": "Jeśli true, wyzwalacz działa za każdym razem, gdy jego warunki są spełnione, a nie tylko za pierwszym. Używaj ostrożnie — niezabezpieczone powtarzalne wyzwalacze mogą działać wiele razy na turę.",
+    "counter.sid": "Unikalny identyfikator tego licznika. Używany w CounterSet, CounterPlus, CounterMinus i w warunkach Counter.",
+    "counter.value": "Początkowa wartość licznika po wczytaniu mapy. Zwykle 0.",
+    "interruption.sid": "Unikalny identyfikator tego przerwania. Używany przez akcje EnableInterruption i DisableInterruption.",
+    "interruption.interruption": "Zdarzenie bojowe, na które nasłuchuje ten hak. Opcje: BeforeIamVsHero, AfterIamWinVsHero, BeforeHeroVsHero, AfterHeroWinVsHero.",
+    "interruption.activeOnStart": "Jeśli true, ten hak przerwania jest aktywny po wczytaniu mapy. Jeśli false, trzeba go włączyć akcją EnableInterruption.",
+    "interruption.p": "Parametry tego przerwania. We wszystkich czterech znanych typach przerwań p[0] to SID encji konkretnego bohatera umieszczonego na mapie (ustawiany w polu Encja w edytorze mapy). Zostaw puste, aby pasowało do dowolnego bohatera."
+  }
+}
