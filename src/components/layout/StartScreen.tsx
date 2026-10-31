@@ -72,7 +72,7 @@ export default function StartScreen() {
             <p className="text-xs text-muted-foreground">{t('startScreen.noRecent')}</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {recent.slice(0, 8).map((f) => (
+              {recent.slice(0, 3).map((f) => (
                 <div key={f.path} className="flex items-center rounded-lg border border-border bg-card pl-4 pr-1.5 transition-colors hover:bg-accent/50">
                   <button
                     type="button"
