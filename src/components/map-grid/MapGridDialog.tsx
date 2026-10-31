@@ -96,6 +96,7 @@ import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { useHotkeys } from '@/hooks/useHotkeys'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import type { SubjectKey } from '@/lib/trigger-subjects'
 import type { MapSaveEdit } from '@/lib/map-save'
@@ -4189,45 +4190,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (or Ctrl+Y) redoes. A separate effect from Escape's above since it
   // needs to listen whenever there's history to undo/redo, independent of
   // which (if any) placing/paint/move mode is currently active.
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase()
-      if ((key !== 'z' && key !== 'y') || !(e.ctrlKey || e.metaKey)) return
-      const tag = (document.activeElement as HTMLElement | null)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-      const isRedo = key === 'y' || (key === 'z' && e.shiftKey)
-      const temporal = useMapDocumentStore.temporal.getState()
-      if (isRedo ? temporal.futureStates.length === 0 : temporal.pastStates.length === 0) return
-      e.preventDefault()
-      if (isRedo) useMapDocumentStore.getState().redo()
-      else useMapDocumentStore.getState().undo()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open])
+  const gridHistory = (redo: boolean) => {
+    const temporal = useMapDocumentStore.temporal.getState()
+    if (redo ? temporal.futureStates.length === 0 : temporal.pastStates.length === 0) return false
+    if (redo) useMapDocumentStore.getState().redo()
+    else useMapDocumentStore.getState().undo()
+  }
 
-  // Delete/Backspace deletes whichever placed object/marker/squad is
-  // currently selected — reuses the same startDelete confirm-arm flow as the
-  // trash button in MapGridCellContent (issue #167 Phase C), so it still
-  // gets the same deliberate confirmation UI rather than deleting instantly.
-  useEffect(() => {
-    if (!open || !canEditEntities) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return
-      const tag = (document.activeElement as HTMLElement | null)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-      if (moveState) return // an in-progress Move already owns arrow keys/Escape
-      const target = selectedItems.find((i) => i.key === inspectedItem?.key) ?? selectedItems[0] ?? null
-      if (!target) return
-      e.preventDefault()
-      // Make sure the confirm row is actually visible if the column was collapsed.
-      if (columnClosed && selectedNode !== null) selectNode(selectedNode)
-      startDelete(target)
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, canEditEntities, selectedItems, inspectedItem, moveState, columnClosed, selectedNode, selectNode])
+  // Delete/Backspace deletes whichever placed object/marker/squad is currently selected.
+  const deleteSelected = () => {
+    if (!canEditEntities) return false
+    if (moveState) return false // an in-progress Move already owns arrow keys/Escape
+    const target = selectedItems.find((i) => i.key === inspectedItem?.key) ?? selectedItems[0] ?? null
+    if (!target) return false
+    // Make sure the confirm row is actually visible if the column was collapsed.
+    if (columnClosed && selectedNode !== null) selectNode(selectedNode)
+    startDelete(target)
+  }
+
+  useHotkeys('mapGrid', {
+    gridUndo: () => gridHistory(false),
+    gridRedo: () => gridHistory(true),
+    gridRedoAlt: () => gridHistory(true),
+    gridDelete: deleteSelected,
+    gridDeleteAlt: deleteSelected,
+  }, open)
+
 
   const placingFootprintBounds = useMemo(() => {
     if (!activePlacingSid || hoveredNode === null) return null

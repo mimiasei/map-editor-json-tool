@@ -73,6 +73,7 @@ import {
   FileInput,
   Dices,
   BalanceScale,
+  Keyboard,
   LayoutGrid,
   Layers,
   ListChecks,
@@ -88,6 +89,9 @@ import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
+import HotkeysDialog from '@/components/common/HotkeysDialog'
+import { useHotkeyCombo } from '@/store/useHotkeyStore'
+import { comboLabel } from '@/lib/hotkeys'
 import WhatsNewDialog from '@/components/common/WhatsNewDialog'
 import PlayerBalancePanel, { DecorationBalanceSection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
@@ -188,8 +192,10 @@ export default function Toolbar({
   // A boolean selector, so map edits don't re-render the toolbar.
   const hasMap = useMapContextStore((s) => !!s.context)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
-  const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
-  const closeRmg = useViewBridgeStore((s) => s.closeRmg)
+  const goToQuests = useViewBridgeStore((s) => s.goToQuests)
+  const viewMapCombo = useHotkeyCombo('viewMap')
+  const viewQuestsCombo = useHotkeyCombo('viewQuests')
+  const [hotkeysOpen, setHotkeysOpen] = useState(false)
   // A pick started from the quests editor owns the view switch until it resolves or is cancelled.
   const pickPending = useViewBridgeStore((s) => s.pendingPick !== null)
   const mapView = !!mapGridOpen || rmgOpen
@@ -582,12 +588,15 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
-  handlersRef.current = { handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
+  const handlersRef = useRef({ handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
+  handlersRef.current = { handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
 
   useEffect(() => {
     const onOpen      = () => { handlersRef.current.handleImport() }
     const onOpenMap   = () => { handlersRef.current.handleOpenMap() }
+    const onNewMap    = () => { void handlersRef.current.handleNewMapClick() }
+    const onRandomMap = () => { void handlersRef.current.handleGenerateMapClick() }
+    const onHotkeys    = () => { setHotkeysOpen(true) }
     const onOpenRecentFile = (e: Event) => {
       const entry = getRecentFiles().find((f) => f.path === (e as CustomEvent<string>).detail)
       if (entry) void handlersRef.current.handleOpenRecentEntry(entry)
@@ -605,6 +614,9 @@ export default function Toolbar({
     window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',       onOpen)
     window.addEventListener('oe:open-map',   onOpenMap)
+    window.addEventListener('oe:new-map',    onNewMap)
+    window.addEventListener('oe:random-map', onRandomMap)
+    window.addEventListener('oe:hotkeys',    onHotkeys)
     window.addEventListener('oe:open-recent-file', onOpenRecentFile)
     window.addEventListener('oe:import-h3m', onImportH3m)
     window.addEventListener('oe:save',       onSave)
@@ -615,6 +627,9 @@ export default function Toolbar({
       window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',       onOpen)
       window.removeEventListener('oe:open-map',   onOpenMap)
+      window.removeEventListener('oe:new-map',    onNewMap)
+      window.removeEventListener('oe:random-map', onRandomMap)
+      window.removeEventListener('oe:hotkeys',    onHotkeys)
       window.removeEventListener('oe:open-recent-file', onOpenRecentFile)
       window.removeEventListener('oe:import-h3m', onImportH3m)
       window.removeEventListener('oe:save',       onSave)
@@ -683,6 +698,7 @@ export default function Toolbar({
             disabled={pickPending}
             aria-pressed={mapView}
             onClick={() => onMapGridOpen?.()}
+            title={viewMapCombo ? comboLabel(viewMapCombo) : undefined}
             className={cn(VIEW_TAB, mapView ? VIEW_TAB_ON : VIEW_TAB_OFF)}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -692,7 +708,8 @@ export default function Toolbar({
             type="button"
             disabled={pickPending}
             aria-pressed={!mapView}
-            onClick={() => { closeMapGrid(); closeRmg() }}
+            onClick={goToQuests}
+            title={viewQuestsCombo ? comboLabel(viewQuestsCombo) : undefined}
             className={cn(VIEW_TAB, !mapView ? VIEW_TAB_ON : VIEW_TAB_OFF)}
           >
             <ListChecks className="h-4 w-4" />
@@ -949,6 +966,11 @@ export default function Toolbar({
               )}
 
               <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => setTimeout(() => setHotkeysOpen(true), 0)}>
+                <Keyboard className="h-4 w-4 mr-2" />
+                {t('hotkeys.title')}
+              </DropdownMenuItem>
 
               <DropdownMenuItem onClick={() => setTimeout(() => setAboutOpen(true), 0)}>
                 <Info className="h-4 w-4 mr-2" />
@@ -1261,6 +1283,7 @@ export default function Toolbar({
 
       {/* About works in both builds — the version row just reads "web build" on the web. */}
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+      <HotkeysDialog open={hotkeysOpen} onOpenChange={setHotkeysOpen} />
       <WhatsNewDialog open={whatsNewOpen} onOpenChange={setWhatsNewOpen} />
 
       {isTauri() && (

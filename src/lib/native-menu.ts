@@ -5,6 +5,8 @@
 import i18n from '@/lib/i18n'
 import { isTauri } from '@/lib/native-fs'
 import { syncRecentMenu } from '@/lib/recent-files'
+import { HOTKEY_DEFS, comboToAccelerator } from '@/lib/hotkeys'
+import { effectiveCombo, useHotkeyStore } from '@/store/useHotkeyStore'
 
 function menuLabels(): Record<string, string> {
   const t = i18n.t.bind(i18n)
@@ -27,7 +29,18 @@ function menuLabels(): Record<string, string> {
     'check-updates': t('nativeMenu.checkUpdates'),
     'recent-none': t('nativeMenu.recentNone'),
     'clear-recent': t('nativeMenu.clearRecent'),
+    ...menuAccelerators(),
   }
+}
+
+/** The configurable shortcuts of the menu items, sent as 'accel:<menu id>' (empty = none) next to the labels. */
+function menuAccelerators(): Record<string, string> {
+  const { overrides } = useHotkeyStore.getState()
+  const out: Record<string, string> = {}
+  for (const def of HOTKEY_DEFS) {
+    if (def.nativeMenuId) out[`accel:${def.nativeMenuId}`] = comboToAccelerator(effectiveCombo(overrides, def.id))
+  }
+  return out
 }
 
 /** Rebuilds the native menu in the current UI language. Desktop only; a failure leaves the previous menu in place. */

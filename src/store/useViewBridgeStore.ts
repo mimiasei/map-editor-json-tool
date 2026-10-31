@@ -17,6 +17,7 @@
 
 import { create } from 'zustand'
 import type { SubjectKey } from '@/lib/trigger-subjects'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import type { SelectedNode } from '@/components/triggers/TriggerInspectorPanel'
 
 export interface PendingPick {
@@ -71,8 +72,17 @@ export interface PendingSubjectSeed {
 
 interface ViewBridgeStore {
   mapGridOpen: boolean
+  /** The "quests belong to a map" notice shown when the Quests tab is chosen with no map loaded. */
+  noMapNoticeOpen: boolean
+  /** Switches to the Quests view; with no map loaded it asks first (unless the user switched the notice off). */
+  goToQuests: () => void
+  confirmGoToQuests: () => void
+  dismissNoMapNotice: () => void
   openMapGrid: () => void
   closeMapGrid: () => void
+  /** The Map tab shows the start screen even though a map is loaded (what closing the Map Grid leads to). */
+  startScreenOpen: boolean
+  showStartScreen: () => void
 
   /** Generate Random Map — a full-pane view swapped in the same way as Map
    *  Grid (issue #232), not a floating dialog. */
@@ -111,26 +121,45 @@ interface ViewBridgeStore {
 
 let nextDatabaseFocusId = 0
 
+export const NO_MAP_NOTICE_KEY = 'oe:no-map-notice-off'
+function noMapNoticeDisabled(): boolean {
+  try { return localStorage.getItem(NO_MAP_NOTICE_KEY) === '1' } catch { return false }
+}
+
 export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
-  mapGridOpen: false,
+  // TSE starts on the Map tab; with no map that is the start screen.
+  mapGridOpen: true,
+  noMapNoticeOpen: false,
+  goToQuests: () => {
+    if (useMapContextStore.getState().context === null && !noMapNoticeDisabled()) {
+      set({ noMapNoticeOpen: true })
+      return
+    }
+    set({ mapGridOpen: false, rmgOpen: false })
+  },
+  confirmGoToQuests: () => set({ noMapNoticeOpen: false, mapGridOpen: false, rmgOpen: false }),
+  dismissNoMapNotice: () => set({ noMapNoticeOpen: false }),
   // Map Grid and Generate Random Map are mutually exclusive full-pane views
   // (AppShell's own mapGridOpen ? MapGrid : rmgOpen ? RMG : normal editor
   // ternary checks mapGridOpen first) — opening one must close the other,
   // otherwise triggering Generate Random Map while Map Grid is open leaves
   // mapGridOpen still true and the ternary never reaches the RMG branch.
-  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false }),
+  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: false }),
   closeMapGrid: () => set({ mapGridOpen: false }),
+  startScreenOpen: false,
+  showStartScreen: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: true }),
 
   rmgOpen: false,
   openRmg: () => set({ rmgOpen: true, mapGridOpen: false }),
-  closeRmg: () => set({ rmgOpen: false }),
+  // Random Map is opened from the Map tab, so closing it goes back there (the start screen when no map is loaded).
+  closeRmg: () => set({ rmgOpen: false, mapGridOpen: true }),
 
   pendingGeneratedWarnings: null,
   reportGeneratedWarnings: (warnings) => set({ pendingGeneratedWarnings: warnings }),
   clearGeneratedWarnings: () => set({ pendingGeneratedWarnings: null }),
 
   pendingPick: null,
-  requestPick: (pick) => set({ pendingPick: pick, mapGridOpen: true }),
+  requestPick: (pick) => set({ pendingPick: pick, mapGridOpen: true, startScreenOpen: false }),
   resolvePick: (value) => {
     const pick = get().pendingPick
     if (!pick) return
@@ -164,3 +193,9 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   openDatabaseItem: (tab, id) => set({ pendingDatabaseFocus: { tab, id, requestId: ++nextDatabaseFocusId } }),
   clearDatabaseFocus: () => set({ pendingDatabaseFocus: null }),
 }))
+
+// Loading any map (New, Open, Import, Random) clears the map context first (map-file.ts resetScenario), so that is the moment to leave the
+// start screen and show the new map in the grid.
+useMapContextStore.subscribe((s) => {
+  if (s.context === null && useViewBridgeStore.getState().startScreenOpen) useViewBridgeStore.setState({ startScreenOpen: false })
+})

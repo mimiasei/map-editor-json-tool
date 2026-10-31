@@ -13,6 +13,10 @@ import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { clearRecentFiles } from '@/lib/recent-files'
 import { syncNativeMenu } from '@/lib/native-menu'
+import { useHotkeys } from '@/hooks/useHotkeys'
+import { useHotkeyStore } from '@/store/useHotkeyStore'
+import StartScreen from './StartScreen'
+import NoMapNoticeDialog from './NoMapNoticeDialog'
 import i18n from '@/lib/i18n'
 import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META, panelTitle } from '@/lib/panel-sync'
@@ -137,7 +141,8 @@ export default function AppShell() {
   const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
   const mapLoaded = useMapContextStore((s) => s.context !== null)
   const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
-  const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
+  const startScreenOpen = useViewBridgeStore((s) => s.startScreenOpen)
+  const showStartScreen = useViewBridgeStore((s) => s.showStartScreen)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
   const openRmg = useViewBridgeStore((s) => s.openRmg)
   const closeRmg = useViewBridgeStore((s) => s.closeRmg)
@@ -451,48 +456,40 @@ export default function AppShell() {
   }, [resetScenario, t])
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────────
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const mod = e.ctrlKey || e.metaKey
-      if (!mod) return
+  // The combos are configurable (lib/hotkeys.ts, More > Keyboard shortcuts). On the desktop build the ones with a native menu item
+  // (New, Open, Save, Save As, Undo, Redo, Open Map, Quit) are carried by that menu's accelerator and arrive as 'menu-action' below.
+  useHotkeys('global', {
+    undo: () => {
+      useScenarioStore.temporal.getState().undo()
+      useScenarioStore.setState({ isDirty: true })
+    },
+    redo: () => {
+      useScenarioStore.temporal.getState().redo()
+      useScenarioStore.setState({ isDirty: true })
+    },
+    redoAlt: () => {
+      useScenarioStore.temporal.getState().redo()
+      useScenarioStore.setState({ isDirty: true })
+    },
+    commandPalette: () => setPaletteOpen((v) => !v),
+    save: () => { void handleSave() },
+    saveAs: () => { window.dispatchEvent(new Event('oe:save-as')) },
+    newScenario: () => { void handleNew() },
+    openScenario: () => { window.dispatchEvent(new Event('oe:open')) },
+    openMap: () => { window.dispatchEvent(new Event('oe:open-map')) },
+    newMap: () => { window.dispatchEvent(new Event('oe:new-map')) },
+    randomMap: () => { window.dispatchEvent(new Event('oe:random-map')) },
+    // A pick started from the quests editor owns the view switch until it resolves (same rule as the toolbar tabs).
+    viewMap: () => {
+      if (useViewBridgeStore.getState().pendingPick) return false
+      openMapGrid()
+    },
+    viewQuests: () => {
+      if (useViewBridgeStore.getState().pendingPick) return false
+      useViewBridgeStore.getState().goToQuests()
+    },
+  })
 
-      const tag = (e.target as HTMLElement)?.tagName
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
-
-      if (e.key === 'z' && !e.shiftKey) {
-        e.preventDefault()
-        useScenarioStore.temporal.getState().undo()
-        useScenarioStore.setState({ isDirty: true })
-      }
-      if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
-        e.preventDefault()
-        useScenarioStore.temporal.getState().redo()
-        useScenarioStore.setState({ isDirty: true })
-      }
-      if (e.key === 'k') {
-        e.preventDefault()
-        setPaletteOpen((v) => !v)
-      }
-      if (e.key === 's' && !e.shiftKey) {
-        e.preventDefault()
-        handleSave()
-      }
-      if (e.key === 's' && e.shiftKey) {
-        e.preventDefault()
-        window.dispatchEvent(new Event('oe:save-as'))
-      }
-      if (e.key === 'n') {
-        e.preventDefault()
-        handleNew()
-      }
-      if (e.key === 'o') {
-        e.preventDefault()
-        window.dispatchEvent(new Event('oe:open'))
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [handleSave, handleNew])
 
   // ── BroadcastChannel sync (Tauri only) ───────────────────────────────────────
   useEffect(() => {
@@ -595,6 +592,8 @@ export default function AppShell() {
     let unlistenMenu: (() => void) | undefined
     let unlistenClose: (() => void) | undefined
     const onLanguageChanged = () => { void syncNativeMenu() }
+    // Changed shortcuts reach the native menu's accelerators.
+    const unsubscribeHotkeys = useHotkeyStore.subscribe((s, prev) => { if (s.overrides !== prev.overrides) void syncNativeMenu() })
 
     ;(async () => {
       const { listen } = await import('@tauri-apps/api/event')
@@ -676,6 +675,7 @@ export default function AppShell() {
 
     return () => {
       unlistenMenu?.()
+      unsubscribeHotkeys()
       unlistenClose?.()
       i18n.off('languageChanged', onLanguageChanged)
     }
@@ -838,16 +838,16 @@ export default function AppShell() {
         // the normal 3-pane editor Group occupies below and needs no resize
         // chrome of its own.
         <div className="flex-1 overflow-hidden p-3">
-          {mapLoaded ? (
+          {mapLoaded && !startScreenOpen ? (
             <MapGridDialog
               open={mapGridOpen}
-              onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
+              onOpenChange={(o) => (o ? openMapGrid() : showStartScreen())}
               onUndock={() => handleUndock('mapGridCell')}
               undocked={isUndocked('mapGridCell')}
             />
           ) : (
-            // The Map tab is also where New Map / Import Map / Random Map live, so it must be reachable without a map.
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t('layout.noMapLoaded')}</div>
+            // The Map tab is where a session starts and where New Map / Import Map / Random Map live, so it must work without a map.
+            <StartScreen />
           )}
         </div>
       ) : rmgOpen ? (
@@ -925,6 +925,7 @@ export default function AppShell() {
       </Group>
       )}
       <ObjectRenderProgressBar />
+      <NoMapNoticeDialog />
     </div>
   )
 }
