@@ -73,7 +73,7 @@ export default function StartScreen() {
           ) : (
             <div className="flex flex-col gap-2">
               {recent.slice(0, 8).map((f) => (
-                <div key={f.path} className="flex items-center rounded-full border border-border bg-card pl-4 pr-1.5 transition-colors hover:bg-accent/50">
+                <div key={f.path} className="flex items-center rounded-lg border border-border bg-card pl-4 pr-1.5 transition-colors hover:bg-accent/50">
                   <button
                     type="button"
                     onClick={() => fire('oe:open-recent-file', f.path)}
@@ -86,7 +86,7 @@ export default function StartScreen() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 shrink-0 rounded-full p-0"
+                    className="h-7 w-7 shrink-0 rounded-md p-0"
                     title={t('startScreen.removeRecent')}
                     onClick={() => { removeRecentFile(f.path); setRecent(getRecentFiles()) }}
                   >
