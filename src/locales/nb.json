@@ -3262,6 +3262,7 @@
     "recent": "Nylige filer",
     "noRecent": "Ingen nylige filer ennå.",
     "removeRecent": "Fjern fra listen",
+    "byAuthor": "Av {{author}}",
     "whatsNew": "Hva er nytt"
   }
 }

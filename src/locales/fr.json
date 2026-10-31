@@ -3308,6 +3308,7 @@
     "recent": "Fichiers récents",
     "noRecent": "Aucun fichier récent.",
     "removeRecent": "Retirer de la liste",
+    "byAuthor": "Par {{author}}",
     "whatsNew": "Nouveautés"
   }
 }

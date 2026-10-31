@@ -3262,6 +3262,7 @@
     "recent": "Zuletzt geöffnet",
     "noRecent": "Noch keine zuletzt geöffneten Dateien.",
     "removeRecent": "Aus der Liste entfernen",
+    "byAuthor": "Von {{author}}",
     "whatsNew": "Neuigkeiten"
   }
 }

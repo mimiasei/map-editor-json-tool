@@ -11,6 +11,8 @@ import { getRecentFiles, removeRecentFile, type RecentFile } from '@/lib/recent-
 import { cn } from '@/lib/utils'
 import { useStartScreenBackground } from '@/lib/start-screen-color'
 
+const AUTHOR = 'Mikkel Syse Grøsland'
+
 function fire(name: string, detail?: string) {
   window.dispatchEvent(detail === undefined ? new Event(name) : new CustomEvent(name, { detail }))
 }
@@ -60,6 +62,7 @@ export default function StartScreen() {
                     <span key={i} className={i === 0 ? 'block' : 'block text-right'}>{line}</span>
                   ))}
                 </p>
+                <p className="text-xs text-muted-foreground">{t('startScreen.byAuthor', { author: AUTHOR })}</p>
                 <p className="text-sm font-medium text-foreground">{version ? `v${version}` : ''}</p>
               </div>
             </div>

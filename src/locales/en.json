@@ -3262,6 +3262,7 @@
     "recent": "Recent files",
     "noRecent": "No recent files yet.",
     "removeRecent": "Remove from list",
+    "byAuthor": "By {{author}}",
     "whatsNew": "What's new"
   }
 }
