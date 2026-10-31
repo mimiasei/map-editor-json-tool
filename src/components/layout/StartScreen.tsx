@@ -61,7 +61,7 @@ export default function StartScreen() {
                 <p className="text-sm font-medium text-foreground">{version ? `v${version}` : ''}</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="self-end" onClick={() => fire('oe:whats-new')}>
+            <Button variant="ghost" size="sm" className="self-end border border-border bg-card hover:bg-accent/50" onClick={() => fire('oe:whats-new')}>
               {t('startScreen.whatsNew')}
             </Button>
           </div>
