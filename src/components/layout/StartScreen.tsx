@@ -22,7 +22,7 @@ function Cell({ icon, label, active, onClick }: { icon: ReactNode; label: string
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex aspect-square flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card p-3 text-center transition-colors hover:bg-accent/50',
+        'flex aspect-square flex-col items-center justify-center gap-3 rounded-lg bg-card p-3 text-center transition-colors hover:bg-accent/50',
         active && 'bg-accent/50',
       )}
     >
