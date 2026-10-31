@@ -3255,7 +3255,7 @@
   },
   "startScreen": {
     "title": "Heroes of Might and Magic: Olden Era",
-    "subtitle": "Scenario and map editor",
+    "subtitle": "Scenario & Map Editor",
     "openMap": "Open map",
     "importH3": "Import H3 map",
     "openProject": "Open scenario (JSON)",
