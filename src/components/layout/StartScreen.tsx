@@ -48,12 +48,17 @@ export default function StartScreen() {
     <div className="flex h-full items-start justify-center overflow-auto py-10">
       <div className="w-full max-w-[864px] space-y-6 px-4">
         <div className="grid grid-cols-3 gap-3">
-          <div className="flex aspect-square flex-col justify-center p-3">
-            <h1 className="text-sm font-medium text-foreground">{t('startScreen.title')}</h1>
-            <div className="flex flex-wrap items-baseline gap-x-2 text-secondary">
-              <p className="text-[2rem] font-bold leading-tight">{t('startScreen.subtitle')}</p>
-              <p className="text-sm font-semibold">{version ? `v${version}` : ''}</p>
+          <div className="flex aspect-square flex-col justify-between p-3">
+            <div className="flex flex-1 flex-col justify-center">
+              <h1 className="text-sm font-medium text-foreground">{t('startScreen.title')}</h1>
+              <div className="flex flex-wrap items-baseline gap-x-2 text-secondary">
+                <p className="text-[2rem] font-bold leading-tight">{t('startScreen.subtitle')}</p>
+                <p className="text-sm font-semibold">{version ? `v${version}` : ''}</p>
+              </div>
             </div>
+            <Button variant="ghost" size="sm" className="-ml-2 self-start" onClick={() => fire('oe:whats-new')}>
+              {t('startScreen.whatsNew')}
+            </Button>
           </div>
           {desktop && <Cell icon={<FilePlus />} label={t('layout.toolbar.newMap')} onClick={() => fire('oe:new-map')} />}
           <Cell
@@ -99,9 +104,6 @@ export default function StartScreen() {
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => fire('oe:whats-new')}>
-            {t('startScreen.whatsNew')}
-          </Button>
           <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => fire('oe:hotkeys')}>
             <Keyboard className="h-3.5 w-3.5" />
             {t('hotkeys.title')}
