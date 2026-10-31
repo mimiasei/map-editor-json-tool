@@ -17,6 +17,7 @@
 
 import { create } from 'zustand'
 import type { SubjectKey } from '@/lib/trigger-subjects'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import type { SelectedNode } from '@/components/triggers/TriggerInspectorPanel'
 
 export interface PendingPick {
@@ -71,6 +72,12 @@ export interface PendingSubjectSeed {
 
 interface ViewBridgeStore {
   mapGridOpen: boolean
+  /** The "quests belong to a map" notice shown when the Quests tab is chosen with no map loaded. */
+  noMapNoticeOpen: boolean
+  /** Switches to the Quests view; with no map loaded it asks first (unless the user switched the notice off). */
+  goToQuests: () => void
+  confirmGoToQuests: () => void
+  dismissNoMapNotice: () => void
   openMapGrid: () => void
   closeMapGrid: () => void
 
@@ -111,8 +118,24 @@ interface ViewBridgeStore {
 
 let nextDatabaseFocusId = 0
 
+export const NO_MAP_NOTICE_KEY = 'oe:no-map-notice-off'
+function noMapNoticeDisabled(): boolean {
+  try { return localStorage.getItem(NO_MAP_NOTICE_KEY) === '1' } catch { return false }
+}
+
 export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
-  mapGridOpen: false,
+  // TSE starts on the Map tab; with no map that is the start screen.
+  mapGridOpen: true,
+  noMapNoticeOpen: false,
+  goToQuests: () => {
+    if (useMapContextStore.getState().context === null && !noMapNoticeDisabled()) {
+      set({ noMapNoticeOpen: true })
+      return
+    }
+    set({ mapGridOpen: false, rmgOpen: false })
+  },
+  confirmGoToQuests: () => set({ noMapNoticeOpen: false, mapGridOpen: false, rmgOpen: false }),
+  dismissNoMapNotice: () => set({ noMapNoticeOpen: false }),
   // Map Grid and Generate Random Map are mutually exclusive full-pane views
   // (AppShell's own mapGridOpen ? MapGrid : rmgOpen ? RMG : normal editor
   // ternary checks mapGridOpen first) — opening one must close the other,

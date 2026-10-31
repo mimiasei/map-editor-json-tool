@@ -2180,7 +2180,13 @@
       "confirmNew": "Du har ulagrede endringer. Starte et nytt scenario likevel?",
       "confirmNewTitle": "Nytt scenario"
     },
-    "noMapLoaded": "Ingen kart er lastet inn. Bruk Nytt kart, Importer kart eller Tilfeldig kart i verktøylinjen."
+    "noMapNotice": {
+      "title": "Ingen kart er lastet inn",
+      "body": "Oppdrag hører til et kart. Åpne eller lag et kart under Kart-fanen først, eller gå til Oppdrag-fanen uten kart.",
+      "dontShowAgain": "Ikke vis dette igjen",
+      "continue": "Gå til Oppdrag",
+      "stay": "Bli på Kart"
+    }
   },
   "dialogs": {
     "assetCombobox": {
@@ -3211,5 +3217,51 @@
     "checkUpdates": "Se etter oppdateringer...",
     "recentNone": "Ingen nylige filer",
     "clearRecent": "Tøm nylige filer"
+  },
+  "hotkeys": {
+    "title": "Hurtigtaster",
+    "hint": "Klikk på en hurtigtast og trykk de nye tastene. Esc avbryter. Hurtigtaster i Fil- og Rediger-menyen endres også i menylinjen.",
+    "scopes": {
+      "global": "Overalt",
+      "mapGrid": "I kartvisningen"
+    },
+    "actions": {
+      "viewMap": "Bytt til Kart",
+      "viewQuests": "Bytt til Oppdrag",
+      "newMap": "Nytt kart",
+      "openMap": "Åpne kart",
+      "randomMap": "Lag tilfeldig kart",
+      "newScenario": "Nytt scenario",
+      "openScenario": "Åpne scenario (JSON)",
+      "save": "Lagre",
+      "saveAs": "Lagre som",
+      "undo": "Angre",
+      "redo": "Gjør om",
+      "redoAlt": "Gjør om (alternativ)",
+      "commandPalette": "Søk / kommandopalett",
+      "quit": "Avslutt",
+      "gridUndo": "Angre kartendring",
+      "gridRedo": "Gjør om kartendring",
+      "gridRedoAlt": "Gjør om kartendring (alternativ)",
+      "gridDelete": "Slett valgt objekt",
+      "gridDeleteAlt": "Slett valgt objekt (alternativ)"
+    },
+    "pressKeys": "Trykk tastene…",
+    "none": "Ingen",
+    "clear": "Fjern",
+    "reset": "Tilbakestill",
+    "resetAll": "Tilbakestill alle",
+    "conflict": "Brukes allerede av: {{action}}"
+  },
+  "startScreen": {
+    "title": "Heroes of Might and Magic: Olden Era",
+    "subtitle": "Scenario- og kartredigerer",
+    "openMap": "Åpne kart",
+    "importH3": "Importer H3-kart",
+    "openProject": "Åpne scenario (JSON)",
+    "recent": "Nylige filer",
+    "noRecent": "Ingen nylige filer ennå.",
+    "removeRecent": "Fjern fra listen",
+    "whatsNew": "Hva er nytt"
   }
 }

@@ -2180,7 +2180,13 @@
       "confirmNew": "You have unsaved changes. Start a new scenario anyway?",
       "confirmNewTitle": "New Scenario"
     },
-    "noMapLoaded": "No map is loaded. Use New Map, Import Map or Random Map in the toolbar."
+    "noMapNotice": {
+      "title": "No map is loaded",
+      "body": "Quests belong to a map. Open or create a map on the Map tab first, or continue to the Quests tab without one.",
+      "dontShowAgain": "Don't show this again",
+      "continue": "Go to Quests",
+      "stay": "Stay on Map"
+    }
   },
   "dialogs": {
     "assetCombobox": {
@@ -3211,5 +3217,51 @@
     "checkUpdates": "Check for Updates...",
     "recentNone": "No recent files",
     "clearRecent": "Clear Recent Files"
+  },
+  "hotkeys": {
+    "title": "Keyboard shortcuts",
+    "hint": "Click a shortcut, then press the new keys. Esc cancels. Shortcuts of the File and Edit menus change in the menu bar too.",
+    "scopes": {
+      "global": "Everywhere",
+      "mapGrid": "In the Map view"
+    },
+    "actions": {
+      "viewMap": "Switch to Map",
+      "viewQuests": "Switch to Quests",
+      "newMap": "New map",
+      "openMap": "Open map",
+      "randomMap": "Generate random map",
+      "newScenario": "New scenario",
+      "openScenario": "Open scenario (JSON)",
+      "save": "Save",
+      "saveAs": "Save as",
+      "undo": "Undo",
+      "redo": "Redo",
+      "redoAlt": "Redo (alternative)",
+      "commandPalette": "Search / command palette",
+      "quit": "Quit",
+      "gridUndo": "Undo map edit",
+      "gridRedo": "Redo map edit",
+      "gridRedoAlt": "Redo map edit (alternative)",
+      "gridDelete": "Delete selected object",
+      "gridDeleteAlt": "Delete selected object (alternative)"
+    },
+    "pressKeys": "Press keys…",
+    "none": "None",
+    "clear": "Clear",
+    "reset": "Reset",
+    "resetAll": "Reset all",
+    "conflict": "Already used by: {{action}}"
+  },
+  "startScreen": {
+    "title": "Heroes of Might and Magic: Olden Era",
+    "subtitle": "Scenario and map editor",
+    "openMap": "Open map",
+    "importH3": "Import H3 map",
+    "openProject": "Open scenario (JSON)",
+    "recent": "Recent files",
+    "noRecent": "No recent files yet.",
+    "removeRecent": "Remove from list",
+    "whatsNew": "What's new"
   }
 }

@@ -2180,7 +2180,13 @@
       "confirmNew": "Sie haben ungespeicherte Änderungen. Trotzdem ein neues Szenario beginnen?",
       "confirmNewTitle": "Neues Szenario"
     },
-    "noMapLoaded": "Keine Karte geladen. Nutzen Sie in der Werkzeugleiste „Neue Karte“, „Karte importieren“ oder „Zufallskarte“."
+    "noMapNotice": {
+      "title": "Keine Karte geladen",
+      "body": "Aufgaben gehören zu einer Karte. Öffnen oder erstellen Sie zuerst auf dem Reiter Karte eine Karte, oder fahren Sie ohne Karte mit dem Reiter Aufgaben fort.",
+      "dontShowAgain": "Nicht mehr anzeigen",
+      "continue": "Zu Aufgaben",
+      "stay": "Bei Karte bleiben"
+    }
   },
   "dialogs": {
     "assetCombobox": {
@@ -3211,5 +3217,51 @@
     "checkUpdates": "Nach Updates suchen...",
     "recentNone": "Keine zuletzt geöffneten Dateien",
     "clearRecent": "Zuletzt geöffnete Dateien löschen"
+  },
+  "hotkeys": {
+    "title": "Tastenkürzel",
+    "hint": "Klicken Sie auf ein Kürzel und drücken Sie dann die neuen Tasten. Esc bricht ab. Kürzel der Menüs Datei und Bearbeiten ändern sich auch in der Menüleiste.",
+    "scopes": {
+      "global": "Überall",
+      "mapGrid": "In der Kartenansicht"
+    },
+    "actions": {
+      "viewMap": "Zu Karte wechseln",
+      "viewQuests": "Zu Aufgaben wechseln",
+      "newMap": "Neue Karte",
+      "openMap": "Karte öffnen",
+      "randomMap": "Zufallskarte erzeugen",
+      "newScenario": "Neues Szenario",
+      "openScenario": "Szenario öffnen (JSON)",
+      "save": "Speichern",
+      "saveAs": "Speichern unter",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "redoAlt": "Wiederholen (Alternative)",
+      "commandPalette": "Suche / Befehlspalette",
+      "quit": "Beenden",
+      "gridUndo": "Karten-Änderung rückgängig",
+      "gridRedo": "Karten-Änderung wiederholen",
+      "gridRedoAlt": "Karten-Änderung wiederholen (Alternative)",
+      "gridDelete": "Gewähltes Objekt löschen",
+      "gridDeleteAlt": "Gewähltes Objekt löschen (Alternative)"
+    },
+    "pressKeys": "Tasten drücken…",
+    "none": "Keines",
+    "clear": "Entfernen",
+    "reset": "Zurücksetzen",
+    "resetAll": "Alle zurücksetzen",
+    "conflict": "Bereits belegt von: {{action}}"
+  },
+  "startScreen": {
+    "title": "Heroes of Might and Magic: Olden Era",
+    "subtitle": "Szenario- und Karteneditor",
+    "openMap": "Karte öffnen",
+    "importH3": "H3-Karte importieren",
+    "openProject": "Szenario öffnen (JSON)",
+    "recent": "Zuletzt geöffnet",
+    "noRecent": "Noch keine zuletzt geöffneten Dateien.",
+    "removeRecent": "Aus der Liste entfernen",
+    "whatsNew": "Neuigkeiten"
   }
 }

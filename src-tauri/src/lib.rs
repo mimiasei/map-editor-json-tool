@@ -26,6 +26,24 @@ fn label(labels: &HashMap<String, String>, id: &str, english: &str) -> String {
     labels.get(id).cloned().unwrap_or_else(|| english.to_string())
 }
 
+/// The menu item's shortcut: the frontend sends the user's choice as "accel:<id>" (empty = none); without it the default applies.
+fn accel(labels: &HashMap<String, String>, id: &str, default: &str) -> Option<String> {
+    match labels.get(&format!("accel:{id}")) {
+        Some(a) if a.is_empty() => None,
+        Some(a) => Some(a.clone()),
+        None if default.is_empty() => None,
+        None => Some(default.to_string()),
+    }
+}
+
+/// Applies `accel` to a menu item builder.
+fn with_accel(builder: MenuItemBuilder, labels: &HashMap<String, String>, id: &str, default: &str) -> MenuItemBuilder {
+    match accel(labels, id, default) {
+        Some(a) => builder.accelerator(a),
+        None => builder,
+    }
+}
+
 #[derive(serde::Deserialize)]
 struct RecentEntry {
     path: String,
@@ -69,17 +87,13 @@ fn set_recent_files(
 }
 
 fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<Menu<Wry>> {
-    let new_item = MenuItemBuilder::with_id("new", label(labels, "new", "New"))
-        .accelerator("CmdOrCtrl+N")
-        .build(app)?;
-    let open_item = MenuItemBuilder::with_id("open", label(labels, "open", "Open..."))
-        .accelerator("CmdOrCtrl+O")
-        .build(app)?;
+    let new_item = with_accel(MenuItemBuilder::with_id("new", label(labels, "new", "New")), labels, "new", "CmdOrCtrl+N").build(app)?;
+    let open_item = with_accel(MenuItemBuilder::with_id("open", label(labels, "open", "Open...")), labels, "open", "CmdOrCtrl+O").build(app)?;
     // issue #160: the header's "Import Map"/"Open Map" button is redundant
     // with the native File menu on desktop (same as New/Open/Save/Save As
     // already were) — this gives it a native home instead of removing the
-    // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
-    let open_map_item = MenuItemBuilder::with_id("open-map", label(labels, "open-map", "Open Map...")).build(app)?;
+    // capability. Ctrl+O is already "Open" (scenario JSON), so its default shortcut is Ctrl+Alt+O.
+    let open_map_item = with_accel(MenuItemBuilder::with_id("open-map", label(labels, "open-map", "Open Map...")), labels, "open-map", "CmdOrCtrl+Alt+O").build(app)?;
     // Filled by the frontend through set_recent_files once it has loaded; until then (and when empty) a disabled placeholder.
     let recent_placeholder = MenuItemBuilder::with_id("recent-none", label(labels, "recent-none", "No recent files"))
         .enabled(false)
@@ -93,12 +107,8 @@ fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Resul
     // rather than replacing it.
     let import_h3m_item =
         MenuItemBuilder::with_id("import-h3m", label(labels, "import-h3m", "Import H3 Map...")).build(app)?;
-    let save_item = MenuItemBuilder::with_id("save", label(labels, "save", "Save"))
-        .accelerator("CmdOrCtrl+S")
-        .build(app)?;
-    let save_as_item = MenuItemBuilder::with_id("save-as", label(labels, "save-as", "Save As..."))
-        .accelerator("CmdOrCtrl+Shift+S")
-        .build(app)?;
+    let save_item = with_accel(MenuItemBuilder::with_id("save", label(labels, "save", "Save")), labels, "save", "CmdOrCtrl+S").build(app)?;
+    let save_as_item = with_accel(MenuItemBuilder::with_id("save-as", label(labels, "save-as", "Save As...")), labels, "save-as", "CmdOrCtrl+Shift+S").build(app)?;
     // A custom item, not PredefinedMenuItem::quit — the predefined one
     // calls the app's native exit directly, bypassing onCloseRequested
     // entirely (confirmed: quitting from this menu item, or Cmd+Q, never
@@ -106,9 +116,7 @@ fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Resul
     // every other item here instead, which just calls win.close() — that
     // still fires closeRequested, reusing the exact same dirty-check flow
     // the window's own [x] button already goes through.
-    let quit_item = MenuItemBuilder::with_id("quit", label(labels, "quit", "Quit"))
-        .accelerator("CmdOrCtrl+Q")
-        .build(app)?;
+    let quit_item = with_accel(MenuItemBuilder::with_id("quit", label(labels, "quit", "Quit")), labels, "quit", "CmdOrCtrl+Q").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, label(labels, "file", "File"))
         .item(&new_item)
@@ -123,12 +131,8 @@ fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Resul
         .item(&quit_item)
         .build()?;
 
-    let undo_item = MenuItemBuilder::with_id("undo", label(labels, "undo", "Undo"))
-        .accelerator("CmdOrCtrl+Z")
-        .build(app)?;
-    let redo_item = MenuItemBuilder::with_id("redo", label(labels, "redo", "Redo"))
-        .accelerator("CmdOrCtrl+Shift+Z")
-        .build(app)?;
+    let undo_item = with_accel(MenuItemBuilder::with_id("undo", label(labels, "undo", "Undo")), labels, "undo", "CmdOrCtrl+Z").build(app)?;
+    let redo_item = with_accel(MenuItemBuilder::with_id("redo", label(labels, "redo", "Redo")), labels, "redo", "CmdOrCtrl+Shift+Z").build(app)?;
 
     let edit_menu = SubmenuBuilder::new(app, label(labels, "edit", "Edit"))
         .item(&undo_item)

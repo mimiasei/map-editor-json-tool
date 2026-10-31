@@ -2215,7 +2215,13 @@
       "confirmNew": "Vous avez des modifications non enregistrées. Démarrer quand même un nouveau scénario ?",
       "confirmNewTitle": "Nouveau scénario"
     },
-    "noMapLoaded": "Aucune carte n'est chargée. Utilisez Nouvelle carte, Importer une carte ou Carte aléatoire dans la barre d'outils."
+    "noMapNotice": {
+      "title": "Aucune carte n'est chargée",
+      "body": "Les quêtes appartiennent à une carte. Ouvrez ou créez d'abord une carte dans l'onglet Carte, ou passez à l'onglet Quêtes sans carte.",
+      "dontShowAgain": "Ne plus afficher",
+      "continue": "Aller aux Quêtes",
+      "stay": "Rester sur Carte"
+    }
   },
   "dialogs": {
     "assetCombobox": {
@@ -3257,5 +3263,51 @@
     "checkUpdates": "Rechercher des mises à jour…",
     "recentNone": "Aucun fichier récent",
     "clearRecent": "Effacer les fichiers récents"
+  },
+  "hotkeys": {
+    "title": "Raccourcis clavier",
+    "hint": "Cliquez sur un raccourci, puis appuyez sur les nouvelles touches. Échap annule. Les raccourcis des menus Fichier et Édition changent aussi dans la barre de menus.",
+    "scopes": {
+      "global": "Partout",
+      "mapGrid": "Dans la vue Carte"
+    },
+    "actions": {
+      "viewMap": "Passer à Carte",
+      "viewQuests": "Passer à Quêtes",
+      "newMap": "Nouvelle carte",
+      "openMap": "Ouvrir une carte",
+      "randomMap": "Générer une carte aléatoire",
+      "newScenario": "Nouveau scénario",
+      "openScenario": "Ouvrir un scénario (JSON)",
+      "save": "Sauvegarder",
+      "saveAs": "Sauvegarder sous",
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "redoAlt": "Rétablir (alternative)",
+      "commandPalette": "Recherche / palette de commandes",
+      "quit": "Quitter",
+      "gridUndo": "Annuler la modification de la carte",
+      "gridRedo": "Rétablir la modification de la carte",
+      "gridRedoAlt": "Rétablir la modification de la carte (alternative)",
+      "gridDelete": "Supprimer l'objet sélectionné",
+      "gridDeleteAlt": "Supprimer l'objet sélectionné (alternative)"
+    },
+    "pressKeys": "Appuyez sur les touches…",
+    "none": "Aucun",
+    "clear": "Effacer",
+    "reset": "Réinitialiser",
+    "resetAll": "Tout réinitialiser",
+    "conflict": "Déjà utilisé par : {{action}}"
+  },
+  "startScreen": {
+    "title": "Heroes of Might and Magic: Olden Era",
+    "subtitle": "Éditeur de scénarios et de cartes",
+    "openMap": "Ouvrir une carte",
+    "importH3": "Importer une carte H3",
+    "openProject": "Ouvrir un scénario (JSON)",
+    "recent": "Fichiers récents",
+    "noRecent": "Aucun fichier récent.",
+    "removeRecent": "Retirer de la liste",
+    "whatsNew": "Nouveautés"
   }
 }
