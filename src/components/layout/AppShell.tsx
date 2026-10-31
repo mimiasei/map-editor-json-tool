@@ -141,7 +141,8 @@ export default function AppShell() {
   const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
   const mapLoaded = useMapContextStore((s) => s.context !== null)
   const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
-  const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
+  const startScreenOpen = useViewBridgeStore((s) => s.startScreenOpen)
+  const showStartScreen = useViewBridgeStore((s) => s.showStartScreen)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
   const openRmg = useViewBridgeStore((s) => s.openRmg)
   const closeRmg = useViewBridgeStore((s) => s.closeRmg)
@@ -837,10 +838,10 @@ export default function AppShell() {
         // the normal 3-pane editor Group occupies below and needs no resize
         // chrome of its own.
         <div className="flex-1 overflow-hidden p-3">
-          {mapLoaded ? (
+          {mapLoaded && !startScreenOpen ? (
             <MapGridDialog
               open={mapGridOpen}
-              onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
+              onOpenChange={(o) => (o ? openMapGrid() : showStartScreen())}
               onUndock={() => handleUndock('mapGridCell')}
               undocked={isUndocked('mapGridCell')}
             />

@@ -80,6 +80,9 @@ interface ViewBridgeStore {
   dismissNoMapNotice: () => void
   openMapGrid: () => void
   closeMapGrid: () => void
+  /** The Map tab shows the start screen even though a map is loaded (what closing the Map Grid leads to). */
+  startScreenOpen: boolean
+  showStartScreen: () => void
 
   /** Generate Random Map — a full-pane view swapped in the same way as Map
    *  Grid (issue #232), not a floating dialog. */
@@ -141,8 +144,10 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   // ternary checks mapGridOpen first) — opening one must close the other,
   // otherwise triggering Generate Random Map while Map Grid is open leaves
   // mapGridOpen still true and the ternary never reaches the RMG branch.
-  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false }),
+  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: false }),
   closeMapGrid: () => set({ mapGridOpen: false }),
+  startScreenOpen: false,
+  showStartScreen: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: true }),
 
   rmgOpen: false,
   openRmg: () => set({ rmgOpen: true, mapGridOpen: false }),
@@ -154,7 +159,7 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   clearGeneratedWarnings: () => set({ pendingGeneratedWarnings: null }),
 
   pendingPick: null,
-  requestPick: (pick) => set({ pendingPick: pick, mapGridOpen: true }),
+  requestPick: (pick) => set({ pendingPick: pick, mapGridOpen: true, startScreenOpen: false }),
   resolvePick: (value) => {
     const pick = get().pendingPick
     if (!pick) return
@@ -188,3 +193,9 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   openDatabaseItem: (tab, id) => set({ pendingDatabaseFocus: { tab, id, requestId: ++nextDatabaseFocusId } }),
   clearDatabaseFocus: () => set({ pendingDatabaseFocus: null }),
 }))
+
+// Loading any map (New, Open, Import, Random) clears the map context first (map-file.ts resetScenario), so that is the moment to leave the
+// start screen and show the new map in the grid.
+useMapContextStore.subscribe((s) => {
+  if (s.context === null && useViewBridgeStore.getState().startScreenOpen) useViewBridgeStore.setState({ startScreenOpen: false })
+})
