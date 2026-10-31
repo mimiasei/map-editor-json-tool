@@ -23,7 +23,7 @@ function Cell({ icon, label, active, onClick }: { icon: ReactNode; label: string
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex aspect-square flex-col items-center justify-center gap-3 rounded-lg bg-card p-3 text-center transition-colors hover:bg-accent/50',
+        'flex aspect-square flex-col items-center justify-center gap-3 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50',
         active && 'bg-accent/50',
       )}
     >
@@ -63,7 +63,7 @@ export default function StartScreen() {
                 <p className="text-sm font-medium text-foreground">{version ? `v${version}` : ''}</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="self-end bg-card hover:bg-accent/50" onClick={() => fire('oe:whats-new')}>
+            <Button variant="ghost" size="sm" className="self-end bg-background hover:bg-accent/50" onClick={() => fire('oe:whats-new')}>
               {t('startScreen.whatsNew')}
             </Button>
           </div>
@@ -85,7 +85,7 @@ export default function StartScreen() {
           ) : (
             <div className="flex flex-col gap-2">
               {recent.slice(0, 3).map((f) => (
-                <div key={f.path} className="flex items-center rounded-lg bg-card pl-4 pr-1.5 transition-colors hover:bg-accent/50">
+                <div key={f.path} className="flex items-center rounded-lg bg-background pl-4 pr-1.5 transition-colors hover:bg-accent/50">
                   <button
                     type="button"
                     onClick={() => fire('oe:open-recent-file', f.path)}
