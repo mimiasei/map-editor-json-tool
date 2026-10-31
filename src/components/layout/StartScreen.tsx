@@ -62,7 +62,7 @@ export default function StartScreen() {
                     <span key={i} className={i === 0 ? 'block' : 'block text-right'}>{line}</span>
                   ))}
                 </p>
-                <p className="text-right text-xs text-foreground opacity-50">{t('startScreen.byAuthor', { author: AUTHOR })}</p>
+                <p className="text-right text-[0.6875rem] text-foreground opacity-50">{t('startScreen.byAuthor', { author: AUTHOR })}</p>
                 <p className="text-sm font-medium text-foreground">{version ? `v${version}` : ''}</p>
               </div>
             </div>
