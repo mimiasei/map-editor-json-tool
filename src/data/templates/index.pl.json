@@ -1,0 +1,78 @@
+{
+  "categories": [
+    {
+      "id": "basic",
+      "label": "Podstawowe"
+    },
+    {
+      "id": "advanced",
+      "label": "Zaawansowane"
+    }
+  ],
+  "templates": [
+    {
+      "id": "simple-kill-quest",
+      "name": "Proste zadanie z pokonaniem celu",
+      "description": "Kończy się, gdy gracz pokona wybrany oddział neutralny. Po ukończeniu nagradza złotem."
+    },
+    {
+      "id": "counter-based-quest",
+      "name": "Zadanie oparte na liczniku",
+      "description": "Wieloetapowe zadanie śledzące postęp za pomocą licznika. Pokazuje, jak ułożyć podzadania w kolejności."
+    },
+    {
+      "id": "timed-event",
+      "name": "Zdarzenie czasowe",
+      "description": "Uruchamia dialog i konsekwencję po upływie ustalonej liczby tur. Używa warunku StartTurn."
+    },
+    {
+      "id": "dialog-driven-quest",
+      "name": "Zadanie oparte na dialogu",
+      "description": "Zadanie z postacią niezależną: gracz klika obiekt, widzi dialog i otrzymuje zlecenie."
+    }
+  ],
+  "annotations": {
+    "simple-kill-quest": {
+      "counters[0]": "Śledzi, czy cel został pokonany (0 = żyje, 1 = martwy). Zastąp „quest_target_killed” opisowym SID dla swojego zadania.",
+      "quests[0]": "Zadanie główne. Zastąp „kill_quest” SID swojego zadania. Ustaw tokeny lokalizacji nazwy/opisu w oknie „Lokalizacja”.",
+      "quests[0].subQuests[0]": "Jedyny etap: pokonać cel. Zastąp „kill_quest_1” SID swojego podzadania.",
+      "quests[0].subQuests[0].triggers[0]": "Działa, gdy oddział zostanie pokonany. Zastąp „E_Squad_Target” SID encji przypisanym stosowi neutralnemu w edytorze mapy.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Oznacza licznik zabójstw jako wykonany. Możesz go użyć w innych wyzwalaczach, aby sprawdzić, czy zadanie jest ukończone.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "Nagradza gracza 500 sztukami złota. W razie potrzeby zmień ilość.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Kończy bieżące podzadanie, co kończy zadanie.",
+      "quests[0].subQuests[0].triggers[0].actions[3]": "Pokazuje dialog zakończenia. Zastąp „kill_quest_complete” ID swojego dialogu lub usuń tę akcję."
+    },
+    "counter-based-quest": {
+      "counters[0]": "Śledzi bieżący etap zadania (0 = nie rozpoczęto, 1 = etap 1 ukończony, 2 = zakończone). Zmień SID i używaj go we wszystkich warunkach Counter poniżej.",
+      "quests[0]": "Kontener zadania głównego. Zastąp SID i ustaw tokeny lokalizacji nazwy/opisu.",
+      "quests[0].subQuests[0]": "Etap 1: pokonać pierwszy cel. To podzadanie jest aktywne od początku.",
+      "quests[0].subQuests[0].triggers[0]": "Działa, gdy oddział z etapu 1 zostanie pokonany. Zwiększa licznik do 1 i aktywuje etap 2.",
+      "quests[0].subQuests[0].triggers[0].actions[1]": "CounterSet oznacza etap 1 jako ukończony. Warunek Counter w wyzwalaczu etapu 2 używa tej wartości.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Kończy to podzadanie w dzienniku zadań.",
+      "quests[0].subQuests[1]": "Etap 2: cel następczy. Zastąp „E_Squad_Target2” SID encji oddziału z etapu 2.",
+      "quests[0].subQuests[1].triggers[0]": "Działa, gdy oddział z etapu 2 zostanie pokonany ORAZ licznik etapu wynosi 1 (czyli etap 1 jest ukończony). Logika AND zapewnia właściwą kolejność.",
+      "quests[0].subQuests[1].triggers[0].actions[2]": "Ustawia licznik na 2 — oznacza całe zadanie jako ukończone. Inne zadania mogą sprawdzać tę wartość."
+    },
+    "timed-event": {
+      "counters[0]": "Zlicza tury, które upłynęły od startu mapy. Zwiększany co turę przez powtarzalny wyzwalacz.",
+      "quests[0]": "To zadanie działa po cichu w tle — gracz nie widzi jego nazwy ani opisu. Służy jako kontener dla logiki timera.",
+      "quests[0].subQuests[0]": "Podzadanie timera. Działa przez czas trwania okna zdarzenia.",
+      "quests[0].subQuests[0].triggers[0]": "Wyzwalacz powtarzalny: działa co turę (StartTurn bez parametrów = dowolna tura, dowolny gracz). Zwiększa licznik tur.",
+      "quests[0].subQuests[0].triggers[1]": "Wyzwalacz terminu: działa, gdy licznik tur osiągnie 10. Zastąp 10 żądaną liczbą tur.",
+      "quests[0].subQuests[0].triggers[1].actions[0]": "Pokazuje dialog po upływie terminu. Zastąp „timed_event_deadline” ID swojego dialogu.",
+      "quests[0].subQuests[0].triggers[1].actions[1]": "Zastąp lub usuń. Przykład: GameLose dla warunku porażki albo dowolna inna konsekwencja."
+    },
+    "dialog-driven-quest": {
+      "counters[0]": "Śledzi, czy gracz rozmawiał z postacią niezależną (0 = jeszcze nie, 1 = rozmawiał).",
+      "counters[1]": "Śledzi, czy zadanie zostało wykonane (0 = niewykonane, 1 = wykonane).",
+      "quests[0]": "Zadanie główne. Ustaw tokeny lokalizacji nazwy i opisu.",
+      "quests[0].subQuests[0]": "Etap 1: gracz musi wejść w interakcję z obiektem postaci niezależnej, aby otrzymać wprowadzenie do zadania.",
+      "quests[0].subQuests[0].triggers[0]": "Działa, gdy gracz wejdzie w interakcję z obiektem postaci niezależnej. Zastąp „npc_quest_giver” SID encji swojej postaci.",
+      "quests[0].subQuests[0].triggers[0].actions[0]": "Pokazuje dialog z wprowadzeniem do zadania. Zastąp „dialog_quest_start” ID swojego dialogu.",
+      "quests[0].subQuests[0].triggers[0].actions[2]": "Aktywuje etap 2 po tym, jak gracz porozmawiał z postacią niezależną.",
+      "quests[0].subQuests[1]": "Etap 2: właściwe zlecenie (tu: pokonać oddział). Dostosuj do celu swojego zadania.",
+      "quests[0].subQuests[1].triggers[0]": "Działa, gdy zlecenie jest wykonane. Zastąp „E_Squad_QuestTarget” SID encji swojego celu.",
+      "quests[0].subQuests[1].triggers[0].actions[1]": "Pokazuje dialog zakończenia zadania. Zastąp „dialog_quest_done” ID swojego dialogu."
+    }
+  }
+}
