@@ -807,6 +807,33 @@ function parseContentPoolEntry(entry: Record<string, unknown>): CatalogContentPo
   return { name, valueDistribution, groups, bans }
 }
 
+/** Every list/pool file the generic collectors above skip: random_pools/** are already in the generic pools, the allowlisted files too. */
+async function collectRmgTemplateContent(zip: JSZip): Promise<{ lists: CatalogContentList[]; pools: CatalogContentPool[] }> {
+  const generic = new Set<string>([...RMG_CONTENT_LIST_FILES, ...RMG_GENERIC_CONTENT_POOL_FILES])
+  const lists: CatalogContentList[] = []
+  const pools: CatalogContentPool[] = []
+  const seenLists = new Set<string>()
+  const seenPools = new Set<string>()
+  const isTemplateFile = (path: string): boolean => !generic.has(path) && !path.startsWith('generator/content_pools/random_pools/')
+  for (const path of zipFilesUnder(zip, 'generator/content_lists/').filter(isTemplateFile)) {
+    for (const entry of await readBareJsonArray(zip, path)) {
+      const name = str(entry.name)
+      if (!name || seenLists.has(name)) continue
+      seenLists.add(name)
+      lists.push({ name, content: Array.isArray(entry.content) ? (entry.content as Record<string, unknown>[]).map(parseContentListEntry) : [] })
+    }
+  }
+  for (const path of zipFilesUnder(zip, 'generator/content_pools/').filter(isTemplateFile)) {
+    for (const entry of await readBareJsonArray(zip, path)) {
+      const pool = parseContentPoolEntry(entry)
+      if (!pool || seenPools.has(pool.name)) continue
+      seenPools.add(pool.name)
+      pools.push(pool)
+    }
+  }
+  return { lists, pools }
+}
+
 async function collectRmgContentPools(zip: JSZip): Promise<CatalogContentPool[]> {
   const pools: CatalogContentPool[] = []
   const seen = new Set<string>()
@@ -959,7 +986,7 @@ export async function buildCatalog(
     heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations,
     squadTemplates, objectLogics, dialogData, zoneTemplates, cityBuildings,
     rmgContentLists, rmgContentPools, rmgEnvironmentAssets, rmgGeneratorConfig, rmgStatSids,
-    rmgZoneLayout, goodsValueBySid,
+    rmgZoneLayout, goodsValueBySid, rmgTemplateContent,
   ] =
     await Promise.all([
       collectHeroes(zip, locMap),
@@ -983,6 +1010,7 @@ export async function buildCatalog(
       collectRmgStatSids(zip),
       collectRmgZoneLayout(zip),
       collectGoodsValueBySid(zip),
+      collectRmgTemplateContent(zip),
     ])
 
   inferInteractableBiomes(mapObjects, factions)
@@ -1015,6 +1043,8 @@ export async function buildCatalog(
     rmgTemplateStrings,
     rmgContentLists,
     rmgContentPools,
+    rmgTemplateContentLists: rmgTemplateContent.lists,
+    rmgTemplateContentPools: rmgTemplateContent.pools,
     rmgEnvironmentAssets,
     rmgGeneratorConfig,
     rmgStatSids,

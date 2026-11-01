@@ -128,6 +128,8 @@ export const STATIC_CATALOG: GameCatalog = {
   rmgTemplateStrings: {},
   rmgContentLists: [],
   rmgContentPools: [],
+  rmgTemplateContentLists: [],
+  rmgTemplateContentPools: [],
   rmgEnvironmentAssets: [],
   rmgGeneratorConfig: undefined,
   rmgStatSids: [],
