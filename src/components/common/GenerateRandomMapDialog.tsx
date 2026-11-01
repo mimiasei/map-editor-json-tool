@@ -37,7 +37,7 @@
 // guaranteed identical for the same seed (one shared implementation).
 
 import { biomeName } from '@/lib/map-grid/terrain-names'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -55,6 +55,7 @@ import { previewRoads } from '@/lib/rmg/preview-roads'
 import type { TerrainResult } from '@/lib/rmg/generate-terrain'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
+import { summarizeGameTemplate } from '@/lib/rmg/template-summary'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
 import WinConditionsPanel from '@/components/common/WinConditionsPanel'
@@ -267,6 +268,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // above — a separate, orthogonal choice from this generator's own
   // slider-driven template format).
   const [gameTemplate, setGameTemplate] = useState<{ fileName: string; name: string; json: string } | null>(null)
+  // What the picked template decides, shown in the controls it overrides (greyed out): see template-summary.ts.
+  const templateSummary = useMemo(() => (gameTemplate ? summarizeGameTemplate(gameTemplate.json) : null), [gameTemplate])
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const [seedText, setSeedText] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category>('core')
@@ -781,7 +784,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
                       <div className="space-y-1.5">
                         <Label className="text-xs">{t('shared.players')}</Label>
-                        <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
+                        <Select value={String(templateSummary?.playerCount ?? playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {PLAYER_COUNT_OPTIONS.map((n) => (
@@ -797,7 +800,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           {t('common.generateRandomMapDialog.maxHeroes')}
                           <FieldInfo className="ml-1 h-3 align-middle" text={t('common.generateRandomMapDialog.howManyHeroesEachPlayer')} />
                         </Label>
-                        <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
+                        <Select value={String(templateSummary?.heroCountMax ?? maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked || !!gameTemplate}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
@@ -805,7 +808,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                         </Select>
                       </div>
                     </div>
-                    {gameTemplate && <p className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.playersIgnoredTheGameTemplate')}</p>}
+                    {gameTemplate && <p className="text-xs text-muted-foreground">{t('common.generateRandomMapDialog.templateControlsThese')}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
@@ -895,21 +898,29 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                         [t('common.generateRandomMapDialog.complexity'), t('common.generateRandomMapDialog.complexityInfo'), classic.complexity, 'complexity', COMPLEXITY_LEVELS],
                         [t('common.generateRandomMapDialog.difficulty'), t('common.generateRandomMapDialog.difficultyInfo'), classic.difficulty, 'difficulty', DIFFICULTY_LEVELS],
                         [t('common.generateRandomMapDialog.water'), t('common.generateRandomMapDialog.waterInfo'), classic.water, 'water', WATER_LEVELS],
-                      ] as const).map(([label, info, value, key, options]) => (
+                      ] as const).map(([label, info, value, key, options]) => {
+                        // The template sets richness, objects and water itself (the game has no override): shown greyed out. Richness has no
+                        // honest one-step equivalent, so it only says so. Difficulty is the player's own setting in the game and stays free.
+                        const fromTemplate = !!gameTemplate && key !== 'difficulty'
+                        const templateLevel = key === 'complexity' ? templateSummary?.complexity?.level : key === 'water' ? templateSummary?.water?.level : undefined
+                        const templateNumber = key === 'complexity' ? templateSummary?.complexity?.obstaclesFill : key === 'water' ? templateSummary?.water?.lakesFill : undefined
+                        const shown = fromTemplate ? templateLevel ?? '' : value
+                        return (
                         <div key={key} className="space-y-1.5">
                           <div className="flex items-center gap-1">
                             <Label className="text-xs">{label}</Label>
-                            <FieldInfo text={info} />
+                            <FieldInfo text={fromTemplate && templateNumber !== undefined ? t('common.generateRandomMapDialog.closestToTemplate', { value: templateNumber.toFixed(2) }) : info} />
                           </div>
-                          <Select value={value} onValueChange={(v) => setClassic((prev) => ({ ...prev, [key]: v }))} disabled={terrainLocked}>
-                            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <Select value={shown} onValueChange={(v) => setClassic((prev) => ({ ...prev, [key]: v }))} disabled={terrainLocked || fromTemplate}>
+                            <SelectTrigger className="h-8 text-sm"><SelectValue placeholder={t('common.generateRandomMapDialog.setByTemplate')} /></SelectTrigger>
                             <SelectContent>
                               {/* A mirrored map has no islands (they are joined by portals that are not mirrored). */}
                               {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{t(`common.generateRandomMapDialog.levels.${key}.${o.id}` as never)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
-                      ))}
+                        )
+                      })}
                       {!gameTemplate && (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1">

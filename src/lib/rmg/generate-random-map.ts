@@ -361,8 +361,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const rmgSchema = applySchemaTuning(catalog.rmgSchema ?? BUILTIN_RMG_SCHEMA, tuning)
   const hillLayouts = gameElevationLayouts ? rmgSchema.zoneLayouts : undefined
-  // A game template sets guard strength and richness itself (guardMultiplier, value budgets, pools); the game has no override for them.
-  const difficultyValues = difficulty && !gameTemplateJson ? rmgSchema.difficulties[difficultyIndex(difficulty)] : undefined
+  // Difficulty is the player's own lobby setting in the game, so it still scales a template's guards (on top of its guardMultiplier).
+  const difficultyValues = difficulty ? rmgSchema.difficulties[difficultyIndex(difficulty)] : undefined
   const elevationMinSpan = tuning.elevation.minAreaSpan
 
   // Zone graph → Fruchterman-Reingold layout → Penrose-tiling zone shaping →
@@ -454,6 +454,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, zones: graph.zones, tilesByZone: populateTilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, zoneContentSpecByZoneId, templateValueScale,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
+    // The template's pools and value budgets are its richness; the game has no override for them.
     richness: richness && !gameTemplateJson ? resolveRichness(richness, tuning) : undefined,
     difficulty: difficultyValues,
     guardTuning: tuning.guards,
