@@ -42,6 +42,9 @@ const PARALLEL = 3
 /** The index is saved this often so a crash or a cancel loses almost nothing. */
 const SAVE_EVERY = 20
 
+/** Bump when the look of decoration renders changes (camera, light, shadow): they are dropped from the index and rendered again. 1 = ground shadow light at 40 degrees instead of 60. */
+const DECORATIONS_REV = 1
+
 const JOBS: JobName[] = ['interactables', 'decorations', 'cliffs', 'rivers']
 
 let listed: Promise<ListedObject[]> | null = null
@@ -71,9 +74,17 @@ export async function refreshPendingCounts(): Promise<PendingCounts | null> {
   const gameDir = await getGameDir()
   if (!isTauri() || !gameDir) return null
   if (!store.index) await loadRenderIndex()
-  const index = useObjectRenderStore.getState().index ?? emptyIndex()
+  let index = useObjectRenderStore.getState().index ?? emptyIndex()
   try {
     const objects = await listObjects(gameDir)
+    if (index.decorationsRev !== DECORATIONS_REV) {
+      // Only decorations: the other jobs' renders are unaffected. The old PNGs are overwritten when rendered again.
+      const next = structuredClone(index)
+      for (const o of objects) if (o.job === 'decorations') delete next.objects[o.sid]
+      next.decorationsRev = DECORATIONS_REV
+      await saveRenderIndex(next)
+      index = next
+    }
     const pending = {
       interactables: missing(objects, index, 'interactables').length,
       decorations: missing(objects, index, 'decorations').length,

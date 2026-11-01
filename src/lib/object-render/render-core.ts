@@ -43,6 +43,11 @@ interface MaterialInfo {
 const FOLIAGE_SID = /^(pinetree_|tree_(?!of_)|palms_)/
 const FOLIAGE_SPECULAR = 0
 
+// Elevation of the invisible light that casts the ground shadow. At 60 degrees the shadow of a big mountain was a short, faint smudge (renders
+// of mountain_*_big_*, dirt_rock_*, hill_big at 60/50/40 were compared); 40 gives a visibly longer, better defined shadow. A render made with another
+// angle needs DECORATIONS_REV in render-job.ts bumped so the decorations are rendered again.
+const SHADOW_ELEVATION = 40
+
 interface MeshMeta {
   materials: Record<string, MaterialInfo>
   bbox_min: [number, number, number]
@@ -152,7 +157,7 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
   sun.position.set(-0.439, 0.643, 0.627).multiplyScalar(12)
   shadowed(sun)
   // ...and a second, invisible one (intensity 0) that only casts the soft ground shadow, lower and from another side.
-  const shadowElev = (60 * Math.PI) / 180
+  const shadowElev = (SHADOW_ELEVATION * Math.PI) / 180
   const shadowSun = new THREE.DirectionalLight(0xffffff, 0)
   shadowSun.position.set(-0.574 * Math.cos(shadowElev), Math.sin(shadowElev), 0.819 * Math.cos(shadowElev)).multiplyScalar(12)
   shadowed(shadowSun)

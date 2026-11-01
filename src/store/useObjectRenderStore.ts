@@ -20,6 +20,8 @@ export interface RenderEntry {
 /** The lookup table of what exists, so only new objects are exported and rendered later. */
 export interface RenderIndex {
   version: 1
+  /** Which DECORATIONS_REV the decoration renders were made with; a different (or missing) value drops them so they are rendered again. */
+  decorationsRev?: number
   objects: Record<string, RenderEntry>
   /** Animation variants that reuse another object's render (chicken_2 -> chicken_1). */
   aliases: Record<string, string>
