@@ -9,13 +9,10 @@
 // `contentCountLimits[]` references, and neutral-city faction
 // `differentFrom` constraints — see each field's own doc comment below and
 // `zone-population.ts`'s own consuming code for exactly how each is used.
-// Still deliberately NOT full template consumption: content POOLS (which
-// specific objects a zone's own `guardedContentPool`/`unguardedContentPool`/
-// `resourcesContentPool` names resolve to) and the full multi-main-object-
-// per-zone placement model are a real, much larger undertaking, tracked
-// separately, not attempted here — this generator still places its own
-// single mine/treasure-loop/guard per zone, just tuned by the real values
-// above when a template provides them.
+// Zone content is consumed through `ZoneContentSpec` (zone-population.ts): every mandatory entry is placed once, and the zone's
+// guarded/unguarded/resources pools (Core.zip generator/content_pools, in the catalog) are rolled until the zone's value budget is
+// spent. Not modelled: the `rules` of a mandatory entry (distance to the crossroads and so on), `soloEncounter`, and the
+// multi-main-object-per-zone placement.
 //
 // Schema confirmed two ways: this repo's own `maps/templates/*.rmg.json`
 // (~90 real game templates) and a third-party template editor's full
@@ -81,6 +78,14 @@ interface RawZone {
   guardedContentValuePerArea?: number
   resourcesValue?: number
   resourcesValuePerArea?: number
+  unguardedContentValue?: number
+  unguardedContentValuePerArea?: number
+  /** Scales every guard in the zone (0.5-1 seen); 1 when absent. */
+  guardMultiplier?: number
+  /** Pool names: Core.zip generator/content_pools, in the catalog as rmgContentPools / rmgTemplateContentPools. */
+  guardedContentPool?: string[]
+  unguardedContentPool?: string[]
+  resourcesContentPool?: string[]
   /** Names of this zone's own entries in the template's top-level
    *  `contentCountLimits[]` (named limit sets, e.g. `content_limits_spawn`)
    *  — resolved against `limitSetsByName` below. Real schema quirk
@@ -99,14 +104,9 @@ interface RawZone {
    *  biome cycling achieves, so only `FromList` is actually consumed
    *  below). */
   zoneBiome?: RawFactionConstraint
-  /** Names of this zone's own entries in the template's top-level
-   *  `mandatoryContent[]` (named content sets with REAL inline sids, unlike
-   *  `guardedContentPool`/`unguardedContentPool`/`resourcesContentPool`,
-   *  which reference pool names with no inline definition anywhere in this
-   *  format — confirmed empty `contentPools`/`contentLists` in 100% of the
-   *  ~60 bundled templates, so those three are NOT resolvable from this
-   *  file at all). Always a real array in every zone sampled — no
-   *  string-vs-array quirk like `contentCountLimits` above. */
+  /** Names of this zone's own entries in the template's top-level `mandatoryContent[]` (named sets of entries, each a sid or a pick
+   *  from content lists). The template's own `contentPools`/`contentLists` are empty in every bundled file: the pools and lists the
+   *  zone names live in Core.zip. Always a real array, no string-vs-array quirk like `contentCountLimits` above. */
   mandatoryContent?: string[]
   /** Zone-internal road segments — confirmed the reliable, real link back
    *  to a top-level connection: a `to: {type:"Connection", args:[name]}`
@@ -201,6 +201,11 @@ interface RawGameRules {
 
 interface RawMandatoryContentEntry {
   sid?: string
+  /** Content-list names to pick one sid from, instead of a fixed sid. */
+  includeLists?: string[]
+  /** Inline weight overrides within those lists; weight 0 bans a sid for this entry. */
+  content?: { sid?: string; weight?: number }[]
+  isGuarded?: boolean
   [key: string]: unknown
 }
 
@@ -265,11 +270,8 @@ export interface GameTemplateTopology {
    *  `RawZone.zoneBiome`'s own doc comment). Empty for a zone with no
    *  resolvable `FromList` constraint. */
   biomeIdByZoneId: Map<number, BiomeId>
-  /** zone id -> real inline sids from that zone's own `mandatoryContent[]`
-   *  name references (see `RawZone.mandatoryContent`'s own doc comment for
-   *  why this is resolvable but `guardedContentPool`/etc. are not). Empty
-   *  for a zone with no such reference. */
-  mandatoryContentSidsByZoneId: Map<number, string[]>
+  /** zone id -> what the zone's content is made of: mandatory entries, pool names and value budgets. Empty for a zone with none. */
+  zoneContentSpecByZoneId: Map<number, ZoneContentSpec>
   /** zone-graph edge key -> that connection's real paved material, resolved
    *  from a zone's own `roads[]` entry pointing at it (see `RawZone.roads`'s
    *  own doc comment for the confirmed name-matching rate). Empty for an
@@ -282,7 +284,31 @@ export interface GameTemplateTopology {
  *  `RawZone`'s own `guardedContentValue`/`resourcesValue` doc comments. */
 export interface ZoneContentValueOverrides {
   guardedContentValue?: number
+  unguardedContentValue?: number
   resourcesValue?: number
+}
+
+/** One `mandatoryContent[]` entry: a fixed sid or a pick from content lists. Placed exactly once per entry. */
+export interface MandatoryContentEntry {
+  sid?: string
+  includeLists?: string[]
+  /** Sids the entry's inline `content` sets to weight 0, i.e. never picked from its lists. */
+  bannedSids: string[]
+  /** False only when the template says so (watchtowers, mana wells, remote footholds); otherwise guarded by value. */
+  unguarded: boolean
+}
+
+/** Everything a template says about what a zone holds, apart from limits (own map) and layout. */
+export interface ZoneContentSpec {
+  mandatory: MandatoryContentEntry[]
+  guardedPools: string[]
+  unguardedPools: string[]
+  resourcesPools: string[]
+  /** Value budgets, `value + valuePerArea * zone size` (template units, before scaling to the map size). */
+  guardedValue?: number
+  unguardedValue?: number
+  resourcesValue?: number
+  guardMultiplier: number
 }
 
 function edgeKey(a: number, b: number): string {
@@ -413,11 +439,17 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   // `mandatoryContent[]` sets (top-level, REAL inline sids — see
   // `RawZone.mandatoryContent`'s own doc comment for why this is
   // resolvable but the guarded/unguarded/resources content POOLS are not).
-  const mandatoryContentSetsByName = new Map<string, string[]>()
+  const mandatoryContentSetsByName = new Map<string, MandatoryContentEntry[]>()
   for (const set of template.mandatoryContent ?? []) {
     if (!set.name) continue
-    const sids = (set.content ?? []).map((c) => c.sid).filter((sid): sid is string => typeof sid === 'string')
-    mandatoryContentSetsByName.set(set.name, sids)
+    const entries: MandatoryContentEntry[] = []
+    for (const c of set.content ?? []) {
+      const includeLists = Array.isArray(c.includeLists) && c.includeLists.length > 0 ? c.includeLists : undefined
+      if (typeof c.sid !== 'string' && !includeLists) continue
+      const bannedSids = (c.content ?? []).filter((x): x is { sid: string; weight: number } => typeof x.sid === 'string' && x.weight === 0).map((x) => x.sid)
+      entries.push({ sid: typeof c.sid === 'string' ? c.sid : undefined, includeLists, bannedSids, unguarded: c.isGuarded === false })
+    }
+    mandatoryContentSetsByName.set(set.name, entries)
   }
   const biomeNameToId = new Map<string, BiomeId>(
     Object.entries(BIOME_NAMES).map(([id, name]) => [name.toLowerCase(), Number(id) as BiomeId]),
@@ -428,7 +460,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   const contentCountLimitsByZoneId = new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = new Map<number, Set<number>>()
   const biomeIdByZoneId = new Map<number, BiomeId>()
-  const mandatoryContentSidsByZoneId = new Map<number, string[]>()
+  const zoneContentSpecByZoneId = new Map<number, ZoneContentSpec>()
   const roadMaterialByEdgeKey = new Map<string, 'Stone' | 'Dirt'>()
 
   rawZones.forEach((z, id) => {
@@ -437,8 +469,9 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
     const size = typeof z.size === 'number' && z.size > 0 ? z.size : 1
     const guardedContentValue = combineValueAndArea(z.guardedContentValue, z.guardedContentValuePerArea, size)
     const resourcesValue = combineValueAndArea(z.resourcesValue, z.resourcesValuePerArea, size)
+    const unguardedContentValue = combineValueAndArea(z.unguardedContentValue, z.unguardedContentValuePerArea, size)
     if (guardedContentValue !== undefined || resourcesValue !== undefined) {
-      zoneContentValueByZoneId.set(id, { guardedContentValue, resourcesValue })
+      zoneContentValueByZoneId.set(id, { guardedContentValue, unguardedContentValue, resourcesValue })
     }
 
     const zoneLimitNames = typeof z.contentCountLimits === 'string' ? [z.contentCountLimits] : z.contentCountLimits
@@ -482,12 +515,20 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
       }
     }
 
-    // Mandatory content — real, placeable sids straight from the
-    // template's own top-level named sets.
-    if (z.mandatoryContent && z.mandatoryContent.length > 0) {
-      const sids = z.mandatoryContent.flatMap((setName) => mandatoryContentSetsByName.get(setName) ?? [])
-      if (sids.length > 0) mandatoryContentSidsByZoneId.set(id, sids)
+    // What the zone holds: its mandatory entries, the pools its content is rolled from and the value budgets for them.
+    const mandatory = (z.mandatoryContent ?? []).flatMap((setName) => mandatoryContentSetsByName.get(setName) ?? [])
+    const names = (v: unknown): string[] => (Array.isArray(v) ? v.filter((n): n is string => typeof n === 'string') : [])
+    const spec: ZoneContentSpec = {
+      mandatory,
+      guardedPools: names(z.guardedContentPool),
+      unguardedPools: names(z.unguardedContentPool),
+      resourcesPools: names(z.resourcesContentPool),
+      guardedValue: guardedContentValue,
+      unguardedValue: unguardedContentValue,
+      resourcesValue,
+      guardMultiplier: typeof z.guardMultiplier === 'number' ? z.guardMultiplier : 1,
     }
+    if (mandatory.length > 0 || spec.guardedPools.length + spec.unguardedPools.length + spec.resourcesPools.length > 0) zoneContentSpecByZoneId.set(id, spec)
 
     // Road material — resolve this zone's own internal road segments that
     // point AT a real top-level connection (`to.type === "Connection"`)
@@ -504,7 +545,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   return {
     graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
-    biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
+    biomeIdByZoneId, zoneContentSpecByZoneId, roadMaterialByEdgeKey,
   }
 }
 

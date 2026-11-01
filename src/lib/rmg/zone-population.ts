@@ -31,8 +31,9 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { isRmgIneligibleInteractableSid, pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, UNSUPPORTED_CONTENT_POOL_SIDS } from './object-variety'
+import { findContentPool, isRmgIneligibleInteractableSid, pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, rollFromLists, UNSUPPORTED_CONTENT_POOL_SIDS, type ResolvedContentPoolPick } from './object-variety'
 import { scaleMultiplier } from './decoration-calibration'
+import type { ZoneContentSpec } from './rmg-template-import'
 import { mineGuardValue } from './value-model'
 import { NEUTRAL_ROLES, type NeutralZoneRole, type ZoneSpec } from './zone-graph'
 import type { RmgDifficultyValues } from './rmg-schema'
@@ -568,13 +569,11 @@ export interface PopulateZonesOptions {
    *  placed here must have a different faction from. Replaces the default
    *  "differ from every player" rule for zones with real data. */
   neutralCityExclusionsByZoneId?: Map<number, Set<number>>
-  /** zone id -> real, inline placeable sids from that zone's own
-   *  `mandatoryContent[]` (second follow-up milestone) — biases which
-   *  concrete artifact/storage/resource sid a treasure roll picks toward
-   *  ones the template author actually specified for this zone, without
-   *  forcing extra placements or overriding the existing count/budget/cap
-   *  logic (see `placeTreasure`'s own doc comment). */
-  mandatoryContentSidsByZoneId?: Map<number, string[]>
+  /** zone id -> a game template's content for that zone: mandatory entries (each placed exactly once), the pools its treasure is
+   *  rolled from and the value budgets for them. A zone with pools skips the generic treasure loop. */
+  zoneContentSpecByZoneId?: Map<number, ZoneContentSpec>
+  /** Map area / the template's declared area: scales the template's value budgets down to a smaller map (and up for a larger one). */
+  templateValueScale?: number
   /** 0 (default) = today's exact behavior (a flat round-robin cycle through
    *  MINE_TYPES with no biome awareness); 1 = the full real calibrated
    *  Sand-biome gold-mine enrichment (see SAND_GOLD_MINE_ENRICHMENT's own
@@ -607,6 +606,10 @@ export interface PopulateZonesResult {
   /** Anchor nodes of objects whose guard was decided here (neutral mines,
    *  guarded treasure) — the proximity-guard pass skips them. */
   decidedNodes: Set<number>
+  /** Zones whose treasure came from a game template's pools (the interactable scatter leaves them alone). */
+  templateContentZoneIds: Set<number>
+  /** Per sid: how many mandatory template entries asked for it and how many got a spot. */
+  mandatoryReport: Map<string, { requested: number; placed: number }>
 }
 
 /** A populator split in two so roads can be routed between the phases. */
@@ -618,7 +621,7 @@ export interface ZonePopulator {
 export function createZonePopulator(options: PopulateZonesOptions): ZonePopulator {
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, zoneContentSpecByZoneId, templateValueScale = 1,
     mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, mines = DEFAULT_MINE_DISTRIBUTION, zoneAnchorNode, symmetricZones = false,
   } = options
   // `rng` is the CONTENT stream (what gets rolled: pool picks, guard values,
@@ -653,6 +656,25 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
   const recordContentPlacement = (sid: string): void => {
     if (contentCountLimitBySid.has(sid)) contentCountSoFar.set(sid, (contentCountSoFar.get(sid) ?? 0) + 1)
     if (currentZoneContentLimitBySid.has(sid)) currentZoneContentSoFar.set(sid, (currentZoneContentSoFar.get(sid) ?? 0) + 1)
+  }
+  // A zone's counts persist between the key-object and treasure phases, so a mandatory entry counts against the zone's caps.
+  const zoneContentSoFar = new Map<number, Map<string, number>>()
+  const zoneUsedArtifacts = new Map<number, Set<string>>()
+  const enterZone = (zoneId: number): void => {
+    currentZoneContentLimitBySid = new Map((contentCountLimitsByZoneId?.get(zoneId) ?? []).map((l) => [l.sid, l.maxCount]))
+    let soFar = zoneContentSoFar.get(zoneId)
+    if (!soFar) { soFar = new Map(); zoneContentSoFar.set(zoneId, soFar) }
+    currentZoneContentSoFar = soFar
+    if (!zoneUsedArtifacts.has(zoneId)) zoneUsedArtifacts.set(zoneId, new Set())
+  }
+  /** Zones whose content comes from a game template's pools, and per sid how many mandatory entries were requested/placed. */
+  const templateContentZoneIds = new Set<number>()
+  const mandatoryReport = new Map<string, { requested: number; placed: number }>()
+  const noteMandatory = (sid: string, placed: boolean): void => {
+    const row = mandatoryReport.get(sid) ?? { requested: 0, placed: 0 }
+    row.requested++
+    if (placed) row.placed++
+    mandatoryReport.set(sid, row)
   }
 
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides'], randomHireOverrides?: ZonePlacement['randomHireOverrides']): number | null => {
@@ -775,7 +797,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
    *  is available or a roll comes back empty. `usedArtifactSids` (per-zone)
    *  mirrors Olden Era's own real RMG templates' `contentCountLimits`
    *  `maxCount: 1` pattern for named/notable objects. */
-  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number, preferredSids?: Set<string>): void => {
+  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number): void => {
     if (catalog && rng() < objectVariety) {
       const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || isRmgIneligibleInteractableSid(sid) || (disabledInteractableSids?.has(sid) ?? false)
       if (rng() < RESOURCE_POOL_SHARE) {
@@ -789,7 +811,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const guarded = rng() < GUARDED_TREASURE_SHARE
         const poolName = `template_pool_random${guarded ? '' : '_unguarded'}_t${currentBuildingTier}_base`
         const rolled = rollContentPool(catalog, poolName, rng, isExcluded)
-        const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, preferredSids, isAtContentCap, rng) : null
+        const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, undefined, isAtContentCap, rng) : null
         if (resolved) {
           recordContentPlacement(resolved.sid)
           const treasureNode = place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
@@ -876,6 +898,107 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng), guardCutoffValueByZoneId?.get(zoneId) ?? GUARD_VALUE_CUTOFF, { sid: mineSid, node: mineNode })
   }
 
+  // ── Game-template content ────────────────────────────────────────────────────
+  // A game template says what each zone holds: mandatory entries (placed once each, no matter the roll) and pools with a value
+  // budget per kind. Only the tile choice within the zone is ours; the template's `rules` (distance to crossroads and so on) and
+  // `soloEncounter` are not modelled.
+  const isTemplatePoolExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || isRmgIneligibleInteractableSid(sid) || (disabledInteractableSids?.has(sid) ?? false)
+  /** Value a guard needs for `sid`: the game's goods value, else the object's own AI/guard value. */
+  const guardValueOf = (sid: string): number | undefined =>
+    (catalog ? resolveGoodsValue(catalog, sid) : undefined) ?? mineGuardValue(sid, objectLogicsById) ?? undefined
+
+  /** Places an already-resolved pick and, when guarded, its guard at the entrance. Counts it against the zone's caps. */
+  const placePick = (pick: ResolvedContentPoolPick, tiles: number[], biome: BiomeId, cutoff: number, guarded: boolean, guardScale: number): number | null => {
+    const node = place(pick.sid, tiles, undefined, pick.randomItemOverrides, undefined, pick.randomHireOverrides)
+    if (node === null) return null
+    recordContentPlacement(pick.sid)
+    if (guarded) {
+      decidedNodes.add(node)
+      const value = pick.guardValue ?? guardValueOf(pick.sid)
+      if (value !== undefined) placeGuard(tiles, Math.round(value * guardScale), sampleFraction(biome, 0.5, rng), cutoff, { sid: pick.sid, node })
+    }
+    return node
+  }
+
+  /** The zone's mandatory entries, one placement each. `kitCredit` is what the player start kit already placed (wood/ore mines). */
+  const placeMandatory = (zone: ZoneSpec, tiles: number[], biome: BiomeId, spec: ZoneContentSpec, kitCredit: Map<string, number>): void => {
+    const cutoff = guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF
+    const used = zoneUsedArtifacts.get(zone.id) ?? new Set<string>()
+    const mineNodes: number[] = []
+    const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || (disabledInteractableSids?.has(sid) ?? false)
+    for (const entry of spec.mandatory) {
+      const sid = entry.sid ?? (catalog && entry.includeLists ? rollFromLists(catalog, entry.includeLists, entry.bannedSids, rng, isExcluded) : null)
+      if (!sid) { noteMandatory(entry.includeLists?.join('+') ?? '?', false); continue }
+      if (sid.startsWith('mine_')) {
+        const credit = kitCredit.get(sid) ?? 0
+        if (credit > 0) { kitCredit.set(sid, credit - 1); noteMandatory(sid, true); continue }
+        const spaced = mineNodes.length === 0
+          ? tiles
+          : tiles.filter((n) => mineNodes.every((m) => Math.max(Math.abs((n % sizeX) - (m % sizeX)), Math.abs(Math.floor(n / sizeX) - Math.floor(m / sizeX))) >= MINE_SPACING))
+        const node = (spaced.length > 0 ? place(sid, spaced) : null) ?? place(sid, tiles)
+        noteMandatory(sid, node !== null)
+        if (node === null) continue
+        recordContentPlacement(sid)
+        mineNodes.push(node)
+        decidedNodes.add(node)
+        const value = mineGuardValue(sid, objectLogicsById)
+        if (value !== null) placeGuard(tiles, Math.round(value * spec.guardMultiplier), sampleFraction(biome, 0.5, rng), cutoff, { sid, node })
+        continue
+      }
+      const pick = catalog ? resolveContentPoolPick(sid, catalog, used, undefined, isAtContentCap, rng) : { sid }
+      const node = pick ? placePick(pick, tiles, biome, cutoff, !entry.unguarded, spec.guardMultiplier) : null
+      noteMandatory(sid, node !== null)
+    }
+  }
+
+  /** Mean value of one pick from a pool, for a pick whose own value is unknown (most buildings). */
+  const poolMeanValue = (poolName: string): number => {
+    const dist = catalog ? findContentPool(catalog, poolName)?.valueDistribution : undefined
+    if (!dist) return 5000
+    let sum = 0
+    let weightSum = 0
+    dist.weights.forEach((w, i) => {
+      const low = i === 0 ? 0 : dist.priceBounds[i - 1]
+      const high = dist.priceBounds[i] ?? low * 1.3
+      sum += w * (low + high) / 2
+      weightSum += w
+    })
+    return weightSum > 0 ? Math.max(1000, sum / weightSum) : 5000
+  }
+
+  /** Spends a zone's template value budgets on rolls from its pools. Returns false when none of the zone's pools exist in the catalog,
+   *  so the caller falls back to the generic treasure loop. */
+  const placeTemplateTreasure = (zone: ZoneSpec, tiles: number[], biome: BiomeId, spec: ZoneContentSpec): boolean => {
+    if (!catalog) return false
+    const known = (names: string[]): string[] => names.filter((n) => findContentPool(catalog, n))
+    const kinds = [
+      { pools: known(spec.guardedPools), budget: spec.guardedValue, guarded: true },
+      { pools: known(spec.unguardedPools), budget: spec.unguardedValue, guarded: false },
+      { pools: known(spec.resourcesPools), budget: spec.resourcesValue, guarded: false },
+    ]
+    if (kinds.every((k) => k.pools.length === 0)) return false
+    const cutoff = guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF
+    const used = zoneUsedArtifacts.get(zone.id) ?? new Set<string>()
+    // A pool rolls objects in a bounded zone: never more than one per 10 tiles, however large the budget.
+    let slots = Math.floor(tiles.length / 10)
+    for (const kind of kinds) {
+      if (kind.pools.length === 0 || !kind.budget) continue
+      const target = kind.budget * templateValueScale
+      let spent = 0
+      let failures = 0
+      while (spent < target && slots > 0 && failures < 8) {
+        const poolName = kind.pools[Math.floor(rng() * kind.pools.length)]
+        const rolled = rollContentPool(catalog, poolName, rng, isTemplatePoolExcluded)
+        const pick = rolled ? resolveContentPoolPick(rolled, catalog, used, undefined, isAtContentCap, rng) : null
+        const node = pick ? placePick(pick, tiles, biome, cutoff, kind.guarded, spec.guardMultiplier) : null
+        if (!pick || node === null) { failures++; continue }
+        slots--
+        spent += resolveGoodsValue(catalog, pick.sid) ?? pick.guardValue ?? poolMeanValue(poolName)
+      }
+    }
+    return true
+  }
+
   // Per-zone treasure-budget scaling from a real template's own
   // resourcesValue (+ resourcesValuePerArea) — issue #210 runner-up
   // milestone. Applied RELATIVE to the median across every neutral zone in
@@ -913,7 +1036,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     if (counts.length > 0) meanNeutralTilesByRole.set(role, Math.round(counts.reduce((a, b) => a + b, 0) / counts.length))
   }
   const zoneContentRng = new Map<number, () => number>()
-  const result = (): PopulateZonesResult => ({ placements, concreteSquads, decidedNodes })
+  const result = (): PopulateZonesResult => ({ placements, concreteSquads, decidedNodes, templateContentZoneIds, mandatoryReport })
 
   /** Phase 1 — the objects roads are built around: player start kits (dwelling,
    *  mines, dust, start guard), neutral mines with their guards, neutral cities. */
@@ -924,6 +1047,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       contentRng = symmetricZones ? createSeededRng(zone.kind === 'neutral' ? roleSeed(roleOf(zone)) : playerContentSeed) : posRng
       zoneContentRng.set(zone.id, contentRng)
       const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
+      enterZone(zone.id)
+      const spec = zoneContentSpecByZoneId?.get(zone.id)
+      const kitCredit = new Map<string, number>()
 
       if (zone.kind === 'player') {
         const cityNode = zoneAnchorNode?.get(zone.id)
@@ -949,8 +1075,12 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         // diluted the map-wide guard-value median on small maps just from
         // sheer guard-count volume, and the user's own request was about
         // resource PRESENCE at player start, not guard density there.
-        for (const mineSid of ['mine_wood', 'mine_ore'] as const) placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid])
-        if (startKit.extraMine) placeAtDistance(startKit.extraMine, tiles, cityNode, startKit.extraMineDistance)
+        for (const mineSid of ['mine_wood', 'mine_ore'] as const) {
+          if (placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid]) !== null) kitCredit.set(mineSid, (kitCredit.get(mineSid) ?? 0) + 1)
+        }
+        if (startKit.extraMine && placeAtDistance(startKit.extraMine, tiles, cityNode, startKit.extraMineDistance) !== null) {
+          kitCredit.set(startKit.extraMine, (kitCredit.get(startKit.extraMine) ?? 0) + 1)
+        }
         placeAtDistance('resource_dust', tiles, cityNode, startKit.resource_dust)
         const range = startKit.guardRange
         // PLAYER_ZONE_GUARD_MULTIPLIER: real RMG templates' own spawn-zone
@@ -979,7 +1109,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const mineZoneTiles = symmetricZones ? meanNeutralTilesByRole.get(roleOf(zone)) ?? tiles.length : tiles.length
         const mineCount = Math.min(mines.neutral.max, Math.max(mines.neutral.min, Math.round(mineZoneTiles / mines.neutral.tilesPerMine)))
         const placedMineNodes: number[] = []
-        for (const drawnSid of drawMineTypes(mineCount, mines.neutralTypeWeights, rng)) {
+        // A template that lists mines for the zone decides them all; the generic draw would add more.
+        const templateMines = spec?.mandatory.some((e) => e.sid?.startsWith('mine_')) ?? false
+        for (const drawnSid of templateMines ? [] : drawMineTypes(mineCount, mines.neutralTypeWeights, rng)) {
           // Sand-biome gold-mine enrichment (issue #230) — an extra override
           // roll per mine, only consumed when biome is Sand AND the strength
           // option is active, so every other zone takes the same rng() path.
@@ -997,6 +1129,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         }
 
       }
+      if (spec && spec.mandatory.length > 0) placeMandatory(zone, tiles, biome, spec, kitCredit)
     }
 
     // Neutral random-city placement (a real, reported gap — this generator
@@ -1083,18 +1216,19 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
    *  symmetric zones still replay identical content. */
   const populateTreasure = (): PopulateZonesResult => {
     for (const zone of zones) {
-      if (zone.kind !== 'neutral') continue
       const tiles = tilesByZone.get(zone.id) ?? []
       if (tiles.length === 0) continue
+      const spec = zoneContentSpecByZoneId?.get(zone.id)
+      if (zone.kind !== 'neutral' && !spec) continue
       contentRng = zoneContentRng.get(zone.id) ?? posRng
       const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
-      // Runner-up milestone: this zone's own real per-sid caps (if any),
-      // layered on top of the map-wide `contentCountLimitBySid` above —
-      // reset fresh per zone since a cap here is scoped to just this zone.
-      currentZoneContentLimitBySid = new Map((contentCountLimitsByZoneId?.get(zone.id) ?? []).map((l) => [l.sid, l.maxCount]))
-      currentZoneContentSoFar = new Map()
-      const mandatorySids = mandatoryContentSidsByZoneId?.get(zone.id)
-      const preferredTreasureSids = mandatorySids && mandatorySids.length > 0 ? new Set(mandatorySids) : undefined
+      enterZone(zone.id)
+      if (spec && placeTemplateTreasure(zone, tiles, biome, spec)) {
+        templateContentZoneIds.add(zone.id)
+        continue
+      }
+      if (zone.kind !== 'neutral') continue
+      // This zone's own per-sid caps (enterZone above) sit on top of the map-wide `contentCountLimitBySid`.
 
       // Per-zone treasure density: bigger Voronoi regions (more tiles) get
       // proportionally more treasure piles, scaled again by the template's
@@ -1146,9 +1280,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       // loop now just runs this many times directly. Still reproduces the
       // same real-map-calibrated density `baseTreasureCount` documents above.
       const treasureCount = Math.max(0, Math.round(baseTreasureCount * treasureDensity * treasureScale))
-      const usedArtifactSids = new Set<string>()
+      const usedArtifactSids = zoneUsedArtifacts.get(zone.id) ?? new Set<string>()
       for (let i = 0; i < treasureCount; i++) {
-        placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, preferredTreasureSids)
+        placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF)
       }
     }
     return result()

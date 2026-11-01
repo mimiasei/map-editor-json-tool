@@ -426,6 +426,10 @@ export interface GameCatalog {
    *  same "raw here, resolved where shown" split used elsewhere. */
   rmgContentLists: CatalogContentList[]
   rmgContentPools: CatalogContentPool[]
+  /** The per-template pools and lists the generic arrays above leave out (template_pools_*, templates_*_pools, custom_content_lists_*,
+   *  generator_content_pools). Names are unique per template; a game template zone references them by name (`guardedContentPool` etc.). */
+  rmgTemplateContentLists?: CatalogContentList[]
+  rmgTemplateContentPools?: CatalogContentPool[]
   /** generator_environment_assets.json's real per-biome decoration/obstacle
    *  weights, issue #240 Phase 0 — all 7 biomes. */
   rmgEnvironmentAssets: CatalogEnvironmentBiome[]
@@ -502,4 +506,6 @@ export interface GameCatalog {
 // Square" map). Nothing persists a built catalog across sessions, so this
 // bump is hygiene-only, not a migration, same as v3-v13.
 // v15: squad templates also carry rollChance, requiredValue, maxValue and per-unit max values (random-squad example preview).
-export const CATALOG_SCHEMA_VERSION = 15
+// v16: rmgTemplateContentLists/rmgTemplateContentPools hold the per-template Core/generator pools and lists excluded from
+// the generic arrays above (they would skew interactable-rarity stats), looked up by name by the template-driven RMG content pass.
+export const CATALOG_SCHEMA_VERSION = 16

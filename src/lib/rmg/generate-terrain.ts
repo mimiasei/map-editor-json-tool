@@ -56,7 +56,7 @@ import { zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
 import { buildBuiltInLayout, ROLE_TREASURE_SCALE, type BuiltInLayout, type LayoutArchetype, type MirrorInfo } from './zone-archetypes'
 import { footprintForRotation, isLeftNode, mirrorAnchorNode, mirrorChanges, mirrorNode, mirrorNodeSet, symmetrizeOwnership } from './zone-mirror'
 import { logInfo } from '@/lib/logger'
-import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides } from './rmg-template-import'
+import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides, type ZoneContentSpec } from './rmg-template-import'
 import { blendZoneBordersWFC } from './terrain-wfc'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
@@ -264,7 +264,7 @@ export interface TerrainResult {
    *  returned; kept here too so callers needing the RAW template signal
    *  (as opposed to the final resolved biome) can still get at it. */
   biomeIdByZoneId: Map<number, BiomeId>
-  mandatoryContentSidsByZoneId: Map<number, string[]>
+  zoneContentSpecByZoneId: Map<number, ZoneContentSpec>
   roadMaterialByEdgeKey: Map<string, 'Stone' | 'Dirt'>
   /** The built-in layout archetype picked for this map; null with a game template. */
   layoutArchetype: LayoutArchetype | null
@@ -317,7 +317,7 @@ export function generateTerrain(
   const contentCountLimitsByZoneId = importedTopology?.contentCountLimitsByZoneId ?? new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = importedTopology?.neutralCityExclusionsByZoneId ?? new Map<number, Set<number>>()
   const biomeIdByZoneId = importedTopology?.biomeIdByZoneId ?? new Map<number, BiomeId>()
-  const mandatoryContentSidsByZoneId = importedTopology?.mandatoryContentSidsByZoneId ?? new Map<number, string[]>()
+  const zoneContentSpecByZoneId = importedTopology?.zoneContentSpecByZoneId ?? new Map<number, ZoneContentSpec>()
   const roadMaterialByEdgeKey = importedTopology?.roadMaterialByEdgeKey ?? new Map<string, 'Stone' | 'Dirt'>()
   const zoneDistances = zoneDistanceMatrix(graph)
   if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
@@ -573,7 +573,7 @@ export function generateTerrain(
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     waterNodesAll, elevationNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
-    biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
+    biomeIdByZoneId, zoneContentSpecByZoneId, roadMaterialByEdgeKey,
     layoutArchetype: builtInLayout?.archetype ?? null,
     mirror,
     playerRotation,

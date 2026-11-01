@@ -361,6 +361,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const rmgSchema = applySchemaTuning(catalog.rmgSchema ?? BUILTIN_RMG_SCHEMA, tuning)
   const hillLayouts = gameElevationLayouts ? rmgSchema.zoneLayouts : undefined
+  // Difficulty is the player's own lobby setting in the game, so it still scales a template's guards (on top of its guardMultiplier).
   const difficultyValues = difficulty ? rmgSchema.difficulties[difficultyIndex(difficulty)] : undefined
   const elevationMinSpan = tuning.elevation.minAreaSpan
 
@@ -393,7 +394,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, tileBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
-    mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
+    zoneContentSpecByZoneId, roadMaterialByEdgeKey,
   } = terrain
   let container = terrain.container
   let block2 = container.chunks[1]
@@ -445,11 +446,16 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
     state.terrainReserved = reserved
   }
+  // A game template's value budgets are in the units of its own declared map size; a smaller or larger map gets proportionally less or more.
+  const templateDeclared = gameTemplateJson ? parseGameTemplateJson(gameTemplateJson) : undefined
+  const templateArea = Number(templateDeclared?.sizeX) * Number(templateDeclared?.sizeZ)
+  const templateValueScale = Number.isFinite(templateArea) && templateArea > 0 ? (sizeX * sizeZ) / templateArea : 1
   const zonePopulator = createZonePopulator({
     sizeX, sizeZ, zones: graph.zones, tilesByZone: populateTilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, zoneContentSpecByZoneId, templateValueScale,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
-    richness: richness ? resolveRichness(richness, tuning) : undefined,
+    // The template's pools and value budgets are its richness; the game has no override for them.
+    richness: richness && !gameTemplateJson ? resolveRichness(richness, tuning) : undefined,
     difficulty: difficultyValues,
     guardTuning: tuning.guards,
     mines: resolveMineDistribution(tuning),
@@ -1243,7 +1249,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   for (const node of roadNodes) {
     if (!state.blocked.has(node)) { state.blocked.add(node); roadOnlyBlocked.add(node) }
   }
-  zonePopulator.populateTreasure()
+  const { templateContentZoneIds, mandatoryReport } = zonePopulator.populateTreasure()
+  const unplaced = [...mandatoryReport].filter(([, row]) => row.placed < row.requested)
+  if (unplaced.length > 0) logWarn(`Random map generation: template content without a spot or a placeable object: ${unplaced.map(([sid, row]) => `${sid} ${row.placed}/${row.requested}`).join(', ')}`)
   // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length
   if (skippedScatter > 0) {
@@ -1576,12 +1584,26 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // state. See zone-interactables.ts's own header comment for why this is
   // independent of (not layered onto) `treasureDensity`'s own interactable
   // share.
+  // What each zone already holds, so the scatter respects a game template's per-zone caps.
+  const zoneOfNode = new Map<number, number>()
+  for (const [zoneId, nodes] of tilesByZone) for (const node of nodes) zoneOfNode.set(node, zoneId)
+  const zoneObjectCounts = new Map<number, Map<string, number>>()
+  for (const p of placements) {
+    const zoneId = zoneOfNode.get(p.node)
+    if (zoneId === undefined) continue
+    const counts = zoneObjectCounts.get(zoneId) ?? new Map<string, number>()
+    counts.set(p.sid, (counts.get(p.sid) ?? 0) + 1)
+    zoneObjectCounts.set(zoneId, counts)
+  }
   const interactablePlacements = scatterZoneInteractables({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
     excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng, riverNodes,
     density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
     rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid),
     pandoraChancePerNeutralZone: includePandoraBox ? PANDORA_CHANCE_PER_NEUTRAL_ZONE : 0,
+    skipZoneIds: templateContentZoneIds,
+    zoneCaps: new Map([...contentCountLimitsByZoneId].map(([zoneId, rows]) => [zoneId, new Map(rows.map((r) => [r.sid, r.maxCount]))])),
+    zoneCounts: zoneObjectCounts,
   })
 
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-
@@ -2048,8 +2070,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     finalBlock2 = patched.block2Chunk
   }
 
-  // Max heroes per player: wins over an imported game template's heroCountMax.
-  if (options.maxHeroes !== undefined) {
+  // Max heroes per player. A game template sets it itself (heroCountMax) and the game has no override for it, so the dialog's value is ignored then.
+  if (options.maxHeroes !== undefined && !gameTemplateJson) {
     const maxHeroes = Math.min(10, Math.max(1, Math.round(options.maxHeroes)))
     const patched = patchGameRules(finalBlock1, finalBlock2, { heroCountMax: maxHeroes })
     finalBlock1 = patched.block1Chunk

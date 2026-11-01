@@ -7,7 +7,7 @@
 // pre-composed army). This module supplies the real alternatives, drawn
 // from the loaded GameCatalog, not invented.
 
-import type { CatalogSquadTemplate, GameCatalog } from '@/lib/catalog/types'
+import type { CatalogContentList, CatalogContentPool, CatalogSquadTemplate, GameCatalog } from '@/lib/catalog/types'
 import { TIER_MEDIAN_SQUAD_VALUE } from '@/lib/h3-import/neutral-strength'
 
 /** `sid -> real gold value`, folding `goodsValueBySid` (objects_logic/items,
@@ -19,6 +19,42 @@ import { TIER_MEDIAN_SQUAD_VALUE } from '@/lib/h3-import/neutral-strength'
  *  value. */
 export function resolveGoodsValue(catalog: GameCatalog, sid: string): number | undefined {
   return catalog.goodsValueBySid[sid] ?? catalog.rmgGeneratorConfig?.metaObjects.find((m) => m.sid === sid)?.value
+}
+
+/** A pool by name: the generic ones first, then the per-template ones a game template's zones reference. */
+export function findContentPool(catalog: GameCatalog, name: string): CatalogContentPool | undefined {
+  return catalog.rmgContentPools.find((p) => p.name === name) ?? catalog.rmgTemplateContentPools?.find((p) => p.name === name)
+}
+
+export function findContentList(catalog: GameCatalog, name: string): CatalogContentList | undefined {
+  return catalog.rmgContentLists.find((l) => l.name === name) ?? catalog.rmgTemplateContentLists?.find((l) => l.name === name)
+}
+
+/** One weighted sid out of the named content lists (a template's mandatory entry), skipping `bannedSids` and anything `isExcluded`
+ *  rejects. Weight-0 list entries are never picked. Null when nothing is left. */
+export function rollFromLists(
+  catalog: GameCatalog,
+  listNames: string[],
+  bannedSids: string[],
+  rng: () => number,
+  isExcluded?: (sid: string) => boolean,
+): string | null {
+  const banned = new Set(bannedSids)
+  const candidates = new Map<string, number>()
+  for (const name of listNames) {
+    for (const entry of findContentList(catalog, name)?.content ?? []) {
+      if (entry.weight <= 0 || banned.has(entry.sid) || isExcluded?.(entry.sid)) continue
+      candidates.set(entry.sid, (candidates.get(entry.sid) ?? 0) + entry.weight)
+    }
+  }
+  const total = [...candidates.values()].reduce((a, b) => a + b, 0)
+  if (total <= 0) return null
+  let roll = rng() * total
+  for (const [sid, weight] of candidates) {
+    if (roll < weight) return sid
+    roll -= weight
+  }
+  return [...candidates.keys()].pop() ?? null
 }
 
 /** Real weighted sid pick straight out of one named `Core/generator/
@@ -45,7 +81,7 @@ export function rollContentPool(
   rng: () => number,
   isExcluded?: (sid: string) => boolean,
 ): string | null {
-  const pool = catalog.rmgContentPools.find((p) => p.name === poolName)
+  const pool = findContentPool(catalog, poolName)
   if (!pool) return null
   const banned = new Set((pool.bans ?? []).map((b) => b.sid))
   const candidates: { sid: string; weight: number }[] = []
@@ -54,7 +90,7 @@ export function rollContentPool(
     const overrides = new Map((group.content ?? []).map((c) => [c.sid, c.weight]))
     const seen = new Set<string>()
     for (const listName of group.includeLists ?? []) {
-      const list = catalog.rmgContentLists.find((l) => l.name === listName)
+      const list = findContentList(catalog, listName)
       for (const entry of list?.content ?? []) {
         if (seen.has(entry.sid) || banned.has(entry.sid) || isExcluded?.(entry.sid)) continue
         seen.add(entry.sid)

@@ -70,6 +70,11 @@ export interface ScatterInteractablesOptions {
    *  never in a player zone). Omitted or 0: none. It is kept out of every other
    *  pool because its reward (15+ spells) is far too strong to be common. */
   pandoraChancePerNeutralZone?: number
+  /** Zones whose content a game template's pools already decided: nothing is scattered there. */
+  skipZoneIds?: ReadonlySet<number>
+  /** A game template's per-zone caps (zone id -> sid -> max), and what the zone already holds (mutated as this pass places). */
+  zoneCaps?: ReadonlyMap<number, ReadonlyMap<string, number>>
+  zoneCounts?: Map<number, Map<string, number>>
 }
 
 export function scatterZoneInteractables(options: ScatterInteractablesOptions): ZonePlacement[] {
@@ -78,7 +83,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
   if (chance <= 0) return placements
   const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng } = options
   for (const zone of zones) {
-    if (zone.kind !== 'neutral' || rng() >= chance) continue
+    if (zone.kind !== 'neutral' || options.skipZoneIds?.has(zone.id) || rng() >= chance) continue
     const free = (tilesByZone.get(zone.id) ?? []).filter((n) => !excludedNodes.has(n))
     // A few tries: the spot may collide with an object that is already there.
     for (let attempt = 0; attempt < 20 && free.length > 0; attempt++) {
@@ -94,7 +99,12 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
 function scatterInteractablesPool(options: ScatterInteractablesOptions): ZonePlacement[] {
   const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false, rarity, riverNodes } = options
   const placements: ZonePlacement[] = []
-  const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false) || (rarity?.isBlocked(candidate) ?? false)
+  let currentZoneId = -1
+  const atZoneCap = (candidate: string): boolean => {
+    const max = options.zoneCaps?.get(currentZoneId)?.get(candidate)
+    return max !== undefined && (options.zoneCounts?.get(currentZoneId)?.get(candidate) ?? 0) >= max
+  }
+  const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false) || (rarity?.isBlocked(candidate) ?? false) || atZoneCap(candidate)
   const weightFor = (sid: string): number => rarity?.weight(sid) ?? 1
 
   // Free land within reach of a river, per zone (built on first use).
@@ -132,6 +142,8 @@ function scatterInteractablesPool(options: ScatterInteractablesOptions): ZonePla
     }
     if (!tryPlaceAt(sid, spot, sizeX, sizeZ, catalogById, state)) return false
     placements.push({ tempId: state.nextTempId++, sid, node: spot })
+    const counts = options.zoneCounts?.get(zoneId)
+    if (counts) counts.set(sid, (counts.get(sid) ?? 0) + 1)
     return true
   }
   if (symmetricZones) {
@@ -141,6 +153,8 @@ function scatterInteractablesPool(options: ScatterInteractablesOptions): ZonePla
     }
     const target = { player: Math.round(meanTiles('player') * density * 0.4), neutral: Math.round(meanTiles('neutral') * density) }
     for (const zone of zones) {
+      if (options.skipZoneIds?.has(zone.id)) continue
+      currentZoneId = zone.id
       const free = (tilesByZone.get(zone.id) ?? []).filter((n) => !excludedNodes.has(n))
       if (free.length === 0) continue
       // One attempt per roll (not retried until it fits): the per-tile roll this
@@ -157,7 +171,8 @@ function scatterInteractablesPool(options: ScatterInteractablesOptions): ZonePla
   }
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
-    if (tiles.length === 0) continue
+    if (tiles.length === 0 || options.skipZoneIds?.has(zone.id)) continue
+    currentZoneId = zone.id
     const zoneDensity = zone.kind === 'player' ? density * 0.4 : density
     for (const node of tiles) {
       if (excludedNodes.has(node)) continue

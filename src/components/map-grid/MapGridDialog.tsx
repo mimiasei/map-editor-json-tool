@@ -5625,10 +5625,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ? entry.pick.primary.rotation
                     : undefined
                   const rotationDegrees = rotation !== undefined ? (rotation % 10) * 90 : 0
-                  // The image is drawn flipped for a mirrored object and for a rotatable one turned 180° or 270° (its art isn't turned in 3D, so a flip is the
-                  // visible cue); both together cancel.
-                  const flipImage = entry.pick.primary.type === 0
-                    && ((entry.pick.primary.rotation ?? 0) >= 10) !== (rotation !== undefined && rotation % 10 >= 2)
+                  // The image is drawn flipped for a mirrored object only. A turn of 180° or 270° is not shown on the image: the render has its
+                  // shadow baked in, and flipping it would throw the shadow to the opposite side of the light.
+                  const flipImage = entry.pick.primary.type === 0 && (entry.pick.primary.rotation ?? 0) >= 10
                   return (
                     <div
                       key={entry.key}
