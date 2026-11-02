@@ -86,7 +86,8 @@ import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
-import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
+import type { PlacedObject } from '@/types/map-context'
+import { boundaryBand, fortifyZoneBoundaries, sealBoundaryBand, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { buildFlatPlaced, reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport, type PlayerStartStats } from './balance-analyzer'
@@ -392,7 +393,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const objectLogicsById = buildObjectLogicsIndex(catalog)
   const {
     graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, tileBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId,
+    portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, gateOnlyEdges: templateGateOnlyEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     zoneContentSpecByZoneId, roadMaterialByEdgeKey,
   } = terrain
@@ -683,6 +684,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const roadNodes = new Set<number>()
   const roadIdByNode = new Map<number, number>()
   const roadPathsByEdge = new Map<string, number[]>()
+  const MAX_GATE_ONLY_PASSAGES = 3
+  const GATE_ONLY_SPACING = 10
   // A road route that needed to cross an elevation wall gets a ramp punched
   // through the exact tile it used (never a level change — see the repair
   // block below), same "carve exactly what a real route needed" convention
@@ -1098,6 +1101,44 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       for (const node of smoothed) { zoneRoad.add(node); roadNodes.add(node); roadIdByNode.set(node, 1) }
     }
   }
+  // A template's roadless Direct connections: no road, but a guarded passage all the same. Without one the zones' walls shut them off
+  // from each other and the accessibility pass later tears holes in the walls at random. A pair listed several times gets that many
+  // passages (up to MAX_GATE_ONLY_PASSAGES), kept GATE_ONLY_SPACING tiles apart. Each is a straight corridor through the whole wall band.
+  const gatePaths: number[][] = []
+  const gateCorridorNodes = new Set<number>()
+  const gateReach = 2
+  const gatesPerPair = new Map<string, number[][]>()
+  for (const [a, b] of templateGateOnlyEdges) {
+    const key = `${Math.min(a, b)}:${Math.max(a, b)}`
+    const made = gatesPerPair.get(key) ?? []
+    if (made.length >= MAX_GATE_ONLY_PASSAGES || islandZoneIds.has(a) || islandZoneIds.has(b)) continue
+    const passages = choosePassages(zoneIdByNode, sizeX, sizeZ, tilesByZone.get(a) ?? [], a, b, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number,
+      (n) => !state.blocked.has(n) && !waterNodesAll.has(n), 400)
+    let path: number[] | null = null
+    for (const [inA, inB] of passages) {
+      const dx = (inB % sizeX) - (inA % sizeX)
+      const dz = Math.floor(inB / sizeX) - Math.floor(inA / sizeX)
+      const x0 = inA % sizeX
+      const z0 = Math.floor(inA / sizeX)
+      const candidate: number[] = []
+      for (let k = -gateReach; k <= 1 + gateReach; k++) {
+        const x = x0 + dx * k
+        const z = z0 + dz * k
+        if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) { candidate.length = 0; break }
+        const node = z * sizeX + x
+        if (state.blocked.has(node) || waterNodesAll.has(node)) { candidate.length = 0; break }
+        candidate.push(node)
+      }
+      if (candidate.length === 0) continue
+      const apart = made.every((other) => Math.abs((other[gateReach] % sizeX) - x0) + Math.abs(Math.floor(other[gateReach] / sizeX) - z0) >= GATE_ONLY_SPACING)
+      if (apart) { path = candidate; break }
+    }
+    if (!path) { unroutableEdges += 1; continue }
+    made.push(path)
+    gatesPerPair.set(key, made)
+    gatePaths.push(path)
+    for (const node of path) gateCorridorNodes.add(node)
+  }
   if (unroutableEdges > 0) {
     logWarn(`Random map generation: ${unroutableEdges} zone connection(s) could not be routed at all — those two zones have no road between them (a genuine blocked-tile partition even after the water-repair pass; extremely crowded/watery map)`)
   }
@@ -1492,6 +1533,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // rather than adding a second parallel check. Deliberately doesn't affect
   // the road/river computation above (each already ran before this point).
   for (const node of roadNodes) state.blocked.add(node)
+  for (const node of gateCorridorNodes) state.blocked.add(node)
   for (const node of riverNodes) state.blocked.add(node)
   // Bridges where a road crosses a straight river.
   const bridgePlacements = placeRoadBridges({ sizeX, sizeZ, roadNodes, roadIdByNode, riverShapeByNode, waterNodes: waterNodesAll, catalogById, state })
@@ -1538,7 +1580,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   await reportProgress(i18n.t('rmg.progress.fortifyingBoundaries'), 68)
   const boundaryResult = fortifyZoneBoundaries({
     sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
-    roadPaths: [...roadPathsByEdge.values(), ...riverPaths],
+    roadPaths: [...roadPathsByEdge.values(), ...gatePaths, ...riverPaths],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
     catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
     islandZoneIds, waterNodes: waterNodesAll, symmetricZones: !gameTemplateJson,
@@ -1687,6 +1729,22 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
     if (dropped > 0) logWarn(`Random map generation: dropped ${dropped} decoration(s) that broke biome isolation`)
   }
+  // Plug every gap left in the zone walls, now that all objects are down. A mirrored map copies its left half and seals its borders itself.
+  if (!mirrored && boundaryGuardStrength !== 'none') {
+    const placedNow = [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...beachResult.placements, ...bankPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]
+    const solid = buildBlockedTileSet({
+      sizeX, sizeZ, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
+      placedObjects: placedNow.map((p) => ({ key: '', type: 0, id: p.tempId, sid: p.sid, x: p.node % sizeX, z: Math.floor(p.node / sizeX), node: p.node, rotation: p.rotation ?? 0 }) as PlacedObject),
+    }, catalog)
+    for (const squad of allConcreteSquads) solid.add(squad.node)
+    boundaryResult.wallPlacements.push(...sealBoundaryBand({
+      sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById,
+      isBlocked: (node) => solid.has(node),
+      keepOpen: new Set([...boundaryResult.gateNodes, ...roadNodes, ...gateCorridorNodes, ...riverNodes]),
+      importantNodes: new Set([...placements, ...bankPlacements, ...portalPlacements, ...interactablePlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements].map((p) => p.node).concat(allConcreteSquads.map((s) => s.node))),
+      islandZoneIds, state, rng,
+    }))
+  }
   for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...beachResult.placements, ...bankPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
@@ -1738,6 +1796,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
 
   await reportProgress(i18n.t('rmg.progress.checkingReachability'), 84)
+  const wallBand = boundaryBand(zoneIdByNode, sizeX, sizeZ)
   const report = applyAccessibilityPass(
     objectGroups,
     sizeX,
@@ -1749,6 +1808,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     portalAdjacency,
     boundaryResult.gateNodes,
     new Set([...roadNodes, ...riverNodes]),
+    // The zone walls, and any other decoration standing in the wall band, are the last things the pass may delete.
+    new Set([...boundaryResult.wallPlacements, ...obstaclePlacements.filter((p) => wallBand.has(p.node))].map((p) => p.tempId)),
   )
   if (report.stillUnreachable > 0) {
     logWarn(`Random map generation: ${report.stillUnreachable} placed object(s) remained unreachable after the accessibility pass`)

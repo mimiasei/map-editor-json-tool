@@ -236,6 +236,9 @@ export interface GameTemplateTopology {
    *  `connectionType: "Portal"`) — see this file's own header comment for
    *  why these still need to be real graph edges. */
   unpaintedEdges: Set<string>
+  /** `Direct` connections without a road (Jebus Cross lists 5 per zone pair, all `road: null`), one entry per connection: the template
+   *  wants a guarded passage between the zones, with nothing painted on it. */
+  gateOnlyEdges: [number, number][]
   /** zone id -> its own resolved `zoneLayouts[]` entry (issue #210, Stage
    *  3a/3c) — empty for a zone with no `layout` reference or an
    *  unresolvable one. */
@@ -388,6 +391,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   const edges: [number, number][] = []
   const portalEdges = new Set<string>()
   const unpaintedEdges = new Set<string>()
+  const gateOnlyEdges: [number, number][] = []
   // Real connection `name` -> its own zone-graph edge key, so a zone's own
   // `roads[]` entry (which references a connection by NAME, not by zone
   // pair) can be resolved back to the edge it actually paints — see
@@ -401,7 +405,10 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
     edges.push([a, b])
     const key = edgeKey(a, b)
     if (conn.connectionType === 'Portal') portalEdges.add(key)
-    else if (!(conn.connectionType === 'Direct' && conn.road)) unpaintedEdges.add(key)
+    else if (!(conn.connectionType === 'Direct' && conn.road)) {
+      unpaintedEdges.add(key)
+      if (conn.connectionType === 'Direct') gateOnlyEdges.push([a, b])
+    }
     if (conn.name) connNameToEdgeKey.set(conn.name, key)
   }
 
@@ -543,7 +550,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   })
 
   return {
-    graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
+    graph: { zones, edges }, portalEdges, unpaintedEdges, gateOnlyEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     biomeIdByZoneId, zoneContentSpecByZoneId, roadMaterialByEdgeKey,
   }

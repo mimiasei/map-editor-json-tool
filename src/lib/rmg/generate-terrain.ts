@@ -247,6 +247,8 @@ export interface TerrainResult {
    *  never be painted as a road or portal (rmg-template-import.ts's own
    *  header comment). Empty when no template was imported. */
   unpaintedEdges: Set<string>
+  /** rmg-template-import.ts's `gateOnlyEdges`; empty when no template was imported. */
+  gateOnlyEdges: [number, number][]
   /** Per-zone terrain-shape overrides from a Stage 1 game-template import
    *  (Stage 3a/3c — rmg-template-import.ts's own `ZoneLayoutOverrides` doc
    *  comment). Empty when no template was imported. */
@@ -307,6 +309,7 @@ export function generateTerrain(
   const graph = importedTopology ? importedTopology.graph : (builtInLayout as BuiltInLayout).graph
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
   const unpaintedEdges = importedTopology?.unpaintedEdges ?? new Set<string>()
+  const gateOnlyEdges = importedTopology?.gateOnlyEdges ?? []
   const zoneLayoutByZoneId = importedTopology?.zoneLayoutByZoneId ?? new Map<number, ZoneLayoutOverrides>()
   const guardCutoffValueByZoneId = importedTopology?.guardCutoffValueByZoneId ?? new Map<number, number>()
   // Built-in layouts: center/pocket zones get extra treasure through the same
@@ -571,7 +574,7 @@ export function generateTerrain(
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     tileBiome: terrainChanges.map((c) => c.biomeId),
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    waterNodesAll, elevationNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
+    waterNodesAll, elevationNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, gateOnlyEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     biomeIdByZoneId, zoneContentSpecByZoneId, roadMaterialByEdgeKey,
     layoutArchetype: builtInLayout?.archetype ?? null,

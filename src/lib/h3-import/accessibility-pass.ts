@@ -133,6 +133,8 @@ interface TargetInfo {
   accessNodes: number[]
 }
 
+const COSTLY_REMOVAL = 12
+
 export function applyAccessibilityPass(
   objectGroups: Map<string, ObjectPlacementGroup>,
   atlasWidth: number,
@@ -157,6 +159,9 @@ export function applyAccessibilityPass(
    *  import call site doesn't pass this, so its own nudge behavior is
    *  unchanged. */
   avoidNodes: Set<number> = new Set(),
+  /** Decorative objects that cost `COSTLY_REMOVAL` instead of 1 to delete, so the path to a stuck target goes through ordinary decoration
+   *  first. The RMG puts its zone walls here: deleting one opens a hole between two zones. */
+  costlyIds: Set<number> = new Set(),
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -308,7 +313,7 @@ export function applyAccessibilityPass(
         if (!blocked.has(n)) { relax(node, n, 0, []); continue }
         const owners = nodeOwners.get(n)
         if (owners && owners.every((o) => decorativeIds.has(o.id))) {
-          relax(node, n, 1, owners.map((o) => o.id))
+          relax(node, n, owners.some((o) => costlyIds.has(o.id)) ? COSTLY_REMOVAL : 1, owners.map((o) => o.id))
         }
       }
       const portalTargets = portalNodeAdjacency.get(node)
