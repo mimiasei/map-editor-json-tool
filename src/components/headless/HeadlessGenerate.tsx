@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMapBytes } from '@/lib/rmg/generate-map-file'
+import { listBundledGameTemplates, readBundledGameTemplateJson } from '@/lib/rmg/rmg-template-catalog'
+import { summarizeGameTemplate } from '@/lib/rmg/template-summary'
 import { buildClassicOptions } from '@/lib/rmg/classic-presets'
 import { loadClassicTuning } from '@/lib/rmg/load-tuning'
 import { DEFAULT_CLI_USE_SEED } from '@/lib/rmg/rmg-tuning'
@@ -101,21 +103,44 @@ export default function HeadlessGenerate({ args }: Props) {
           return finish(EXIT_NO_CATALOG, resultPath, { ok: false, error: message })
         }
 
+        // Only the game's own templates, not the RealMap_* ones mined from real maps.
+        let templateJson: string | undefined
+        let playerCount = parsed.playerCount
+        if (parsed.gameTemplate) {
+          const wanted = parsed.gameTemplate.toLowerCase()
+          const all = (await listBundledGameTemplates(useCatalogStore.getState().catalog!)) ?? []
+          const real = all.filter((tpl) => !tpl.fileName.startsWith('RealMap_'))
+          const hit = real.find((tpl) => tpl.name.toLowerCase() === wanted || tpl.fileName.replace(/.rmg.json$/, '').toLowerCase() === wanted)
+          if (!hit) {
+            const message = `--game-template "${parsed.gameTemplate}" is not a game template; use one of: ${real.map((tpl) => tpl.name).join(', ')}`
+            logError(`Headless: bad arguments — ${message}`)
+            setError(message)
+            return finish(EXIT_BAD_ARGS, resultPath, { ok: false, error: message })
+          }
+          const json = await readBundledGameTemplateJson(hit.fileName)
+          const summary = json ? summarizeGameTemplate(json) : null
+          if (!json || !summary) throw new Error(`Game template "${hit.name}" could not be read`)
+          templateJson = json
+          playerCount = summary.playerCount
+          logInfo(`Headless: game template "${hit.name}" (${playerCount} players)${parsed.ignored.length ? `; ignoring --${parsed.ignored.join(', --')}` : ''}`)
+        }
+
         const tuning = await loadClassicTuning(useCatalogStore.getState().catalog)
         const useSeed = tuning.cli?.useSeed ?? DEFAULT_CLI_USE_SEED
         if (parsed.seed !== undefined && !useSeed) logInfo(`Headless: ignoring --seed ${parsed.seed} (cli.useSeed is off in the tuning file)`)
         const seed = useSeed && parsed.seed !== undefined ? parsed.seed : Math.floor(Math.random() * 1_000_000_000)
         const rng = createSeededRng(seed)
-        logInfo(`Headless: generating ${parsed.sizeX}x${parsed.sizeZ}, ${parsed.playerCount} players, seed ${seed} → ${parsed.output}`)
+        logInfo(`Headless: generating ${parsed.sizeX}x${parsed.sizeZ}, ${playerCount} players, seed ${seed} → ${parsed.output}`)
 
         const generated = await generateRandomMapBytes({
           mapName: parsed.mapName,
           onProgress: (label, pct) => report({ label, pct }),
           sizeX: parsed.sizeX,
           sizeZ: parsed.sizeZ,
-          playerCount: parsed.playerCount,
+          playerCount,
           playerSpawnerSid: 'city-spawner',
           ...buildClassicOptions(parsed.classic, rng, tuning),
+          gameTemplateJson: templateJson,
           rng,
         })
         if (!generated) throw new Error('Headless generation requires the desktop build')
@@ -128,7 +153,9 @@ export default function HeadlessGenerate({ args }: Props) {
           seed,
           sizeX: parsed.sizeX,
           sizeZ: parsed.sizeZ,
-          playerCount: parsed.playerCount,
+          playerCount,
+          gameTemplate: parsed.gameTemplate,
+          ignoredFlags: parsed.ignored,
           ...parsed.classic,
           fairness: generated.playerBalance?.score ?? null,
           warnings: generated.warnings,

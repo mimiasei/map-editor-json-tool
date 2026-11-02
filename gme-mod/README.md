@@ -4,7 +4,7 @@ A BepInEx 6 (IL2CPP) plugin for Heroes of Might and Magic: Olden Era's own map
 editor. It adds **Seed (random or the seed field; the seed field only counts when `cli.useSeed` is true in the tse tuning file), Players, Richness, Complexity, Difficulty and Water** options
 to the editor's *Generate map* dialog, plus **Layout** (`--layout`) below them, and a second column with **Starting towns** (fit the terrain, or random; `--faction`) and an Off/On dropdown for each extra **win condition**
 (Capital Hold, City Hold, Guardian's Demise, Final Battle, Tournament; sent as `--win classic,…`, with the default days
-and battle dates) **Mirrored Map** (`--mirror true`, even player counts only: the right half copies the left) and **Max Heroes** (1-10 heroes per player, default 10; `--max-heroes`, written to the map's `heroCountMax`), and generates the map with the Scenario
+and battle dates) **Mirrored Map** (`--mirror true`, even player counts only: the right half copies the left) and **Max Heroes** (1-10 heroes per player, default 10; `--max-heroes`, written to the map's `heroCountMax`), and a **Game Template** dropdown at the top of the second column (the 59 random map templates of the game, or none; `--game-template "<name>"`). With a template picked, the template decides players, richness, complexity, water and max heroes, and layout, win conditions and mirroring do not apply, so the mod greys those dropdowns out and the Scenario Editor ignores their flags. GME's own template text field is left alone (it is still sent as `--template`, which is ignored). The mod generates the map with the Scenario
 Editor's random map generator (`app.exe --generate …`, see
 `src/lib/rmg/headless-args.ts`), then opens the result in the map editor.
 

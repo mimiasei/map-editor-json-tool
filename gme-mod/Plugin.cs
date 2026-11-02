@@ -1,6 +1,6 @@
 // ─── GME random map generator mod ────────────────────────────────────────────
 // Adds Players / Richness / Complexity / Difficulty / Water / Layout / Win
-// condition / Starting towns dropdowns to the
+// condition / Starting towns / Game template dropdowns to the
 // game map editor's (GME) "Generate map" dialog and replaces its generator with
 // the Scenario Editor's (tse) headless RMG: the dialog runs
 // `app.exe --generate …`, then opens the generated map in GME.
@@ -31,7 +31,74 @@ namespace GmeRmgMod
 
         // The added dropdowns (TMP_Dropdown), set by StartPostfix.
         private static object seedDropdown, playersDropdown, richnessDropdown, complexityDropdown, difficultyDropdown, waterDropdown;
-        private static object layoutDropdown, townsDropdown, mirrorDropdown, heroesDropdown;
+        private static object layoutDropdown, townsDropdown, mirrorDropdown, heroesDropdown, templateDropdown;
+
+        // The game's own random map templates, as tse's --game-template takes them; index 0 sends no flag.
+        // Keep in step with src-tauri/resources/templates/*.rmg.json without the RealMap_* ones (templates mined from real maps).
+        private static readonly string[] GameTemplates =
+        {
+            "",
+            "Anarchy",
+            "Arcade",
+            "Blitz",
+            "Chosen One",
+            "Christmas Tree",
+            "Crossroads",
+            "Diamond",
+            "Exodus",
+            "Exodus Classic",
+            "Expanse",
+            "Eye of the Storm",
+            "Fair'n Square",
+            "Flashback",
+            "Full Hire",
+            "Galaxy",
+            "Hallway",
+            "Hard Place",
+            "Harmony",
+            "Helltide",
+            "Highway",
+            "Ikarus",
+            "Infinity",
+            "Jebus Cross",
+            "Jebus Cross Classic",
+            "Jebus Outcast",
+            "Jebus Tournament",
+            "Junction",
+            "Kerberos",
+            "King of the Hill",
+            "Last Fortress",
+            "Last Stand",
+            "Madness",
+            "Maneuvers",
+            "Massacre",
+            "Maze",
+            "Mini-Nostalgia",
+            "Miracle",
+            "Mix",
+            "Nuclear",
+            "OctoJebus",
+            "One for All",
+            "Outcast Tournament",
+            "Overthrow",
+            "Pyramid",
+            "Sand Clover",
+            "Shamrock",
+            "Showdown",
+            "Spider",
+            "Sprint",
+            "Staircase",
+            "Sworn",
+            "Symmetry",
+            "Symphony",
+            "Trinity",
+            "Universe",
+            "Vendetta",
+            "Wastelands",
+            "Yin Yang",
+            "Zookeeper",
+        };
+        private static int shownTemplate = -1;
 
         // Layout names as tse's --layout takes them; index 0 (Random) sends no flag.
         private static readonly string[] LayoutArgs = { "", "ring", "ringCenter", "innerRing", "doubleNeutral", "pockets", "hub" };
@@ -63,7 +130,7 @@ namespace GmeRmgMod
         private static readonly object[] winDropdowns = new object[WinChoices.Length];
 
         /// <summary>Height added to the dialog frame: the left column's 7 added rows of 35px (seed to layout), the 50px layout description and margin.</summary>
-        private const float ExtraHeight = 7 * 35f + 60f + 50f;
+        private const float ExtraHeight = 7 * 35f + 60f + 50f + 10f;
 
         /// <summary>Width of the second column of dropdowns (300px wide plus a 20px gap), also added to the frame.</summary>
         private const float ColumnWidth = 320f;
@@ -187,21 +254,26 @@ namespace GmeRmgMod
                 new[] { "No Water", "Few Lakes", "Some Lakes", "Many Lakes", "Islands Map" }, 2);
             layoutDropdown = AddDropdown(sizeDropdown, parent, "Layout_Dropdown", leftX, baseY - 245f,
                 new[] { "Random Layout", "Ring Layout", "Ring with Center", "Inner Ring", "Double Neutral", "Pockets Layout", "Hub Layout" }, 0);
-            // Second column, level with the seed row: starting towns first, then the win conditions.
+            // Second column, level with the seed row: the game template first, then starting towns and the win conditions.
             float rightX = leftX + ColumnWidth;
-            townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 35f,
+            var templateChoices = new string[GameTemplates.Length];
+            templateChoices[0] = "No Game Template";
+            for (int i = 1; i < templateChoices.Length; i++) templateChoices[i] = "Template: " + GameTemplates[i];
+            templateDropdown = AddDropdown(sizeDropdown, parent, "GameTemplate_Dropdown", rightX, baseY - 35f, templateChoices, 0);
+            shownTemplate = -1;
+            townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 70f,
                 new[] { "Starting Towns: Fit the Terrain", "Starting Towns: Random" }, 0);
             AddLayoutText(sizeDropdown, sizeRect, parent, leftX, baseY - 288f);
             for (int i = 0; i < WinChoices.Length; i++)
-                winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
+                winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 105f - 35f * i,
                     new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
             // Last in the right column: a left-right mirror image map (needs an even player count).
-            mirrorDropdown = AddDropdown(sizeDropdown, parent, "Mirror_Dropdown", rightX, baseY - 70f - 35f * WinChoices.Length,
+            mirrorDropdown = AddDropdown(sizeDropdown, parent, "Mirror_Dropdown", rightX, baseY - 105f - 35f * WinChoices.Length,
                 new[] { "Mirrored Map: Off", "Mirrored Map: On" }, 0);
             // Max heroes per player, 1-10 (--max-heroes), default 10 (the last entry).
             var heroChoices = new string[10];
             for (int i = 0; i < heroChoices.Length; i++) heroChoices[i] = "Max Heroes: " + (i + 1);
-            heroesDropdown = AddDropdown(sizeDropdown, parent, "Heroes_Dropdown", rightX, baseY - 70f - 35f * (WinChoices.Length + 1),
+            heroesDropdown = AddDropdown(sizeDropdown, parent, "Heroes_Dropdown", rightX, baseY - 105f - 35f * (WinChoices.Length + 1),
                 heroChoices, 9);
 
             // Grow the dialog's background frame down by the left column's added rows and right by the second column.
@@ -273,6 +345,23 @@ namespace GmeRmgMod
             catch { layoutText = null; } // the dialog was destroyed; the next one adds its own
         }
 
+        /// <summary>A game template decides these itself (tse ignores the flags), so grey them out while one is picked; runs every frame.</summary>
+        private static void UpdateTemplateLock()
+        {
+            if (templateDropdown == null) return;
+            try
+            {
+                int index = Math.Clamp(Selected(templateDropdown, 0), 0, GameTemplates.Length - 1);
+                if (index == shownTemplate) return;
+                shownTemplate = index;
+                bool free = index == 0;
+                var decided = new System.Collections.Generic.List<object> { playersDropdown, richnessDropdown, complexityDropdown, waterDropdown, layoutDropdown, mirrorDropdown, heroesDropdown };
+                decided.AddRange(winDropdowns);
+                foreach (object dropdown in decided) if (dropdown != null) GameApi.TrySet(dropdown, "interactable", free);
+            }
+            catch { shownTemplate = -1; templateDropdown = null; } // the dialog was destroyed; the next one adds its own
+        }
+
         /// <summary>A copy of `source` (the size dropdown) at (x, y), 300px wide, with `choices`.</summary>
         private static object AddDropdown(dynamic source, object parent, string name, float x, float y, string[] choices, int defaultIndex)
         {
@@ -323,6 +412,7 @@ namespace GmeRmgMod
         public static void TickPostfix()
         {
             UpdateLayoutText();
+            UpdateTemplateLock();
             if (pendingOpenPath != null) { try { RetryOpen(); } catch (Exception ex) { Logger.LogError($"Opening the generated map failed: {ex}"); pendingOpenPath = null; } }
             if (runningTse == null) return;
             try { Tick(); }
@@ -364,6 +454,7 @@ namespace GmeRmgMod
             int[] playerCounts = { 2, 3, 4, 5, 6, 7, 8 };
             int players = playerCounts[Math.Clamp(Selected(playersDropdown, 0), 0, playerCounts.Length - 1)];
 
+            string gameTemplate = GameTemplates[Math.Clamp(Selected(templateDropdown, 0), 0, GameTemplates.Length - 1)];
             string layoutArg = LayoutArgs[Math.Clamp(Selected(layoutDropdown, 0), 0, LayoutArgs.Length - 1)];
             var wins = new System.Collections.Generic.List<string>();
             for (int i = 0; i < WinChoices.Length; i++)
@@ -407,6 +498,7 @@ namespace GmeRmgMod
                     + (Selected(townsDropdown, 0) == 1 ? " --faction random" : "")
                     + (mirror ? " --mirror true" : "")
                     + $" --max-heroes {Math.Clamp(Selected(heroesDropdown, 9), 0, 9) + 1}"
+                    + (gameTemplate.Length > 0 ? $" --game-template \"{gameTemplate}\"" : "")
                     + (progressFile != null ? $" --progress \"{progressFile}\"" : ""),
                 CreateNoWindow = true,
                 UseShellExecute = false,

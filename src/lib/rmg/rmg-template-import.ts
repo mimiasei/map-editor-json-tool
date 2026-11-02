@@ -55,6 +55,11 @@ interface RawFactionConstraint {
 interface RawMainObject {
   type?: string
   spawn?: string
+  owner?: string
+  guardChance?: number
+  guardValue?: number
+  guardWeeklyIncrement?: number
+  placement?: string
   faction?: RawFactionConstraint
   [key: string]: unknown
 }
@@ -225,6 +230,19 @@ interface RawTemplate {
   [key: string]: unknown
 }
 
+/** A zone's main object, in template order (other main objects refer to one by zone and index). A `Spawn` or an owned `City` is the
+ *  player's start; the other `City` entries are neutral cities the template wants in the zone. */
+export interface TemplateMainObject {
+  type: string
+  owned: boolean
+  guardChance?: number
+  guardValue?: number
+  guardWeeklyIncrement?: number
+  placement?: string
+  /** `match`: the same faction as another main object; `different`: none of the listed ones; absent: any faction no player has. */
+  faction?: { kind: 'match'; ref: { zoneId: number; index: number } } | { kind: 'different'; refs: { zoneId: number; index: number }[] }
+}
+
 export interface GameTemplateTopology {
   graph: ZoneGraph
   /** zone-graph edge key (`"${min}:${max}"`) -> whether that edge should be
@@ -236,6 +254,9 @@ export interface GameTemplateTopology {
    *  `connectionType: "Portal"`) — see this file's own header comment for
    *  why these still need to be real graph edges. */
   unpaintedEdges: Set<string>
+  /** `Direct` connections without a road (Jebus Cross lists 5 per zone pair, all `road: null`), one entry per connection: the template
+   *  wants a guarded passage between the zones, with nothing painted on it. */
+  gateOnlyEdges: [number, number][]
   /** zone id -> its own resolved `zoneLayouts[]` entry (issue #210, Stage
    *  3a/3c) — empty for a zone with no `layout` reference or an
    *  unresolvable one. */
@@ -264,6 +285,8 @@ export interface GameTemplateTopology {
    *  alternative-object model). Empty for a zone with no such constraint —
    *  callers fall back to "differ from every player" in that case. */
   neutralCityExclusionsByZoneId: Map<number, Set<number>>
+  /** zone id -> its main objects in template order. */
+  mainObjectsByZoneId: Map<number, TemplateMainObject[]>
   /** zone id -> a real, closed biome choice from that zone's own
    *  `zoneBiome: {type:"FromList", args:[...]}` (neutral zones only in
    *  every sample checked — Spawn zones use `MatchMainObject` instead, see
@@ -388,6 +411,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   const edges: [number, number][] = []
   const portalEdges = new Set<string>()
   const unpaintedEdges = new Set<string>()
+  const gateOnlyEdges: [number, number][] = []
   // Real connection `name` -> its own zone-graph edge key, so a zone's own
   // `roads[]` entry (which references a connection by NAME, not by zone
   // pair) can be resolved back to the edge it actually paints — see
@@ -401,7 +425,10 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
     edges.push([a, b])
     const key = edgeKey(a, b)
     if (conn.connectionType === 'Portal') portalEdges.add(key)
-    else if (!(conn.connectionType === 'Direct' && conn.road)) unpaintedEdges.add(key)
+    else if (!(conn.connectionType === 'Direct' && conn.road)) {
+      unpaintedEdges.add(key)
+      if (conn.connectionType === 'Direct') gateOnlyEdges.push([a, b])
+    }
     if (conn.name) connNameToEdgeKey.set(conn.name, key)
   }
 
@@ -459,6 +486,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   const zoneContentValueByZoneId = new Map<number, ZoneContentValueOverrides>()
   const contentCountLimitsByZoneId = new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = new Map<number, Set<number>>()
+  const mainObjectsByZoneId = new Map<number, TemplateMainObject[]>()
   const biomeIdByZoneId = new Map<number, BiomeId>()
   const zoneContentSpecByZoneId = new Map<number, ZoneContentSpec>()
   const roadMaterialByEdgeKey = new Map<string, 'Stone' | 'Dirt'>()
@@ -489,6 +517,27 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
       }
       if (merged.size > 0) contentCountLimitsByZoneId.set(id, [...merged].map(([sid, maxCount]) => ({ sid, maxCount })))
     }
+
+    mainObjectsByZoneId.set(id, (z.mainObjects ?? []).map((mo) => {
+      const args = mo.faction?.args ?? []
+      let faction: TemplateMainObject['faction']
+      if (mo.faction?.type === 'Match' && args.length > 0) {
+        // [index] is an object of this zone, [index, zoneName] one of another zone.
+        const refZone = args.length > 1 ? zoneIdByName.get(args[1]) : id
+        if (refZone !== undefined && Number.isInteger(Number(args[0]))) faction = { kind: 'match', ref: { zoneId: refZone, index: Number(args[0]) } }
+      } else if (mo.faction?.type === 'FromList' && args.length > 0) {
+        const refs = args.flatMap((arg) => {
+          const m = /^differentFrom:s*(d+)s+(.+)$/.exec(arg)
+          const refZone = m ? zoneIdByName.get(m[2]) : undefined
+          return m && refZone !== undefined ? [{ zoneId: refZone, index: Number(m[1]) }] : []
+        })
+        if (refs.length > 0) faction = { kind: 'different', refs }
+      }
+      return {
+        type: String(mo.type ?? ''), owned: typeof mo.owner === 'string' && mo.owner !== '',
+        guardChance: mo.guardChance, guardValue: mo.guardValue, guardWeeklyIncrement: mo.guardWeeklyIncrement, placement: mo.placement, faction,
+      }
+    }))
 
     // Neutral city faction exclusions — see neutralCityExclusionsByZoneId's
     // own doc comment above for the real shape this parses.
@@ -543,8 +592,8 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   })
 
   return {
-    graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    graph: { zones, edges }, portalEdges, unpaintedEdges, gateOnlyEdges, zoneLayoutByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId,
     biomeIdByZoneId, zoneContentSpecByZoneId, roadMaterialByEdgeKey,
   }
 }

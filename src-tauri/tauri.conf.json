@@ -140,7 +140,12 @@
         },
         {
           "name": "template",
-          "description": "Accepted for forward compatibility; ignored (Classic mode only)",
+          "description": "Accepted and ignored (the GME mod sends GME's own template text field here). Use game-template to pick a game template",
+          "takesValue": true
+        },
+        {
+          "name": "game-template",
+          "description": "Optional. Name of a bundled game random-map template, e.g. \"Jebus Cross\". The template decides players, richness, complexity, water, max heroes; layout, win and mirror are ignored. Empty or none: no template",
           "takesValue": true
         }
       ]

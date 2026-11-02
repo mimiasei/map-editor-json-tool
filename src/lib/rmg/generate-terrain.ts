@@ -56,7 +56,7 @@ import { zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
 import { buildBuiltInLayout, ROLE_TREASURE_SCALE, type BuiltInLayout, type LayoutArchetype, type MirrorInfo } from './zone-archetypes'
 import { footprintForRotation, isLeftNode, mirrorAnchorNode, mirrorChanges, mirrorNode, mirrorNodeSet, symmetrizeOwnership } from './zone-mirror'
 import { logInfo } from '@/lib/logger'
-import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides, type ZoneContentSpec } from './rmg-template-import'
+import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides, type ZoneContentSpec, type TemplateMainObject } from './rmg-template-import'
 import { blendZoneBordersWFC } from './terrain-wfc'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
@@ -247,6 +247,8 @@ export interface TerrainResult {
    *  never be painted as a road or portal (rmg-template-import.ts's own
    *  header comment). Empty when no template was imported. */
   unpaintedEdges: Set<string>
+  /** rmg-template-import.ts's `gateOnlyEdges`; empty when no template was imported. */
+  gateOnlyEdges: [number, number][]
   /** Per-zone terrain-shape overrides from a Stage 1 game-template import
    *  (Stage 3a/3c — rmg-template-import.ts's own `ZoneLayoutOverrides` doc
    *  comment). Empty when no template was imported. */
@@ -259,6 +261,8 @@ export interface TerrainResult {
   zoneContentValueByZoneId: Map<number, ZoneContentValueOverrides>
   contentCountLimitsByZoneId: Map<number, { sid: string; maxCount: number }[]>
   neutralCityExclusionsByZoneId: Map<number, Set<number>>
+  /** rmg-template-import.ts's `mainObjectsByZoneId`; empty when no template was imported. */
+  mainObjectsByZoneId: Map<number, TemplateMainObject[]>
   /** Per-zone real biome constraints (issue #210 second follow-up
    *  milestone) — already folded into `zoneBiome` above by the time this is
    *  returned; kept here too so callers needing the RAW template signal
@@ -307,6 +311,7 @@ export function generateTerrain(
   const graph = importedTopology ? importedTopology.graph : (builtInLayout as BuiltInLayout).graph
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
   const unpaintedEdges = importedTopology?.unpaintedEdges ?? new Set<string>()
+  const gateOnlyEdges = importedTopology?.gateOnlyEdges ?? []
   const zoneLayoutByZoneId = importedTopology?.zoneLayoutByZoneId ?? new Map<number, ZoneLayoutOverrides>()
   const guardCutoffValueByZoneId = importedTopology?.guardCutoffValueByZoneId ?? new Map<number, number>()
   // Built-in layouts: center/pocket zones get extra treasure through the same
@@ -316,6 +321,7 @@ export function generateTerrain(
   )
   const contentCountLimitsByZoneId = importedTopology?.contentCountLimitsByZoneId ?? new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = importedTopology?.neutralCityExclusionsByZoneId ?? new Map<number, Set<number>>()
+  const mainObjectsByZoneId = importedTopology?.mainObjectsByZoneId ?? new Map<number, TemplateMainObject[]>()
   const biomeIdByZoneId = importedTopology?.biomeIdByZoneId ?? new Map<number, BiomeId>()
   const zoneContentSpecByZoneId = importedTopology?.zoneContentSpecByZoneId ?? new Map<number, ZoneContentSpec>()
   const roadMaterialByEdgeKey = importedTopology?.roadMaterialByEdgeKey ?? new Map<string, 'Stone' | 'Dirt'>()
@@ -571,8 +577,8 @@ export function generateTerrain(
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     tileBiome: terrainChanges.map((c) => c.biomeId),
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    waterNodesAll, elevationNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    waterNodesAll, elevationNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, gateOnlyEdges, zoneLayoutByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId,
     biomeIdByZoneId, zoneContentSpecByZoneId, roadMaterialByEdgeKey,
     layoutArchetype: builtInLayout?.archetype ?? null,
     mirror,
