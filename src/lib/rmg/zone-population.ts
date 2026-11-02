@@ -33,7 +33,7 @@ import {
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { findContentPool, isRmgIneligibleInteractableSid, pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, rollFromLists, UNSUPPORTED_CONTENT_POOL_SIDS, type ResolvedContentPoolPick } from './object-variety'
 import { scaleMultiplier } from './decoration-calibration'
-import type { ZoneContentSpec } from './rmg-template-import'
+import type { TemplateMainObject, ZoneContentSpec } from './rmg-template-import'
 import { mineGuardValue } from './value-model'
 import { NEUTRAL_ROLES, type NeutralZoneRole, type ZoneSpec } from './zone-graph'
 import type { RmgDifficultyValues } from './rmg-schema'
@@ -569,6 +569,9 @@ export interface PopulateZonesOptions {
    *  placed here must have a different faction from. Replaces the default
    *  "differ from every player" rule for zones with real data. */
   neutralCityExclusionsByZoneId?: Map<number, Set<number>>
+  /** A game template's main objects per zone: when given, its neutral `City` entries are the cities (counts, factions, guards) and
+   *  `randomCityCount` is not used. */
+  mainObjectsByZoneId?: Map<number, TemplateMainObject[]>
   /** zone id -> a game template's content for that zone: mandatory entries (each placed exactly once), the pools its treasure is
    *  rolled from and the value budgets for them. A zone with pools skips the generic treasure loop. */
   zoneContentSpecByZoneId?: Map<number, ZoneContentSpec>
@@ -621,7 +624,7 @@ export interface ZonePopulator {
 export function createZonePopulator(options: PopulateZonesOptions): ZonePopulator {
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, zoneContentSpecByZoneId, templateValueScale = 1,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId, zoneContentSpecByZoneId, templateValueScale = 1,
     mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, mines = DEFAULT_MINE_DISTRIBUTION, zoneAnchorNode, symmetricZones = false,
   } = options
   // `rng` is the CONTENT stream (what gets rolled: pool picks, guard values,
@@ -1043,6 +1046,77 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
   const zoneContentRng = new Map<number, () => number>()
   const result = (): PopulateZonesResult => ({ placements, concreteSquads, decidedNodes, templateContentZoneIds, mandatoryReport })
 
+  /** A game template's neutral cities: each non-owned `City` main object of each zone, with the template's own faction rule and guard.
+   *  A faction is `match` (same as another main object), `different` (none of the listed ones) or free (none a player has); the player
+   *  start objects (`Spawn`, owned `City`) have their zone's faction. Placement kinds other than `Center` (connection, near-zone) are
+   *  not modelled: those cities go anywhere in the zone. */
+  const placeTemplateCities = (): void => {
+    if (!mainObjectsByZoneId) return
+    const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
+    const playerFactions = new Set(zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f))
+    const chosen = new Map<string, string | undefined>()
+    const resolving = new Set<string>()
+    const factionOf = (zoneId: number, index: number): string | undefined => {
+      const key = `${zoneId}:${index}`
+      if (chosen.has(key)) return chosen.get(key)
+      const mo = mainObjectsByZoneId.get(zoneId)?.[index]
+      if (!mo || resolving.has(key)) return undefined
+      resolving.add(key)
+      let faction: string | undefined
+      if (mo.type !== 'City' || mo.owned) faction = BIOME_FACTION[zoneBiome.get(zoneId) ?? 1]
+      else if (mo.faction?.kind === 'match') faction = factionOf(mo.faction.ref.zoneId, mo.faction.ref.index)
+      if (faction === undefined && mo.type === 'City' && !mo.owned) {
+        const banned = mo.faction?.kind === 'different'
+          ? new Set(mo.faction.refs.map((r) => factionOf(r.zoneId, r.index)).filter((f): f is string => !!f))
+          : playerFactions
+        const pool = allFactions.filter((f) => !banned.has(f))
+        const from = pool.length > 0 ? pool : allFactions
+        faction = from[Math.floor(rng() * from.length)]
+      }
+      resolving.delete(key)
+      chosen.set(key, faction)
+      return faction
+    }
+    contentRng = posRng
+    for (const zone of zones) {
+      const mains = mainObjectsByZoneId.get(zone.id) ?? []
+      const tiles = tilesByZone.get(zone.id) ?? []
+      if (tiles.length === 0) continue
+      enterZone(zone.id)
+      const multiplier = zoneContentSpecByZoneId?.get(zone.id)?.guardMultiplier ?? 1
+      for (let index = 0; index < mains.length; index++) {
+        const mo = mains[index]
+        if (mo.type !== 'City' || mo.owned) continue
+        const factionSid = factionOf(zone.id, index)
+        if (!factionSid) continue
+        let candidates = tiles
+        if (mo.placement === 'Center') {
+          // The centre of the zone: its nearest tenth of tiles to the mean tile.
+          const cx = tiles.reduce((s, n) => s + (n % sizeX), 0) / tiles.length
+          const cz = tiles.reduce((s, n) => s + Math.floor(n / sizeX), 0) / tiles.length
+          const d = (n: number): number => ((n % sizeX) - cx) ** 2 + (Math.floor(n / sizeX) - cz) ** 2
+          candidates = [...tiles].sort((p, q) => d(p) - d(q)).slice(0, Math.max(20, Math.floor(tiles.length / 10)))
+        }
+        const cityNode = place('random-city', candidates, undefined, undefined, { factionSid, spawnHero: false }) ?? (candidates === tiles ? null : place('random-city', tiles, undefined, undefined, { factionSid, spawnHero: false }))
+        if (cityNode === null) continue
+        decidedNodes.add(cityNode)
+        const chance = mo.guardChance ?? 1
+        const value = mo.guardValue ?? difficulty?.cityGuardValue
+        if (value === undefined || rng() >= chance) continue
+        const guardNode = entranceGuardTile('random-city', cityNode, sizeX, sizeZ, catalogById, state, posRng)
+        if (guardNode !== null && tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
+          placements.push({
+            tempId: state.nextTempId++, sid: 'random-squad', node: guardNode,
+            randomSquadOverrides: {
+              requestedValue: Math.round(value * multiplier), fraction: sampleFraction(zoneBiome.get(zone.id) ?? 1, 0.5, rng),
+              weeklyIncrementBonus: mo.guardWeeklyIncrement ?? difficulty?.cityGuardWeeklyIncrement,
+            },
+          })
+        }
+      }
+    }
+  }
+
   /** Phase 1 — the objects roads are built around: player start kits (dwelling,
    *  mines, dust, start guard), neutral mines with their guards, neutral cities. */
   const populateKeyObjects = (): PopulateZonesResult => {
@@ -1153,7 +1227,8 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     // in every real sample checked (`Pyramid.rmg.json`: a Treasure zone
     // between two spawns only excludes those two factions, not every player
     // in the game).
-    if (randomCityCount > 0) {
+    if (mainObjectsByZoneId && mainObjectsByZoneId.size > 0) placeTemplateCities()
+    else if (randomCityCount > 0) {
       const neutralZones = zones.filter((z) => z.kind === 'neutral')
       const playerFactions = new Set(
         zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),

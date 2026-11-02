@@ -394,7 +394,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const {
     graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, tileBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, gateOnlyEdges: templateGateOnlyEdges, zoneLayoutByZoneId,
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId,
     zoneContentSpecByZoneId, roadMaterialByEdgeKey,
   } = terrain
   let container = terrain.container
@@ -453,7 +453,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const templateValueScale = Number.isFinite(templateArea) && templateArea > 0 ? (sizeX * sizeZ) / templateArea : 1
   const zonePopulator = createZonePopulator({
     sizeX, sizeZ, zones: graph.zones, tilesByZone: populateTilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, zoneContentSpecByZoneId, templateValueScale,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId, zoneContentSpecByZoneId, templateValueScale,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
     // The template's pools and value budgets are its richness; the game has no override for them.
     richness: richness && !gameTemplateJson ? resolveRichness(richness, tuning) : undefined,
