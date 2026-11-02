@@ -500,3 +500,151 @@ export function sealBoundaryBand(options: SealBoundaryBandOptions): ZonePlacemen
   }
   return placements
 }
+
+export interface CloseBorderLeaksOptions {
+  sizeX: number
+  sizeZ: number
+  zoneIdByNode: number[]
+  zoneBiome: Map<number, BiomeId>
+  mapObjects: CatalogMapObject[]
+  catalogById: Map<string, CatalogMapObject>
+  /** What a hero cannot walk onto (water, cliffs, solid object cells). Copied; the caller's set is not changed. */
+  blocked: Set<number>
+  /** Tiles with a guard on them: a hero cannot pass them either, but they are not terrain. */
+  guardNodes: Set<number>
+  keepOpen: Set<number>
+  importantNodes: Set<number>
+  islandZoneIds?: Set<number>
+  /** The gate guards already placed, to copy the nearest one's strength for an extra guard. */
+  guardTemplates: { node: number; overrides: NonNullable<ZonePlacement['randomSquadOverrides']> }[]
+  state: PlacementState
+  rng: () => number
+}
+
+export interface CloseBorderLeaksResult {
+  plugs: ZonePlacement[]
+  guards: ZonePlacement[]
+  /** Leaks that could not be closed (every tile of the crossing is a gate, an object or a road with nothing to copy). */
+  unclosed: number
+}
+
+// A zone counts as reachable through a component when it has this many tiles in it: a two-tile pocket between walls is not a way through.
+const LEAK_MIN_ZONE_TILES = 12
+const LEAK_MAX_ROUNDS = 400
+
+/**
+ * Last word on the zone walls. Whatever the earlier passes did (the accessibility pass deletes a wall to reach a stranded pickup, two
+ * roads run side by side through one gate, a guard stands where the road bends...), this walks the finished map the way a hero does, 8
+ * neighbours with guards in the way, and while one walkable area still spans two zones it closes a crossing: a plug on a free tile, or an
+ * extra guard (strength copied from the nearest gate guard) on a road or gate tile. Each fix blocks one more tile, so it terminates.
+ */
+export function closeBorderLeaks(options: CloseBorderLeaksOptions): CloseBorderLeaksResult {
+  const { sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects, catalogById, keepOpen, importantNodes, islandZoneIds, guardTemplates, state, rng } = options
+  const result: CloseBorderLeaksResult = { plugs: [], guards: [], unclosed: 0 }
+  if (guardTemplates.length === 0) return result
+  const tileCount = sizeX * sizeZ
+  const blocked = new Set(options.blocked)
+  const guards = new Set(options.guardNodes)
+  const zoneTileCounts = new Map<number, number>()
+  for (const zoneId of zoneIdByNode) zoneTileCounts.set(zoneId, (zoneTileCounts.get(zoneId) ?? 0) + 1)
+  const { pools } = applyBiomeDecorationMix(buildFuzzyObstaclePools(mapObjects), undefined)
+  const plugsByBiome = new Map<number, string[]>()
+  const plugsFor = (biome: BiomeId): string[] => {
+    let plugs = plugsByBiome.get(biome)
+    if (!plugs) {
+      const pool = pools[biome]
+      plugs = [...pool.mountains, ...pool.obstacles].filter((sid) => {
+        const solid = computeFootprintTiles(catalogById.get(sid), 0, 0).filter((c) => c.value === 1 || c.value === 2)
+        return solid.length === 1 && solid[0].x === 0 && solid[0].z === 0
+      })
+      plugsByBiome.set(biome, plugs)
+    }
+    return plugs
+  }
+  const walkable = (node: number): boolean => !blocked.has(node) && !guards.has(node)
+  const taken = (node: number): boolean => importantNodes.has(node) || guards.has(node) || state.reservedGuardTiles.has(node)
+  const canPlug = (node: number): boolean => {
+    const zoneId = zoneIdByNode[node]
+    return !keepOpen.has(node) && !taken(node) && !islandZoneIds?.has(zoneId) && (zoneTileCounts.get(zoneId) ?? 0) >= MIN_ZONE_SIZE_TO_WALL
+      && plugsFor(zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]).length > 0
+  }
+  const nearestGuard = (node: number) => {
+    let best = guardTemplates[0]
+    let bestD = Infinity
+    for (const g of guardTemplates) {
+      const d = (g.node % sizeX - node % sizeX) ** 2 + (Math.floor(g.node / sizeX) - Math.floor(node / sizeX)) ** 2
+      if (d < bestD) { bestD = d; best = g }
+    }
+    return best
+  }
+  const skipped = new Set<number>()
+  const component = new Int32Array(tileCount)
+  for (let round = 0; round < LEAK_MAX_ROUNDS; round++) {
+    component.fill(-1)
+    const zonesIn: Map<number, number>[] = []
+    for (let start = 0; start < tileCount; start++) {
+      if (component[start] !== -1 || !walkable(start)) continue
+      const id = zonesIn.length
+      const zoneCount = new Map<number, number>()
+      zonesIn.push(zoneCount)
+      const stack = [start]
+      component[start] = id
+      while (stack.length > 0) {
+        const cur = stack.pop() as number
+        const zone = zoneIdByNode[cur]
+        zoneCount.set(zone, (zoneCount.get(zone) ?? 0) + 1)
+        const cx = cur % sizeX
+        const cz = Math.floor(cur / sizeX)
+        for (let dz = -1; dz <= 1; dz++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const x = cx + dx
+            const z = cz + dz
+            if ((dx === 0 && dz === 0) || x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+            const q = z * sizeX + x
+            if (component[q] === -1 && walkable(q)) { component[q] = id; stack.push(q) }
+          }
+        }
+      }
+    }
+    const leaking = new Set<number>()
+    zonesIn.forEach((zoneCount, id) => { if ([...zoneCount.values()].filter((c) => c >= LEAK_MIN_ZONE_TILES).length >= 2) leaking.add(id) })
+    if (leaking.size === 0) break
+    const fixedComponents = new Set<number>()
+    let fixedAny = false
+    for (let a = 0; a < tileCount && fixedComponents.size < leaking.size; a++) {
+      const id = component[a]
+      if (id === -1 || !leaking.has(id) || fixedComponents.has(id) || skipped.has(a)) continue
+      const ax = a % sizeX
+      const az = Math.floor(a / sizeX)
+      for (let dz = -1; dz <= 1 && !fixedComponents.has(id); dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const x = ax + dx
+          const z = az + dz
+          if ((dx === 0 && dz === 0) || x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+          const b = z * sizeX + x
+          if (component[b] !== id || zoneIdByNode[b] === zoneIdByNode[a]) continue
+          // Prefer closing the tile of a zone that is not the smaller side of a gate; any free one will do.
+          const pick = canPlug(b) ? b : canPlug(a) ? a : null
+          if (pick !== null) {
+            const sid = plugsFor(zoneBiome.get(zoneIdByNode[pick]) ?? ZONE_BIOMES[0])[Math.floor(rng() * plugsFor(zoneBiome.get(zoneIdByNode[pick]) ?? ZONE_BIOMES[0]).length)]
+            state.usedAnchors.add(pick)
+            state.blocked.add(pick)
+            blocked.add(pick)
+            result.plugs.push({ tempId: state.nextTempId++, sid, node: pick })
+          } else {
+            const guardAt = !taken(b) ? b : !taken(a) ? a : null
+            if (guardAt === null) { skipped.add(a); result.unclosed++; continue }
+            state.usedAnchors.add(guardAt)
+            guards.add(guardAt)
+            result.guards.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardAt, randomSquadOverrides: { ...nearestGuard(guardAt).overrides } })
+          }
+          fixedComponents.add(id)
+          fixedAny = true
+          break
+        }
+      }
+    }
+    if (!fixedAny) break
+  }
+  return result
+}

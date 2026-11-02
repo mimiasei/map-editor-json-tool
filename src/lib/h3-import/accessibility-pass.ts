@@ -162,6 +162,8 @@ export function applyAccessibilityPass(
   /** Decorative objects that cost `COSTLY_REMOVAL` instead of 1 to delete, so the path to a stuck target goes through ordinary decoration
    *  first. The RMG puts its zone walls here: deleting one opens a hole between two zones. */
   costlyIds: Set<number> = new Set(),
+  /** Decorative objects the pass must not delete at all (a stuck target is nudged instead). */
+  forbiddenIds: Set<number> = new Set(),
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -312,7 +314,7 @@ export function applyAccessibilityPass(
         if (n === null) continue
         if (!blocked.has(n)) { relax(node, n, 0, []); continue }
         const owners = nodeOwners.get(n)
-        if (owners && owners.every((o) => decorativeIds.has(o.id))) {
+        if (owners && owners.every((o) => decorativeIds.has(o.id) && !forbiddenIds.has(o.id))) {
           relax(node, n, owners.some((o) => costlyIds.has(o.id)) ? COSTLY_REMOVAL : 1, owners.map((o) => o.id))
         }
       }

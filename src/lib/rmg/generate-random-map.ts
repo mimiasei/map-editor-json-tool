@@ -87,7 +87,7 @@ import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevatio
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import type { PlacedObject } from '@/types/map-context'
-import { boundaryBand, fortifyZoneBoundaries, sealBoundaryBand, type BoundaryGuardStrength } from './zone-boundary'
+import { boundaryBand, closeBorderLeaks, fortifyZoneBoundaries, sealBoundaryBand, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { buildFlatPlaced, reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport, type PlayerStartStats } from './balance-analyzer'
@@ -1797,20 +1797,16 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
 
   await reportProgress(i18n.t('rmg.progress.checkingReachability'), 84)
   const wallBand = boundaryBand(zoneIdByNode, sizeX, sizeZ)
-  const report = applyAccessibilityPass(
-    objectGroups,
-    sizeX,
-    sizeZ,
+  // The zone walls, and any other decoration standing in the wall band. Deleting one opens a hole between two zones, so the first pass leaves
+  // them standing and moves a stranded pickup instead; only what that cannot fix (a whole zone with no way in) may cost a wall.
+  const wallIds = new Set([...boundaryResult.wallPlacements, ...obstaclePlacements.filter((p) => wallBand.has(p.node))].map((p) => p.tempId))
+  const accessibilityArgs = [
+    objectGroups, sizeX, sizeZ,
     { levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal },
-    catalog,
-    catalogById,
-    decorativeIds,
-    portalAdjacency,
-    boundaryResult.gateNodes,
-    new Set([...roadNodes, ...riverNodes]),
-    // The zone walls, and any other decoration standing in the wall band, are the last things the pass may delete.
-    new Set([...boundaryResult.wallPlacements, ...obstaclePlacements.filter((p) => wallBand.has(p.node))].map((p) => p.tempId)),
-  )
+    catalog, catalogById, decorativeIds, portalAdjacency, boundaryResult.gateNodes, new Set([...roadNodes, ...riverNodes]),
+  ] as const
+  applyAccessibilityPass(...accessibilityArgs, wallIds, wallIds)
+  const report = applyAccessibilityPass(...accessibilityArgs, wallIds)
   if (report.stillUnreachable > 0) {
     logWarn(`Random map generation: ${report.stillUnreachable} placed object(s) remained unreachable after the accessibility pass`)
   }
@@ -1875,6 +1871,39 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     for (const node of waterCollisionResult.reclaimedNodes) {
       waterMapFinal[node] = 0
       levelsMapFinal[node] = 0
+    }
+  }
+
+  // Walk the finished map like a hero and close whatever way between two zones is still open (zone-boundary.ts closeBorderLeaks).
+  if (!mirrored && boundaryGuardStrength !== 'none') {
+    const guardTemplates = boundaryResult.guardPlacements.flatMap((g) => (g.randomSquadOverrides ? [{ node: g.node, overrides: g.randomSquadOverrides }] : []))
+    const guardNodes = new Set<number>([...(objectGroups.get('random-squad')?.nodes ?? []), ...allConcreteSquads.map((s) => s.node)])
+    const importantNodes = new Set<number>(allConcreteSquads.map((s) => s.node))
+    for (const [sid, group] of objectGroups) {
+      if (sid === 'random-squad') continue
+      group.ids.forEach((id, i) => { if (!decorativeIds.has(id)) importantNodes.add(group.nodes[i]) })
+    }
+    const leaks = closeBorderLeaks({
+      sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById,
+      blocked: buildBlockedTileSet({ sizeX, sizeZ, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal, placedObjects: buildFlatPlaced(objectGroups, sizeX) }, catalog),
+      guardNodes, importantNodes, islandZoneIds,
+      keepOpen: new Set([...boundaryResult.gateNodes, ...roadNodes, ...gateCorridorNodes, ...riverNodes]),
+      guardTemplates, state, rng,
+    })
+    for (const placement of [...leaks.plugs, ...leaks.guards]) {
+      tempIdToPlacement.set(placement.tempId, placement)
+      let group = objectGroups.get(placement.sid)
+      if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
+      group.ids.push(placement.tempId)
+      group.nodes.push(placement.node)
+      group.rotations.push(0)
+      group.levels.push(0)
+    }
+    for (const plug of leaks.plugs) decorativeIds.add(plug.tempId)
+    if (leaks.plugs.length + leaks.guards.length > 0) {
+      // A plug may have shut in a pickup: move the pickup out, leave the plug and the walls standing.
+      applyAccessibilityPass(...accessibilityArgs, new Set(), new Set([...wallIds, ...leaks.plugs.map((p) => p.tempId)]))
+      logInfo(`Random map generation: closed ${leaks.plugs.length} wall gap(s) and ${leaks.guards.length} unguarded crossing(s) between zones${leaks.unclosed > 0 ? `, ${leaks.unclosed} could not be closed` : ''}`)
     }
   }
 
