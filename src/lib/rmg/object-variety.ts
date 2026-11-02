@@ -64,8 +64,8 @@ export function rollFromLists(
  *  candidate list (a group's own inline `content` is an override/extension
  *  of a specific sid's weight within that group, per `CatalogContentPool`'s
  *  own doc comment — it replaces, not adds to, a same-sid list entry's
- *  weight), each candidate's effective pick weight = `group.weight *
- *  entry.weight`, additionally scaled by the pool's own `valueDistribution`
+ *  weight), each candidate's effective pick weight = `group.weight` times the entry's share of its
+ *  group's entry weights, the entry weight additionally scaled by the pool's own `valueDistribution`
  *  price-bucket weight when the sid's real gold value is known
  *  (`resolveGoodsValue`) — an unknown-value sid (most buildings;
  *  `goodsValueBySid` is sparse) gets no value-bucket scaling at all
@@ -87,6 +87,7 @@ export function rollContentPool(
   const candidates: { sid: string; weight: number }[] = []
   for (const group of pool.groups) {
     if (group.weight <= 0) continue
+    const inGroup: { sid: string; weight: number }[] = []
     const overrides = new Map((group.content ?? []).map((c) => [c.sid, c.weight]))
     const seen = new Set<string>()
     for (const listName of group.includeLists ?? []) {
@@ -106,7 +107,7 @@ export function rollContentPool(
             bucketScale = weights[bucket] ?? 1
           }
         }
-        candidates.push({ sid: entry.sid, weight: group.weight * weight * bucketScale })
+        inGroup.push({ sid: entry.sid, weight: weight * bucketScale })
       }
     }
     // Override entries whose sid wasn't already in one of this group's own
@@ -115,8 +116,14 @@ export function rollContentPool(
     // all for some of them).
     for (const [sid, weight] of overrides) {
       if (seen.has(sid) || banned.has(sid) || isExcluded?.(sid) || weight <= 0) continue
-      candidates.push({ sid, weight: group.weight * weight })
+      inGroup.push({ sid, weight })
     }
+    // The group is chosen by its own weight, then an entry within it by the entry weights: a group is worth `group.weight` however large
+    // its entries' weights are. (Multiplying them made a list of heavy entries, e.g. Harmony's random hires at 195-225 each, win far more often
+    // than its group weight says: 3x the random hires of the game's own Harmony map.)
+    const groupTotal = inGroup.reduce((sum, c) => sum + c.weight, 0)
+    if (groupTotal <= 0) continue
+    for (const c of inGroup) candidates.push({ sid: c.sid, weight: group.weight * c.weight / groupTotal })
   }
   const total = candidates.reduce((sum, c) => sum + c.weight, 0)
   if (total <= 0) return null

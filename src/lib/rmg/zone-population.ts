@@ -657,6 +657,11 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     if (contentCountLimitBySid.has(sid)) contentCountSoFar.set(sid, (contentCountSoFar.get(sid) ?? 0) + 1)
     if (currentZoneContentLimitBySid.has(sid)) currentZoneContentSoFar.set(sid, (currentZoneContentSoFar.get(sid) ?? 0) + 1)
   }
+  /** A resolved random-hire is the one sid `random-hire`, but templates cap its variants (`random_hire_1`..`7`, Harmony: 13 per zone), so count both. */
+  const recordPickPlacement = (pick: { sid: string; randomHireOverrides?: { tier: number } }): void => {
+    recordContentPlacement(pick.sid)
+    if (pick.randomHireOverrides) recordContentPlacement(`random_hire_${pick.randomHireOverrides.tier}`)
+  }
   // A zone's counts persist between the key-object and treasure phases, so a mandatory entry counts against the zone's caps.
   const zoneContentSoFar = new Map<number, Map<string, number>>()
   const zoneUsedArtifacts = new Map<number, Set<string>>()
@@ -813,7 +818,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const rolled = rollContentPool(catalog, poolName, rng, isExcluded)
         const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, undefined, isAtContentCap, rng) : null
         if (resolved) {
-          recordContentPlacement(resolved.sid)
+          recordPickPlacement(resolved)
           const treasureNode = place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
           if (guarded && treasureNode !== null) {
             decidedNodes.add(treasureNode)
@@ -911,7 +916,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
   const placePick = (pick: ResolvedContentPoolPick, tiles: number[], biome: BiomeId, cutoff: number, guarded: boolean, guardScale: number): number | null => {
     const node = place(pick.sid, tiles, undefined, pick.randomItemOverrides, undefined, pick.randomHireOverrides)
     if (node === null) return null
-    recordContentPlacement(pick.sid)
+    recordPickPlacement(pick)
     if (guarded) {
       decidedNodes.add(node)
       const value = pick.guardValue ?? guardValueOf(pick.sid)
@@ -1109,8 +1114,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const mineZoneTiles = symmetricZones ? meanNeutralTilesByRole.get(roleOf(zone)) ?? tiles.length : tiles.length
         const mineCount = Math.min(mines.neutral.max, Math.max(mines.neutral.min, Math.round(mineZoneTiles / mines.neutral.tilesPerMine)))
         const placedMineNodes: number[] = []
-        // A template that lists mines for the zone decides them all; the generic draw would add more.
-        const templateMines = spec?.mandatory.some((e) => e.sid?.startsWith('mine_')) ?? false
+        // A template zone's mines are exactly its mandatory entries (Harmony in the game: 30 mines = the 30 mandatory ones, none
+        // from the pools, and none in the zone that lists no mines), so the generic draw would only add more.
+        const templateMines = spec !== undefined
         for (const drawnSid of templateMines ? [] : drawMineTypes(mineCount, mines.neutralTypeWeights, rng)) {
           // Sand-biome gold-mine enrichment (issue #230) — an extra override
           // roll per mine, only consumed when biome is Sand AND the strength
