@@ -18,6 +18,10 @@ export interface HeadlessArgs {
   seed: number | undefined
   mapName: string
   classic: ClassicSettings
+  /** Name of a bundled game template (`--game-template`); null generates in Classic mode. */
+  gameTemplate: string | null
+  /** Flags that were given but have no effect with a game template, which decides them itself. */
+  ignored: string[]
 }
 
 export const MIN_PLAYERS = 2
@@ -92,6 +96,16 @@ function parseMirror(raw: ArgValue): boolean | undefined {
   throw new Error(`--mirror must be true or false (got "${raw}")`)
 }
 
+/** `--game-template`: a bundled template's name (e.g. "Jebus Cross"); empty or "none" means no template. Whether the name exists is checked where the templates can be listed (HeadlessGenerate). */
+function parseGameTemplate(raw: ArgValue): string | null {
+  const text = raw?.trim()
+  if (!text || text.toLowerCase() === 'none') return null
+  return text
+}
+
+// A game template decides these itself (same as the Random Map dialog, which greys them out), so with one they are ignored, not errors.
+const TEMPLATE_DECIDES = ['players', 'richness', 'complexity', 'water', 'layout', 'win', 'mirror', 'max-heroes'] as const
+
 export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   const output = raw.output?.trim()
   if (!output) throw new Error('--output is required')
@@ -102,7 +116,9 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
     throw new Error(`--players must be an integer ${MIN_PLAYERS}-${MAX_PLAYERS} (got "${raw.players}")`)
   }
 
-  const mirrored = parseMirror(raw.mirror)
+  const gameTemplate = parseGameTemplate(raw['game-template'])
+  const ignored = gameTemplate ? TEMPLATE_DECIDES.filter((flag) => raw[flag] !== undefined) : []
+  const mirrored = gameTemplate ? undefined : parseMirror(raw.mirror)
   const includePandoraBox = parseFlag(raw.pandora, 'pandora')
   if (mirrored && playerCount % 2 !== 0) throw new Error(`--mirror needs an even number of players (got ${playerCount})`)
 
@@ -136,14 +152,16 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
     playerCount,
     seed,
     mapName: raw.name?.trim() || 'Random Map',
+    gameTemplate,
+    ignored,
     classic: {
       richness: pickIndex(raw.richness, RICHNESS_LEVELS, DEFAULT_CLASSIC_SETTINGS.richness, 'richness'),
       complexity: pickIndex(raw.complexity, COMPLEXITY_LEVELS, DEFAULT_CLASSIC_SETTINGS.complexity, 'complexity'),
       difficulty: pickIndex(raw.difficulty, DIFFICULTY_LEVELS, DEFAULT_CLASSIC_SETTINGS.difficulty, 'difficulty'),
       water: pickIndex(raw.water, WATER_LEVELS, DEFAULT_CLASSIC_SETTINGS.water, 'water'),
       maxRandomCities,
-      layout: parseLayout(raw.layout),
-      winConditions: parseWinConditionList(raw.win),
+      layout: gameTemplate ? undefined : parseLayout(raw.layout),
+      winConditions: gameTemplate ? undefined : parseWinConditionList(raw.win),
       randomPlayerFaction: parseFaction(raw.faction),
       mirrored,
       includePandoraBox,
