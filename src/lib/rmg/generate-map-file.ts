@@ -30,6 +30,10 @@ import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-
  *  total); the best-scoring attempt wins. */
 const BALANCE_TARGET_SCORE = 85
 const MAX_BALANCE_ATTEMPTS = 4
+/** Below this a map is not accepted while attempts remain: it keeps re-rolling up to `MAX_ATTEMPTS_BELOW_MIN` total. Measured with 6
+ *  players (Node, default Classic settings): about half the maps score under 67 at 64-128 tiles, so the extra attempts are used often. */
+const MIN_ACCEPTABLE_SCORE = 67
+const MAX_ATTEMPTS_BELOW_MIN = 10
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
@@ -105,12 +109,15 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   let bestScore = fairnessOf(best)
   options.onProgress?.(i18n.t('rmg.progress.checkingFairness', { score: bestScore }), 60)
   await yieldToUI()
-  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && bestScore < BALANCE_TARGET_SCORE; attempt++) {
-    const lo = 60 + (attempt - 2) * 10
-    const prefix = i18n.t('rmg.progress.rebalancePrefix', { attempt, max: MAX_BALANCE_ATTEMPTS, score: bestScore })
+  const attemptsAllowed = (): number => (bestScore < MIN_ACCEPTABLE_SCORE ? MAX_ATTEMPTS_BELOW_MIN : MAX_BALANCE_ATTEMPTS)
+  // The re-rolls share the 60-90% stretch, so each slice shrinks to fit the longest run.
+  const slice = 30 / (MAX_ATTEMPTS_BELOW_MIN - 1)
+  for (let attempt = 2; attempt <= attemptsAllowed() && !options.gameTemplateJson && !options.terrainOnly && bestScore < BALANCE_TARGET_SCORE; attempt++) {
+    const lo = Math.round(60 + (attempt - 2) * slice)
+    const prefix = i18n.t('rmg.progress.rebalancePrefix', { attempt, max: attemptsAllowed(), score: bestScore })
     options.onProgress?.(`${prefix}${i18n.t('rmg.progress.startingOver')}`, lo)
     await yieldToUI()
-    const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, lo + 10, prefix) })
+    const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, Math.round(lo + slice), prefix) })
     const nextScore = fairnessOf(next)
     if (nextScore > bestScore) { best = next; bestScore = nextScore }
   }
