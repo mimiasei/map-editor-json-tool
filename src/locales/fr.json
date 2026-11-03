@@ -928,6 +928,7 @@
     "roads": "Routes",
     "loading": "Chargement en cours…",
     "whatsNew": "Nouveautés",
+    "earlierVersions": "Versions précédentes",
     "all": "Tout",
     "iconProgress": "{{done}} / {{total}} icônes",
     "noMatches": "Aucune correspondance",

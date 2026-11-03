@@ -907,6 +907,7 @@
     "roads": "Roads",
     "loading": "Loading…",
     "whatsNew": "What's new",
+    "earlierVersions": "Earlier versions",
     "all": "All",
     "iconProgress": "{{done}} / {{total}} icons",
     "noMatches": "No matches",

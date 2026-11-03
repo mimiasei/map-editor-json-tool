@@ -899,6 +899,7 @@
     "roads": "Veier",
     "loading": "Laster…",
     "whatsNew": "Hva er nytt",
+    "earlierVersions": "Tidligere versjoner",
     "all": "Alle",
     "iconProgress": "{{done}} / {{total}} ikoner",
     "noMatches": "Ingen treff",
