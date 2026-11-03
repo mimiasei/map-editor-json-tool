@@ -108,6 +108,17 @@ function drawMineTypes(count: number, weights: Partial<Record<MineType, number>>
 /** Neutral-zone mines are kept at least this many tiles apart (when the zone
  *  has room) so they spread out instead of clumping. */
 const MINE_SPACING = 6
+// Classic-mode treasure calibration. Measured over 15 game templates x 3 seeds (the same map size, players, water and complexity
+// as each template, classic at Medium richness): per 1000 tiles the templates average hires 4.0 (median 2.9), artifacts 7.1,
+// resource piles + storages 10.9, chests 2.0, scroll boxes 3.1 vs classic before this: 0.14, 2.1, 0.8, 0.08, 0.10.
+// Scroll boxes are deliberately brought only to ~0.8 (a quarter of the template figure). Re-measure after changing these.
+/** Multiplier on a neutral zone's treasure slot count. */
+const CLASSIC_TREASURE_COUNT_SCALE = 7.5
+/** Of the non-resource slots: share that is a random-item (artifact) and share that is a random-hire; the rest rolls the building pool. */
+const CLASSIC_ARTIFACT_SHARE = 0.56
+const CLASSIC_HIRE_SHARE = 0.30
+/** Chance a slot drops scroll boxes from its content roll. */
+const CLASSIC_SCROLL_BOX_DROP = 0.6
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -731,6 +742,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     guardRoll: rng(),
   }
 
+  /** No game template: zones fill through the generic treasure loop (classic mode). */
+  const isClassicLoot = !zoneContentSpecByZoneId || zoneContentSpecByZoneId.size === 0
+
   /** `random-item.rarity` fallback weights — the exact real distribution
    *  surveyed this session (`maps/*.map`'s own `propRandomItems.rarity`, 140
    *  rows: 88/30/19/3 for rarity 0/1/2/3). Only reached when `catalog` is
@@ -757,7 +771,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
    *  storage-or-resource, 0.55 for artifact+interactable+hire combined)
    *  since nothing in the real data suggests a different top-level split;
    *  only the WITHIN-branch distribution is now real instead of guessed. */
-  const RESOURCE_POOL_SHARE = 0.45
+  const RESOURCE_POOL_SHARE = 0.56
   /** Within the "building" branch, how often this slot rolls from the real
    *  GUARDED pool (gets its own guard below) vs. the UNGUARDED one — real
    *  data (`template_pools_random_t2.json` vs `..._unguarded_t2.json`,
@@ -806,8 +820,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
    *  mirrors Olden Era's own real RMG templates' `contentCountLimits`
    *  `maxCount: 1` pattern for named/notable objects. */
   const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number): void => {
-    if (catalog && rng() < objectVariety) {
-      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || isRmgIneligibleInteractableSid(sid) || (disabledInteractableSids?.has(sid) ?? false)
+    if (catalog && (isClassicLoot || rng() < objectVariety)) {
+      const dropScrollBoxes = isClassicLoot && rng() < CLASSIC_SCROLL_BOX_DROP
+      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || isRmgIneligibleInteractableSid(sid) || (disabledInteractableSids?.has(sid) ?? false) || (dropScrollBoxes && sid.includes('scroll_box'))
       if (rng() < RESOURCE_POOL_SHARE) {
         const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {
@@ -816,9 +831,18 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
           return
         }
       } else {
+        let hireOnly = false
+        if (isClassicLoot) {
+          const kind = rng()
+          if (kind < CLASSIC_ARTIFACT_SHARE) {
+            place('random-item', tiles, undefined, { rarity: pickFallbackRarity() })
+            return
+          }
+          hireOnly = kind < CLASSIC_ARTIFACT_SHARE + CLASSIC_HIRE_SHARE
+        }
         const guarded = rng() < GUARDED_TREASURE_SHARE
         const poolName = `template_pool_random${guarded ? '' : '_unguarded'}_t${currentBuildingTier}_base`
-        const rolled = rollContentPool(catalog, poolName, rng, isExcluded)
+        const rolled = rollContentPool(catalog, poolName, rng, hireOnly ? (sid) => isExcluded(sid) || !sid.startsWith('random_hire') : isExcluded)
         const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, undefined, isAtContentCap, rng) : null
         if (resolved) {
           recordPickPlacement(resolved)
@@ -1360,7 +1384,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       // directly from the real, mixed-category content pools above), so the
       // loop now just runs this many times directly. Still reproduces the
       // same real-map-calibrated density `baseTreasureCount` documents above.
-      const treasureCount = Math.max(0, Math.round(baseTreasureCount * treasureDensity * treasureScale))
+      const treasureCount = Math.max(0, Math.round(baseTreasureCount * treasureDensity * treasureScale * (isClassicLoot ? CLASSIC_TREASURE_COUNT_SCALE : 1)))
       const usedArtifactSids = zoneUsedArtifacts.get(zone.id) ?? new Set<string>()
       for (let i = 0; i < treasureCount; i++) {
         placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF)
