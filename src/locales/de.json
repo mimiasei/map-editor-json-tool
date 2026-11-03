@@ -550,8 +550,10 @@
       "randomSquads": "Zufällige Trupps",
       "unitSquads": "Einheiten-Trupps",
       "riverTiles": "Flusskacheln",
+      "roadTiles": "Straßenkacheln",
       "blockingTiles": "Blockierende Kacheln %",
       "guardedObjects": "Bewachte Objekte %",
+      "neutralZones": "Neutrale Zonen",
       "noPlayerCitySpawnersPlaced": "Keine Stadt-Startpunkte für Spieler platziert.",
       "faction": "Fraktion",
       "hero": "Held",
@@ -908,6 +910,7 @@
     "interactablesSubCategories": "Unterkategorien interaktiver Objekte",
     "subCategories": "Unterkategorien",
     "decorationsSubCategories": "Unterkategorien der Dekorationen",
+    "spawnersSubCategories": "Unterkategorien der Startpunkte",
     "on": "Ein",
     "skill": "Fähigkeit…",
     "buff": "Effekt…",
@@ -1002,6 +1005,16 @@
       "walkable": "Begehbar",
       "campaignRelated": "Kampagnenbezogen",
       "other": "Andere Dekorationen"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Spielerstart (Stadt)",
+      "hero-spawner": "Spielerstart (Held)",
+      "random-city": "Zufallsstadt",
+      "random-hero": "Zufallsheld",
+      "random-squad": "Zufallsarmee",
+      "random-res": "Zufallsressource",
+      "random-item": "Zufallsgegenstand",
+      "random-hire": "Zufallsanwerbung"
     },
     "mapObjectCategories": {
       "interactables": "Interaktiv",

@@ -16,7 +16,7 @@ import { logWarn } from '@/lib/logger'
 import type { NeutralZoneRole, ZoneGraph, ZoneSpec } from './zone-graph'
 import type { ZoneCenter } from './zone-layout'
 
-export const LAYOUT_ARCHETYPES = ['ring', 'ringCenter', 'innerRing', 'doubleNeutral', 'pockets', 'hub'] as const
+export const LAYOUT_ARCHETYPES = ['ring', 'ringCenter', 'innerRing', 'doubleNeutral', 'pockets', 'hub', 'chain'] as const
 export type LayoutArchetype = (typeof LAYOUT_ARCHETYPES)[number]
 
 /** Name, one-line description and a fuller explanation (how the map looks and the zone rules) of each layout, for the generator dialog. */
@@ -33,6 +33,8 @@ export const LAYOUT_LABELS: Record<LayoutArchetype, { label: string; description
     details: 'A tighter ring of player and neutral zones in the middle of the map, as in Ring. Behind each neutral zone, towards the map edge, lies a small dead-end treasure pocket with richer treasure that is reached only through that neutral zone. Offered for up to 4 players.' },
   hub: { label: 'Hub', description: 'A spoke from every player to a shared center; no direct ring between players.',
     details: 'Like the hub of a wheel: each player has a single neutral zone towards the middle, and all of these connect to one large central zone with extra treasure. There is no ring between players, so the only way to a rival is through your neutral zone and the centre. Offered for up to 4 players.' },
+  chain: { label: 'Chain', description: 'A ring with a chain of neutral zones between neighbouring players; the number of zones follows the map size.',
+    details: 'A ring where each pair of neighbouring player zones has a chain of neutral zones between them. How long the chain is depends on the map size, so a large map gets many small zones, as in the game templates. From three neutral zones per player a large treasure zone is added in the middle, reachable from the middle of every chain.' },
 }
 
 interface UnitZone {
@@ -59,7 +61,9 @@ interface ArchetypeDef {
   maxPlayers?: number
 }
 
-const DEFS: Record<LayoutArchetype, ArchetypeDef> = {
+type FixedArchetype = Exclude<LayoutArchetype, 'chain'>
+
+const DEFS: Record<FixedArchetype, ArchetypeDef> = {
   // Today's layout: player and neutral zones alternate on one ring.
   ring: {
     unit: [
@@ -118,6 +122,42 @@ const DEFS: Record<LayoutArchetype, ArchetypeDef> = {
   },
 }
 
+/** Total zones a built-in map should have for its size. Fitted to the game's 59 templates (zone count against the template's own map
+ *  area: about 2.9 + 0.48 per 1000 tiles, players add next to nothing); classic mode used to build 2 to 3 zones per player whatever the size. */
+export function targetZoneCount(sizeX: number, sizeZ: number): number {
+  return Math.round(2.9 + 0.48 * (sizeX * sizeZ) / 1000)
+}
+
+/** The chain layout for this map: `k` neutral zones between each pair of players, plus a centre zone once the chain is long enough
+ *  to want shortcuts (two or more), sized to reach `targetZoneCount` at this player count (never fewer than a plain ring). */
+function chainParams(sizeX: number, sizeZ: number, playerCount: number): { k: number; centre: boolean } {
+  const target = targetZoneCount(sizeX, sizeZ)
+  const withCentre = Math.round((target - playerCount - 1) / playerCount)
+  if (withCentre >= 2) return { k: withCentre, centre: true }
+  return { k: Math.max(1, Math.round((target - playerCount) / playerCount)), centre: false }
+}
+
+function chainDef(k: number, centre: boolean): ArchetypeDef {
+  const unit: UnitZone[] = [{ key: 'P', kind: 'player', size: 5, r: 1, a: 0 }]
+  const edges: [string, string][] = []
+  const middle: string[] = []
+  for (let j = 1; j <= k; j++) {
+    const a = j / (k + 1)
+    // Every other zone sits further in, so the chain fills the ring instead of a thin band; the radius depends only on the distance from the nearest player, so mirrored zones agree.
+    unit.push({ key: `N${j}`, kind: 'neutral', role: 'between', size: 2, r: Math.min(j, k + 1 - j) % 2 === 1 ? 0.7 : 1, a })
+    edges.push([j === 1 ? 'P' : `N${j - 1}`, `N${j}`])
+    if (j === Math.ceil(k / 2) || j === Math.floor(k / 2) + 1) middle.push(`N${j}`)
+  }
+  edges.push([`N${k}`, 'P+'])
+  return { unit, edges, ...(centre ? { center: { size: 3, links: [...new Set(middle)] } } : {}) }
+}
+
+function defOf(name: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number): ArchetypeDef {
+  if (name !== 'chain') return DEFS[name]
+  const { k, centre } = chainParams(sizeX, sizeZ, playerCount)
+  return chainDef(k, centre)
+}
+
 /** Extra treasure for special neutral zones, as `resourcesValue` relative to
  *  1 for ordinary ones (zone-population.ts scales treasure by it). */
 export const ROLE_TREASURE_SCALE: Record<NeutralZoneRole, number> = { between: 1, inner: 1, center: 1.5, pocket: 1.3 }
@@ -150,7 +190,7 @@ function zoneCount(def: ArchetypeDef, playerCount: number): number {
  *  can drop the larger layouts on a small map; `ring` always remains. */
 export function neutralZoneRange(playerCount: number): { min: number; max: number } {
   const counts = LAYOUT_ARCHETYPES
-    .filter((name) => playerCount <= (DEFS[name].maxPlayers ?? Infinity))
+    .filter((name): name is FixedArchetype => name !== 'chain' && playerCount <= (DEFS[name].maxPlayers ?? Infinity))
     .map((name) => DEFS[name].unit.filter((u) => u.kind === 'neutral').length * playerCount + (DEFS[name].center ? 1 : 0))
   return { min: Math.min(...counts), max: Math.max(...counts) }
 }
@@ -159,7 +199,7 @@ export function neutralZoneRange(playerCount: number): { min: number; max: numbe
  *  crowded and not over its player limit (`ring` always fits). */
 function archetypeFits(name: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number): boolean {
   return name === 'ring' || (
-    (sizeX * sizeZ) / zoneCount(DEFS[name], playerCount) >= MIN_TILES_PER_ZONE && playerCount <= (DEFS[name].maxPlayers ?? Infinity))
+    (sizeX * sizeZ) / zoneCount(defOf(name, sizeX, sizeZ, playerCount), playerCount) >= MIN_TILES_PER_ZONE && playerCount <= (defOf(name, sizeX, sizeZ, playerCount).maxPlayers ?? Infinity))
 }
 
 /** The layouts a user can pick for this map size and player count. */
@@ -181,11 +221,15 @@ export function buildBuiltInLayout(
     if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale, mirrored)
     logWarn(`RMG layout: ${forced} does not fit ${playerCount} players on ${sizeX}x${sizeZ} — picking a random layout instead`)
   }
-  const tiles = sizeX * sizeZ
-  const options = LAYOUT_ARCHETYPES
-    .map((name) => ({ name, weight: Math.max(0, weights[name] ?? 1) }))
-    .filter((o) => o.weight > 0 && (o.name === 'ring' || (
-      tiles / zoneCount(DEFS[o.name], playerCount) >= MIN_TILES_PER_ZONE && playerCount <= (DEFS[o.name].maxPlayers ?? Infinity))))
+  // The size asks for a number of zones: only the layouts with the closest fit are rolled. The chain stretches to
+  // the target at any player count, but where it would be a plain ring (or smaller than the target allows) the fixed layouts stand in.
+  const target = targetZoneCount(sizeX, sizeZ)
+  const counts = LAYOUT_ARCHETYPES
+    .filter((name) => archetypeFits(name, sizeX, sizeZ, playerCount) && (weights[name] ?? 1) > 0)
+    .map((name) => ({ name, weight: weights[name] ?? 1, count: zoneCount(defOf(name, sizeX, sizeZ, playerCount), playerCount) }))
+    .filter((o) => o.name !== 'chain' || o.count > 2 * playerCount)
+  const closest = Math.min(...counts.map((o) => Math.abs(o.count - target)))
+  const options = counts.filter((o) => Math.abs(o.count - target) <= closest)
   const total = options.reduce((s, o) => s + o.weight, 0)
   let archetype: LayoutArchetype = 'ring'
   if (total > 0) {
@@ -211,7 +255,7 @@ export function buildBuiltInLayout(
 export function layoutArchetype(
   archetype: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number, rng: () => number, radiusScale = 1, mirrored = false,
 ): BuiltInLayout {
-  const def = DEFS[archetype]
+  const def = defOf(archetype, sizeX, sizeZ, playerCount)
   const zones: ZoneSpec[] = []
   const centers: ZoneCenter[] = []
   const idByKey = new Map<string, number>() // `${sector}:${key}`

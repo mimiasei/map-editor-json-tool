@@ -282,9 +282,14 @@
           "label": "Hub",
           "description": "A spoke from every player to a shared center; no direct ring between players.",
           "details": "Like the hub of a wheel: each player has a single neutral zone towards the middle, and all of these connect to one large central zone with extra treasure. There is no ring between players, so the only way to a rival is through your neutral zone and the centre. Offered for up to 4 players."
+        },
+        "chain": {
+          "label": "Chain",
+          "description": "A ring with a chain of neutral zones between neighbouring players; the number of zones follows the map size.",
+          "details": "A ring where each pair of neighbouring player zones has a chain of neutral zones between them. How long the chain is depends on the map size, so a large map gets many small zones, as in the game templates. From three neutral zones per player a large treasure zone is added in the middle, reachable from the middle of every chain."
         }
       },
-      "randomCitiesInfo": "Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets the default of 1. On: you choose the total for the whole map, from 0 up to {{perZone}} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with {{players}} players the map has {{zones}} neutral zones, so up to {{maxCities}} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones."
+      "randomCitiesInfo": "Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets about 0.3 cities per 1000 tiles, as the game templates do. On: you choose the total for the whole map, from 0 up to {{perZone}} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with {{players}} players the map has {{zones}} neutral zones, so up to {{maxCities}} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones."
     },
     "iconBrowserDialog": {
       "searchIcons": "Search icons…",
@@ -553,8 +558,10 @@
       "randomSquads": "Random Squads",
       "unitSquads": "Unit Squads",
       "riverTiles": "River Tiles",
+      "roadTiles": "Road Tiles",
       "blockingTiles": "Blocking Tiles %",
       "guardedObjects": "Guarded Objects %",
+      "neutralZones": "Neutral Zones",
       "noPlayerCitySpawnersPlaced": "No player city-spawners placed.",
       "faction": "Faction",
       "hero": "Hero",
@@ -911,6 +918,7 @@
     "interactablesSubCategories": "Interactables sub-categories",
     "subCategories": "Sub-categories",
     "decorationsSubCategories": "Decorations sub-categories",
+    "spawnersSubCategories": "Spawners sub-categories",
     "on": "On",
     "skill": "Skill…",
     "buff": "Buff…",
@@ -1005,6 +1013,16 @@
       "walkable": "Walkable",
       "campaignRelated": "Campaign related",
       "other": "Other decorations"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Player start (city)",
+      "hero-spawner": "Player start (hero)",
+      "random-city": "Random city",
+      "random-hero": "Random hero",
+      "random-squad": "Random squad",
+      "random-res": "Random resource",
+      "random-item": "Random item",
+      "random-hire": "Random hire"
     },
     "mapObjectCategories": {
       "interactables": "Interactive",

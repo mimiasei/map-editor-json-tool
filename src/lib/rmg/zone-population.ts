@@ -119,6 +119,16 @@ const CLASSIC_ARTIFACT_SHARE = 0.56
 const CLASSIC_HIRE_SHARE = 0.30
 /** Chance a slot drops scroll boxes from its content roll. */
 const CLASSIC_SCROLL_BOX_DROP = 0.6
+/** Share of classic resource piles that are a `random-res` spawner (the game picks the resource) instead of a fixed pile. The game templates
+ *  use none (0 in the 15 measured), so this is a variety choice, not a measurement. */
+const CLASSIC_RANDOM_RESOURCE_SHARE = 0.3
+/** Share of classic resource-pile and chest rolls that are placed; the rest are dropped. Measured over 15 templates against classic at the same size and
+ *  player count (per 1000 tiles): piles incl. storage 10.9 vs 9.1 with the pile share at 0.7, chests 2.0 vs 2.8 before any drop. */
+const CLASSIC_RESOURCE_PILE_KEEP = 0.8
+const CLASSIC_CHEST_KEEP = 0.7
+/** Neutral cities per 1000 map tiles when the user gives no total. Over the 59 game templates the city count follows the map area (correlation
+ *  0.50) far more than the neutral zone count (0.25) or the player count (0.06): 0.31 per 1000 tiles pooled, 3.3 cities under 10k tiles, 10.6 at 30-50k. */
+const AUTO_CITIES_PER_1000_TILES = 0.31
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -634,7 +644,7 @@ export interface ZonePopulator {
 
 export function createZonePopulator(options: PopulateZonesOptions): ZonePopulator {
   const {
-    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
+    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId, zoneContentSpecByZoneId, templateValueScale = 1,
     mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, mines = DEFAULT_MINE_DISTRIBUTION, zoneAnchorNode, symmetricZones = false,
   } = options
@@ -826,8 +836,10 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       if (rng() < RESOURCE_POOL_SHARE) {
         const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {
+          if (isClassicLoot && (sid.startsWith('resource_') ? rng() >= CLASSIC_RESOURCE_PILE_KEEP : sid === 'chest' && rng() >= CLASSIC_CHEST_KEEP)) return
           recordContentPlacement(sid)
-          place(sid, tiles)
+          if (isClassicLoot && sid.startsWith('resource_') && rng() < CLASSIC_RANDOM_RESOURCE_SHARE) place('random-res', tiles)
+          else place(sid, tiles)
           return
         }
       } else {
@@ -1252,8 +1264,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     // between two spawns only excludes those two factions, not every player
     // in the game).
     if (mainObjectsByZoneId && mainObjectsByZoneId.size > 0) placeTemplateCities()
-    else if (randomCityCount > 0) {
+    else if (randomCityCount === undefined || randomCityCount > 0) {
       const neutralZones = zones.filter((z) => z.kind === 'neutral')
+      const cityTotal = randomCityCount ?? Math.round(AUTO_CITIES_PER_1000_TILES * sizeX * sizeZ / 1000)
       const playerFactions = new Set(
         zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
       )
@@ -1263,7 +1276,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       // third round, so extra cities spread out before any zone gets crowded.
       let remainingZones: typeof neutralZones = []
       let round = 0
-      for (let i = 0; i < randomCityCount; i++) {
+      for (let i = 0; i < cityTotal; i++) {
         if (remainingZones.length === 0) {
           if (round >= MAX_CITIES_PER_ZONE || neutralZones.length === 0) break
           remainingZones = [...neutralZones]

@@ -607,6 +607,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     climbsMap: Array.isArray(b2.climbsMap) ? b2.climbsMap : [],
     roadsMap: Array.isArray(b2.roadsMap) ? b2.roadsMap : [],
     customAreasPainting: Array.isArray(b2.customAreasPainting) && b2.customAreasPainting.length === sizeX * (b1.sizeZ ?? 0) ? b2.customAreasPainting : [],
+    zoneAreas: Array.isArray(b2.areas) ? b2.areas : [],
     haveCustomAreas: b2.haveCustomAreas ?? false,
     riverNodes: new Map(
       (b2.rivers?.[0]?.nodes ?? [])

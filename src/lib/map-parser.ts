@@ -89,6 +89,8 @@ export interface RawMapBlock2 {
    *  unpainted map, even the blank New Map template — never actually
    *  missing. */
   customAreasPainting?: number[]
+  /** Zones of a generated (RMG) map: each with the nodes it covers. GME-made maps paint player regions in customAreasPainting instead. */
+  areas?: { id: number; nodes: number[] }[]
   /** True once any customAreasPainting value is nonzero. */
   haveCustomAreas?: boolean
   /** River path data. Confirmed across every parseable real sample map to

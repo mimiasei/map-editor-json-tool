@@ -46,11 +46,14 @@ export interface MapStats {
   levelPct: { level: number; pct: number }[]
   roadTileCounts: { roadId: number; label: string; tiles: number }[]
   riverLength: number
+  roadTileTotal: number
   resourceCounts: [string, number][]
   chestCount: number
   portalLinkCounts: { kind: string; count: number }[]
   blockingPct: number
   guardedPct: number
+  /** Painted zones that hold no player start. */
+  neutralZoneCount: number
 }
 
 /** Every catalog category treated as "scenery" for the decorations
@@ -60,6 +63,18 @@ const DECORATION_CATEGORIES = ['environments', 'animals', 'fxs'] as const
 
 function pct(count: number, total: number): number {
   return total > 0 ? (count / total) * 100 : 0
+}
+
+/** Zones with no player city spawner in them. A generated map lists its zones in `areas`; a hand-made one only has the painted player regions. */
+function countNeutralZones({ zoneAreas, customAreasPainting, placedObjects }: MapContext): number {
+  const cities = placedObjects.filter((o) => o.type === 0 && o.sid === 'city-spawner')
+  if (zoneAreas.length > 0) {
+    const owned = new Set(zoneAreas.filter((a) => cities.some((c) => a.nodes.includes(c.node))).map((a) => a.id))
+    return zoneAreas.length - owned.size
+  }
+  const painted = new Set(customAreasPainting.filter((id) => id !== 0))
+  for (const c of cities) painted.delete(customAreasPainting[c.node])
+  return painted.size
 }
 
 export function computeMapStats(context: MapContext, catalog: GameCatalog | null): MapStats {
@@ -197,12 +212,14 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     levelPct,
     roadTileCounts,
     riverLength: riverNodes.size,
+    roadTileTotal: roadTileCounts.reduce((sum, r) => sum + r.tiles, 0),
     resourceCounts: [...resourceCounts.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
     chestCount,
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,
-    guardedPct: pct(guardedCount, guardableCount)
+    guardedPct: pct(guardedCount, guardableCount),
+    neutralZoneCount: countNeutralZones(context),
   }
 }

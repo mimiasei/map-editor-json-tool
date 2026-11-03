@@ -285,6 +285,8 @@ export interface MapContext {
    *  RawMapBlock2.customAreasPainting. Empty when unpainted or the map has
    *  no known size — never a stale wrong-length array. */
   customAreasPainting: number[]
+  /** Zones of a generated map (Block 2 `areas`), empty on a hand-made one. */
+  zoneAreas: { id: number; nodes: number[] }[]
   /** True once any customAreasPainting value is nonzero. */
   haveCustomAreas: boolean
   /** Every river tile on the map, keyed by node — pre-flattened out of

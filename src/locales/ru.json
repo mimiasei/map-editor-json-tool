@@ -592,8 +592,10 @@
       "randomSquads": "Случайные отряды",
       "unitSquads": "Отряды существ",
       "riverTiles": "Клетки рек",
+      "roadTiles": "Клетки дорог",
       "blockingTiles": "Заблокированных клеток, %",
       "guardedObjects": "Охраняемых объектов, %",
+      "neutralZones": "Нейтральные зоны",
       "noPlayerCitySpawnersPlaced": "Точки появления городов игроков не размещены.",
       "faction": "Фракция",
       "hero": "Герой",
@@ -966,6 +968,7 @@
     "interactablesSubCategories": "Подкатегории интерактивных объектов",
     "subCategories": "Подкатегории",
     "decorationsSubCategories": "Подкатегории декораций",
+    "spawnersSubCategories": "Подкатегории точек появления",
     "on": "Вкл.",
     "skill": "Навык…",
     "buff": "Эффект…",
@@ -1060,6 +1063,16 @@
       "walkable": "Проходимые",
       "campaignRelated": "Связанные с кампанией",
       "other": "Прочие декорации"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Старт игрока (город)",
+      "hero-spawner": "Старт игрока (герой)",
+      "random-city": "Случайный город",
+      "random-hero": "Случайный герой",
+      "random-squad": "Случайный отряд",
+      "random-res": "Случайный ресурс",
+      "random-item": "Случайный предмет",
+      "random-hire": "Случайный найм"
     },
     "mapObjectCategories": {
       "interactables": "Интерактивные",

@@ -592,8 +592,10 @@
       "randomSquads": "Випадкових загонів",
       "unitSquads": "Одиничних загонів",
       "riverTiles": "Тайлів річок",
+      "roadTiles": "Тайлів доріг",
       "blockingTiles": "Заблокованих тайлів, %",
       "guardedObjects": "Охоронюваних об'єктів, %",
+      "neutralZones": "Нейтральних зон",
       "noPlayerCitySpawnersPlaced": "Точок появи міст гравців не розміщено.",
       "faction": "Фракція",
       "hero": "Герой",
@@ -966,6 +968,7 @@
     "interactablesSubCategories": "Підкатегорії інтерактивних об'єктів",
     "subCategories": "Підкатегорії",
     "decorationsSubCategories": "Підкатегорії декорацій",
+    "spawnersSubCategories": "Підкатегорії точок появи",
     "on": "Увімк.",
     "skill": "Уміння…",
     "buff": "Ефект…",
@@ -1060,6 +1063,16 @@
       "walkable": "Прохідні",
       "campaignRelated": "Пов'язані з кампанією",
       "other": "Інші декорації"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Старт гравця (місто)",
+      "hero-spawner": "Старт гравця (герой)",
+      "random-city": "Випадкове місто",
+      "random-hero": "Випадковий герой",
+      "random-squad": "Випадковий загін",
+      "random-res": "Випадковий ресурс",
+      "random-item": "Випадковий предмет",
+      "random-hire": "Випадковий найм"
     },
     "mapObjectCategories": {
       "interactables": "Інтерактивні",
