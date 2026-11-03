@@ -21,7 +21,6 @@ import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {isGuardCandidate} from "@/lib/rmg/zone-guard-scatter.ts";
 import i18n from '@/lib/i18n'
 import { localNameById } from '@/lib/catalog/local-name'
-import { groupPlayerStartsByZone } from './zone-ownership'
 
 export interface PlayerCityStat {
   owner: number
@@ -64,6 +63,18 @@ const DECORATION_CATEGORIES = ['environments', 'animals', 'fxs'] as const
 
 function pct(count: number, total: number): number {
   return total > 0 ? (count / total) * 100 : 0
+}
+
+/** Zones with no player city spawner in them. A generated map lists its zones in `areas`; a hand-made one only has the painted player regions. */
+function countNeutralZones({ zoneAreas, customAreasPainting, placedObjects }: MapContext): number {
+  const cities = placedObjects.filter((o) => o.type === 0 && o.sid === 'city-spawner')
+  if (zoneAreas.length > 0) {
+    const owned = new Set(zoneAreas.filter((a) => cities.some((c) => a.nodes.includes(c.node))).map((a) => a.id))
+    return zoneAreas.length - owned.size
+  }
+  const painted = new Set(customAreasPainting.filter((id) => id !== 0))
+  for (const c of cities) painted.delete(customAreasPainting[c.node])
+  return painted.size
 }
 
 export function computeMapStats(context: MapContext, catalog: GameCatalog | null): MapStats {
@@ -157,8 +168,6 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     portalKindCounts.set(o.portalInfo.linkKind, (portalKindCounts.get(o.portalInfo.linkKind) ?? 0) + 1)
   }
 
-  const playerZones = new Set(groupPlayerStartsByZone(context).keys())
-
   // ── Blocking vs non-blocking tiles ────────────────────────────────────────
   const blocked = buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap: context.climbsMap, waterMap }, catalog)
   const blockingPct = pct(blocked.size, totalTiles)
@@ -211,6 +220,6 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,
     guardedPct: pct(guardedCount, guardableCount),
-    neutralZoneCount: new Set(context.customAreasPainting.filter((id) => id !== 0 && !playerZones.has(id))).size,
+    neutralZoneCount: countNeutralZones(context),
   }
 }
