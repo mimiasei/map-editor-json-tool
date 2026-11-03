@@ -129,7 +129,7 @@ export function targetZoneCount(sizeX: number, sizeZ: number): number {
 }
 
 /** The chain layout for this map: `k` neutral zones between each pair of players, plus a centre zone once the chain is long enough
- *  to want shortcuts (two or more). The fixed layouts give 2 to 3 zones per player, so the chain takes over where the target is above that. */
+ *  to want shortcuts (two or more), sized to reach `targetZoneCount` at this player count (never fewer than a plain ring). */
 function chainParams(sizeX: number, sizeZ: number, playerCount: number): { k: number; centre: boolean } {
   const target = targetZoneCount(sizeX, sizeZ)
   const withCentre = Math.round((target - playerCount - 1) / playerCount)
@@ -221,16 +221,15 @@ export function buildBuiltInLayout(
     if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale, mirrored)
     logWarn(`RMG layout: ${forced} does not fit ${playerCount} players on ${sizeX}x${sizeZ} — picking a random layout instead`)
   }
-  const tiles = sizeX * sizeZ
-  // Where the size asks for more zones than any fixed layout gives, the chain is the layout (no dice roll).
-  if (targetZoneCount(sizeX, sizeZ) > 3 * playerCount + 1 && archetypeFits('chain', sizeX, sizeZ, playerCount)) {
-    return layoutArchetype('chain', sizeX, sizeZ, playerCount, rng, radiusScale, mirrored)
-  }
-  const options = LAYOUT_ARCHETYPES
-    .filter((name): name is FixedArchetype => name !== 'chain')
-    .map((name) => ({ name, weight: Math.max(0, weights[name] ?? 1) }))
-    .filter((o) => o.weight > 0 && (o.name === 'ring' || (
-      tiles / zoneCount(DEFS[o.name], playerCount) >= MIN_TILES_PER_ZONE && playerCount <= (DEFS[o.name].maxPlayers ?? Infinity))))
+  // The size asks for a number of zones: only the layouts that come within one zone of the closest fit are rolled. The chain stretches to
+  // the target at any player count, but where it would be a plain ring (or smaller than the target allows) the fixed layouts stand in.
+  const target = targetZoneCount(sizeX, sizeZ)
+  const counts = LAYOUT_ARCHETYPES
+    .filter((name) => archetypeFits(name, sizeX, sizeZ, playerCount) && (weights[name] ?? 1) > 0)
+    .map((name) => ({ name, weight: weights[name] ?? 1, count: zoneCount(defOf(name, sizeX, sizeZ, playerCount), playerCount) }))
+    .filter((o) => o.name !== 'chain' || o.count > 2 * playerCount)
+  const closest = Math.min(...counts.map((o) => Math.abs(o.count - target)))
+  const options = counts.filter((o) => Math.abs(o.count - target) <= closest + 1)
   const total = options.reduce((s, o) => s + o.weight, 0)
   let archetype: LayoutArchetype = 'ring'
   if (total > 0) {
