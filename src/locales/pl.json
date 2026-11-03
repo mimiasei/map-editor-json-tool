@@ -966,6 +966,7 @@
     "interactablesSubCategories": "Podkategorie obiektów interaktywnych",
     "subCategories": "Podkategorie",
     "decorationsSubCategories": "Podkategorie dekoracji",
+    "spawnersSubCategories": "Podkategorie spawnerów",
     "on": "Wł.",
     "skill": "Umiejętność…",
     "buff": "Wzmocnienie…",
@@ -1060,6 +1061,16 @@
       "walkable": "Przejezdne",
       "campaignRelated": "Związane z kampanią",
       "other": "Inne dekoracje"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Start gracza (miasto)",
+      "hero-spawner": "Start gracza (bohater)",
+      "random-city": "Losowe miasto",
+      "random-hero": "Losowy bohater",
+      "random-squad": "Losowy oddział",
+      "random-res": "Losowy zasób",
+      "random-item": "Losowy przedmiot",
+      "random-hire": "Losowy najem"
     },
     "mapObjectCategories": {
       "interactables": "Interaktywny",

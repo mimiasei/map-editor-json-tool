@@ -908,6 +908,7 @@
     "interactablesSubCategories": "Underkategorier for interaktive objekter",
     "subCategories": "Underkategorier",
     "decorationsSubCategories": "Underkategorier for dekorasjoner",
+    "spawnersSubCategories": "Underkategorier for spawnere",
     "on": "På",
     "skill": "Ferdighet…",
     "buff": "Buff…",
@@ -1002,6 +1003,16 @@
       "walkable": "Gangbart",
       "campaignRelated": "Kampanjerelatert",
       "other": "Andre dekorasjoner"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Spillerstart (by)",
+      "hero-spawner": "Spillerstart (helt)",
+      "random-city": "Tilfeldig by",
+      "random-hero": "Tilfeldig helt",
+      "random-squad": "Tilfeldig tropp",
+      "random-res": "Tilfeldig ressurs",
+      "random-item": "Tilfeldig gjenstand",
+      "random-hire": "Tilfeldig rekruttering"
     },
     "mapObjectCategories": {
       "interactables": "Interaktiv",

@@ -966,6 +966,7 @@
     "interactablesSubCategories": "Подкатегории интерактивных объектов",
     "subCategories": "Подкатегории",
     "decorationsSubCategories": "Подкатегории декораций",
+    "spawnersSubCategories": "Подкатегории точек появления",
     "on": "Вкл.",
     "skill": "Навык…",
     "buff": "Эффект…",
@@ -1060,6 +1061,16 @@
       "walkable": "Проходимые",
       "campaignRelated": "Связанные с кампанией",
       "other": "Прочие декорации"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Старт игрока (город)",
+      "hero-spawner": "Старт игрока (герой)",
+      "random-city": "Случайный город",
+      "random-hero": "Случайный герой",
+      "random-squad": "Случайный отряд",
+      "random-res": "Случайный ресурс",
+      "random-item": "Случайный предмет",
+      "random-hire": "Случайный найм"
     },
     "mapObjectCategories": {
       "interactables": "Интерактивные",

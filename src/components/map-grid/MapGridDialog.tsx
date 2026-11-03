@@ -47,6 +47,12 @@ import { RenderedObject } from '@/components/map-grid/RenderedObject'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 import {
+  SPAWNER_SUBCATEGORY_ORDER,
+  spawnerSubcategoryName,
+  isSpawnerSubcategory,
+  type SpawnerSubcategory,
+} from '@/lib/map-grid/spawner-subcategories'
+import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   interactableSubcategoryName,
   resolveInteractableSubcategory,
@@ -288,6 +294,26 @@ function saveDecorationSubFilter(f: DecorationSubFilterState): void {
   try { localStorage.setItem(DECORATION_SUBFILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
 }
 
+// Same idea for the Spawners group: one entry per spawner type (city-spawner, random-hire, ...).
+type SpawnerSubFilterState = Record<SpawnerSubcategory, boolean>
+
+const SPAWNER_SUBFILTER_STORAGE_KEY = 'oe-map-grid-spawner-subfilter'
+
+function loadSpawnerSubFilter(): SpawnerSubFilterState {
+  const fallback = Object.fromEntries(
+    SPAWNER_SUBCATEGORY_ORDER.map((c) => [c, true]),
+  ) as SpawnerSubFilterState
+  try {
+    const raw = localStorage.getItem(SPAWNER_SUBFILTER_STORAGE_KEY)
+    if (raw) return { ...fallback, ...JSON.parse(raw) }
+  } catch { /* ignore */ }
+  return fallback
+}
+
+function saveSpawnerSubFilter(f: SpawnerSubFilterState): void {
+  try { localStorage.setItem(SPAWNER_SUBFILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
+}
+
 // ─── Transform ────────────────────────────────────────────────────────────────
 
 interface Transform { x: number; y: number; scale: number }
@@ -414,6 +440,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     saveInteractableSubFilter(next)
   }
 
+  const [spawnerSubFilter, setSpawnerSubFilter] = useState<SpawnerSubFilterState>(loadSpawnerSubFilter)
+  const toggleSpawnerSubcategory = (c: SpawnerSubcategory) => {
+    setSpawnerSubFilter((prev) => {
+      const next = { ...prev, [c]: !prev[c] }
+      saveSpawnerSubFilter(next)
+      return next
+    })
+  }
+  const setAllSpawnerSubcategories = (value: boolean) => {
+    const next = Object.fromEntries(
+      SPAWNER_SUBCATEGORY_ORDER.map((c) => [c, value]),
+    ) as SpawnerSubFilterState
+    setSpawnerSubFilter(next)
+    saveSpawnerSubFilter(next)
+  }
+
   const [decorationSubFilter, setDecorationSubFilter] = useState<DecorationSubFilterState>(
     loadDecorationSubFilter,
   )
@@ -432,12 +474,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     saveDecorationSubFilter(next)
   }
 
-  // Every header pill back on, both sub-category dropdowns fully ticked, "Entity SIDs only" off.
+  // Every header pill back on, all three sub-category dropdowns fully ticked, "Entity SIDs only" off.
   const resetAllFilters = () => {
     const allOn = Object.fromEntries(GRID_GROUP_ORDER.map((g) => [g, true])) as GridFilterState
     setFilter(allOn)
     saveGridFilter(allOn)
     setAllInteractableSubcategories(true)
+    setAllSpawnerSubcategories(true)
     setAllDecorationSubcategories(true)
     setEntitySidsOnly(false)
     saveEntitySidsOnly(false)
@@ -560,12 +603,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const group = groupOf(item, catalog)
     if (!group || !filter[group]) return false
     if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
+    if (group === 'spawners' && isSpawnerSubcategory(item.sid) && !spawnerSubFilter[item.sid]) return false
     if (group === 'decorations') {
       const category = findMapObject(catalog, item.sid)?.category
       if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
     }
     return true
-  }, [catalog, filter, interactableSubFilter, decorationSubFilter, erasedKeys])
+  }, [catalog, filter, interactableSubFilter, spawnerSubFilter, decorationSubFilter, erasedKeys])
 
   const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
@@ -5261,7 +5305,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <button
                   onClick={() => toggleGroup(g)}
                   className={`h-6 px-2 text-xs rounded shrink-0 border transition-colors ${
-                    g === 'interactables' || g === 'decorations' ? 'rounded-r-none border-r-0' : ''
+                    g === 'interactables' || g === 'spawners' || g === 'decorations' ? 'rounded-r-none border-r-0' : ''
                   } ${
                     filter[g]
                       ? 'bg-background text-foreground border-border'
@@ -5322,6 +5366,59 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         size="sm"
                         className="h-6 text-xs w-full"
                         onClick={() => setAllInteractableSubcategories(true)}
+                      >
+                        {t('shared.reset')}
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                {g === 'spawners' && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`h-6 w-5 flex items-center justify-center rounded-r border transition-colors ${
+                          filter[g]
+                            ? 'bg-background text-foreground border-border'
+                            : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+                        }`}
+                        title={t('shared.spawnersSubCategories')}
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {t('shared.subCategories')}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="spawner-subcat-all"
+                          checked={SPAWNER_SUBCATEGORY_ORDER.every((c) => spawnerSubFilter[c])}
+                          onCheckedChange={(v) => setAllSpawnerSubcategories(Boolean(v))}
+                        />
+                        <Label htmlFor="spawner-subcat-all" className="text-xs cursor-pointer font-medium">
+                          {t('shared.all')}
+                        </Label>
+                      </div>
+                      <div className="border-t border-border pt-2 space-y-2">
+                        {SPAWNER_SUBCATEGORY_ORDER.map((c) => (
+                          <div key={c} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`spawner-subcat-${c}`}
+                              checked={spawnerSubFilter[c]}
+                              onCheckedChange={() => toggleSpawnerSubcategory(c)}
+                            />
+                            <Label htmlFor={`spawner-subcat-${c}`} className="text-xs cursor-pointer">
+                              {spawnerSubcategoryName(c)}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs w-full"
+                        onClick={() => setAllSpawnerSubcategories(true)}
                       >
                         {t('shared.reset')}
                       </Button>

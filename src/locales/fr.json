@@ -937,6 +937,7 @@
     "interactablesSubCategories": "Sous-catégories d'objets interactifs",
     "subCategories": "Sous-catégories",
     "decorationsSubCategories": "Sous-catégories de décorations",
+    "spawnersSubCategories": "Sous-catégories de points d'apparition",
     "on": "Activé",
     "skill": "Compétence…",
     "buff": "Effet…",
@@ -1031,6 +1032,16 @@
       "walkable": "Franchissable",
       "campaignRelated": "Liés à la campagne",
       "other": "Autres décorations"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Départ joueur (ville)",
+      "hero-spawner": "Départ joueur (héros)",
+      "random-city": "Ville aléatoire",
+      "random-hero": "Héros aléatoire",
+      "random-squad": "Troupe aléatoire",
+      "random-res": "Ressource aléatoire",
+      "random-item": "Objet aléatoire",
+      "random-hire": "Recrutement aléatoire"
     },
     "mapObjectCategories": {
       "interactables": "Interactif",

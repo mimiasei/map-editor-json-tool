@@ -911,6 +911,7 @@
     "interactablesSubCategories": "Interactables sub-categories",
     "subCategories": "Sub-categories",
     "decorationsSubCategories": "Decorations sub-categories",
+    "spawnersSubCategories": "Spawners sub-categories",
     "on": "On",
     "skill": "Skill…",
     "buff": "Buff…",
@@ -1005,6 +1006,16 @@
       "walkable": "Walkable",
       "campaignRelated": "Campaign related",
       "other": "Other decorations"
+    },
+    "spawnerSubcategories": {
+      "city-spawner": "Player start (city)",
+      "hero-spawner": "Player start (hero)",
+      "random-city": "Random city",
+      "random-hero": "Random hero",
+      "random-squad": "Random squad",
+      "random-res": "Random resource",
+      "random-item": "Random item",
+      "random-hire": "Random hire"
     },
     "mapObjectCategories": {
       "interactables": "Interactive",
