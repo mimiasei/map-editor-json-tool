@@ -30,10 +30,19 @@ import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-
  *  total); the best-scoring attempt wins. */
 const BALANCE_TARGET_SCORE = 85
 const MAX_BALANCE_ATTEMPTS = 4
-/** Below this a map is not accepted while attempts remain: it keeps re-rolling up to `MAX_ATTEMPTS_BELOW_MIN` total. Measured with 6
- *  players (Node, default Classic settings): about half the maps score under 67 at 64-128 tiles, so the extra attempts are used often. */
-const MIN_ACCEPTABLE_SCORE = 67
+/** Below the minimum acceptable score a map is not accepted while attempts remain: it keeps re-rolling up to `MAX_ATTEMPTS_BELOW_MIN` total. */
 const MAX_ATTEMPTS_BELOW_MIN = 10
+const MAX_MIN_ACCEPTABLE_SCORE = 67
+const FLOOR_MIN_ACCEPTABLE_SCORE = 30
+
+/** Fairness scores fall with the player count and rise with the map area, so one fixed minimum would be out of reach for many players
+ *  on a small map. Fitted to the 60th percentile of single attempts (Classic defaults, about 1,270 generations: 48-256 tiles square, 2-8
+ *  players, 30 seeds per cell up to 160 and 3 above, rmse 4.6 points): about 55% of attempts pass, 1 to 5 attempts expected per map,
+ *  capped at two thirds. Re-fit after changing the layouts or the balance score. */
+export function minAcceptableFairness(sizeX: number, sizeZ: number, playerCount: number): number {
+  const fitted = 12 + 6.2 * Math.log2(sizeX * sizeZ) - 6.5 * playerCount
+  return Math.max(FLOOR_MIN_ACCEPTABLE_SCORE, Math.min(MAX_MIN_ACCEPTABLE_SCORE, Math.round(fitted)))
+}
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
@@ -109,7 +118,8 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   let bestScore = fairnessOf(best)
   options.onProgress?.(i18n.t('rmg.progress.checkingFairness', { score: bestScore }), 60)
   await yieldToUI()
-  const attemptsAllowed = (): number => (bestScore < MIN_ACCEPTABLE_SCORE ? MAX_ATTEMPTS_BELOW_MIN : MAX_BALANCE_ATTEMPTS)
+  const minAcceptable = minAcceptableFairness(options.sizeX, options.sizeZ, options.playerCount)
+  const attemptsAllowed = (): number => (bestScore < minAcceptable ? MAX_ATTEMPTS_BELOW_MIN : MAX_BALANCE_ATTEMPTS)
   // The re-rolls share the 60-90% stretch, so each slice shrinks to fit the longest run.
   const slice = 30 / (MAX_ATTEMPTS_BELOW_MIN - 1)
   for (let attempt = 2; attempt <= attemptsAllowed() && !options.gameTemplateJson && !options.terrainOnly && bestScore < BALANCE_TARGET_SCORE; attempt++) {
