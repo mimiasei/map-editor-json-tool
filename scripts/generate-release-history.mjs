@@ -30,7 +30,8 @@ for (const release of releases) {
     // The first line is meant for the GitHub release page and means nothing inside the app (same cut as WhatsNewDialog).
     .replace(/^Desktop release for[^\n]*\n+/, '')
     .trim()
-  if (notes) history.push({ version: release.tag_name.replace(/^v/, ''), notes })
+  // 0.6.7-0.6.10 carry only this pointer, which says nothing about the release.
+  if (notes && !/^See \[CHANGELOG\]\([^)]*\) for what changed\.$/.test(notes)) history.push({ version: release.tag_name.replace(/^v/, ''), notes })
 }
 
 writeFileSync(OUT, JSON.stringify(history, null, 2) + '\n')

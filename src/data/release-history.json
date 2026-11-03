@@ -42,21 +42,5 @@
   {
     "version": "0.8.5",
     "notes": "What's new:\n- Custom map objects can now have their own icon, chosen independently from the base object they were cloned from, instead of always inheriting the base object's icon.\n\nSee CHANGELOG (https://github.com/mimiasei/map-editor-json-tool/commits/main) for what changed."
-  },
-  {
-    "version": "0.6.10",
-    "notes": "See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/commits/main) for what changed."
-  },
-  {
-    "version": "0.6.9",
-    "notes": "See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/commits/main) for what changed."
-  },
-  {
-    "version": "0.6.8",
-    "notes": "See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/commits/main) for what changed."
-  },
-  {
-    "version": "0.6.7",
-    "notes": "See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/commits/main) for what changed."
   }
 ]
