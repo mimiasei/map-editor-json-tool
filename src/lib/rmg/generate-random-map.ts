@@ -363,7 +363,11 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const rmgSchema = applySchemaTuning(catalog.rmgSchema ?? BUILTIN_RMG_SCHEMA, tuning)
   const hillLayouts = gameElevationLayouts ? rmgSchema.zoneLayouts : undefined
   // Difficulty is the player's own lobby setting in the game, so it still scales a template's guards (on top of its guardMultiplier).
-  const difficultyValues = difficulty ? rmgSchema.difficulties[difficultyIndex(difficulty)] : undefined
+  // Classic zone/treasure guards came out at 0.34x the total value of the game templates' maps over 15 templates (count 0.5x);
+  // with the larger treasure count above, 1.8x brings the total value level. Border and city guards keep the schema values.
+  const CLASSIC_ZONE_GUARD_SCALE = 1.8
+  const baseDifficulty = difficulty ? rmgSchema.difficulties[difficultyIndex(difficulty)] : undefined
+  const difficultyValues = baseDifficulty && !gameTemplateJson ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : baseDifficulty
   const elevationMinSpan = tuning.elevation.minAreaSpan
 
   // Zone graph → Fruchterman-Reingold layout → Penrose-tiling zone shaping →
