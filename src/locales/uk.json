@@ -957,6 +957,7 @@
     "roads": "Дороги",
     "loading": "Завантаження…",
     "whatsNew": "Що нового",
+    "earlierVersions": "Попередні версії",
     "all": "Усе",
     "iconProgress": "Значків: {{done}} / {{total}}",
     "noMatches": "Збігів немає",
