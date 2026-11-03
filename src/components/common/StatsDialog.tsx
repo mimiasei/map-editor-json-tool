@@ -449,7 +449,7 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-6 gap-3">
         <StatCard label={t('common.statsDialog.mapSizeTiles')} value={stats.totalTiles} />
         <StatCard label={t('common.statsDialog.playerCities')} value={stats.playerCities.length} />
         <StatCard label={t('common.statsDialog.randomCities')} value={stats.randomCityCount} />
@@ -457,8 +457,10 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
         <StatCard label={t('common.statsDialog.randomSquads')} value={stats.randomSquadCount} />
         <StatCard label={t('common.statsDialog.unitSquads')} value={stats.unitSquadCount} />
         <StatCard label={t('common.statsDialog.riverTiles')} value={stats.riverLength} />
+        <StatCard label={t('common.statsDialog.roadTiles')} value={stats.roadTileTotal} />
         <StatCard label={t('common.statsDialog.blockingTiles')} value={Math.round(stats.blockingPct)} />
         <StatCard label={t('common.statsDialog.guardedObjects')} value={Math.round(stats.guardedPct)} />
+        <StatCard label={t('common.statsDialog.neutralZones')} value={stats.neutralZoneCount} />
       </div>
 
       <div>

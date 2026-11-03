@@ -21,6 +21,7 @@ import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {isGuardCandidate} from "@/lib/rmg/zone-guard-scatter.ts";
 import i18n from '@/lib/i18n'
 import { localNameById } from '@/lib/catalog/local-name'
+import { groupPlayerStartsByZone } from './zone-ownership'
 
 export interface PlayerCityStat {
   owner: number
@@ -46,11 +47,14 @@ export interface MapStats {
   levelPct: { level: number; pct: number }[]
   roadTileCounts: { roadId: number; label: string; tiles: number }[]
   riverLength: number
+  roadTileTotal: number
   resourceCounts: [string, number][]
   chestCount: number
   portalLinkCounts: { kind: string; count: number }[]
   blockingPct: number
   guardedPct: number
+  /** Painted zones that hold no player start. */
+  neutralZoneCount: number
 }
 
 /** Every catalog category treated as "scenery" for the decorations
@@ -153,6 +157,8 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     portalKindCounts.set(o.portalInfo.linkKind, (portalKindCounts.get(o.portalInfo.linkKind) ?? 0) + 1)
   }
 
+  const playerZones = new Set(groupPlayerStartsByZone(context).keys())
+
   // ── Blocking vs non-blocking tiles ────────────────────────────────────────
   const blocked = buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap: context.climbsMap, waterMap }, catalog)
   const blockingPct = pct(blocked.size, totalTiles)
@@ -197,12 +203,14 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     levelPct,
     roadTileCounts,
     riverLength: riverNodes.size,
+    roadTileTotal: roadTileCounts.reduce((sum, r) => sum + r.tiles, 0),
     resourceCounts: [...resourceCounts.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
     chestCount,
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,
-    guardedPct: pct(guardedCount, guardableCount)
+    guardedPct: pct(guardedCount, guardableCount),
+    neutralZoneCount: new Set(context.customAreasPainting.filter((id) => id !== 0 && !playerZones.has(id))).size,
   }
 }
