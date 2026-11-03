@@ -221,7 +221,7 @@ export function buildBuiltInLayout(
     if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale, mirrored)
     logWarn(`RMG layout: ${forced} does not fit ${playerCount} players on ${sizeX}x${sizeZ} — picking a random layout instead`)
   }
-  // The size asks for a number of zones: only the layouts that come within one zone of the closest fit are rolled. The chain stretches to
+  // The size asks for a number of zones: only the layouts with the closest fit are rolled. The chain stretches to
   // the target at any player count, but where it would be a plain ring (or smaller than the target allows) the fixed layouts stand in.
   const target = targetZoneCount(sizeX, sizeZ)
   const counts = LAYOUT_ARCHETYPES
@@ -229,7 +229,7 @@ export function buildBuiltInLayout(
     .map((name) => ({ name, weight: weights[name] ?? 1, count: zoneCount(defOf(name, sizeX, sizeZ, playerCount), playerCount) }))
     .filter((o) => o.name !== 'chain' || o.count > 2 * playerCount)
   const closest = Math.min(...counts.map((o) => Math.abs(o.count - target)))
-  const options = counts.filter((o) => Math.abs(o.count - target) <= closest + 1)
+  const options = counts.filter((o) => Math.abs(o.count - target) <= closest)
   const total = options.reduce((s, o) => s + o.weight, 0)
   let archetype: LayoutArchetype = 'ring'
   if (total > 0) {
