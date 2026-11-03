@@ -175,8 +175,7 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       bankDecoration: DEFAULT_RIVER_BANK_DENSITY,
     },
     cities: {
-      _about: 'maxRandom (0-27): total neutral cities on the map, not counting the players\' own cities. At most 3 per neutral zone, so a map with fewer neutral zones gets fewer. The GME dialog and --max-cities override it.',
-      maxRandom: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+      _about: 'maxRandom (0-27): total neutral cities on the map, not counting the players\' own cities. At most 3 per neutral zone, so a map with fewer neutral zones gets fewer. Leave it out for the automatic total (about 0.7 per neutral zone, as in the game templates). The GME dialog and --max-cities override it.',
     },
     spells: {
       _about: 'banned: spell sids banned on the generated map, e.g. ["neutral_magic_town_portal", "neutral_magic_dimension_door"] (sids as in the Game Database dialog). Players cannot learn or cast them.',
@@ -230,7 +229,7 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
     mirrored: settings.mirrored,
     includePandoraBox: settings.includePandoraBox,
     maxHeroes: settings.maxHeroes ?? DEFAULT_MAX_HEROES,
-    randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+    randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,
     zoneJaggedness: randomInSliderBand(0, 1, 0, 0.70, rng),

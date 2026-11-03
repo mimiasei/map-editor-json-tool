@@ -119,6 +119,12 @@ const CLASSIC_ARTIFACT_SHARE = 0.56
 const CLASSIC_HIRE_SHARE = 0.30
 /** Chance a slot drops scroll boxes from its content roll. */
 const CLASSIC_SCROLL_BOX_DROP = 0.6
+/** Share of classic resource piles that are a `random-res` spawner (the game picks the resource) instead of a fixed pile. The game templates
+ *  use none (0 in the 15 measured), so this is a variety choice, not a measurement. */
+const CLASSIC_RANDOM_RESOURCE_SHARE = 0.3
+/** Neutral cities per neutral zone when the user gives no total. Measured over the 59 game templates: 6.5 cities in 9.7 neutral zones (0.67),
+ *  and 52% of the neutral zones hold at least one. */
+const AUTO_CITIES_PER_NEUTRAL_ZONE = 0.67
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -634,7 +640,7 @@ export interface ZonePopulator {
 
 export function createZonePopulator(options: PopulateZonesOptions): ZonePopulator {
   const {
-    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
+    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mainObjectsByZoneId, zoneContentSpecByZoneId, templateValueScale = 1,
     mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, mines = DEFAULT_MINE_DISTRIBUTION, zoneAnchorNode, symmetricZones = false,
   } = options
@@ -827,7 +833,8 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {
           recordContentPlacement(sid)
-          place(sid, tiles)
+          if (isClassicLoot && sid.startsWith('resource_') && rng() < CLASSIC_RANDOM_RESOURCE_SHARE) place('random-res', tiles)
+          else place(sid, tiles)
           return
         }
       } else {
@@ -1252,8 +1259,9 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     // between two spawns only excludes those two factions, not every player
     // in the game).
     if (mainObjectsByZoneId && mainObjectsByZoneId.size > 0) placeTemplateCities()
-    else if (randomCityCount > 0) {
+    else if (randomCityCount === undefined || randomCityCount > 0) {
       const neutralZones = zones.filter((z) => z.kind === 'neutral')
+      const cityTotal = randomCityCount ?? Math.round(AUTO_CITIES_PER_NEUTRAL_ZONE * neutralZones.length)
       const playerFactions = new Set(
         zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
       )
@@ -1263,7 +1271,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       // third round, so extra cities spread out before any zone gets crowded.
       let remainingZones: typeof neutralZones = []
       let round = 0
-      for (let i = 0; i < randomCityCount; i++) {
+      for (let i = 0; i < cityTotal; i++) {
         if (remainingZones.length === 0) {
           if (round >= MAX_CITIES_PER_ZONE || neutralZones.length === 0) break
           remainingZones = [...neutralZones]
