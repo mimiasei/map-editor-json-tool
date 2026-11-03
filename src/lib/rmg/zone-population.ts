@@ -122,6 +122,9 @@ const CLASSIC_SCROLL_BOX_DROP = 0.6
 /** Share of classic resource piles that are a `random-res` spawner (the game picks the resource) instead of a fixed pile. The game templates
  *  use none (0 in the 15 measured), so this is a variety choice, not a measurement. */
 const CLASSIC_RANDOM_RESOURCE_SHARE = 0.3
+/** Share of classic resource-pile rolls that are placed; the rest are dropped. Template maps carry 8.9 piles per 1000 tiles (mean over the 15
+ *  measured, range 2.6-16.2); classic placed 13.6 before this. */
+const CLASSIC_RESOURCE_PILE_KEEP = 0.7
 /** Neutral cities per neutral zone when the user gives no total. Measured over the 59 game templates: 6.5 cities in 9.7 neutral zones (0.67),
  *  and 52% of the neutral zones hold at least one. */
 const AUTO_CITIES_PER_NEUTRAL_ZONE = 0.67
@@ -832,6 +835,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
       if (rng() < RESOURCE_POOL_SHARE) {
         const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {
+          if (isClassicLoot && sid.startsWith('resource_') && rng() >= CLASSIC_RESOURCE_PILE_KEEP) return
           recordContentPlacement(sid)
           if (isClassicLoot && sid.startsWith('resource_') && rng() < CLASSIC_RANDOM_RESOURCE_SHARE) place('random-res', tiles)
           else place(sid, tiles)
