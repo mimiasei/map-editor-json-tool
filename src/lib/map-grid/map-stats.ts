@@ -36,6 +36,7 @@ export interface MapStats {
   randomCityCount: number
   playerHeroSpawnerCount: number
   randomSquadCount: number
+  randomHireCount: number
   unitSquadCount: number
   unitFrequency: [string, number][]
   minesByType: [string, number][]
@@ -100,6 +101,7 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
   // const squads = placedObjects.filter((o) => o.type === 2)
   const concreteSquads = placedObjects.filter((o) => o.type === 2)
   const randomSquads = placedObjects.filter((o) => o.type === 0 && o.sid === 'random-squad')
+  const randomHires = placedObjects.filter((o) => o.type === 0 && o.sid === 'random-hire')
   const unitFreq = new Map<string, number>()
   for (const s of concreteSquads) {
     if (!s.firstUnitSid) continue
@@ -195,6 +197,7 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     randomCityCount,
     playerHeroSpawnerCount,
     randomSquadCount: randomSquads.length,
+    randomHireCount: randomHires.length,
     unitSquadCount: concreteSquads.length,
     unitFrequency: [...unitFreq.entries()]
         .sort((a, b) => b[1] - a[1])

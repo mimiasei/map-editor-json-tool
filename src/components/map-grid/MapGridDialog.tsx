@@ -96,6 +96,7 @@ import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import MapGameSettingsDialog from '@/components/map-grid/MapGameSettingsDialog'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
+import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
@@ -3677,6 +3678,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids }, 'set city garrison')
   const handleSetRandomSquadValue = (item: PlacedObject, requestedValue: number) =>
     applyEdit({ kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue }, 'set random-squad value')
+  const handleSetRandomHire = (item: PlacedObject, change: { tier?: number; fraction?: number }) =>
+    applyEdit({ kind: 'setRandomHire', entityType: item.type, entityId: item.id, ...change }, 'set random-hire tier/faction')
   const handleSetRandomSquadFraction = (item: PlacedObject, fraction: string) =>
     applyEdit({ kind: 'setRandomSquadFraction', entityType: item.type, entityId: item.id, fraction }, 'set random-squad faction')
   const handleSetRewardParams = (item: PlacedObject, parameters: string[]) =>
@@ -4371,11 +4374,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 nothing to switch to without write access, and Browse's
                 filter pills stay the only/default row exactly as before. */}
             {canEditEntities && (
-              <div className="flex items-center rounded border border-border p-0.5 shrink-0" data-nodrag>
-                <button
-                  className={`h-5 px-2 text-xs rounded-sm transition-colors ${
-                    gridMode === 'browse' ? 'bg-secondary text-secondary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                  }`}
+              <div className="flex items-center rounded p-0.5 shrink-0" data-nodrag>
+                <ModeToggleButton
+                  icon={<Search />}
+                  label={t('common.entityCombobox.browse')}
+                  active={gridMode === 'browse'}
+                  activeClass="bg-secondary text-secondary-foreground shadow-sm"
                   onClick={() => {
                     // Deactivate every armed tool on the way out — a
                     // click in Browse mode must always mean "select this
@@ -4410,17 +4414,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setSpawnerSelectorOpen(false)
                     setGridMode('browse')
                   }}
-                >
-                  {t('common.entityCombobox.browse')}
-                </button>
-                <button
-                  className={`h-5 px-2 text-xs rounded-sm transition-colors ${
-                    gridMode === 'paint' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                />
+                <ModeToggleButton
+                  icon={<Paintbrush />}
+                  label={t('mapGrid.mapGridDialog.paint')}
+                  active={gridMode === 'paint'}
+                  activeClass="bg-amber-500 text-white shadow-sm"
                   onClick={() => setGridMode('paint')}
-                >
-                  {t('mapGrid.mapGridDialog.paint')}
-                </button>
+                />
               </div>
             )}
             <div className="flex-1" />
@@ -6280,6 +6281,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
                   onSetRandomSquadValue={canEditEntities ? handleSetRandomSquadValue : undefined}
                   onSetRandomSquadFraction={canEditEntities ? handleSetRandomSquadFraction : undefined}
+                  onSetRandomHire={canEditEntities ? handleSetRandomHire : undefined}
                   squadDifficultyRanges={settings.squadDifficultyRanges}
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}

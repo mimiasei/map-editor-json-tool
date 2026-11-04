@@ -42,6 +42,7 @@ import {
   upsertPropRandomSquads,
   setRandomSquadValue,
   setRandomSquadFraction,
+  setRandomHire,
   upsertPropRewardParams,
   moveObjectInstance,
   rotateObjectInstance,
@@ -96,6 +97,7 @@ export type MapSaveEdit =
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadFraction'; entityType: number; entityId: number; fraction: string }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
+  | { kind: 'setRandomHire'; entityType: number; entityId: number; tier?: number; fraction?: number }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
   | { kind: 'rotateObject'; entityId: number; newRotation: number }
@@ -272,6 +274,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = upsertPropRandomSquads(newChunks[1], edit.entityType, edit.entityId, edit.sids)
   } else if (edit?.kind === 'setRandomSquadFraction') {
     newChunks[1] = setRandomSquadFraction(newChunks[1], edit.entityType, edit.entityId, edit.fraction)
+  } else if (edit?.kind === 'setRandomHire') {
+    newChunks[1] = setRandomHire(newChunks[1], edit.entityType, edit.entityId, { tier: edit.tier, fraction: edit.fraction })
   } else if (edit?.kind === 'setRandomSquadValue') {
     newChunks[1] = setRandomSquadValue(newChunks[1], edit.entityType, edit.entityId, edit.requestedValue)
   } else if (edit?.kind === 'setRewardParams') {
@@ -607,6 +611,14 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = (block2.objectsProperties?.propRandomSquads ?? []).find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.fraction !== edit.fraction) {
       throw new Error('Verification failed: faction not reflected in the rebuilt propRandomSquads table')
+    }
+  } else if (edit?.kind === 'setRandomHire') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRandomHires?: Array<{ type?: number | string; id?: number; tier?: number; fraction?: number }> }
+    }
+    const match = (block2.objectsProperties?.propRandomHires ?? []).find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || (edit.tier !== undefined && match.tier !== edit.tier) || (edit.fraction !== undefined && match.fraction !== edit.fraction)) {
+      throw new Error('Verification failed: tier/faction not reflected in the rebuilt propRandomHires table')
     }
   } else if (edit?.kind === 'setRandomSquadValue') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

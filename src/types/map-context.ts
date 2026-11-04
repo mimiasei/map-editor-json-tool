@@ -211,6 +211,9 @@ export interface PlacedObject {
   randomSquadValue?: number
   /** Enrichment: propRandomSquads.fraction — the faction the random-squad draws its units from ('' = any). */
   randomSquadFraction?: string
+  /** Enrichment: propRandomHires.tier / .fraction (EPropFraction number, see map-grid/random-hire.ts) for a random-hire. */
+  randomHireTier?: number
+  randomHireFraction?: number
   /** Enrichment: whether this instance has a propCities entry at all (issue
    *  #143) — true, deliberately, even for a "random-city" (a procedurally-
    *  placed neutral/monster city with no propSpawns entry at all, so
