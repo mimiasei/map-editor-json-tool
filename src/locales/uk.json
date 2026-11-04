@@ -1226,7 +1226,6 @@
         "hires": "Найм",
         "buildings": "Будівлі та житла"
       },
-      "kinds": "Види",
       "selectedCount": "{{selected}}/{{total}}",
       "selectAll": "Усі",
       "selectNone": "Жодного",

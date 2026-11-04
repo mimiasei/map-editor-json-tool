@@ -1197,7 +1197,6 @@
         "hires": "Recrutements",
         "buildings": "Bâtiments et habitations"
       },
-      "kinds": "Types",
       "selectedCount": "{{selected}}/{{total}}",
       "selectAll": "Tout",
       "selectNone": "Aucun",

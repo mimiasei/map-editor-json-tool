@@ -638,6 +638,11 @@ export interface ScatterObstaclesOptions {
   /** Blocked tiles that are still walkable (roads, rivers) — for the forced
    *  mountains' "doesn't cut anything off" check. */
   walkableNodes?: Set<number>
+  /** Chance (0-1) that a single scattered decoration is borrowed from another biome, like the Map Grid brushes' biome mix (1 - purity). Default 0: the
+   *  generator's own cross-biome rules (biome-decoration-mix.ts) already decide that. */
+  crossBiomeChance?: number
+  /** With cross-biome picks: false limits them to compatible biomes (fuzzy-obstacle.ts areBiomesCompatible). Default true. */
+  allowHighContrastBiomes?: boolean
 }
 
 /** Whether placing `footprint` would split the walkable ground around it:
@@ -905,8 +910,8 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
       ? (node: number) => biasedChance(INDEPENDENT_PHASE_POOL_BASE_CHANCE, 0, node, sizeX, sizeZ, placedCategoryByNode, 'pools', coOccurrenceStrength, CLUSTER_RADIUS)
       : undefined
     sampleFuzzyObstacles(nodeDistances, () => biome, pools, {
-      // Cross-biome mixing is done by the lists themselves (biome-decoration-mix.ts), not per node.
-      crossBiomeChance: 0,
+      // Cross-biome mixing is done by the lists themselves (biome-decoration-mix.ts); an explicit chance adds per-node borrowing on top.
+      crossBiomeChance: options.crossBiomeChance ?? 0, allowHighContrastBiomes: options.allowHighContrastBiomes ?? true,
       mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor, weights: environmentWeights,
       onDecided: (node, addition) => {
         if (!addition) return

@@ -1176,7 +1176,6 @@
         "hires": "Hires",
         "buildings": "Buildings and dwellings"
       },
-      "kinds": "Kinds",
       "selectedCount": "{{selected}}/{{total}}",
       "selectAll": "All",
       "selectNone": "None",

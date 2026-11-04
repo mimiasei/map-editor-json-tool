@@ -68,6 +68,8 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [decorationsOn, setDecorationsOn] = useState(true)
   const [decorationTypes, setDecorationTypes] = useState<Set<DecorationType>>(new Set(DECORATION_TYPES))
   const [decorationDensity, setDecorationDensity] = useState(0.35)
+  const [biomePurity, setBiomePurity] = useState(0.9)
+  const [highContrast, setHighContrast] = useState(false)
   const [interactablesOn, setInteractablesOn] = useState(true)
   const [interactableDensity, setInteractableDensity] = useState(0.25)
   const [disabledSids, setDisabledSids] = useState<Set<string>>(new Set())
@@ -95,7 +97,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           water: waterOn ? { chance: waterChance } : undefined,
           elevation: elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
           treasures: treasuresOn ? { density: treasureDensity, types: treasureTypes } : undefined,
-          decorations: decorationsOn ? { types: decorationTypes, density: decorationDensity } : undefined,
+          decorations: decorationsOn ? { types: decorationTypes, density: decorationDensity, biomePurity, allowHighContrastBiomes: highContrast } : undefined,
           interactables: interactablesOn ? { density: interactableDensity, disabledSids } : undefined,
           encounters: encountersOn ? { density: encounterDensity, guardExisting } : undefined,
         }, createSeededRng(Math.floor(Math.random() * 2 ** 31)))
@@ -149,7 +151,6 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
             <Layer title={t('mapGrid.generateOnMap.treasures')} on={treasuresOn} onChange={setTreasuresOn}>
               <CheckGroup
-                title={t('mapGrid.generateOnMap.kinds')}
                 options={TREASURE_TYPES.map((type) => ({ id: type, label: t(`mapGrid.generateOnMap.treasureType.${type}`) }))}
                 selected={treasureTypes}
                 onChange={setTreasureTypes}
@@ -159,12 +160,24 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
             <Layer title={t('mapGrid.generateOnMap.decorations')} on={decorationsOn} onChange={setDecorationsOn}>
               <CheckGroup
-                title={t('mapGrid.generateOnMap.kinds')}
                 options={DECORATION_TYPES.map((type) => ({ id: type, label: decorationSubcategoryName(type) }))}
                 selected={decorationTypes}
                 onChange={setDecorationTypes}
               />
               <SliderRow label={t('mapGrid.generateOnMap.density')} value={decorationDensity} min={0.05} max={1} step={0.05} onChange={setDecorationDensity} />
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground" title={t('mapGrid.toolBrushSettingsPopover.biomeMixTooltip.obstacles')}>{t('mapGrid.toolBrushSettingsPopover.biomeMix')}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {biomePurity >= 1 ? t('mapGrid.toolBrushSettingsPopover.thisBiomeOnly') : biomePurity <= 0 ? t('mapGrid.toolBrushSettingsPopover.allBiomes') : `${Math.round(biomePurity * 100)}% pure`}
+                  </span>
+                </div>
+                <Slider value={[biomePurity]} onValueChange={(v) => setBiomePurity(v[0])} min={0} max={1} step={0.01} />
+                <label className="flex items-center gap-2 text-xs" title={t('mapGrid.toolBrushSettingsPopover.whenOffACrossBiome')}>
+                  <Checkbox checked={highContrast} onCheckedChange={(v) => setHighContrast(v === true)} />
+                  {t('mapGrid.toolBrushSettingsPopover.allowHighContrastBiomes')}
+                </label>
+              </div>
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.interactables')} on={interactablesOn} onChange={setInteractablesOn}>

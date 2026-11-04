@@ -8,14 +8,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronDown, ChevronRight } from '@/components/ui/icons'
 
 interface Props<T extends string> {
-  title: string
   options: readonly { id: T; label: string }[]
   selected: ReadonlySet<T>
   onChange: (next: Set<T>) => void
   defaultOpen?: boolean
 }
 
-export default function CheckGroup<T extends string>({ title, options, selected, onChange, defaultOpen = true }: Props<T>) {
+export default function CheckGroup<T extends string>({ options, selected, onChange, defaultOpen = true }: Props<T>) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(defaultOpen)
   const count = options.filter((o) => selected.has(o.id)).length
@@ -28,16 +27,15 @@ export default function CheckGroup<T extends string>({ title, options, selected,
   const pill = 'h-5 rounded px-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:pointer-events-none disabled:opacity-40'
 
   return (
-    <div className="rounded-md border border-border/60">
-      <div className="flex items-center gap-1 px-1.5 py-1">
+    <div>
+      <div className="flex items-center gap-1 py-0.5">
         <button
           type="button"
           aria-expanded={open}
-          className="flex flex-1 items-center gap-1 text-left text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="flex flex-1 items-center gap-1 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
           onClick={() => setOpen(!open)}
         >
           {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-          {title}
           <span className="rounded-full bg-secondary px-1.5 text-[10px] tabular-nums text-secondary-foreground">{t('mapGrid.generateOnMap.selectedCount', { selected: count, total: options.length })}</span>
         </button>
         <button type="button" className={pill} disabled={count === options.length} onClick={() => onChange(new Set(options.map((o) => o.id)))}>
@@ -48,7 +46,7 @@ export default function CheckGroup<T extends string>({ title, options, selected,
         </button>
       </div>
       {open && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border/60 px-3 py-2">
+        <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 py-1.5 pl-5">
           {options.map((o) => (
             <label key={o.id} className="flex cursor-pointer items-center gap-2 text-xs">
               <Checkbox checked={selected.has(o.id)} onCheckedChange={(v) => toggle(o.id, v === true)} />

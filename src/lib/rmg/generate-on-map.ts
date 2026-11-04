@@ -68,7 +68,8 @@ export interface OnMapLayers {
   /** Treasure piles, artifacts, dwellings and hires with their guards, in the zones that have no start city. */
   treasures?: { density: number; types: ReadonlySet<TreasureType> }
   /** Which decoration kinds to add. */
-  decorations?: { types: ReadonlySet<DecorationType>; density: number }
+  /** `biomePurity` is the Map Grid brushes' slider: 1 = each region's own biome only, lower = more borrowed from other biomes. */
+  decorations?: { types: ReadonlySet<DecorationType>; density: number; biomePurity: number; allowHighContrastBiomes: boolean }
   interactables?: { density: number; disabledSids: ReadonlySet<string> }
   /** Guards beside the new interactables, and optionally beside existing unguarded objects. */
   encounters?: { density: number; guardExisting: boolean }
@@ -233,6 +234,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const scenery = scatterKeeping(state, (scratch) => scatterZoneObstacles({
       sizeX, sizeZ, zones: terrain.zones, centers: terrain.centers, tilesByZone: terrain.tilesByZone, zoneBiome: terrain.zoneBiome, catalogById,
       mapObjects: catalog.mapObjects, excludedNodes: excluded, state: scratch, rng, density: deco.density,
+      crossBiomeChance: 1 - deco.biomePurity, allowHighContrastBiomes: deco.allowHighContrastBiomes,
       levelsMap: levels, climbsMap: climbs, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets, walkableNodes: walkable,
     }), (p) => deco.types.has(decorationTypeOf(p.sid, catalogById) as DecorationType), sizeX, sizeZ, catalogById)
     additions.push(...scenery)
