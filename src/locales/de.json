@@ -1161,6 +1161,13 @@
       "encounters": "Begegnungen",
       "amount": "Menge",
       "guardExisting": "Vorhandene Objekte ebenfalls bewachen",
+      "treasureType": {
+        "resources": "Ressourcen",
+        "artifacts": "Artefakte",
+        "chests": "Truhen und Schriftrollen",
+        "hires": "Rekrutierungen",
+        "buildings": "Gebäude und Behausungen"
+      },
       "generate": "Generieren",
       "generating": "Generiere…"
     },

@@ -30,6 +30,22 @@ import { zonesFromTerrain } from './zones-from-terrain'
 export const DECORATION_TYPES = ['trees', 'mountains', 'rocks', 'hills', 'walkable', 'pools', 'other', 'animals', 'fx'] as const satisfies readonly DecorationSubcategory[]
 export type DecorationType = (typeof DECORATION_TYPES)[number]
 
+export const TREASURE_TYPES = ['resources', 'artifacts', 'chests', 'hires', 'buildings'] as const
+export type TreasureType = (typeof TREASURE_TYPES)[number]
+
+/** Which treasure checkbox a treasure-loop object belongs to: resource piles and storages, artifacts, chests (incl. Pandora and scroll boxes), hires, and
+ *  everything else the pools hand out (buildings, dwellings). */
+function treasureTypeOf(sid: string, artifactSids: Set<string>): TreasureType {
+  if (sid.startsWith('resource_') || sid.startsWith('storage_') || sid === 'random-res') return 'resources'
+  if (sid === 'random-item' || artifactSids.has(sid)) return 'artifacts'
+  if (sid === 'chest' || sid === 'pandora_box' || sid === 'scroll_box' || sid === 'enchanted_scroll_box') return 'chests'
+  if (sid === 'random-hire') return 'hires'
+  return 'buildings'
+}
+
+/** A guard counts as belonging to the nearest treasure object within this many tiles. */
+const GUARD_TIE_RADIUS = 4
+
 /** Same stand-in as the full generator: classic zone/treasure guards are scaled up so their total value matches the game templates. */
 const CLASSIC_ZONE_GUARD_SCALE = 1.8
 /** An existing object with a squad this close (tiles) already counts as guarded. */
@@ -46,7 +62,7 @@ export interface OnMapLayers {
   /** Hills and dry valleys (with their ramps). */
   elevation?: { hillChance: number; valleyChance: number }
   /** Treasure piles, artifacts, dwellings and hires with their guards, in the zones that have no start city. */
-  treasures?: { density: number }
+  treasures?: { density: number; types: ReadonlySet<TreasureType> }
   /** Which decoration kinds to add. */
   decorations?: { types: ReadonlySet<DecorationType>; density: number }
   interactables?: { density: number; disabledSids: ReadonlySet<string> }
@@ -165,21 +181,44 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const schema = applySchemaTuning(BUILTIN_RMG_SCHEMA, EMPTY_TUNING)
   const baseDifficulty = catalog.rmgSchema?.difficulties?.[difficultyIndex(layers.settings.difficulty)] ?? schema.difficulties[difficultyIndex(layers.settings.difficulty)]
   const difficulty = baseDifficulty ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : undefined
-  let guardedByTreasure = new Set<number>()
+  const guardedByTreasure = new Set<number>()
 
   if (layers.treasures) {
     const landByZone = new Map<number, number[]>()
     for (const [zoneId, tiles] of awayFromStarts) landByZone.set(zoneId, tiles.filter((n) => !excluded.has(n)))
-    const populator = createZonePopulator({
+    const populatorOptions = {
       sizeX, sizeZ, zones: placerZones, tilesByZone: landByZone, zoneBiome: terrain.zoneBiome, catalogById, objectLogicsById: buildObjectLogicsIndex(catalog), state, rng,
       treasureDensity: layers.treasures.density, catalog, contentCountLimits: [{ sid: 'university', maxCount: 1 }], richness: resolveRichness(layers.settings.richness, EMPTY_TUNING),
       difficulty, guardTuning: EMPTY_TUNING.guards, zoneAnchorNode: terrain.zoneAnchorNode,
-    })
-    const result = populator.populateTreasure()
-    additions.push(...result.placements)
-    squads.push(...result.concreteSquads)
-    guardedByTreasure = result.decidedNodes
-    added.treasures = result.placements.length + result.concreteSquads.length
+    }
+    // Run on a scratch copy, keep the chosen kinds with the guards that stand beside them, and book only those into the real state.
+    const scratch: PlacementState = { ...state, blocked: new Set(state.blocked), usedAnchors: new Set(state.usedAnchors), guardTileByNode: new Map(state.guardTileByNode), reservedGuardTiles: new Set(state.reservedGuardTiles) }
+    const result = createZonePopulator({ ...populatorOptions, state: scratch }).populateTreasure()
+    const artifactSids = new Set(collectArtifactSids(catalog))
+    const objects = result.placements.filter((p) => p.sid !== 'random-squad')
+    const near = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
+    const wanted = layers.treasures.types
+    /** Whether the treasure object nearest to a guard is one of the chosen kinds (undefined: no treasure object close by). */
+    const guardedObjectWanted = (node: number): boolean | undefined => {
+      let best: ZonePlacement | undefined
+      for (const o of objects) if (near(o.node, node) <= GUARD_TIE_RADIUS && (!best || near(o.node, node) < near(best.node, node))) best = o
+      return best ? wanted.has(treasureTypeOf(best.sid, artifactSids)) : undefined
+    }
+    let treasureCount = 0
+    for (const p of result.placements) {
+      const keep = p.sid === 'random-squad' ? guardedObjectWanted(p.node) ?? true : wanted.has(treasureTypeOf(p.sid, artifactSids))
+      if (!keep || !tryPlaceAt(p.sid, p.node, sizeX, sizeZ, catalogById, state)) continue
+      additions.push({ ...p, tempId: state.nextTempId++ })
+      guardedByTreasure.add(p.node)
+      treasureCount++
+    }
+    for (const s of result.concreteSquads) {
+      if (guardedObjectWanted(s.node) === false) continue
+      state.usedAnchors.add(s.node)
+      squads.push({ ...s, tempId: state.nextTempId++ })
+      treasureCount++
+    }
+    added.treasures = treasureCount
   }
 
   const deco = layers.decorations

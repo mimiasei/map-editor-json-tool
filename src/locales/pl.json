@@ -1219,6 +1219,13 @@
       "encounters": "Spotkania",
       "amount": "Ilość",
       "guardExisting": "Strzeż też istniejących obiektów",
+      "treasureType": {
+        "resources": "Surowce",
+        "artifacts": "Artefakty",
+        "chests": "Skrzynie i zwoje",
+        "hires": "Zaciągi",
+        "buildings": "Budynki i siedziby"
+      },
       "generate": "Generuj",
       "generating": "Generowanie…"
     },

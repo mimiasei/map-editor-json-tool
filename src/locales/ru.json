@@ -1219,6 +1219,13 @@
       "encounters": "Встречи",
       "amount": "Количество",
       "guardExisting": "Охранять и существующие объекты",
+      "treasureType": {
+        "resources": "Ресурсы",
+        "artifacts": "Артефакты",
+        "chests": "Сундуки и свитки",
+        "hires": "Найм",
+        "buildings": "Здания и жилища"
+      },
       "generate": "Сгенерировать",
       "generating": "Генерация…"
     },

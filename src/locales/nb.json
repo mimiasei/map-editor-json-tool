@@ -1161,6 +1161,13 @@
       "encounters": "Møter",
       "amount": "Mengde",
       "guardExisting": "Vokt også eksisterende objekter",
+      "treasureType": {
+        "resources": "Ressurser",
+        "artifacts": "Artefakter",
+        "chests": "Kister og skriftruller",
+        "hires": "Rekrutteringer",
+        "buildings": "Bygninger og boliger"
+      },
       "generate": "Generer",
       "generating": "Genererer…"
     },

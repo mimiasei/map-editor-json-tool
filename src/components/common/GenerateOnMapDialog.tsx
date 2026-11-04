@@ -20,7 +20,7 @@ import { extractMapContext } from '@/lib/map-extract'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
-import { DECORATION_TYPES, generateOnMap, type DecorationType, type OnMapResult } from '@/lib/rmg/generate-on-map'
+import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
 
 interface Props {
   open: boolean
@@ -63,6 +63,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [hillChance, setHillChance] = useState(0.5)
   const [treasuresOn, setTreasuresOn] = useState(true)
   const [treasureDensity, setTreasureDensity] = useState(1)
+  const [treasureTypes, setTreasureTypes] = useState<Set<TreasureType>>(new Set(TREASURE_TYPES))
   const [decorationsOn, setDecorationsOn] = useState(true)
   const [decorationTypes, setDecorationTypes] = useState<Set<DecorationType>>(new Set(DECORATION_TYPES))
   const [decorationDensity, setDecorationDensity] = useState(0.35)
@@ -77,6 +78,13 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
 
+  const toggleTreasureType = (type: TreasureType, on: boolean) => {
+    const next = new Set(treasureTypes)
+    if (on) next.add(type)
+    else next.delete(type)
+    setTreasureTypes(next)
+  }
+
   const toggleType = (type: DecorationType, on: boolean) => {
     const next = new Set(decorationTypes)
     if (on) next.add(type)
@@ -84,7 +92,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
     setDecorationTypes(next)
   }
 
-  const nothingChosen = !waterOn && !elevationOn && !treasuresOn && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
+  const nothingChosen = !waterOn && !elevationOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
   const handleGenerate = () => {
     const current = useMapDocumentStore.getState().container
@@ -99,7 +107,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           settings: { richness, difficulty },
           water: waterOn ? { chance: waterChance } : undefined,
           elevation: elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
-          treasures: treasuresOn ? { density: treasureDensity } : undefined,
+          treasures: treasuresOn ? { density: treasureDensity, types: treasureTypes } : undefined,
           decorations: decorationsOn ? { types: decorationTypes, density: decorationDensity } : undefined,
           interactables: interactablesOn ? { density: interactableDensity, disabledSids } : undefined,
           encounters: encountersOn ? { density: encounterDensity, guardExisting } : undefined,
@@ -153,6 +161,14 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.treasures')} on={treasuresOn} onChange={setTreasuresOn}>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {TREASURE_TYPES.map((type) => (
+                  <label key={type} className="flex items-center gap-2 text-xs">
+                    <Checkbox checked={treasureTypes.has(type)} onCheckedChange={(v) => toggleTreasureType(type, v === true)} />
+                    {t(`mapGrid.generateOnMap.treasureType.${type}`)}
+                  </label>
+                ))}
+              </div>
               <SliderRow label={t('mapGrid.generateOnMap.amount')} value={treasureDensity} min={0.2} max={3} step={0.1} onChange={setTreasureDensity} />
             </Layer>
 

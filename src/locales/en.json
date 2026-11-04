@@ -1169,6 +1169,13 @@
       "encounters": "Encounters",
       "amount": "Amount",
       "guardExisting": "Also guard existing objects",
+      "treasureType": {
+        "resources": "Resources",
+        "artifacts": "Artifacts",
+        "chests": "Chests and scrolls",
+        "hires": "Hires",
+        "buildings": "Buildings and dwellings"
+      },
       "generate": "Generate",
       "generating": "Generating…"
     },

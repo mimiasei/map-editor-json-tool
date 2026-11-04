@@ -1190,6 +1190,13 @@
       "encounters": "Rencontres",
       "amount": "Quantité",
       "guardExisting": "Garder aussi les objets existants",
+      "treasureType": {
+        "resources": "Ressources",
+        "artifacts": "Artefacts",
+        "chests": "Coffres et parchemins",
+        "hires": "Recrutements",
+        "buildings": "Bâtiments et habitations"
+      },
       "generate": "Générer",
       "generating": "Génération…"
     },

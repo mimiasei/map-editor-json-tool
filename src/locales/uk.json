@@ -1219,6 +1219,13 @@
       "encounters": "Зустрічі",
       "amount": "Кількість",
       "guardExisting": "Охороняти й наявні об’єкти",
+      "treasureType": {
+        "resources": "Ресурси",
+        "artifacts": "Артефакти",
+        "chests": "Скрині та сувої",
+        "hires": "Найм",
+        "buildings": "Будівлі та житла"
+      },
       "generate": "Згенерувати",
       "generating": "Генерація…"
     },
