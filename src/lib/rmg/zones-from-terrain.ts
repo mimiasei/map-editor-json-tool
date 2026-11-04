@@ -15,6 +15,8 @@ export interface TerrainZones {
   zoneBiome: Map<number, BiomeId>
   zoneAnchorNode: Map<number, number>
   centers: ZoneCenter[]
+  /** Hops between zones over shared borders (Infinity when not connected); guard strength grows with the distance from a player zone. */
+  zoneDistances: number[][]
 }
 
 export function zonesFromTerrain(input: { sizeX: number; sizeZ: number; tilesMap: number[]; startNodes: number[] }): TerrainZones {
@@ -111,5 +113,21 @@ export function zonesFromTerrain(input: { sizeX: number; sizeZ: number; tilesMap
     }
     zoneAnchorNode.set(zoneId, anchor)
   }
-  return { zones, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, centers }
+  const adjacent: Set<number>[] = zones.map(() => new Set<number>())
+  for (let n = 0; n < tileCount; n++) {
+    for (const next of neighbours(n)) {
+      if (zoneIdByNode[next] !== zoneIdByNode[n]) adjacent[zoneIdByNode[n]].add(zoneIdByNode[next])
+    }
+  }
+  const zoneDistances = zones.map((zone) => {
+    const dist = new Array<number>(zones.length).fill(Infinity)
+    dist[zone.id] = 0
+    const queue = [zone.id]
+    for (let head = 0; head < queue.length; head++) {
+      const cur = queue[head]
+      for (const next of adjacent[cur]) if (dist[next] === Infinity) { dist[next] = dist[cur] + 1; queue.push(next) }
+    }
+    return dist
+  })
+  return { zones, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, centers, zoneDistances }
 }
