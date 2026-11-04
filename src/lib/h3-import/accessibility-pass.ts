@@ -164,6 +164,8 @@ export function applyAccessibilityPass(
   costlyIds: Set<number> = new Set(),
   /** Decorative objects the pass must not delete at all (a stuck target is nudged instead). */
   forbiddenIds: Set<number> = new Set(),
+  /** Anchors of things that are not in `objectGroups` (the RMG's concrete guard squads): a nudge must not land on one, or two guards share a tile and the game fails to load the map. */
+  fixedAnchors: Set<number> = new Set(),
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -402,7 +404,7 @@ export function applyAccessibilityPass(
   // in ADDITION to `nudgeBlocked`, independent of solid/non-solid, and kept
   // in sync the same way as each nudge succeeds.
   const nudgeBlocked = new Set(blocked)
-  const occupiedAnchors = new Set(idToNode.values())
+  const occupiedAnchors = new Set([...idToNode.values(), ...fixedAnchors])
   for (const target of unreachable) {
     const sid = target.sid
     const template = catalogById.get(sid)
