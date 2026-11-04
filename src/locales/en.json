@@ -1164,14 +1164,7 @@
       "keepsExisting": "Existing objects, terrain, roads and rivers are never changed. Everything is added in one undo step.",
       "done": "Added {{decorations}} decorations, {{fauna}} animals and effects, {{interactables}} interactables.",
       "generate": "Generate",
-      "generating": "Generating…",
-      "type": {
-        "trees": "Trees",
-        "mountains": "Mountains",
-        "rocks": "Rocks and bushes",
-        "pools": "Pools",
-        "fauna": "Animals and effects"
-      }
+      "generating": "Generating…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Nothing on this tile.",

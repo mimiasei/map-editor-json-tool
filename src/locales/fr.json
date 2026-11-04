@@ -1185,14 +1185,7 @@
       "keepsExisting": "Les objets, le terrain, les routes et les rivières existants ne sont jamais modifiés. Tout est ajouté en une seule étape d’annulation.",
       "done": "{{decorations}} décors, {{fauna}} animaux et effets, {{interactables}} objets interactifs ajoutés.",
       "generate": "Générer",
-      "generating": "Génération…",
-      "type": {
-        "trees": "Arbres",
-        "mountains": "Montagnes",
-        "rocks": "Rochers et buissons",
-        "pools": "Mares",
-        "fauna": "Animaux et effets"
-      }
+      "generating": "Génération…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Rien sur cette case.",

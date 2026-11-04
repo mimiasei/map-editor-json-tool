@@ -1214,14 +1214,7 @@
       "keepsExisting": "Istniejące obiekty, teren, drogi i rzeki nigdy nie są zmieniane. Wszystko dodawane jest w jednym kroku cofania.",
       "done": "Dodano: dekoracje {{decorations}}, zwierzęta i efekty {{fauna}}, obiekty interaktywne {{interactables}}.",
       "generate": "Generuj",
-      "generating": "Generowanie…",
-      "type": {
-        "trees": "Drzewa",
-        "mountains": "Góry",
-        "rocks": "Skały i krzewy",
-        "pools": "Sadzawki",
-        "fauna": "Zwierzęta i efekty"
-      }
+      "generating": "Generowanie…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Na tym polu nic nie ma.",

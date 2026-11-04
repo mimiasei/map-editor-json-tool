@@ -17,6 +17,7 @@ import { containerToRawBlocks, useMapDocumentStore } from '@/store/useMapDocumen
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { extractMapContext } from '@/lib/map-extract'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
+import { decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { DECORATION_TYPES, generateOnMap, type DecorationType, type OnMapResult } from '@/lib/rmg/generate-on-map'
 
 interface Props {
@@ -91,7 +92,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                   {DECORATION_TYPES.map((type) => (
                     <label key={type} className="flex items-center gap-2 text-xs">
                       <Checkbox checked={decorationTypes.has(type)} onCheckedChange={(v) => toggleType(type, v === true)} />
-                      {t(`mapGrid.generateOnMap.type.${type}`)}
+                      {decorationSubcategoryName(type)}
                     </label>
                   ))}
                 </div>

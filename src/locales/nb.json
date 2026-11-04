@@ -1156,14 +1156,7 @@
       "keepsExisting": "Eksisterende objekter, terreng, veier og elver endres aldri. Alt legges til i ett angresteg.",
       "done": "La til {{decorations}} dekorasjoner, {{fauna}} dyr og effekter, {{interactables}} interaktive objekter.",
       "generate": "Generer",
-      "generating": "Genererer…",
-      "type": {
-        "trees": "Trær",
-        "mountains": "Fjell",
-        "rocks": "Steiner og busker",
-        "pools": "Dammer",
-        "fauna": "Dyr og effekter"
-      }
+      "generating": "Genererer…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Ingenting på denne ruten.",

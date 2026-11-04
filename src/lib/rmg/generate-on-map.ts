@@ -6,7 +6,7 @@
 import type { GameCatalog, CatalogMapObject } from '@/lib/catalog/types'
 import { extractMapContext } from '@/lib/map-extract'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
-import { isTreeDecoration } from '@/lib/map-grid/fuzzy-obstacle'
+import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
 import { addObjectInstances, type MapContainer } from '@/lib/map-write'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { buildInteractableRarity } from './interactable-rarity'
@@ -16,11 +16,13 @@ import { scatterZoneObstacles } from './zone-decoration'
 import { createPlacementState, tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
 import { zonesFromTerrain } from './zones-from-terrain'
 
-export const DECORATION_TYPES = ['trees', 'mountains', 'rocks', 'pools', 'fauna'] as const
+/** The Map Grid's own decoration subcategories (decoration-subcategories.ts), so the names match the object browser and the stats. The game has no bush
+ *  objects; shrub-like things are in walkable (grass, flowers, mushrooms) or other. */
+export const DECORATION_TYPES = ['trees', 'mountains', 'rocks', 'hills', 'walkable', 'pools', 'other', 'animals', 'fx'] as const satisfies readonly DecorationSubcategory[]
 export type DecorationType = (typeof DECORATION_TYPES)[number]
 
 export interface OnMapLayers {
-  /** Which decoration kinds to add. `rocks` is everything else the scenery scatter picks (rocks, bushes, clutter). */
+  /** Which decoration kinds to add. */
   decorations?: { types: ReadonlySet<DecorationType>; density: number }
   interactables?: { density: number; disabledSids: ReadonlySet<string> }
 }
@@ -31,11 +33,8 @@ export interface OnMapResult {
   added: { decorations: number; fauna: number; interactables: number }
 }
 
-function decorationTypeOf(sid: string): DecorationType {
-  if (isTreeDecoration(sid)) return 'trees'
-  if (sid.startsWith('mountain_')) return 'mountains'
-  if (sid.startsWith('pool_')) return 'pools'
-  return 'rocks'
+function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
+  return resolveDecorationSubcategory(sid, catalogById.get(sid)?.category)
 }
 
 /** Runs a scatter on a throw-away copy of the state, keeps the placements `keep` accepts, and books those into the real state. The placers mark
@@ -76,22 +75,23 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const added = { decorations: 0, fauna: 0, interactables: 0 }
 
   const deco = layers.decorations
-  if (deco && deco.types.size > 0) {
+  const sceneryTypes = deco ? DECORATION_TYPES.filter((type) => deco.types.has(type) && type !== 'animals' && type !== 'fx') : []
+  if (deco && sceneryTypes.length > 0) {
     const scenery = scatterKeeping(state, (scratch) => scatterZoneObstacles({
       sizeX, sizeZ, zones: terrain.zones, centers: terrain.centers, tilesByZone: terrain.tilesByZone, zoneBiome: terrain.zoneBiome, catalogById,
       mapObjects: catalog.mapObjects, excludedNodes: excluded, state: scratch, rng, density: deco.density,
       levelsMap: ctx.levelsMap, climbsMap: ctx.climbsMap, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets, walkableNodes: walkable,
-    }), (p) => deco.types.has(decorationTypeOf(p.sid)), sizeX, sizeZ, catalogById)
+    }), (p) => deco.types.has(decorationTypeOf(p.sid, catalogById) as DecorationType), sizeX, sizeZ, catalogById)
     additions.push(...scenery)
     added.decorations = scenery.length
-    if (deco.types.has('fauna')) {
-      const fauna = scatterZoneFauna({
-        sizeX, sizeZ, zones: terrain.zones, tilesByZone: terrain.tilesByZone, zoneBiome: terrain.zoneBiome, waterNodes, catalogById,
-        mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
-      })
-      additions.push(...fauna)
-      added.fauna = fauna.length
-    }
+  }
+  if (deco && (deco.types.has('animals') || deco.types.has('fx'))) {
+    const fauna = scatterKeeping(state, (scratch) => scatterZoneFauna({
+      sizeX, sizeZ, zones: terrain.zones, tilesByZone: terrain.tilesByZone, zoneBiome: terrain.zoneBiome, waterNodes, catalogById,
+      mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state: scratch, rng,
+    }), (p) => deco.types.has(decorationTypeOf(p.sid, catalogById) as DecorationType), sizeX, sizeZ, catalogById)
+    additions.push(...fauna)
+    added.fauna = fauna.length
   }
 
   const inter = layers.interactables

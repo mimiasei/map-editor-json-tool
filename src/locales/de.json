@@ -1156,14 +1156,7 @@
       "keepsExisting": "Vorhandene Objekte, Gelände, Straßen und Flüsse werden nie verändert. Alles wird in einem Rückgängig-Schritt hinzugefügt.",
       "done": "{{decorations}} Dekorationen, {{fauna}} Tiere und Effekte, {{interactables}} Interaktionsobjekte hinzugefügt.",
       "generate": "Generieren",
-      "generating": "Generiere…",
-      "type": {
-        "trees": "Bäume",
-        "mountains": "Berge",
-        "rocks": "Felsen und Büsche",
-        "pools": "Teiche",
-        "fauna": "Tiere und Effekte"
-      }
+      "generating": "Generiere…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Nichts auf dieser Kachel.",
