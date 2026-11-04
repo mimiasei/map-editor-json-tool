@@ -971,7 +971,7 @@ export function setRandomSquadFraction(chunk: Uint8Array, entityType: number, en
   return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
-/** A random-hire's tier (1-7) and faction (EPropFraction number, see map-grid/random-hire.ts). */
+/** A random-hire's tier (1-7, 0 = none set) and faction (EPropFraction number, see map-grid/random-hire.ts). */
 export function setRandomHire(chunk: Uint8Array, entityType: number, entityId: number, change: { tier?: number; fraction?: number }): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomHires')

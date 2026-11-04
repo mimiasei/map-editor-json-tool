@@ -18,6 +18,9 @@ export const RANDOM_HIRE_FRACTION_BY_FACTION: Record<string, number> = {
   neutral: 9,
 }
 
+/** "Random" tier means no tier is set: the field stays 0 (an assumption: no sample map has it, the shipped ones all store 1-7). */
+export const RANDOM_HIRE_TIER_RANDOM = 0
+
 export const RANDOM_HIRE_TIERS = [1, 2, 3, 4, 5, 6, 7] as const
 
 export function factionOfRandomHireFraction(fraction: number): string | null {
