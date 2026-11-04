@@ -48,7 +48,7 @@ function SliderRow({ label, value, min, max, step, onChange }: { label: string; 
     <div className="flex items-center gap-3">
       <span className="text-xs text-muted-foreground w-16 shrink-0">{label}</span>
       <Slider value={[value]} onValueChange={(v) => onChange(v[0])} min={min} max={max} step={step} className="flex-1" />
-      <span className="text-xs tabular-nums w-10 text-right">{value.toFixed(2)}</span>
+      <span className="text-xs tabular-nums w-10 text-right">{Number.isInteger(step) ? value : value.toFixed(2)}</span>
     </div>
   )
 }
@@ -62,6 +62,10 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [waterChance, setWaterChance] = useState(0.3)
   const [elevationOn, setElevationOn] = useState(false)
   const [hillChance, setHillChance] = useState(0.5)
+  const [roadsOn, setRoadsOn] = useState(false)
+  const [spurChance, setSpurChance] = useState(0.8)
+  const [riversOn, setRiversOn] = useState(false)
+  const [riverCount, setRiverCount] = useState(2)
   const [treasuresOn, setTreasuresOn] = useState(true)
   const [treasureDensity, setTreasureDensity] = useState(1)
   const [treasureTypes, setTreasureTypes] = useState<Set<TreasureType>>(new Set(TREASURE_TYPES))
@@ -81,7 +85,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
 
-  const nothingChosen = !waterOn && !elevationOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
+  const nothingChosen = !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
   const handleGenerate = () => {
     const current = useMapDocumentStore.getState().container
@@ -96,6 +100,8 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           settings: { richness, difficulty },
           water: waterOn ? { chance: waterChance } : undefined,
           elevation: elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
+          roads: roadsOn ? { spurChance } : undefined,
+          rivers: riversOn ? { count: riverCount } : undefined,
           treasures: treasuresOn ? { density: treasureDensity, types: treasureTypes } : undefined,
           decorations: decorationsOn ? { types: decorationTypes, density: decorationDensity, biomePurity, allowHighContrastBiomes: highContrast } : undefined,
           interactables: interactablesOn ? { density: interactableDensity, disabledSids } : undefined,
@@ -147,6 +153,14 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
             <Layer title={t('mapGrid.generateOnMap.elevation')} on={elevationOn} onChange={setElevationOn}>
               <SliderRow label={t('mapGrid.generateOnMap.amount')} value={hillChance} min={0.1} max={1} step={0.05} onChange={setHillChance} />
+            </Layer>
+
+            <Layer title={t('mapGrid.generateOnMap.roads')} on={roadsOn} onChange={setRoadsOn}>
+              <SliderRow label={t('mapGrid.generateOnMap.roadSpurs')} value={spurChance} min={0} max={1} step={0.05} onChange={setSpurChance} />
+            </Layer>
+
+            <Layer title={t('mapGrid.generateOnMap.rivers')} on={riversOn} onChange={setRiversOn}>
+              <SliderRow label={t('mapGrid.generateOnMap.riverCount')} value={riverCount} min={1} max={5} step={1} onChange={setRiverCount} />
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.treasures')} on={treasuresOn} onChange={setTreasuresOn}>

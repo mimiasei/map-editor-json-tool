@@ -8,7 +8,7 @@ import type { GameCatalog, CatalogMapObject } from '@/lib/catalog/types'
 import { extractMapContext } from '@/lib/map-extract'
 import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
 import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
-import { addObjectInstance, addObjectInstances, paintClimbTiles, paintLevelTiles, paintWaterTiles, type MapContainer } from '@/lib/map-write'
+import { addObjectInstance, addObjectInstances, paintClimbTiles, paintLevelTiles, paintRiverTiles, paintRoadTiles, paintWaterTiles, type MapContainer } from '@/lib/map-write'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { buildInteractableRarity } from './interactable-rarity'
@@ -23,6 +23,7 @@ import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneObstacles } from './zone-decoration'
 import { scatterZoneWater } from './zone-water'
 import { createPlacementState, createZonePopulator, tryPlaceAt, type ConcreteSquadPlacement, type PlacementState, type ZonePlacement } from './zone-population'
+import { carveRiversOnMap, layRoads } from './on-map-linework'
 import { zonesFromTerrain } from './zones-from-terrain'
 
 /** The Map Grid's own decoration subcategories (decoration-subcategories.ts), so the names match the object browser and the stats. The game has no bush
@@ -70,6 +71,10 @@ export interface OnMapLayers {
   water?: { chance: number }
   /** Hills and dry valleys (with their ramps). */
   elevation?: { hillChance: number; valleyChance: number }
+  /** Roads: the cities are joined by stone roads and mines and dwellings get spurs (`spurChance`) to the nearest road. */
+  roads?: { spurChance: number }
+  /** Rivers with their source mountains and end pools. */
+  rivers?: { count: number }
   /** Treasure piles, artifacts, dwellings and hires with their guards, in the zones that have no start city. */
   treasures?: { density: number; types: ReadonlySet<TreasureType> }
   /** Which decoration kinds to add. */
@@ -83,7 +88,7 @@ export interface OnMapLayers {
 export interface OnMapResult {
   container: MapContainer
   /** Things added, by layer. */
-  added: { water: number; elevation: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  added: { water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -152,8 +157,10 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const excluded = new Set<number>([...walkable, ...waterNodes])
 
   const additions: ZonePlacement[] = []
+  const roadChanges: { node: number; roadId: number }[] = []
+  let riverChanges: { node: number; s: number; isWaterfall?: boolean }[] = []
   const squads: ConcreteSquadPlacement[] = []
-  const added = { water: 0, elevation: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
+  const added = { water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
 
   // Keeps lakes and hills off the things the player must be able to walk between: start cities, existing mines and dwellings, zone centres.
   const keyNodes = ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map((o) => o.node)
@@ -187,6 +194,25 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     added.elevation = hills.elevatedNodes.size + valleys.elevatedNodes.size
     // Only the wall tiles of a raised or lowered area block walking (passability.ts), not the whole area.
     for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) state.blocked.add(node)
+  }
+
+  if (layers.roads) {
+    const existingRoads = new Map<number, number>()
+    ctx.roadsMap.forEach((r, node) => { if (r !== 0) existingRoads.set(node, r) })
+    const toPoint = (o: (typeof ctx.placedObjects)[number]) => ({ sid: o.sid, node: o.node, rotation: o.rotation })
+    const newRoads = layRoads({
+      sizeX, sizeZ, rng, catalogById, blocked: state.blocked, existingRoads, spurChance: layers.roads.spurChance,
+      cities: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.isCity)).map(toPoint),
+      spurPoints: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map(toPoint),
+    })
+    for (const [node, roadId] of newRoads) {
+      roadChanges.push({ node, roadId })
+      roadNodes.add(node)
+      walkable.add(node)
+      excluded.add(node)
+      state.blocked.add(node)
+    }
+    added.roads = newRoads.size
   }
 
   const schema = applySchemaTuning(BUILTIN_RMG_SCHEMA, EMPTY_TUNING)
@@ -240,6 +266,18 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       treasureCount++
     }
     added.treasures = treasureCount
+  }
+
+  if (layers.rivers) {
+    const wallNodes = new Set<number>()
+    for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) wallNodes.add(node)
+    const river = carveRiversOnMap({
+      sizeX, sizeZ, rng, catalog, catalogById, state, tileBiome: ctx.tilesMap, levels, climbs, waterNodes, wallNodes, roadNodes, riverNodes, count: layers.rivers.count,
+    })
+    riverChanges = river.changes
+    additions.push(...river.placements)
+    for (const node of riverNodes) { walkable.add(node); excluded.add(node); state.blocked.add(node) }
+    added.rivers = river.tiles
   }
 
   const deco = layers.decorations
@@ -302,6 +340,8 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   if (waterChanges.length > 0) block2 = paintWaterTiles(block2, waterChanges)
   if (levelChanges.length > 0) block2 = paintLevelTiles(block2, levelChanges)
   if (climbChanges.length > 0) block2 = paintClimbTiles(block2, climbChanges)
+  if (roadChanges.length > 0) block2 = paintRoadTiles(block2, roadChanges)
+  if (riverChanges.length > 0) block2 = paintRiverTiles(block2, riverChanges)
   block2 = addObjectInstances(block2, additions.map((p) => ({
     sid: p.sid, node: p.node, rotation: p.rotation, randomSquadOverrides: p.randomSquadOverrides, randomItemOverrides: p.randomItemOverrides,
     randomCityOverrides: p.randomCityOverrides, randomHireOverrides: p.randomHireOverrides,
