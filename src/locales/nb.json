@@ -384,6 +384,7 @@
     },
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Kartet lagret med problemer",
+      "showOnMap": "Klikk på en oppføring for å vise den på kartet.",
       "autoFix": "Rett opp automatisk",
       "intro": "Kartet ble lagret, men følgende objekt(er) har problemer:",
       "autoFixResult": "Automatisk retting løste {{fixed}} problem(er) — {{remaining}} kunne fortsatt ikke rettes automatisk. Rett dem opp manuelt."
@@ -1145,6 +1146,49 @@
           "label": "Egendefinert AI"
         }
       }
+    },
+    "generateOnMap": {
+      "title": "Generer på dette kartet",
+      "description": "Legger generert innhold til kartet du har åpent.",
+      "decorations": "Dekorasjoner",
+      "density": "Tetthet",
+      "interactables": "Interaktive objekter",
+      "chooseInteractables": "Velg interaktive objekter ({{count}} utelatt)",
+      "keepsExisting": "Eksisterende objekter, terreng, veier og elver endres aldri. Vann, høyder, skatter og interaktive objekter holder 12 felt avstand fra startbyer. Alt legges til i ett angresteg.",
+      "done": "La til {{terrain}} terrengfelt, {{borders}} grensehindringer, {{water}} vannfelt, {{elevation}} høyde-/dalfelt, {{roads}} veifelt, {{rivers}} elvefelt, {{treasures}} skattobjekter, {{decorations}} dekorasjoner, {{fauna}} dyr og effekter, {{interactables}} interaktive objekter, {{encounters}} voktere.",
+      "water": "Vann",
+      "elevation": "Høydeforskjeller",
+      "treasures": "Skatter",
+      "encounters": "Møter",
+      "amount": "Mengde",
+      "guardExisting": "Vokt også eksisterende objekter",
+      "treasureType": {
+        "resources": "Ressurser",
+        "artifacts": "Artefakter",
+        "chests": "Kister og skriftruller",
+        "hires": "Rekrutteringer",
+        "buildings": "Bygninger og boliger"
+      },
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Alle",
+      "selectNone": "Ingen",
+      "roads": "Veier",
+      "rivers": "Elver",
+      "roadSpurs": "Avstikkere",
+      "riverCount": "Antall",
+      "terrain": "Terreng",
+      "terrainZones": "Med soner",
+      "terrainPatches": "Organiske flekker",
+      "scopeUnpainted": "Bare umalte felt",
+      "scopeAll": "Alle frie felt",
+      "finish": "Fullfør kartet",
+      "finishHint": "Alt under, med terrenget ditt beholdt (et tomt kart får soneterreng først).",
+      "needsDesktop": "Terreng med soner krever skrivebordsappen.",
+      "borders": "Sonegrenser",
+      "bordersHint": "Hindringer langs grensene mellom soner, med porter (der en vei krysser, og minst én per grense).",
+      "bordersNeedZones": "Trenger soner: bruk Terreng med soner over, eller et kart som allerede har soner.",
+      "generate": "Generer",
+      "generating": "Genererer…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Ingenting på denne ruten.",
@@ -2114,6 +2158,8 @@
       "validateScenario": "Valider scenario",
       "fairness": "Rettferdighet",
       "checkHowEvenTheMap": "Sjekk hvor jevnt kartet er mellom spillerne",
+      "generateOnMap": "Generer på kartet",
+      "generateOnMapTitle": "Legg til genererte dekorasjoner og interaktive objekter på dette kartet",
       "unpublishedChanges": "Upubliserte endringer",
       "publishMapYouHaveChanges": "Publiser kart — du har endringer som ennå ikke er skrevet til spillet (egendefinerte helter/objekter/artefakter, dialoger, lokalisering)",
       "guides": "Guider",

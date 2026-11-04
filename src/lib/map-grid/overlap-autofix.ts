@@ -6,6 +6,7 @@
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, isFootprintInBounds } from './footprint'
+import { entranceApproachNodes } from './entrance-validation'
 import { buildBlockedTileSet } from './passability'
 import { groupOf } from './tile-index'
 import { findOverlappingPlacements, type OverlappingPlacement } from './overlap-validation'
@@ -104,6 +105,8 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
       catalog,
     )
     for (const node of claimedDestinations) moverBlocked.add(node)
+    // A moved object never lands on another object's entrance or approach ring (it would trade an overlap for a blocked entrance).
+    const approach = mover.type === 0 ? entranceApproachNodes(context, catalog, mover.key) : new Set<number>()
 
     const isValidCandidate = (x: number, z: number): boolean => {
       if (mover.type !== 0) {
@@ -117,7 +120,7 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
       let anyReachable = !reachable
       for (const cell of cells) {
         const n = cell.z * sizeX + cell.x
-        if (cell.value === 1 && moverBlocked.has(n)) return false
+        if (cell.value === 1 && (moverBlocked.has(n) || approach.has(n))) return false
         if (reachable?.has(n)) anyReachable = true
       }
       return anyReachable

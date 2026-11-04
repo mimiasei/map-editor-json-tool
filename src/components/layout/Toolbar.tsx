@@ -20,6 +20,7 @@ import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, re
 import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
 import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import NewMapDialog from '@/components/common/NewMapDialog'
+import GenerateOnMapDialog from '@/components/common/GenerateOnMapDialog'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
@@ -189,6 +190,7 @@ export default function Toolbar({
   // Same on-demand rule as the placement check: scored when the dialog opens, from the loaded map. The score is the one the random map
   // generator itself uses to pick and warn (computePlayerBalance).
   const [fairnessOpen,        setFairnessOpen]        = useState(false)
+  const [generateOnMapOpen,   setGenerateOnMapOpen]   = useState(false)
   // A boolean selector, so map edits don't re-render the toolbar.
   const hasMap = useMapContextStore((s) => !!s.context)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
@@ -752,6 +754,14 @@ export default function Toolbar({
               onClick={handleOpenFairness}
             />
           )}
+          {hasMap && (
+            <ToolButton
+              icon={<Wand2 className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.generateOnMap')}
+              title={t('layout.toolbar.generateOnMapTitle')}
+              onClick={() => setGenerateOnMapOpen(true)}
+            />
+          )}
           </>
           ) : (
             <>
@@ -1021,6 +1031,8 @@ export default function Toolbar({
         </div>
       </header>
 
+      <GenerateOnMapDialog open={generateOnMapOpen} onOpenChange={setGenerateOnMapOpen} />
+
       {/* Fairness dialog */}
       <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -1110,7 +1122,7 @@ export default function Toolbar({
               </div>
             )}
             {mapPlacementCheck?.issues.map((issue, i) => (
-              <Alert key={`bounds-entrance-${i}`} variant="destructive">
+              <Alert key={`bounds-entrance-${i}`} variant="destructive" className="cursor-pointer hover:bg-destructive/10" title={t('common.mapValidationErrorDialog.showOnMap')} onClick={() => focusOnTile(issue.x, issue.z, issue.node)}>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2">{describeMapValidationIssue(issue)}</AlertDescription>
               </Alert>

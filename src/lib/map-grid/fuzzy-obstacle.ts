@@ -123,14 +123,11 @@ function isMountainDecoration(id: string): boolean {
   return id.startsWith('mountain_')
 }
 
-/** Confirmed against the real catalog: every tree entry is prefixed either
- *  tree_ or pinetree_ (43 total), all solid blockers (nodes[] includes 1).
- *  Sand/Desert has zero real tree entries (matches this project's existing
- *  faction-biome finding that Desert is purely decorative, no natural
- *  faction — see CLAUDE.md) — a Trees-tool stroke over Sand tiles is
- *  expected to place nothing, not a bug to work around. */
+/** Every tree entry is prefixed tree_ or pinetree_ (43 total), all solid blockers (nodes[] includes 1). Sand/Desert has none of those: its trees are
+ *  palms_* (3) and cactus_* (6), which decoration-subcategories.ts (TREE_PREFIXES) already counts as trees. Leaving them out made the Trees tool
+ *  paint nothing on sand. */
 export function isTreeDecoration(id: string): boolean {
-  return id.startsWith('tree_') || id.startsWith('pinetree_')
+  return id.startsWith('tree_') || id.startsWith('pinetree_') || id.startsWith('palms_') || id.startsWith('cactus_')
 }
 
 export interface FuzzyObstaclePool {

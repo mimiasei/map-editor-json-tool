@@ -50,7 +50,10 @@ const WALKABLE_PREFIXES = [
   ...WALKABLE_BIOMES.map((b) => 'grass_' + b + '_2'),
 ]
 const TREE_PREFIXES = ['tree_', 'pinetree', 'palm', 'cactus']
-const ROCK_MARKERS = ['rock_', 'stone_', '_stones_']
+const ROCK_MARKERS = ['stone_', '_stones_']
+/** `rock` / `hill` (or the plural) as a whole word of the sid (rock_1, dirt_rock_2, rock1, grass_hill_1, hill_big, hill1), not inside another word (hillbilly). */
+const ROCK_WORD = /(^|_)rocks?(?=$|_|\d)/
+const HILL_WORD = /(^|_)hills?(?=$|_|\d)/
 
 /** Classifies a `decorations`-group placement by real catalog category first
  *  (animals/fxs), then by the `environments` sid-naming convention — order
@@ -61,11 +64,11 @@ export function resolveDecorationSubcategory(sid: string, category: string | und
   if (category === 'fxs') return 'fx'
   if (sid.startsWith('mountain_')) return 'mountains'
   if (TREE_PREFIXES.some((t) => sid.startsWith(t))) return 'trees'
-  if (ROCK_MARKERS.some((r) => sid.includes(r))) return 'rocks'
+  if (ROCK_WORD.test(sid) || ROCK_MARKERS.some((r) => sid.includes(r))) return 'rocks'
   if (sid.startsWith('pool_')) return 'pools'
   if (sid.startsWith('campaign_')) return 'campaignRelated'
   if (WALKABLE_PREFIXES.some((w) => sid.includes(w))) return 'walkable'
-  if (sid.includes('_hill_')) return 'hills'
+  if (HILL_WORD.test(sid)) return 'hills'
   return 'other'
 }
 

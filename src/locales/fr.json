@@ -397,6 +397,7 @@
     },
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Carte enregistrée avec des problèmes",
+      "showOnMap": "Cliquez sur une entrée pour l’afficher sur la carte.",
       "autoFix": "Correction auto",
       "intro": "La carte a été enregistrée, mais les objets suivants présentent des problèmes :",
       "autoFixResult": "La correction automatique a résolu {{fixed}} problème(s) ; {{remaining}} n'ont pas pu être corrigés automatiquement. Corrigez-les à la main."
@@ -1174,6 +1175,49 @@
           "label": "IA personnalisée"
         }
       }
+    },
+    "generateOnMap": {
+      "title": "Générer sur cette carte",
+      "description": "Ajoute du contenu généré à la carte ouverte.",
+      "decorations": "Décors",
+      "density": "Densité",
+      "interactables": "Objets interactifs",
+      "chooseInteractables": "Choisir les objets interactifs ({{count}} exclus)",
+      "keepsExisting": "Les objets, le terrain, les routes et les rivières existants ne sont jamais modifiés. L’eau, le relief, les trésors et les objets interactifs restent à 12 tuiles des villes de départ. Tout est ajouté en une seule étape d’annulation.",
+      "done": "{{terrain}} tuiles de terrain, {{borders}} obstacles de frontière, {{water}} tuiles d’eau, {{elevation}} tuiles de relief, {{roads}} tuiles de route, {{rivers}} tuiles de rivière, {{treasures}} objets de trésor, {{decorations}} décors, {{fauna}} animaux et effets, {{interactables}} objets interactifs, {{encounters}} gardes ajoutés.",
+      "water": "Eau",
+      "elevation": "Relief",
+      "treasures": "Trésors",
+      "encounters": "Rencontres",
+      "amount": "Quantité",
+      "guardExisting": "Garder aussi les objets existants",
+      "treasureType": {
+        "resources": "Ressources",
+        "artifacts": "Artefacts",
+        "chests": "Coffres et parchemins",
+        "hires": "Recrutements",
+        "buildings": "Bâtiments et habitations"
+      },
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Tout",
+      "selectNone": "Aucun",
+      "roads": "Routes",
+      "rivers": "Rivières",
+      "roadSpurs": "Embranchements",
+      "riverCount": "Nombre",
+      "terrain": "Terrain",
+      "terrainZones": "Avec zones",
+      "terrainPatches": "Taches organiques",
+      "scopeUnpainted": "Tuiles non peintes seulement",
+      "scopeAll": "Toutes les tuiles libres",
+      "finish": "Terminer la carte",
+      "finishHint": "Tout ce qui suit, en gardant votre terrain (une carte vierge reçoit d’abord un terrain à zones).",
+      "needsDesktop": "Le terrain avec zones nécessite l’application de bureau.",
+      "borders": "Frontières de zones",
+      "bordersHint": "Obstacles le long des frontières entre zones, avec des passages (là où une route traverse, et au moins un par frontière).",
+      "bordersNeedZones": "Nécessite des zones : utilisez Terrain avec zones ci-dessus, ou une carte qui en a déjà.",
+      "generate": "Générer",
+      "generating": "Génération…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Rien sur cette case.",
@@ -2149,6 +2193,8 @@
       "validateScenario": "Valider le scénario",
       "fairness": "Équité",
       "checkHowEvenTheMap": "Vérifier l'équilibre de la carte entre les joueurs",
+      "generateOnMap": "Générer sur la carte",
+      "generateOnMapTitle": "Ajouter des décors et objets interactifs générés à cette carte",
       "unpublishedChanges": "Modifications non publiées",
       "publishMapYouHaveChanges": "Publier la carte — vous avez des modifications pas encore écrites dans le jeu (héros/objets/artefacts personnalisés, dialogues, localisation)",
       "guides": "Guides",

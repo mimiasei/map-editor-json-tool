@@ -53,7 +53,7 @@
 
 import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { applyBiomeDecorationMix } from '@/lib/rmg/biome-decoration-mix'
+import { applyBiomeDecorationMix, BIOME_DECORATION_RULES } from '@/lib/rmg/biome-decoration-mix'
 import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
 import { randomInRange } from '@/lib/map-grid/squad-pool'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
@@ -638,6 +638,14 @@ export interface ScatterObstaclesOptions {
   /** Blocked tiles that are still walkable (roads, rivers) — for the forced
    *  mountains' "doesn't cut anything off" check. */
   walkableNodes?: Set<number>
+  /** Chance (0-1) that a single scattered decoration is borrowed from another biome, like the Map Grid brushes' biome mix (1 - purity). Default 0: the
+   *  generator's own cross-biome rules (biome-decoration-mix.ts) already decide that. */
+  crossBiomeChance?: number
+  /** Drops the generator's built-in borrowing between biomes (grass takes some autumn and dirt decoration, and so on): every biome keeps to its own
+   *  decoration. The deny rules (things a biome must not use) still apply. */
+  ownBiomeOnly?: boolean
+  /** With cross-biome picks: false limits them to compatible biomes (fuzzy-obstacle.ts areBiomesCompatible). Default true. */
+  allowHighContrastBiomes?: boolean
 }
 
 /** Whether placing `footprint` would split the walkable ground around it:
@@ -800,6 +808,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const { pools, treePools, weights: environmentWeights } = applyBiomeDecorationMix(
     buildFuzzyObstaclePools(mapObjects),
     rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined,
+    options.ownBiomeOnly ? BIOME_DECORATION_RULES.filter((rule) => 'deny' in rule) : undefined,
   )
   const placements: ZonePlacement[] = []
   for (const { node, biome, cluster = 1 } of forcedMountainSpots) {
@@ -905,8 +914,8 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
       ? (node: number) => biasedChance(INDEPENDENT_PHASE_POOL_BASE_CHANCE, 0, node, sizeX, sizeZ, placedCategoryByNode, 'pools', coOccurrenceStrength, CLUSTER_RADIUS)
       : undefined
     sampleFuzzyObstacles(nodeDistances, () => biome, pools, {
-      // Cross-biome mixing is done by the lists themselves (biome-decoration-mix.ts), not per node.
-      crossBiomeChance: 0,
+      // Cross-biome mixing is done by the lists themselves (biome-decoration-mix.ts); an explicit chance adds per-node borrowing on top.
+      crossBiomeChance: options.crossBiomeChance ?? 0, allowHighContrastBiomes: options.allowHighContrastBiomes ?? true,
       mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor, weights: environmentWeights,
       onDecided: (node, addition) => {
         if (!addition) return

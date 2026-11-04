@@ -54,7 +54,7 @@ export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
  *  here rather than in `generate-terrain.ts` so that file stays
  *  environment-agnostic (no Tauri fs, no store access), matching this
  *  file's own existing role as the Tauri/store orchestration layer. */
-async function readTemplateAndCatalog(): Promise<{ template: MapContainer; catalogById: Map<string, import('@/lib/catalog/types').CatalogMapObject> } | null> {
+export async function readTemplateAndCatalog(): Promise<{ template: MapContainer; catalogById: Map<string, import('@/lib/catalog/types').CatalogMapObject> } | null> {
   if (!isTauri()) return null
   const catalog = useCatalogStore.getState().catalog
   if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')

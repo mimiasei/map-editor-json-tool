@@ -384,6 +384,7 @@
     },
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Karte mit Problemen gespeichert",
+      "showOnMap": "Auf einen Eintrag klicken, um ihn auf der Karte zu zeigen.",
       "autoFix": "Automatisch beheben",
       "intro": "Die Karte wurde gespeichert, aber die folgenden Objekte haben Probleme:",
       "autoFixResult": "Die automatische Korrektur hat {{fixed}} Problem(e) gelöst — {{remaining}} konnten nicht automatisch behoben werden. Beheben Sie sie manuell."
@@ -1145,6 +1146,49 @@
           "label": "Benutzerdefinierte KI"
         }
       }
+    },
+    "generateOnMap": {
+      "title": "Auf dieser Karte generieren",
+      "description": "Fügt der geöffneten Karte generierte Inhalte hinzu.",
+      "decorations": "Dekorationen",
+      "density": "Dichte",
+      "interactables": "Interaktionsobjekte",
+      "chooseInteractables": "Interaktionsobjekte wählen ({{count}} ausgeschlossen)",
+      "keepsExisting": "Vorhandene Objekte, Gelände, Straßen und Flüsse werden nie verändert. Wasser, Hügel, Schätze und Interaktionsobjekte bleiben 12 Felder von Startstädten entfernt. Alles wird in einem Rückgängig-Schritt hinzugefügt.",
+      "done": "{{terrain}} Geländefelder, {{borders}} Grenzhindernisse, {{water}} Wasserfelder, {{elevation}} Hügel-/Talfelder, {{roads}} Straßenfelder, {{rivers}} Flussfelder, {{treasures}} Schatzobjekte, {{decorations}} Dekorationen, {{fauna}} Tiere und Effekte, {{interactables}} Interaktionsobjekte, {{encounters}} Wächter hinzugefügt.",
+      "water": "Wasser",
+      "elevation": "Höhenunterschiede",
+      "treasures": "Schätze",
+      "encounters": "Begegnungen",
+      "amount": "Menge",
+      "guardExisting": "Vorhandene Objekte ebenfalls bewachen",
+      "treasureType": {
+        "resources": "Ressourcen",
+        "artifacts": "Artefakte",
+        "chests": "Truhen und Schriftrollen",
+        "hires": "Rekrutierungen",
+        "buildings": "Gebäude und Behausungen"
+      },
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Alle",
+      "selectNone": "Keine",
+      "roads": "Straßen",
+      "rivers": "Flüsse",
+      "roadSpurs": "Abzweige",
+      "riverCount": "Anzahl",
+      "terrain": "Gelände",
+      "terrainZones": "Mit Zonen",
+      "terrainPatches": "Organische Flecken",
+      "scopeUnpainted": "Nur unbemalte Felder",
+      "scopeAll": "Alle freien Felder",
+      "finish": "Karte fertigstellen",
+      "finishHint": "Alles unten, Ihr Gelände bleibt erhalten (eine leere Karte erhält zuerst Zonengelände).",
+      "needsDesktop": "Gelände mit Zonen benötigt die Desktop-App.",
+      "borders": "Zonengrenzen",
+      "bordersHint": "Hindernisse entlang der Grenzen zwischen Zonen, mit Durchgängen (wo eine Straße kreuzt, und mindestens einer je Grenze).",
+      "bordersNeedZones": "Benötigt Zonen: oben Gelände mit Zonen verwenden oder eine Karte, die schon Zonen hat.",
+      "generate": "Generieren",
+      "generating": "Generiere…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Nichts auf dieser Kachel.",
@@ -2114,6 +2158,8 @@
       "validateScenario": "Szenario validieren",
       "fairness": "Fairness",
       "checkHowEvenTheMap": "Prüfen, wie ausgeglichen die Karte zwischen den Spielern ist",
+      "generateOnMap": "Auf Karte generieren",
+      "generateOnMapTitle": "Generierte Dekorationen und Interaktionsobjekte zu dieser Karte hinzufügen",
       "unpublishedChanges": "Unveröffentlichte Änderungen",
       "publishMapYouHaveChanges": "Karte veröffentlichen — Sie haben Änderungen, die noch nicht ins Spiel geschrieben wurden (benutzerdefinierte Helden/Objekte/Artefakte, Dialoge, Lokalisierung)",
       "guides": "Anleitungen",

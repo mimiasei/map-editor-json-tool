@@ -410,6 +410,7 @@
     },
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Mapa zapisana z problemami",
+      "showOnMap": "Kliknij pozycję, aby pokazać ją na mapie.",
       "autoFix": "Napraw automatycznie",
       "intro": "Mapa została zapisana, ale poniższe obiekty mają problemy:",
       "autoFixResult": "Automatyczna naprawa rozwiązała problemy: {{fixed}} — pozostałe ({{remaining}}) nie dały się naprawić automatycznie. Napraw je ręcznie."
@@ -1203,6 +1204,49 @@
           "label": "Własne SI"
         }
       }
+    },
+    "generateOnMap": {
+      "title": "Generuj na tej mapie",
+      "description": "Dodaje wygenerowaną zawartość do otwartej mapy.",
+      "decorations": "Dekoracje",
+      "density": "Gęstość",
+      "interactables": "Obiekty interaktywne",
+      "chooseInteractables": "Wybierz obiekty interaktywne (wykluczono: {{count}})",
+      "keepsExisting": "Istniejące obiekty, teren, drogi i rzeki nigdy nie są zmieniane. Woda, wzgórza, skarby i obiekty interaktywne trzymają się 12 pól od miast startowych. Wszystko dodawane jest w jednym kroku cofania.",
+      "done": "Dodano: pola terenu {{terrain}}, pola wody przeszkody graniczne {{borders}}, {{water}}, pola wzgórz/dolin {{elevation}}, pola dróg {{roads}}, pola rzek {{rivers}}, obiekty skarbów {{treasures}}, dekoracje {{decorations}}, zwierzęta i efekty {{fauna}}, obiekty interaktywne {{interactables}}, strażnicy {{encounters}}.",
+      "water": "Woda",
+      "elevation": "Wzniesienia",
+      "treasures": "Skarby",
+      "encounters": "Spotkania",
+      "amount": "Ilość",
+      "guardExisting": "Strzeż też istniejących obiektów",
+      "treasureType": {
+        "resources": "Surowce",
+        "artifacts": "Artefakty",
+        "chests": "Skrzynie i zwoje",
+        "hires": "Zaciągi",
+        "buildings": "Budynki i siedziby"
+      },
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Wszystko",
+      "selectNone": "Nic",
+      "roads": "Drogi",
+      "rivers": "Rzeki",
+      "roadSpurs": "Odnogi",
+      "riverCount": "Liczba",
+      "terrain": "Teren",
+      "terrainZones": "Ze strefami",
+      "terrainPatches": "Organiczne plamy",
+      "scopeUnpainted": "Tylko niepomalowane pola",
+      "scopeAll": "Wszystkie wolne pola",
+      "finish": "Dokończ mapę",
+      "finishHint": "Wszystko poniżej, z zachowaniem Twojego terenu (pusta mapa dostaje najpierw teren ze strefami).",
+      "needsDesktop": "Teren ze strefami wymaga aplikacji desktopowej.",
+      "borders": "Granice stref",
+      "bordersHint": "Przeszkody wzdłuż granic między strefami, z przejściami (tam, gdzie krzyżuje się droga, i co najmniej jedno na granicę).",
+      "bordersNeedZones": "Wymaga stref: użyj powyżej Terenu ze strefami albo mapy, która już je ma.",
+      "generate": "Generuj",
+      "generating": "Generowanie…"
     },
     "mapGridCellContent": {
       "nothingOnThisTile": "Na tym polu nic nie ma.",
@@ -2184,6 +2228,8 @@
       "validateScenario": "Sprawdź scenariusz",
       "fairness": "Uczciwość",
       "checkHowEvenTheMap": "Sprawdź, jak wyrównana jest mapa między graczami",
+      "generateOnMap": "Generuj na mapie",
+      "generateOnMapTitle": "Dodaj wygenerowane dekoracje i obiekty interaktywne do tej mapy",
       "unpublishedChanges": "Nieopublikowane zmiany",
       "publishMapYouHaveChanges": "Opublikuj mapę — masz zmiany, które nie trafiły jeszcze do gry (własni bohaterowie/obiekty/artefakty, dialogi, lokalizacja)",
       "guides": "Poradniki",

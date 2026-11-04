@@ -22,6 +22,7 @@ import { AlertTriangle } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import {describeMapValidationIssue} from '@/lib/map-grid/map-validation'
 import { useTranslation } from 'react-i18next'
+import { focusTileInMapGrid } from '@/lib/map-grid/focus-tile'
 
 export default function MapValidationErrorDialog() {
   const { t } = useTranslation()
@@ -38,16 +39,12 @@ export default function MapValidationErrorDialog() {
     setLastFixed(fixedCount)
   }
 
-  const message = issues
-    ? [
-        t('common.mapValidationErrorDialog.intro'),
-        '',
-        ...issues.map((v) => `• ${describeMapValidationIssue(v)}`),
-        ...(lastFixed !== null
-          ? ['', t('common.mapValidationErrorDialog.autoFixResult', { fixed: lastFixed, remaining: issues.length })]
-          : []),
-      ].join('\n')
-    : ''
+  // Jumping to a problem closes the list (the dialog would cover the map); Validate in the toolbar lists them again.
+  const showIssue = (x: number, z: number, node: number) => {
+    clearMapValidationIssues()
+    setLastFixed(null)
+    focusTileInMapGrid(x, z, node)
+  }
 
   return (
     <Dialog
@@ -60,7 +57,20 @@ export default function MapValidationErrorDialog() {
         </DialogHeader>
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="ml-2 whitespace-pre-line">{message}</AlertDescription>
+          <AlertDescription className="ml-2 space-y-1">
+            <p>{t('common.mapValidationErrorDialog.intro')}</p>
+            <ul className="space-y-0.5">
+              {(issues ?? []).map((v, i) => (
+                <li key={i}>
+                  <button type="button" className="text-left underline-offset-2 hover:underline" title={t('common.mapValidationErrorDialog.showOnMap')} onClick={() => showIssue(v.x, v.z, v.node)}>
+                    • {describeMapValidationIssue(v)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs opacity-80">{t('common.mapValidationErrorDialog.showOnMap')}</p>
+            {lastFixed !== null && <p>{t('common.mapValidationErrorDialog.autoFixResult', { fixed: lastFixed, remaining: issues?.length ?? 0 })}</p>}
+          </AlertDescription>
         </Alert>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" size="sm" onClick={() => { clearMapValidationIssues(); setLastFixed(null) }}>

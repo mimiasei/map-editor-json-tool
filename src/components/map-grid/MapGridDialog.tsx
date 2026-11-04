@@ -403,7 +403,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Deliberately local/ephemeral state, not persisted — resets to Browse on
   // reopen, same as every other in-progress tool state in this dialog
   // (paintBiome, placingSid, etc.).
-  const [gridMode, setGridMode] = useState<'browse' | 'paint'>('browse')
+  // Paint is the working mode; without write access (web build) there is nothing to paint with, so Browse stays the start.
+  const [gridMode, setGridMode] = useState<'browse' | 'paint'>(isTauri() ? 'paint' : 'browse')
 
   const [filter, setFilter] = useState<GridFilterState>(loadGridFilter)
   const toggleGroup = (g: GridGroup) => {
