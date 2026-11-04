@@ -35,10 +35,14 @@ export type TreasureType = (typeof TREASURE_TYPES)[number]
 
 /** Which treasure checkbox a treasure-loop object belongs to: resource piles and storages, artifacts, chests (incl. Pandora and scroll boxes), hires, and
  *  everything else the pools hand out (buildings, dwellings). */
+const SCROLL_BOX_SIDS = new Set(['scroll_box', 'enchanted_scroll_box'])
+/** The artifact pool hands out scroll boxes too, far more often than the game's maps have them: they count as chests and only this share is kept. */
+const SCROLL_BOX_KEEP = 0.15
+
 function treasureTypeOf(sid: string, artifactSids: Set<string>): TreasureType {
   if (sid.startsWith('resource_') || sid.startsWith('storage_') || sid === 'random-res') return 'resources'
+  if (sid === 'chest' || SCROLL_BOX_SIDS.has(sid)) return 'chests'
   if (sid === 'random-item' || artifactSids.has(sid)) return 'artifacts'
-  if (sid === 'chest' || sid === 'pandora_box' || sid === 'scroll_box' || sid === 'enchanted_scroll_box') return 'chests'
   if (sid === 'random-hire') return 'hires'
   return 'buildings'
 }
@@ -188,7 +192,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     for (const [zoneId, tiles] of awayFromStarts) landByZone.set(zoneId, tiles.filter((n) => !excluded.has(n)))
     const populatorOptions = {
       sizeX, sizeZ, zones: placerZones, tilesByZone: landByZone, zoneBiome: terrain.zoneBiome, catalogById, objectLogicsById: buildObjectLogicsIndex(catalog), state, rng,
-      treasureDensity: layers.treasures.density, catalog, contentCountLimits: [{ sid: 'university', maxCount: 1 }], richness: resolveRichness(layers.settings.richness, EMPTY_TUNING),
+      treasureDensity: layers.treasures.density, catalog, contentCountLimits: [{ sid: 'university', maxCount: 1 }, { sid: 'pandora_box', maxCount: 0 }], richness: resolveRichness(layers.settings.richness, EMPTY_TUNING),
       difficulty, guardTuning: EMPTY_TUNING.guards, zoneAnchorNode: terrain.zoneAnchorNode,
     }
     // Run on a scratch copy, keep the chosen kinds with the guards that stand beside them, and book only those into the real state.
@@ -198,15 +202,17 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const objects = result.placements.filter((p) => p.sid !== 'random-squad')
     const near = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
     const wanted = layers.treasures.types
-    /** Whether the treasure object nearest to a guard is one of the chosen kinds (undefined: no treasure object close by). */
+    // One decision per object (chosen kind; scroll boxes also only SCROLL_BOX_KEEP of the time; Pandora's boxes never), so its guard can follow it.
+    const keepObject = new Map<ZonePlacement, boolean>(objects.map((o) => [o, o.sid !== 'pandora_box' && wanted.has(treasureTypeOf(o.sid, artifactSids)) && (!SCROLL_BOX_SIDS.has(o.sid) || rng() < SCROLL_BOX_KEEP)]))
+    /** Whether the treasure object nearest to a guard is kept (undefined: no treasure object close by). */
     const guardedObjectWanted = (node: number): boolean | undefined => {
       let best: ZonePlacement | undefined
       for (const o of objects) if (near(o.node, node) <= GUARD_TIE_RADIUS && (!best || near(o.node, node) < near(best.node, node))) best = o
-      return best ? wanted.has(treasureTypeOf(best.sid, artifactSids)) : undefined
+      return best ? keepObject.get(best) : undefined
     }
     let treasureCount = 0
     for (const p of result.placements) {
-      const keep = p.sid === 'random-squad' ? guardedObjectWanted(p.node) ?? true : wanted.has(treasureTypeOf(p.sid, artifactSids))
+      const keep = p.sid === 'random-squad' ? guardedObjectWanted(p.node) ?? true : keepObject.get(p) === true
       if (!keep || !tryPlaceAt(p.sid, p.node, sizeX, sizeZ, catalogById, state)) continue
       additions.push({ ...p, tempId: state.nextTempId++ })
       guardedByTreasure.add(p.node)

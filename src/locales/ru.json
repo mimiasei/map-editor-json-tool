@@ -1226,6 +1226,10 @@
         "hires": "Найм",
         "buildings": "Здания и жилища"
       },
+      "kinds": "Виды",
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Все",
+      "selectNone": "Ничего",
       "generate": "Сгенерировать",
       "generating": "Генерация…"
     },

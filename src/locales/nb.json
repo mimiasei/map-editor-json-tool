@@ -1168,6 +1168,10 @@
         "hires": "Rekrutteringer",
         "buildings": "Bygninger og boliger"
       },
+      "kinds": "Typer",
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Alle",
+      "selectNone": "Ingen",
       "generate": "Generer",
       "generating": "Genererer…"
     },

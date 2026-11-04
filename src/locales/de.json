@@ -1168,6 +1168,10 @@
         "hires": "Rekrutierungen",
         "buildings": "Gebäude und Behausungen"
       },
+      "kinds": "Arten",
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Alle",
+      "selectNone": "Keine",
       "generate": "Generieren",
       "generating": "Generiere…"
     },

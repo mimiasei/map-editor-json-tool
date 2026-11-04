@@ -1226,6 +1226,10 @@
         "hires": "Zaciągi",
         "buildings": "Budynki i siedziby"
       },
+      "kinds": "Rodzaje",
+      "selectedCount": "{{selected}}/{{total}}",
+      "selectAll": "Wszystko",
+      "selectNone": "Nic",
       "generate": "Generuj",
       "generating": "Generowanie…"
     },

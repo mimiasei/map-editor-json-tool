@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import CheckGroup from '@/components/common/CheckGroup'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { containerToRawBlocks, useMapDocumentStore } from '@/store/useMapDocumentStore'
@@ -77,20 +78,6 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
-
-  const toggleTreasureType = (type: TreasureType, on: boolean) => {
-    const next = new Set(treasureTypes)
-    if (on) next.add(type)
-    else next.delete(type)
-    setTreasureTypes(next)
-  }
-
-  const toggleType = (type: DecorationType, on: boolean) => {
-    const next = new Set(decorationTypes)
-    if (on) next.add(type)
-    else next.delete(type)
-    setDecorationTypes(next)
-  }
 
   const nothingChosen = !waterOn && !elevationOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
@@ -161,26 +148,22 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.treasures')} on={treasuresOn} onChange={setTreasuresOn}>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                {TREASURE_TYPES.map((type) => (
-                  <label key={type} className="flex items-center gap-2 text-xs">
-                    <Checkbox checked={treasureTypes.has(type)} onCheckedChange={(v) => toggleTreasureType(type, v === true)} />
-                    {t(`mapGrid.generateOnMap.treasureType.${type}`)}
-                  </label>
-                ))}
-              </div>
+              <CheckGroup
+                title={t('mapGrid.generateOnMap.kinds')}
+                options={TREASURE_TYPES.map((type) => ({ id: type, label: t(`mapGrid.generateOnMap.treasureType.${type}`) }))}
+                selected={treasureTypes}
+                onChange={setTreasureTypes}
+              />
               <SliderRow label={t('mapGrid.generateOnMap.amount')} value={treasureDensity} min={0.2} max={3} step={0.1} onChange={setTreasureDensity} />
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.decorations')} on={decorationsOn} onChange={setDecorationsOn}>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                {DECORATION_TYPES.map((type) => (
-                  <label key={type} className="flex items-center gap-2 text-xs">
-                    <Checkbox checked={decorationTypes.has(type)} onCheckedChange={(v) => toggleType(type, v === true)} />
-                    {decorationSubcategoryName(type)}
-                  </label>
-                ))}
-              </div>
+              <CheckGroup
+                title={t('mapGrid.generateOnMap.kinds')}
+                options={DECORATION_TYPES.map((type) => ({ id: type, label: decorationSubcategoryName(type) }))}
+                selected={decorationTypes}
+                onChange={setDecorationTypes}
+              />
               <SliderRow label={t('mapGrid.generateOnMap.density')} value={decorationDensity} min={0.05} max={1} step={0.05} onChange={setDecorationDensity} />
             </Layer>
 
