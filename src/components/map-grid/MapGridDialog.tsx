@@ -4374,7 +4374,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 nothing to switch to without write access, and Browse's
                 filter pills stay the only/default row exactly as before. */}
             {canEditEntities && (
-              <div className="flex items-center rounded border border-border p-0.5 shrink-0" data-nodrag>
+              <div className="flex items-center rounded p-0.5 shrink-0" data-nodrag>
                 <ModeToggleButton
                   icon={<Search />}
                   label={t('common.entityCombobox.browse')}
