@@ -8,7 +8,7 @@ import type { GameCatalog, CatalogMapObject } from '@/lib/catalog/types'
 import { extractMapContext } from '@/lib/map-extract'
 import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
 import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
-import { addObjectInstance, addObjectInstances, paintClimbTiles, paintLevelTiles, paintRiverTiles, paintRoadTiles, paintWaterTiles, type MapContainer } from '@/lib/map-write'
+import { addObjectInstance, addObjectInstances, paintClimbTiles, paintLevelTiles, paintRiverTiles, paintRoadTiles, paintTerrainTiles, paintWaterTiles, type MapContainer } from '@/lib/map-write'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { buildInteractableRarity } from './interactable-rarity'
@@ -24,6 +24,7 @@ import { scatterZoneObstacles } from './zone-decoration'
 import { scatterZoneWater } from './zone-water'
 import { createPlacementState, createZonePopulator, tryPlaceAt, type ConcreteSquadPlacement, type PlacementState, type ZonePlacement } from './zone-population'
 import { carveRiversOnMap, layRoads } from './on-map-linework'
+import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
 
 /** The Map Grid's own decoration subcategories (decoration-subcategories.ts), so the names match the object browser and the stats. The game has no bush
@@ -67,6 +68,8 @@ const MAX_KIND_COMPENSATION = 6
 export interface OnMapLayers {
   /** Strength words shared by treasure and guards. */
   settings: { richness: RmgRichness; difficulty: RmgDifficulty }
+  /** Biomes on free ground (see on-map-terrain.ts). Runs first: every other layer works on the new terrain. */
+  terrain?: OnMapTerrainLayer
   /** Lakes in the zones that have no start city. `chance` is the full generator's waterChance (0-1). */
   water?: { chance: number }
   /** Hills and dry valleys (with their ramps). */
@@ -88,7 +91,7 @@ export interface OnMapLayers {
 export interface OnMapResult {
   container: MapContainer
   /** Things added, by layer. */
-  added: { water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  added: { terrain: number; water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -115,7 +118,17 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
   const startNodes = ctx.placedObjects.filter((o) => o.type === 0 && o.sid === 'city-spawner').map((o) => o.node)
-  const terrain = zonesFromTerrain({ sizeX, sizeZ, tilesMap: ctx.tilesMap, startNodes })
+  // The terrain layer repaints this copy; everything below reads it, so each layer sees the new biomes.
+  const tiles = [...ctx.tilesMap]
+  let terrainChanges: { node: number; biomeId: number }[] = []
+  if (layers.terrain) {
+    const occupied = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: ctx.placedObjects, levelsMap: ctx.levelsMap, climbsMap: ctx.climbsMap, waterMap: ctx.waterMap }, catalog)
+    for (const o of ctx.placedObjects) occupied.add(o.node)
+    ctx.roadsMap.forEach((r, node) => { if (r !== 0) occupied.add(node) })
+    for (const node of ctx.riverNodes.keys()) occupied.add(node)
+    terrainChanges = paintOnMapTerrain({ sizeX, sizeZ, tiles, occupied, startCount: startNodes.length, layer: layers.terrain, catalogById, rng })
+  }
+  const terrain = zonesFromTerrain({ sizeX, sizeZ, tilesMap: tiles, startNodes })
   // Every region takes part in the placers as a neutral zone; the start cities are protected by distance instead (see START_PROTECT_RADIUS).
   const placerZones = terrain.zones.map((z) => ({ ...z, kind: 'neutral' as const }))
   const nearStart = new Set<number>()
@@ -144,7 +157,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     buildBlockedTileSet({ sizeX, sizeZ, placedObjects: ctx.placedObjects, levelsMap: levels, climbsMap: climbs, waterMap: water }, catalog),
     new Set(ctx.placedObjects.map((o) => o.node)),
   )
-  state.tileBiome = ctx.tilesMap
+  state.tileBiome = tiles
 
   const roadNodes = new Set<number>()
   ctx.roadsMap.forEach((r, node) => { if (r !== 0) roadNodes.add(node) })
@@ -160,7 +173,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const roadChanges: { node: number; roadId: number }[] = []
   let riverChanges: { node: number; s: number; isWaterfall?: boolean }[] = []
   const squads: ConcreteSquadPlacement[] = []
-  const added = { water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
+  const added = { terrain: terrainChanges.length, water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
 
   // Keeps lakes and hills off the things the player must be able to walk between: start cities, existing mines and dwellings, zone centres.
   const keyNodes = ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map((o) => o.node)
@@ -169,7 +182,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
 
   if (layers.water) {
     const result = scatterZoneWater({
-      sizeX, sizeZ, zones: placerZones, tilesByZone: terrain.tilesByZone, tileBiome: ctx.tilesMap,
+      sizeX, sizeZ, zones: placerZones, tilesByZone: terrain.tilesByZone, tileBiome: tiles,
       excludedNodes: new Set(terrain.zoneAnchorNode.values()), connectNodes, blocked: state.blocked, usedAnchors: protectedAnchors, rng, chance: layers.water.chance,
     })
     for (const c of result.waterChanges) { water[c.node] = c.waterId; waterChanges.push(c) }
@@ -274,7 +287,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const wallNodes = new Set<number>()
     for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) wallNodes.add(node)
     const river = carveRiversOnMap({
-      sizeX, sizeZ, rng, catalog, catalogById, state, tileBiome: ctx.tilesMap, levels, climbs, waterNodes, wallNodes, roadNodes, riverNodes, count: layers.rivers.count,
+      sizeX, sizeZ, rng, catalog, catalogById, state, tileBiome: tiles, levels, climbs, waterNodes, wallNodes, roadNodes, riverNodes, count: layers.rivers.count,
     })
     riverChanges = river.changes
     additions.push(...river.placements)
@@ -339,6 +352,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   // Commit onto a copy of the container: tile layers first, then objects, then the concrete squads (their own entity type).
   let block1 = container.chunks[0]
   let block2 = container.chunks[1]
+  if (terrainChanges.length > 0) block2 = paintTerrainTiles(block2, terrainChanges)
   if (waterChanges.length > 0) block2 = paintWaterTiles(block2, waterChanges)
   if (levelChanges.length > 0) block2 = paintLevelTiles(block2, levelChanges)
   if (climbChanges.length > 0) block2 = paintClimbTiles(block2, climbChanges)

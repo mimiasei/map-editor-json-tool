@@ -7,14 +7,14 @@ import { useTranslation } from 'react-i18next'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronDown, ChevronRight } from '@/components/ui/icons'
 
-interface Props<T extends string> {
+interface Props<T extends string | number> {
   options: readonly { id: T; label: string }[]
   selected: ReadonlySet<T>
   onChange: (next: Set<T>) => void
   defaultOpen?: boolean
 }
 
-export default function CheckGroup<T extends string>({ options, selected, onChange, defaultOpen = true }: Props<T>) {
+export default function CheckGroup<T extends string | number>({ options, selected, onChange, defaultOpen = true }: Props<T>) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(defaultOpen)
   const count = options.filter((o) => selected.has(o.id)).length
