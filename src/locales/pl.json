@@ -1204,6 +1204,25 @@
         }
       }
     },
+    "generateOnMap": {
+      "title": "Generuj na tej mapie",
+      "description": "Dodaje wygenerowaną zawartość do otwartej mapy.",
+      "decorations": "Dekoracje",
+      "density": "Gęstość",
+      "interactables": "Obiekty interaktywne",
+      "chooseInteractables": "Wybierz obiekty interaktywne (wykluczono: {{count}})",
+      "keepsExisting": "Istniejące obiekty, teren, drogi i rzeki nigdy nie są zmieniane. Wszystko dodawane jest w jednym kroku cofania.",
+      "done": "Dodano: dekoracje {{decorations}}, zwierzęta i efekty {{fauna}}, obiekty interaktywne {{interactables}}.",
+      "generate": "Generuj",
+      "generating": "Generowanie…",
+      "type": {
+        "trees": "Drzewa",
+        "mountains": "Góry",
+        "rocks": "Skały i krzewy",
+        "pools": "Sadzawki",
+        "fauna": "Zwierzęta i efekty"
+      }
+    },
     "mapGridCellContent": {
       "nothingOnThisTile": "Na tym polu nic nie ma.",
       "bringForward": "Przesuń na wierzch",
@@ -2184,6 +2203,8 @@
       "validateScenario": "Sprawdź scenariusz",
       "fairness": "Uczciwość",
       "checkHowEvenTheMap": "Sprawdź, jak wyrównana jest mapa między graczami",
+      "generateOnMap": "Generuj na mapie",
+      "generateOnMapTitle": "Dodaj wygenerowane dekoracje i obiekty interaktywne do tej mapy",
       "unpublishedChanges": "Nieopublikowane zmiany",
       "publishMapYouHaveChanges": "Opublikuj mapę — masz zmiany, które nie trafiły jeszcze do gry (własni bohaterowie/obiekty/artefakty, dialogi, lokalizacja)",
       "guides": "Poradniki",

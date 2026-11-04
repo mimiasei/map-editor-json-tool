@@ -1146,6 +1146,25 @@
         }
       }
     },
+    "generateOnMap": {
+      "title": "Generer på dette kartet",
+      "description": "Legger generert innhold til kartet du har åpent.",
+      "decorations": "Dekorasjoner",
+      "density": "Tetthet",
+      "interactables": "Interaktive objekter",
+      "chooseInteractables": "Velg interaktive objekter ({{count}} utelatt)",
+      "keepsExisting": "Eksisterende objekter, terreng, veier og elver endres aldri. Alt legges til i ett angresteg.",
+      "done": "La til {{decorations}} dekorasjoner, {{fauna}} dyr og effekter, {{interactables}} interaktive objekter.",
+      "generate": "Generer",
+      "generating": "Genererer…",
+      "type": {
+        "trees": "Trær",
+        "mountains": "Fjell",
+        "rocks": "Steiner og busker",
+        "pools": "Dammer",
+        "fauna": "Dyr og effekter"
+      }
+    },
     "mapGridCellContent": {
       "nothingOnThisTile": "Ingenting på denne ruten.",
       "bringForward": "Flytt fremover",
@@ -2114,6 +2133,8 @@
       "validateScenario": "Valider scenario",
       "fairness": "Rettferdighet",
       "checkHowEvenTheMap": "Sjekk hvor jevnt kartet er mellom spillerne",
+      "generateOnMap": "Generer på kartet",
+      "generateOnMapTitle": "Legg til genererte dekorasjoner og interaktive objekter på dette kartet",
       "unpublishedChanges": "Upubliserte endringer",
       "publishMapYouHaveChanges": "Publiser kart — du har endringer som ennå ikke er skrevet til spillet (egendefinerte helter/objekter/artefakter, dialoger, lokalisering)",
       "guides": "Guider",

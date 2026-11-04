@@ -1146,6 +1146,25 @@
         }
       }
     },
+    "generateOnMap": {
+      "title": "Auf dieser Karte generieren",
+      "description": "Fügt der geöffneten Karte generierte Inhalte hinzu.",
+      "decorations": "Dekorationen",
+      "density": "Dichte",
+      "interactables": "Interaktionsobjekte",
+      "chooseInteractables": "Interaktionsobjekte wählen ({{count}} ausgeschlossen)",
+      "keepsExisting": "Vorhandene Objekte, Gelände, Straßen und Flüsse werden nie verändert. Alles wird in einem Rückgängig-Schritt hinzugefügt.",
+      "done": "{{decorations}} Dekorationen, {{fauna}} Tiere und Effekte, {{interactables}} Interaktionsobjekte hinzugefügt.",
+      "generate": "Generieren",
+      "generating": "Generiere…",
+      "type": {
+        "trees": "Bäume",
+        "mountains": "Berge",
+        "rocks": "Felsen und Büsche",
+        "pools": "Teiche",
+        "fauna": "Tiere und Effekte"
+      }
+    },
     "mapGridCellContent": {
       "nothingOnThisTile": "Nichts auf dieser Kachel.",
       "bringForward": "Nach vorne",
@@ -2114,6 +2133,8 @@
       "validateScenario": "Szenario validieren",
       "fairness": "Fairness",
       "checkHowEvenTheMap": "Prüfen, wie ausgeglichen die Karte zwischen den Spielern ist",
+      "generateOnMap": "Auf Karte generieren",
+      "generateOnMapTitle": "Generierte Dekorationen und Interaktionsobjekte zu dieser Karte hinzufügen",
       "unpublishedChanges": "Unveröffentlichte Änderungen",
       "publishMapYouHaveChanges": "Karte veröffentlichen — Sie haben Änderungen, die noch nicht ins Spiel geschrieben wurden (benutzerdefinierte Helden/Objekte/Artefakte, Dialoge, Lokalisierung)",
       "guides": "Anleitungen",

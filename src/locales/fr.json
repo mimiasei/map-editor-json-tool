@@ -1175,6 +1175,25 @@
         }
       }
     },
+    "generateOnMap": {
+      "title": "Générer sur cette carte",
+      "description": "Ajoute du contenu généré à la carte ouverte.",
+      "decorations": "Décors",
+      "density": "Densité",
+      "interactables": "Objets interactifs",
+      "chooseInteractables": "Choisir les objets interactifs ({{count}} exclus)",
+      "keepsExisting": "Les objets, le terrain, les routes et les rivières existants ne sont jamais modifiés. Tout est ajouté en une seule étape d’annulation.",
+      "done": "{{decorations}} décors, {{fauna}} animaux et effets, {{interactables}} objets interactifs ajoutés.",
+      "generate": "Générer",
+      "generating": "Génération…",
+      "type": {
+        "trees": "Arbres",
+        "mountains": "Montagnes",
+        "rocks": "Rochers et buissons",
+        "pools": "Mares",
+        "fauna": "Animaux et effets"
+      }
+    },
     "mapGridCellContent": {
       "nothingOnThisTile": "Rien sur cette case.",
       "bringForward": "Mettre au premier plan",
@@ -2149,6 +2168,8 @@
       "validateScenario": "Valider le scénario",
       "fairness": "Équité",
       "checkHowEvenTheMap": "Vérifier l'équilibre de la carte entre les joueurs",
+      "generateOnMap": "Générer sur la carte",
+      "generateOnMapTitle": "Ajouter des décors et objets interactifs générés à cette carte",
       "unpublishedChanges": "Modifications non publiées",
       "publishMapYouHaveChanges": "Publier la carte — vous avez des modifications pas encore écrites dans le jeu (héros/objets/artefacts personnalisés, dialogues, localisation)",
       "guides": "Guides",

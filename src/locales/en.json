@@ -1154,6 +1154,25 @@
         }
       }
     },
+    "generateOnMap": {
+      "title": "Generate on this map",
+      "description": "Adds generated content to the map you have open.",
+      "decorations": "Decorations",
+      "density": "Density",
+      "interactables": "Interactables",
+      "chooseInteractables": "Choose interactables ({{count}} excluded)",
+      "keepsExisting": "Existing objects, terrain, roads and rivers are never changed. Everything is added in one undo step.",
+      "done": "Added {{decorations}} decorations, {{fauna}} animals and effects, {{interactables}} interactables.",
+      "generate": "Generate",
+      "generating": "Generating…",
+      "type": {
+        "trees": "Trees",
+        "mountains": "Mountains",
+        "rocks": "Rocks and bushes",
+        "pools": "Pools",
+        "fauna": "Animals and effects"
+      }
+    },
     "mapGridCellContent": {
       "nothingOnThisTile": "Nothing on this tile.",
       "bringForward": "Bring forward",
@@ -2122,6 +2141,8 @@
       "validateScenario": "Validate scenario",
       "fairness": "Fairness",
       "checkHowEvenTheMap": "Check how even the map is between players",
+      "generateOnMap": "Generate on map",
+      "generateOnMapTitle": "Add generated decorations and interactables to this map",
       "unpublishedChanges": "Unpublished changes",
       "publishMapYouHaveChanges": "Publish map — you have changes not yet written to the game (custom heroes/objects/artifacts, dialogs, localization)",
       "guides": "Guides",
