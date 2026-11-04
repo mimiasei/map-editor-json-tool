@@ -117,6 +117,9 @@ const CLASSIC_TREASURE_COUNT_SCALE = 7.5
 /** Of the non-resource slots: share that is a random-item (artifact) and share that is a random-hire; the rest rolls the building pool. */
 const CLASSIC_ARTIFACT_SHARE = 0.56
 const CLASSIC_HIRE_SHARE = 0.30
+/** Share of classic random-hire rolls that are placed. The templates' per-map hire count is skewed by a few hire-heavy ones (mean 65, median 48 on 128x128);
+ *  classic at the default settings gave 92 on 128x128 (2 players, no water), so this brings it to the median. Re-measure after changing the shares above. */
+const CLASSIC_HIRE_KEEP = 0.55
 /** Chance a slot drops scroll boxes from its content roll. */
 const CLASSIC_SCROLL_BOX_DROP = 0.6
 /** Share of classic resource piles that are a `random-res` spawner (the game picks the resource) instead of a fixed pile. The game templates
@@ -857,6 +860,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const rolled = rollContentPool(catalog, poolName, rng, hireOnly ? (sid) => isExcluded(sid) || !sid.startsWith('random_hire') : isExcluded)
         const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, undefined, isAtContentCap, rng) : null
         if (resolved) {
+          if (isClassicLoot && resolved.sid === 'random-hire' && rng() >= CLASSIC_HIRE_KEEP) return
           recordPickPlacement(resolved)
           const treasureNode = place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
           if (guarded && treasureNode !== null) {
