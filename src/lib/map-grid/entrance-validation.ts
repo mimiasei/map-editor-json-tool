@@ -42,6 +42,27 @@ export interface BlockedEntrancePlacement {
 
 type EntranceValidationContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
 
+/** The entrance cells and approach rings of every object with a real entrance, except `excludeKey`'s own. A mover's solid cell must not land on one, or the
+ *  move itself blocks the entrance it was meant to free (Stormlight_2: a resource pile moved out of a windmill's approach ring into another tile of it, again and
+ *  again, so the auto-fix never converged). */
+export function entranceApproachNodes(
+  context: EntranceValidationContext,
+  catalog: GameCatalog | null,
+  excludeKey?: string,
+): Set<number> {
+  const catalogById = new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o]))
+  const nodes = new Set<number>()
+  for (const placed of context.placedObjects as PlacedObject[]) {
+    if (placed.type !== 0 || placed.key === excludeKey) continue
+    const groups = entranceGroups(computeFootprintTiles(catalogById.get(placed.sid), placed.x, placed.z, placed.rotation), context.sizeX, context.sizeZ)
+    for (const g of groups) {
+      nodes.add(g.entranceNode)
+      for (const n of g.protectedNodes) nodes.add(n)
+    }
+  }
+  return nodes
+}
+
 /** Every type-0 placement whose real entrance is entirely blocked — by
  *  another object's solid footprint, water, or an unramped elevation wall
  *  (the same three-source rule `buildBlockedTileSet` already uses for the

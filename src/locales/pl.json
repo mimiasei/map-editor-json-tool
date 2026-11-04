@@ -410,6 +410,7 @@
     },
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Mapa zapisana z problemami",
+      "showOnMap": "Kliknij pozycję, aby pokazać ją na mapie.",
       "autoFix": "Napraw automatycznie",
       "intro": "Mapa została zapisana, ale poniższe obiekty mają problemy:",
       "autoFixResult": "Automatyczna naprawa rozwiązała problemy: {{fixed}} — pozostałe ({{remaining}}) nie dały się naprawić automatycznie. Napraw je ręcznie."

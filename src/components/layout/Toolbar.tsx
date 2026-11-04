@@ -1122,7 +1122,7 @@ export default function Toolbar({
               </div>
             )}
             {mapPlacementCheck?.issues.map((issue, i) => (
-              <Alert key={`bounds-entrance-${i}`} variant="destructive">
+              <Alert key={`bounds-entrance-${i}`} variant="destructive" className="cursor-pointer hover:bg-destructive/10" title={t('common.mapValidationErrorDialog.showOnMap')} onClick={() => focusOnTile(issue.x, issue.z, issue.node)}>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="ml-2">{describeMapValidationIssue(issue)}</AlertDescription>
               </Alert>

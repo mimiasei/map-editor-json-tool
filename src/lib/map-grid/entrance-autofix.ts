@@ -29,7 +29,7 @@ import type { GameCatalog } from '@/lib/catalog/types'
 import {computeFootprintTiles, entranceGroups, isFootprintInBounds} from './footprint'
 import { groupOf } from './tile-index'
 import { buildBlockedTileSet } from './passability'
-import { findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
+import { entranceApproachNodes, findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
 
 export interface EntranceAutoFixDeletion {
   /** The object being removed — always type 0 (a footprint template is what
@@ -260,10 +260,12 @@ function findNearbyFreeTile(
     catalog,
   )
 
+  // Never into another object's entrance or approach ring: that would just block a different (or the same) entrance.
+  const approach = entranceApproachNodes(context, catalog, obj.key)
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, obj.rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
-    return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x)))
+    return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x) && !approach.has(cell.z * sizeX + cell.x)))
   }
 
   const maxRadius = Math.max(sizeX, sizeZ)
