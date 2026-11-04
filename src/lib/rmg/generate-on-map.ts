@@ -200,8 +200,10 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const existingRoads = new Map<number, number>()
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) existingRoads.set(node, r) })
     const toPoint = (o: (typeof ctx.placedObjects)[number]) => ({ sid: o.sid, node: o.node, rotation: o.rotation })
+    // Spawner placeholders (random-squad, random-item, ...) have no solid cells, so a road would run over them: their tiles count as blocked too.
     const newRoads = layRoads({
-      sizeX, sizeZ, rng, catalogById, blocked: state.blocked, existingRoads, spurChance: layers.roads.spurChance,
+      blocked: new Set([...state.blocked, ...state.usedAnchors]),
+      sizeX, sizeZ, rng, catalogById, existingRoads, spurChance: layers.roads.spurChance,
       cities: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.isCity)).map(toPoint),
       spurPoints: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map(toPoint),
     })

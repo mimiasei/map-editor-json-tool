@@ -63,7 +63,6 @@ export function layRoads(options: RoadOptions): Map<number, number> {
 
   const added = new Map<number, number>()
   const network = new Set<number>(existingRoads.keys())
-  const idAt = (node: number): number => added.get(node) ?? existingRoads.get(node) ?? DIRT_ROAD
 
   const lay = (from: number, goals: ReadonlySet<number>, roadId: number, maxLength: number): boolean => {
     if (goals.has(from)) return true
@@ -71,12 +70,10 @@ export function layRoads(options: RoadOptions): Map<number, number> {
     if (goalNode === null) return false
     const path = shortestPath(sizeX, sizeZ, from, goals, blocked, createWindingCost(sizeX, from, goalNode, rng))
     if (!path || path.length > maxLength) return false
-    // Joining an existing road takes that road's material so the network doesn't change colour at the junction.
-    const joined = idAt(path[path.length - 1])
-    const material = network.has(path[path.length - 1]) ? joined : roadId
+    // The junction tile already carries the road it joins (it is in `network`, so it is not repainted); the new stretch keeps its own material.
     for (const node of smoothPath(path, sizeX, blocked, ROAD_SMOOTH_WINDOW)) {
+      if (!network.has(node)) added.set(node, roadId)
       network.add(node)
-      if (!existingRoads.has(node) && !added.has(node)) added.set(node, material)
     }
     return true
   }
