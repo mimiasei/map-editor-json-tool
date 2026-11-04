@@ -1809,8 +1809,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     { levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal },
     catalog, catalogById, decorativeIds, portalAdjacency, boundaryResult.gateNodes, new Set([...roadNodes, ...riverNodes]),
   ] as const
-  applyAccessibilityPass(...accessibilityArgs, wallIds, wallIds)
-  const report = applyAccessibilityPass(...accessibilityArgs, wallIds)
+  // Concrete squads are not in objectGroups, so the pass is told where they stand.
+  const squadAnchors = (): Set<number> => new Set(allConcreteSquads.map((s) => s.node))
+  applyAccessibilityPass(...accessibilityArgs, wallIds, wallIds, squadAnchors())
+  const report = applyAccessibilityPass(...accessibilityArgs, wallIds, new Set(), squadAnchors())
   if (report.stillUnreachable > 0) {
     logWarn(`Random map generation: ${report.stillUnreachable} placed object(s) remained unreachable after the accessibility pass`)
   }
@@ -1906,7 +1908,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     for (const plug of leaks.plugs) decorativeIds.add(plug.tempId)
     if (leaks.plugs.length + leaks.guards.length > 0) {
       // A plug may have shut in a pickup: move the pickup out, leave the plug and the walls standing.
-      applyAccessibilityPass(...accessibilityArgs, new Set(), new Set([...wallIds, ...leaks.plugs.map((p) => p.tempId)]))
+      applyAccessibilityPass(...accessibilityArgs, new Set(), new Set([...wallIds, ...leaks.plugs.map((p) => p.tempId)]), squadAnchors())
       logInfo(`Random map generation: closed ${leaks.plugs.length} wall gap(s) and ${leaks.guards.length} unguarded crossing(s) between zones${leaks.unclosed > 0 ? `, ${leaks.unclosed} could not be closed` : ''}`)
     }
   }
