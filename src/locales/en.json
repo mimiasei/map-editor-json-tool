@@ -1162,7 +1162,7 @@
       "interactables": "Interactables",
       "chooseInteractables": "Choose interactables ({{count}} excluded)",
       "keepsExisting": "Existing objects, terrain, roads and rivers are never changed. Water, hills, treasure and interactables stay 12 tiles away from start cities. Everything is added in one undo step.",
-      "done": "Added {{terrain}} terrain tiles, {{water}} water tiles, {{elevation}} hill/valley tiles, {{roads}} road tiles, {{rivers}} river tiles, {{treasures}} treasure objects, {{decorations}} decorations, {{fauna}} animals and effects, {{interactables}} interactables, {{encounters}} guards.",
+      "done": "Added {{terrain}} terrain tiles, {{borders}} border obstacles, {{water}} water tiles, {{elevation}} hill/valley tiles, {{roads}} road tiles, {{rivers}} river tiles, {{treasures}} treasure objects, {{decorations}} decorations, {{fauna}} animals and effects, {{interactables}} interactables, {{encounters}} guards.",
       "water": "Water",
       "elevation": "Elevation",
       "treasures": "Treasures",
@@ -1191,6 +1191,9 @@
       "finish": "Finish the map",
       "finishHint": "Everything below, with your terrain kept (a blank map gets zone terrain first).",
       "needsDesktop": "Terrain with zones needs the desktop app.",
+      "borders": "Zone borders",
+      "bordersHint": "Obstacles along the borders between zones, with gates (wherever a road crosses, and at least one per border).",
+      "bordersNeedZones": "Needs zones: use Terrain with zones above, or a map that already has zones.",
       "generate": "Generate",
       "generating": "Generating…"
     },

@@ -7,6 +7,7 @@
 import type { GameCatalog, CatalogMapObject } from '@/lib/catalog/types'
 import { extractMapContext } from '@/lib/map-extract'
 import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
 import { addObjectInstance, addObjectInstances, paintClimbTiles, paintLevelTiles, paintRiverTiles, paintRoadTiles, paintTerrainTiles, paintWaterTiles, type MapContainer } from '@/lib/map-write'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
@@ -24,6 +25,7 @@ import { scatterZoneObstacles } from './zone-decoration'
 import { scatterZoneWater } from './zone-water'
 import { createPlacementState, createZonePopulator, tryPlaceAt, type ConcreteSquadPlacement, type PlacementState, type ZonePlacement } from './zone-population'
 import { carveRiversOnMap, layRoads } from './on-map-linework'
+import { wallZoneBorders } from './on-map-borders'
 import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
 
@@ -70,6 +72,8 @@ export interface OnMapLayers {
   settings: { richness: RmgRichness; difficulty: RmgDifficulty }
   /** Biomes on free ground (see on-map-terrain.ts). Runs first: every other layer works on the new terrain. */
   terrain?: OnMapTerrainLayer
+  /** Obstacles along the borders between zones, with gates (needs zones: the terrain layer's zones, or the map's own `areas`). */
+  borders?: boolean
   /** Lakes in the zones that have no start city. `chance` is the full generator's waterChance (0-1). */
   water?: { chance: number }
   /** Hills and dry valleys (with their ramps). */
@@ -91,7 +95,7 @@ export interface OnMapLayers {
 export interface OnMapResult {
   container: MapContainer
   /** Things added, by layer. */
-  added: { terrain: number; water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -121,12 +125,15 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   // The terrain layer repaints this copy; everything below reads it, so each layer sees the new biomes.
   const tiles = [...ctx.tilesMap]
   let terrainChanges: { node: number; biomeId: number }[] = []
+  let terrainZoneIds: number[] | undefined
   if (layers.terrain) {
     const occupied = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: ctx.placedObjects, levelsMap: ctx.levelsMap, climbsMap: ctx.climbsMap, waterMap: ctx.waterMap }, catalog)
     for (const o of ctx.placedObjects) occupied.add(o.node)
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) occupied.add(node) })
     for (const node of ctx.riverNodes.keys()) occupied.add(node)
-    terrainChanges = paintOnMapTerrain({ sizeX, sizeZ, tiles, occupied, startCount: startNodes.length, layer: layers.terrain, catalogById, rng })
+    const painted = paintOnMapTerrain({ sizeX, sizeZ, tiles, occupied, startCount: startNodes.length, layer: layers.terrain, catalogById, rng })
+    terrainChanges = painted.changes
+    terrainZoneIds = painted.zoneIdByNode
   }
   const terrain = zonesFromTerrain({ sizeX, sizeZ, tilesMap: tiles, startNodes })
   // Every region takes part in the placers as a neutral zone; the start cities are protected by distance instead (see START_PROTECT_RADIUS).
@@ -173,7 +180,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const roadChanges: { node: number; roadId: number }[] = []
   let riverChanges: { node: number; s: number; isWaterfall?: boolean }[] = []
   const squads: ConcreteSquadPlacement[] = []
-  const added = { terrain: terrainChanges.length, water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
+  const added = { terrain: terrainChanges.length, borders: 0, water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
 
   // Keeps lakes and hills off the things the player must be able to walk between: start cities, existing mines and dwellings, zone centres.
   const keyNodes = ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map((o) => o.node)
@@ -293,6 +300,27 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     additions.push(...river.placements)
     for (const node of riverNodes) { walkable.add(node); excluded.add(node); state.blocked.add(node) }
     added.rivers = river.tiles
+  }
+
+  if (layers.borders) {
+    // The zones the terrain layer just laid out, else the zones the map already has (a generated map's areas).
+    let zoneIdByNode = terrainZoneIds
+    if (!zoneIdByNode && ctx.zoneAreas.length > 1) {
+      const ids = new Array<number>(tileCount).fill(-1)
+      for (const area of ctx.zoneAreas) for (const node of area.nodes) if (node >= 0 && node < tileCount) ids[node] = area.id
+      if (ids.filter((id) => id !== -1).length >= tileCount / 2) zoneIdByNode = ids
+    }
+    if (!zoneIdByNode) throw new Error('The map has no zones to put borders between')
+    const biomeVotes = new Map<number, Map<number, number>>()
+    zoneIdByNode.forEach((zoneId, node) => {
+      const votes = biomeVotes.get(zoneId) ?? new Map<number, number>()
+      votes.set(tiles[node], (votes.get(tiles[node]) ?? 0) + 1)
+      biomeVotes.set(zoneId, votes)
+    })
+    const zoneBiome = new Map<number, BiomeId>([...biomeVotes].map(([zoneId, votes]) => [zoneId, [...votes].sort((a, b) => b[1] - a[1])[0][0] as BiomeId]))
+    const walls = wallZoneBorders({ sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById, state, rng, openNodes: excluded, roadNodes })
+    additions.push(...walls)
+    added.borders = walls.length
   }
 
   const deco = layers.decorations

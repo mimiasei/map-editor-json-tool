@@ -43,19 +43,22 @@ export function paintOnMapTerrain(options: {
   layer: OnMapTerrainLayer
   catalogById: Map<string, CatalogMapObject>
   rng: () => number
-}): { node: number; biomeId: number }[] {
+}): { changes: { node: number; biomeId: number }[]; zoneIdByNode?: number[] } {
   const { sizeX, sizeZ, tiles, occupied, startCount, layer, catalogById, rng } = options
   const biomes = [...layer.biomes] as BiomeId[]
-  if (biomes.length === 0) return []
+  if (biomes.length === 0) return { changes: [] }
   const tileCount = sizeX * sizeZ
 
   let target: number[]
+  let zoneIdByNode: number[] | undefined
   if (layer.mode === 'zones') {
     if (!layer.template) throw new Error('Terrain with zones needs the blank-map template')
-    target = generateTerrain(layer.template, catalogById, {
+    const generated = generateTerrain(layer.template, catalogById, {
       sizeX, sizeZ, playerCount: Math.max(2, Math.min(8, startCount)), includeSpawners: false, waterContent: 'none', rng,
       zoneJaggedness: 0.4, zoneSpread: 1, organicTerrainBlending: 0.3, enabledBiomes: biomes,
-    }).tileBiome
+    })
+    target = generated.tileBiome
+    zoneIdByNode = generated.zoneIdByNode
   } else {
     const seeds = Array.from({ length: Math.max(3, Math.round(tileCount / PATCH_TILES)) }, () => ({
       x: rng() * sizeX, z: rng() * sizeZ, biome: biomes[Math.floor(rng() * biomes.length)],
@@ -81,5 +84,5 @@ export function paintOnMapTerrain(options: {
     changes.push({ node: n, biomeId: target[n] })
     tiles[n] = target[n]
   }
-  return changes
+  return { changes, zoneIdByNode }
 }

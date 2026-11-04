@@ -1154,7 +1154,7 @@
       "interactables": "Interaktive objekter",
       "chooseInteractables": "Velg interaktive objekter ({{count}} utelatt)",
       "keepsExisting": "Eksisterende objekter, terreng, veier og elver endres aldri. Vann, høyder, skatter og interaktive objekter holder 12 felt avstand fra startbyer. Alt legges til i ett angresteg.",
-      "done": "La til {{terrain}} terrengfelt, {{water}} vannfelt, {{elevation}} høyde-/dalfelt, {{roads}} veifelt, {{rivers}} elvefelt, {{treasures}} skattobjekter, {{decorations}} dekorasjoner, {{fauna}} dyr og effekter, {{interactables}} interaktive objekter, {{encounters}} voktere.",
+      "done": "La til {{terrain}} terrengfelt, {{borders}} grensehindringer, {{water}} vannfelt, {{elevation}} høyde-/dalfelt, {{roads}} veifelt, {{rivers}} elvefelt, {{treasures}} skattobjekter, {{decorations}} dekorasjoner, {{fauna}} dyr og effekter, {{interactables}} interaktive objekter, {{encounters}} voktere.",
       "water": "Vann",
       "elevation": "Høydeforskjeller",
       "treasures": "Skatter",
@@ -1183,6 +1183,9 @@
       "finish": "Fullfør kartet",
       "finishHint": "Alt under, med terrenget ditt beholdt (et tomt kart får soneterreng først).",
       "needsDesktop": "Terreng med soner krever skrivebordsappen.",
+      "borders": "Sonegrenser",
+      "bordersHint": "Hindringer langs grensene mellom soner, med porter (der en vei krysser, og minst én per grense).",
+      "bordersNeedZones": "Trenger soner: bruk Terreng med soner over, eller et kart som allerede har soner.",
       "generate": "Generer",
       "generating": "Genererer…"
     },

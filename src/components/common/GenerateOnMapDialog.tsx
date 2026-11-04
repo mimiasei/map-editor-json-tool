@@ -66,6 +66,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [terrainMode, setTerrainMode] = useState<'zones' | 'patches'>('zones')
   const [terrainScope, setTerrainScope] = useState<'unpainted' | 'all'>('unpainted')
   const [terrainBiomes, setTerrainBiomes] = useState<Set<BiomeId>>(new Set(ALL_BIOMES))
+  const [bordersOn, setBordersOn] = useState(false)
   const [waterOn, setWaterOn] = useState(false)
   const [waterChance, setWaterChance] = useState(0.3)
   const [elevationOn, setElevationOn] = useState(false)
@@ -93,7 +94,12 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
 
-  const nothingChosen = (!terrainOn || terrainBiomes.size === 0) && !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
+  // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
+  const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
+  const zonesAvailable = (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
+  const bordersChosen = bordersOn && zonesAvailable
+
+  const nothingChosen = (!terrainOn || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
   /** `finish`: every layer on with every kind, and the terrain laid out with zones when the map is still a blank one-biome map (otherwise the terrain stays). */
   const handleGenerate = (finish = false) => {
@@ -113,6 +119,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
         const out = generateOnMap(current, catalog, {
           settings: { richness, difficulty },
           terrain: terrainLayer ? { ...terrainLayer, template } : undefined,
+          borders: finish ? blank || mapZoneCount > 1 : bordersChosen,
           water: finish || waterOn ? { chance: waterChance } : undefined,
           elevation: finish || elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
           roads: finish || roadsOn ? { spurChance } : undefined,
@@ -189,6 +196,10 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                 selected={terrainBiomes}
                 onChange={setTerrainBiomes}
               />
+            </Layer>
+
+            <Layer title={t('mapGrid.generateOnMap.borders')} on={bordersChosen} onChange={setBordersOn}>
+              <p className="text-xs text-muted-foreground">{zonesAvailable ? t('mapGrid.generateOnMap.bordersHint') : t('mapGrid.generateOnMap.bordersNeedZones')}</p>
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.water')} on={waterOn} onChange={setWaterOn}>
