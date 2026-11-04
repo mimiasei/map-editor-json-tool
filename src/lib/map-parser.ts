@@ -203,6 +203,7 @@ export interface RawMapBlock2 {
      *  other roll-config fields (requestedValue, fraction, tier, ...) this
      *  editor doesn't touch, left untouched on write. */
     propRandomSquads?: Array<{ type?: string; id?: number; sids?: string[]; requestedValue?: number; fraction?: string }>
+    propRandomHires?: Array<{ type?: string; id?: number; tier?: number; fraction?: number }>
     /** Generic per-instance active/inactive toggle — unrelated to
      *  propPortals' own isActive or propMarkers' isActivate below; a
      *  separate table, seen on plain objects (up to 208 uses in one map). */

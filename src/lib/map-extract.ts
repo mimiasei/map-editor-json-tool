@@ -47,6 +47,8 @@ export interface PlacedObjectEnrichment {
   citySquadSidsByKey: Map<string, string[]>
   randomSquadValueByKey: Map<string, number>
   randomSquadFractionByKey: Map<string, string>
+  randomHireTierByKey: Map<string, number>
+  randomHireFractionByKey: Map<string, number>
   isCityByKey: Set<string>
   cityFactionByKey: Map<string, string>
   heroSidByKey: Map<string, string>
@@ -88,6 +90,8 @@ export function buildPlacedObjects(
       citySquadSids: enrichment.citySquadSidsByKey.get(key),
       randomSquadValue: enrichment.randomSquadValueByKey.get(key),
       randomSquadFraction: enrichment.randomSquadFractionByKey.get(key),
+      randomHireTier: enrichment.randomHireTierByKey.get(key),
+      randomHireFraction: enrichment.randomHireFractionByKey.get(key),
       isCity: enrichment.isCityByKey.has(key) || undefined,
       cityFactionSid: enrichment.cityFactionByKey.get(key),
       heroSid: enrichment.heroSidByKey.get(key),
@@ -334,6 +338,14 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (typeof rs.requestedValue === 'number' && !randomSquadValueByKey.has(key)) randomSquadValueByKey.set(key, rs.requestedValue)
     if (typeof rs.fraction === 'string' && !randomSquadFractionByKey.has(key)) randomSquadFractionByKey.set(key, rs.fraction)
   }
+  const randomHireTierByKey = new Map<string, number>()
+  const randomHireFractionByKey = new Map<string, number>()
+  for (const rh of b2.objectsProperties?.propRandomHires ?? []) {
+    if (rh.id === undefined) continue
+    const key = `${rh.type ?? ''}:${rh.id}`
+    if (typeof rh.tier === 'number' && !randomHireTierByKey.has(key)) randomHireTierByKey.set(key, rh.tier)
+    if (typeof rh.fraction === 'number' && !randomHireFractionByKey.has(key)) randomHireFractionByKey.set(key, rh.fraction)
+  }
   const heroSidByKey = new Map<string, string>()
   for (const h of propHeroes) {
     if (h.id === undefined || typeof h.heroSid !== 'string' || !h.heroSid.trim()) continue
@@ -370,6 +382,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     citySquadSidsByKey,
     randomSquadValueByKey,
     randomSquadFractionByKey,
+    randomHireTierByKey,
+    randomHireFractionByKey,
     isCityByKey,
     cityFactionByKey: factionByKey,
     actionsBeforeByKey,
