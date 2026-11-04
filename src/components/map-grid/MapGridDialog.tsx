@@ -3677,6 +3677,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids }, 'set city garrison')
   const handleSetRandomSquadValue = (item: PlacedObject, requestedValue: number) =>
     applyEdit({ kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue }, 'set random-squad value')
+  const handleSetRandomHire = (item: PlacedObject, change: { tier?: number; fraction?: number }) =>
+    applyEdit({ kind: 'setRandomHire', entityType: item.type, entityId: item.id, ...change }, 'set random-hire tier/faction')
   const handleSetRandomSquadFraction = (item: PlacedObject, fraction: string) =>
     applyEdit({ kind: 'setRandomSquadFraction', entityType: item.type, entityId: item.id, fraction }, 'set random-squad faction')
   const handleSetRewardParams = (item: PlacedObject, parameters: string[]) =>
@@ -6280,6 +6282,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
                   onSetRandomSquadValue={canEditEntities ? handleSetRandomSquadValue : undefined}
                   onSetRandomSquadFraction={canEditEntities ? handleSetRandomSquadFraction : undefined}
+                  onSetRandomHire={canEditEntities ? handleSetRandomHire : undefined}
                   squadDifficultyRanges={settings.squadDifficultyRanges}
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}

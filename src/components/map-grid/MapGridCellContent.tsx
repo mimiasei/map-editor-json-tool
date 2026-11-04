@@ -33,6 +33,7 @@ import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, squadDifficultyName, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import { useTranslation } from 'react-i18next'
 import { factionLabel } from '@/lib/factions'
+import { RANDOM_HIRE_BIOME_FRACTION, RANDOM_HIRE_FRACTION_BY_FACTION, RANDOM_HIRE_TIERS, factionOfRandomHireFraction } from '@/lib/map-grid/random-hire'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -148,6 +149,8 @@ export interface MapGridCellContentProps {
    *  matching squad against) — docked-only, like the above. */
   onSetRandomSquadValue?: (item: PlacedObject, requestedValue: number) => void
   onSetRandomSquadFraction?: (item: PlacedObject, fraction: string) => void
+  /** Set a random-hire's tier (1-7) and/or faction (EPropFraction number). */
+  onSetRandomHire?: (item: PlacedObject, change: { tier?: number; fraction?: number }) => void
   /** Difficulty labels/min/max for the Value field's badge + quick-pick
    *  buttons — the (possibly user-customized, Map Grid settings' Advanced
    *  section) live ranges. Defaults to DEFAULT_SQUAD_DIFFICULTY_RANGES for
@@ -241,6 +244,7 @@ export default function MapGridCellContent({
   onSetCityGarrison,
   onSetRandomSquadValue,
   onSetRandomSquadFraction,
+  onSetRandomHire,
   squadDifficultyRanges = DEFAULT_SQUAD_DIFFICULTY_RANGES,
   onSetRewardParams,
   moveTarget = null,
@@ -1055,6 +1059,48 @@ export default function MapGridCellContent({
                     ))}
                   </div>
                 )}
+              </div>
+            )
+          })()}
+
+          {selected && selected.sid === 'random-hire' && (selected.randomHireTier !== undefined || onSetRandomHire) && (() => {
+            const tier = selected.randomHireTier ?? 1
+            const fraction = selected.randomHireFraction ?? RANDOM_HIRE_BIOME_FRACTION
+            const factionName = (id: string) => (id === 'neutral' ? t('common.templateDetailsDialog.neutral') : localNameById(catalog, 'factions', id, catalog?.factions.find((f) => f.id === id)?.name ?? id))
+            const factionChoices = Object.keys(RANDOM_HIRE_FRACTION_BY_FACTION).filter((id) => id !== 'neutral')
+            // 'Random' is not stored: no file value is known to mean "random" for a hire, so picking it rolls a faction/tier now.
+            const rollFaction = () => RANDOM_HIRE_FRACTION_BY_FACTION[factionChoices[Math.floor(Math.random() * factionChoices.length)]]
+            const rollTier = () => RANDOM_HIRE_TIERS[Math.floor(Math.random() * RANDOM_HIRE_TIERS.length)]
+            const shownFaction = factionOfRandomHireFraction(fraction) === null ? 'biome' : String(fraction)
+            return (
+              <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.randomHire')}</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">{t('common.statsDialog.faction')}</p>
+                  {onSetRandomHire ? (
+                    <Select value={shownFaction} onValueChange={(v) => onSetRandomHire(selected, { fraction: v === 'biome' ? RANDOM_HIRE_BIOME_FRACTION : v === 'random' ? rollFaction() : Number(v) })}>
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-48"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="biome">{t('mapGrid.mapGridCellContent.hireFactionBiome')}</SelectItem>
+                        <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
+                        {factionChoices.map((id) => (<SelectItem key={id} value={String(RANDOM_HIRE_FRACTION_BY_FACTION[id])}>{factionName(id)}</SelectItem>))}
+                        <SelectItem value={String(RANDOM_HIRE_FRACTION_BY_FACTION.neutral)}>{factionName('neutral')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (<p className="text-xs">{shownFaction === 'biome' ? t('mapGrid.mapGridCellContent.hireFactionBiome') : factionName(factionOfRandomHireFraction(fraction) ?? '')}</p>)}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.hireTier')}</p>
+                  {onSetRandomHire ? (
+                    <Select value={String(tier)} onValueChange={(v) => onSetRandomHire(selected, { tier: v === 'random' ? rollTier() : Number(v) })}>
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-48"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="random">{t('common.generateRandomMapDialog.random')}</SelectItem>
+                        {RANDOM_HIRE_TIERS.map((n) => (<SelectItem key={n} value={String(n)}>{t('mapGrid.mapGridCellContent.hireTierN', { n })}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  ) : (<p className="text-xs">{t('mapGrid.mapGridCellContent.hireTierN', { n: tier })}</p>)}
+                </div>
               </div>
             )
           })()}

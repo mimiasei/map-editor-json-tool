@@ -971,6 +971,20 @@ export function setRandomSquadFraction(chunk: Uint8Array, entityType: number, en
   return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
+/** A random-hire's tier (1-7) and faction (EPropFraction number, see map-grid/random-hire.ts). */
+export function setRandomHire(chunk: Uint8Array, entityType: number, entityId: number, change: { tier?: number; fraction?: number }): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomHires')
+  const entries = JSON.parse(span) as { type?: number | string; id?: number; tier?: number; fraction?: number }[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propRandomHires entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured random-hire`)
+  }
+  if (change.tier !== undefined) existing.tier = change.tier
+  if (change.fraction !== undefined) existing.fraction = change.fraction
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── Reward slots (objectsProperties.propRewardParams.parameters) ──────────
 // Each slot is "-" (unfilled), "resourceSid:amount", or a bare artifact/
 // skill sid — see src/lib/map-grid/reward-params.ts for the shared encode/
