@@ -57,6 +57,11 @@ const GUARDED_RADIUS = 3
 /** Water, hills, treasure and interactables keep this far from a start city: a hand-made map is often one big biome region around all its starts, so "the
  *  player zone" cannot be told apart by region the way the generator's zones can. */
 const START_PROTECT_RADIUS = 12
+/** On a small map with many starts a fixed radius would leave almost no room, so the protected area is capped at this share of the map (radius never below 5). */
+const START_PROTECT_MAX_SHARE = 0.35
+const START_PROTECT_MIN_RADIUS = 5
+/** Largest factor the treasure amount is raised by when only some kinds are ticked (the unticked ones are thrown away, so a plain amount would shrink). */
+const MAX_KIND_COMPENSATION = 6
 
 export interface OnMapLayers {
   /** Strength words shared by treasure and guards. */
@@ -109,12 +114,13 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   // Every region takes part in the placers as a neutral zone; the start cities are protected by distance instead (see START_PROTECT_RADIUS).
   const placerZones = terrain.zones.map((z) => ({ ...z, kind: 'neutral' as const }))
   const nearStart = new Set<number>()
+  const protectRadius = startNodes.length === 0 ? START_PROTECT_RADIUS : Math.max(START_PROTECT_MIN_RADIUS, Math.min(START_PROTECT_RADIUS, Math.floor(Math.sqrt((START_PROTECT_MAX_SHARE * tileCount) / (Math.PI * startNodes.length)))))
   for (const s of startNodes) {
     const sx = s % sizeX
     const sz = Math.floor(s / sizeX)
-    for (let z = Math.max(0, sz - START_PROTECT_RADIUS); z <= Math.min(sizeZ - 1, sz + START_PROTECT_RADIUS); z++) {
-      for (let x = Math.max(0, sx - START_PROTECT_RADIUS); x <= Math.min(sizeX - 1, sx + START_PROTECT_RADIUS); x++) {
-        if (Math.hypot(x - sx, z - sz) <= START_PROTECT_RADIUS) nearStart.add(z * sizeX + x)
+    for (let z = Math.max(0, sz - protectRadius); z <= Math.min(sizeZ - 1, sz + protectRadius); z++) {
+      for (let x = Math.max(0, sx - protectRadius); x <= Math.min(sizeX - 1, sx + protectRadius); x++) {
+        if (Math.hypot(x - sx, z - sz) <= protectRadius) nearStart.add(z * sizeX + x)
       }
     }
   }
@@ -196,10 +202,18 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       treasureDensity: layers.treasures.density, catalog, contentCountLimits: [{ sid: 'university', maxCount: 1 }, { sid: 'pandora_box', maxCount: 0 }], richness: resolveRichness(layers.settings.richness, EMPTY_TUNING),
       difficulty, guardTuning: EMPTY_TUNING.guards, zoneAnchorNode: terrain.zoneAnchorNode,
     }
-    // Run on a scratch copy, keep the chosen kinds with the guards that stand beside them, and book only those into the real state.
-    const scratch: PlacementState = { ...state, blocked: new Set(state.blocked), usedAnchors: new Set(state.usedAnchors), guardTileByNode: new Map(state.guardTileByNode), reservedGuardTiles: new Set(state.reservedGuardTiles) }
-    const result = createZonePopulator({ ...populatorOptions, state: scratch }).populateTreasure()
     const artifactSids = new Set(collectArtifactSids(catalog))
+    const copyState = (): PlacementState => ({ ...state, blocked: new Set(state.blocked), usedAnchors: new Set(state.usedAnchors), guardTileByNode: new Map(state.guardTileByNode), reservedGuardTiles: new Set(state.reservedGuardTiles) })
+    // The unticked kinds are thrown away, so with only some kinds ticked the amount is raised by the share of the loop that is kept: ticking just
+    // artifacts still gives about as many artifacts as the amount slider promises, not the artifact slice of the mixed total.
+    let passDensity = layers.treasures.density
+    if (layers.treasures.types.size < TREASURE_TYPES.length) {
+      const probe = createZonePopulator({ ...populatorOptions, state: copyState() }).populateTreasure().placements.filter((p) => p.sid !== 'random-squad' && p.sid !== 'pandora_box')
+      const kept = probe.filter((p) => layers.treasures?.types.has(treasureTypeOf(p.sid, artifactSids))).length
+      passDensity *= Math.min(MAX_KIND_COMPENSATION, probe.length / Math.max(1, kept))
+    }
+    // Run on a scratch copy, keep the chosen kinds with the guards that stand beside them, and book only those into the real state.
+    const result = createZonePopulator({ ...populatorOptions, treasureDensity: passDensity, state: copyState() }).populateTreasure()
     const objects = result.placements.filter((p) => p.sid !== 'random-squad')
     const near = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
     const wanted = layers.treasures.types
@@ -234,7 +248,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const scenery = scatterKeeping(state, (scratch) => scatterZoneObstacles({
       sizeX, sizeZ, zones: terrain.zones, centers: terrain.centers, tilesByZone: terrain.tilesByZone, zoneBiome: terrain.zoneBiome, catalogById,
       mapObjects: catalog.mapObjects, excludedNodes: excluded, state: scratch, rng, density: deco.density,
-      crossBiomeChance: 1 - deco.biomePurity, allowHighContrastBiomes: deco.allowHighContrastBiomes,
+      crossBiomeChance: 1 - deco.biomePurity, allowHighContrastBiomes: deco.allowHighContrastBiomes, ownBiomeOnly: deco.biomePurity >= 1,
       levelsMap: levels, climbsMap: climbs, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets, walkableNodes: walkable,
     }), (p) => deco.types.has(decorationTypeOf(p.sid, catalogById) as DecorationType), sizeX, sizeZ, catalogById)
     additions.push(...scenery)
