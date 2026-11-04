@@ -47,6 +47,14 @@ import { DEFAULT_MINE_DISTRIBUTION, MAX_CITIES_PER_ZONE, MINE_TYPES, type MineDi
  *  Sand (biome 2), the only biome with no native faction, but kept so this
  *  function has a real answer for every `BiomeId` rather than assuming its
  *  caller's own zone-biome choices forever. */
+/** Distinct dwelling tiers (2-6) for a start's extra dwellings. */
+function pickDistinctTiers(count: number, rng: () => number): number[] {
+  const tiers = [2, 3, 4, 5, 6]
+  const out: number[] = []
+  while (out.length < count) out.push(tiers.splice(Math.floor(rng() * tiers.length), 1)[0])
+  return out
+}
+
 function dwellingFactionToken(biome: BiomeId): string {
   const faction = BIOME_FACTION[biome]
   if (faction === 'undead') return 'necropolis'
@@ -120,6 +128,14 @@ const CLASSIC_HIRE_SHARE = 0.30
 /** Share of classic random-hire rolls that are placed. The templates' per-map hire count is skewed by a few hire-heavy ones (mean 65, median 48 on 128x128);
  *  classic at the default settings gave 92 on 128x128 (2 players, no water), so this brings it to the median. Re-measure after changing the shares above. */
 const CLASSIC_HIRE_KEEP = 0.55
+/** Random hires per 1000 tiles that classic's treasure loop yields at that keep share (48 on 128x128: the template median). The hires placed beside the player
+ *  starts come out of this total, so the loop's keep share is cut by their share of it. */
+const CLASSIC_HIRES_PER_1000_TILES = 2.93
+/** A classic player start gets 1-3 random hires of random tier within this many tiles of its city, and this many extra dwellings of its own faction
+ *  beside the first one. Real maps (25 shipped/GME maps surveyed): starts with any barracks within 15 tiles had 1-4, own faction, tiers 1-7, 5-14 tiles out. */
+const START_HIRE_MAX_RADIUS = 12
+const START_HIRE_MIN_RADIUS = 3
+const START_EXTRA_DWELLINGS = 2
 /** Chance a slot drops scroll boxes from its content roll. */
 const CLASSIC_SCROLL_BOX_DROP = 0.6
 /** Share of classic resource piles that are a `random-res` spawner (the game picks the resource) instead of a fixed pile. The game templates
@@ -709,6 +725,8 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     mandatoryReport.set(sid, row)
   }
 
+  const classicHireKeep = (): number => CLASSIC_HIRE_KEEP * Math.max(0, 1 - startHireTotal / (CLASSIC_HIRES_PER_1000_TILES * sizeX * sizeZ / 1000))
+
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides'], randomHireOverrides?: ZonePlacement['randomHireOverrides']): number | null => {
     const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, posRng)
     if (node === null) return null
@@ -736,6 +754,18 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     return place(sid, tiles)
   }
 
+  /** Like placeAtDistance but anywhere between minDistance and maxDistance of the anchor (no fallback outside the ring). */
+  const placeWithin = (sid: string, tiles: number[], anchorNode: number, minDistance: number, maxDistance: number, randomHireOverrides?: ZonePlacement['randomHireOverrides']): number | null => {
+    const ax = anchorNode % sizeX
+    const az = Math.floor(anchorNode / sizeX)
+    const ring = tiles.filter((n) => { const d = Math.hypot((n % sizeX) - ax, Math.floor(n / sizeX) - az); return d >= minDistance && d <= maxDistance })
+    if (ring.length === 0) return null
+    const node = tryPlace(sid, ring, sizeX, sizeZ, catalogById, state, posRng, 40)
+    if (node === null) return null
+    placements.push({ tempId: state.nextTempId++, sid, node, randomHireOverrides })
+    return node
+  }
+
   /** The player start kit is rolled ONCE per generation and reused for every
    *  player (issue #254): measured over 12 seeds, per-player mine distances
    *  differed by ~60% and start-guard strength by whatever the random band
@@ -753,7 +783,11 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
     extraMineDistance: randomInRange(9, 17, rng),
     guardRange: pickSquadRange(['Easy'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng),
     guardRoll: rng(),
+    hireCount: randomInRange(1, 3, rng),
+    extraDwellingTiers: pickDistinctTiers(START_EXTRA_DWELLINGS, rng),
+    extraDwellingDistances: [randomInRange(5, 12, rng), randomInRange(5, 12, rng)],
   }
+  let startHireTotal = 0
 
   /** No game template: zones fill through the generic treasure loop (classic mode). */
   const isClassicLoot = !zoneContentSpecByZoneId || zoneContentSpecByZoneId.size === 0
@@ -860,7 +894,7 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const rolled = rollContentPool(catalog, poolName, rng, hireOnly ? (sid) => isExcluded(sid) || !sid.startsWith('random_hire') : isExcluded)
         const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, undefined, isAtContentCap, rng) : null
         if (resolved) {
-          if (isClassicLoot && resolved.sid === 'random-hire' && rng() >= CLASSIC_HIRE_KEEP) return
+          if (isClassicLoot && resolved.sid === 'random-hire' && rng() >= classicHireKeep()) return
           recordPickPlacement(resolved)
           const treasureNode = place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
           if (guarded && treasureNode !== null) {
@@ -1174,6 +1208,21 @@ export function createZonePopulator(options: PopulateZonesOptions): ZonePopulato
         const cityNode = zoneAnchorNode?.get(zone.id)
         const dwellingSid = `barracks_${dwellingFactionToken(biome)}_1`
         const dwellingNode = placeAtDistance(dwellingSid, tiles, cityNode, startKit.dwelling)
+
+        // A few more dwellings of the start's own faction and 1-3 random hires nearby (classic only; a game template places its own).
+        if (isClassicLoot && cityNode !== undefined) {
+          startKit.extraDwellingTiers.forEach((tier, i) => {
+            const sid = `barracks_${dwellingFactionToken(biome)}_${tier}`
+            const node = placeWithin(sid, tiles, cityNode, START_HIRE_MIN_RADIUS, startKit.extraDwellingDistances[i])
+            if (node === null) return
+            decidedNodes.add(node)
+            placeGuard(tiles, Math.round((startKit.guardRange.min + startKit.guardRoll * (startKit.guardRange.max - startKit.guardRange.min)) * PLAYER_ZONE_GUARD_MULTIPLIER), sampleFraction(biome, 0.8, rng), guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, { sid, node })
+          })
+          for (let h = 0; h < startKit.hireCount; h++) {
+            // tier 0 = no tier set, which the game rolls itself (random tier)
+            if (placeWithin('random-hire', tiles, cityNode, START_HIRE_MIN_RADIUS, START_HIRE_MAX_RADIUS, { tier: 0 }) !== null) startHireTotal++
+          }
+        }
 
         // Every player start needs its own wood + ore mine (this game's real
         // "wood + ore" building-cost pair — there is no `mine_stone`) and a
