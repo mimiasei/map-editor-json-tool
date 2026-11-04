@@ -455,6 +455,7 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
         <StatCard label={t('common.statsDialog.randomCities')} value={stats.randomCityCount} />
         <StatCard label={t('common.statsDialog.heroSpawners')} value={stats.playerHeroSpawnerCount} />
         <StatCard label={t('common.statsDialog.randomSquads')} value={stats.randomSquadCount} />
+        <StatCard label={t('common.statsDialog.randomHires')} value={stats.randomHireCount} />
         <StatCard label={t('common.statsDialog.unitSquads')} value={stats.unitSquadCount} />
         <StatCard label={t('common.statsDialog.riverTiles')} value={stats.riverLength} />
         <StatCard label={t('common.statsDialog.roadTiles')} value={stats.roadTileTotal} />
