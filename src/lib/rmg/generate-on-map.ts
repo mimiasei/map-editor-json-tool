@@ -481,9 +481,10 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   let newInteractables: ZonePlacement[] = []
   const inter = layers.interactables
   if (inter) {
+    // Never Pandora's boxes, like the full generator (its reward is too strong); the interactables list does not exclude them.
     newInteractables = scatterZoneInteractables({
       sizeX, sizeZ, zones: placerZones, tilesByZone: awayFromStarts, catalogById, excludedNodes: excluded, state, rng, riverNodes,
-      density: inter.density, disabledInteractableSids: new Set(inter.disabledSids), rarity: buildInteractableRarity(catalog),
+      density: inter.density, disabledInteractableSids: new Set([...inter.disabledSids, 'pandora_box']), rarity: buildInteractableRarity(catalog),
     })
     additions.push(...newInteractables)
     added.interactables = newInteractables.length
