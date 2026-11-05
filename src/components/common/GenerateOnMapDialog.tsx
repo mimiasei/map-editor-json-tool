@@ -116,14 +116,16 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
       try {
         const tilesMap = useMapContextStore.getState().context?.tilesMap ?? []
         const blank = tilesMap.length > 0 && tilesMap.every((b) => b === tilesMap[0])
+        // Painted player areas on a map with terrain of its own: Finish builds the borders around them, the way the user drew the zones.
+        const paintedAreas = finish && !blank && definedAreaCount > 1
         const terrainLayer = finish ? (blank ? { mode: 'zones' as const, scope: 'unpainted' as const, biomes: new Set<BiomeId>(ALL_BIOMES) } : undefined) : terrainOn && terrainMode !== 'defined' ? { mode: terrainMode, scope: terrainScope, biomes: terrainBiomes } : undefined
         const template = terrainLayer?.mode === 'zones' ? (await readTemplateAndCatalog())?.template : undefined
         if (terrainLayer?.mode === 'zones' && !template) throw new Error(t('mapGrid.generateOnMap.needsDesktop'))
         const out = generateOnMap(current, catalog, {
           settings: { richness, difficulty },
           terrain: terrainLayer ? { ...terrainLayer, template } : undefined,
-          borders: finish ? blank || mapZoneCount > 1 : bordersChosen,
-          definedZones: !finish && bordersChosen && definedZones,
+          borders: finish ? blank || paintedAreas || mapZoneCount > 1 : bordersChosen,
+          definedZones: finish ? paintedAreas : bordersChosen && definedZones,
           water: finish || waterOn ? { chance: waterChance } : undefined,
           elevation: finish || elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
           mines: finish || minesOn ? {} : undefined,
