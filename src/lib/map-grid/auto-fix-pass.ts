@@ -62,20 +62,27 @@ export interface PlacementAutoFixOptions {
    *  (deleting it only if none exists). Off for H3 import and the Map Grid,
    *  where the target is human-authored content that must never be moved. */
   guaranteeReachability?: boolean
+  /** Only these objects/squads may be moved or deleted (Generate on this map: what the user placed is never touched). Omitted: any. */
+  mayChange?: (entityType: number, id: number) => boolean
+  /** Whether the elevation spike fix may repaint levels. Default true. */
+  fixElevation?: boolean
 }
 
 export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null, options: PlacementAutoFixOptions = {}): PlacementAutoFixResult {
+  const may = options.mayChange ?? (() => true)
   let fixed = container
   const boundsCtx = extractMapContext(containerToRawBlocks(fixed))
   const bounds = computeBoundsAutoFix(boundsCtx, catalog)
-  for (const fix of bounds.fixes) {
+  const boundsFixes = bounds.fixes.filter((fix) => may(0, fix.id))
+  for (const fix of boundsFixes) {
     fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode }).container
   }
 
   let entranceFixCount = 0
   for (let pass = 0; pass < MAX_ENTRANCE_AUTOFIX_PASSES; pass++) {
     const entranceCtx = extractMapContext(containerToRawBlocks(fixed))
-    const entrance = computeEntranceAutoFix(entranceCtx, catalog)
+    const entranceAll = computeEntranceAutoFix(entranceCtx, catalog)
+    const entrance = { deletions: entranceAll.deletions.filter((d) => may(0, d.id)), relocations: entranceAll.relocations.filter((r) => may(0, r.id)) }
     if (entrance.deletions.length === 0 && entrance.relocations.length === 0) break
     for (const del of entrance.deletions) {
       fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: del.id }).container
@@ -89,7 +96,8 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
   let reachabilityFixCount = 0
   for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
     const reachabilityCtx = extractMapContext(containerToRawBlocks(fixed))
-    const reachability = computeReachabilityAutoFix(reachabilityCtx, catalog)
+    const reachabilityAll = computeReachabilityAutoFix(reachabilityCtx, catalog)
+    const reachability = { deletions: reachabilityAll.deletions.filter((d) => may(d.entityType, d.id)), relocations: reachabilityAll.relocations.filter((r) => may(r.entityType, r.id)) }
     if (reachability.deletions.length === 0 && reachability.relocations.length === 0) break
     for (const del of reachability.deletions) {
       fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: del.entityType, entityId: del.id }).container
@@ -103,7 +111,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
   let overlapFixCount = 0
   for (let pass = 0; pass < MAX_OVERLAP_AUTOFIX_PASSES; pass++) {
     const overlapCtx = extractMapContext(containerToRawBlocks(fixed))
-    const overlap = computeOverlapAutoFix(overlapCtx, catalog)
+    const overlap = { relocations: computeOverlapAutoFix(overlapCtx, catalog).relocations.filter((r) => may(r.entityType, r.id)) }
     if (overlap.relocations.length === 0) break
     for (const rel of overlap.relocations) {
       fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
@@ -112,7 +120,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
   }
 
   const spikeCtx = extractMapContext(containerToRawBlocks(fixed))
-  const spike = computeElevationSpikeAutoFix(spikeCtx)
+  const spike = options.fixElevation === false ? { levelChanges: [], climbClears: [] } : computeElevationSpikeAutoFix(spikeCtx)
   if (spike.levelChanges.length > 0) {
     fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: spike.levelChanges }).container
   }
@@ -174,7 +182,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
 
   const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
   const warnings: string[] = []
-  const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length + guaranteeFixCount
+  const fixedCount = boundsFixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length + guaranteeFixCount
   if (fixedCount > 0) warnings.push(i18n.t('validate.map.autoFixed', { count: fixedCount }))
   for (const issue of remaining) {
     warnings.push(i18n.t('validate.map.unresolved', { issue: describeMapValidationIssue(issue) }))

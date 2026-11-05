@@ -23,11 +23,21 @@ import { scatterZoneFauna } from './zone-fauna'
 import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneObstacles } from './zone-decoration'
 import { scatterZoneWater } from './zone-water'
+import type { ZoneSpec } from './zone-graph'
 import { createPlacementState, createZonePopulator, tryPlaceAt, type ConcreteSquadPlacement, type PlacementState, type ZonePlacement } from './zone-population'
 import { carveRiversOnMap, layRoads } from './on-map-linework'
-import { wallZoneBorders } from './on-map-borders'
+import { planBorderGates, wallZoneBorders, type BorderGatePlan } from './on-map-borders'
+import { closeBorderLeaks } from './zone-boundary'
+import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
+import { RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
+import i18n from '@/lib/i18n'
+import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
+import { BALANCE_TARGET_SCORE, MAX_BALANCE_ATTEMPTS as FULL_MAP_BALANCE_ATTEMPTS } from './generate-map-file'
+import { yieldToUI } from '@/lib/async-utils'
+import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
+import { describeMapValidationIssue, findMapValidationIssues } from '@/lib/map-grid/map-validation'
 
 /** The Map Grid's own decoration subcategories (decoration-subcategories.ts), so the names match the object browser and the stats. The game has no bush
  *  objects; shrub-like things are in walkable (grass, flowers, mushrooms) or other. */
@@ -66,6 +76,25 @@ const START_PROTECT_MAX_SHARE = 0.35
 const START_PROTECT_MIN_RADIUS = 5
 /** Largest factor the treasure amount is raised by when only some kinds are ticked (the unticked ones are thrown away, so a plain amount would shrink). */
 const MAX_KIND_COMPENSATION = 6
+/** The ground around a start city that its mines and dust are placed in (the start kit puts them 5-17 tiles out). */
+const START_ZONE_RADIUS = 20
+const START_KIT_REACH = 17
+/** Ids of the stand-in start zones, clear of the terrain regions' ids. */
+const START_ZONE_ID_BASE = 100000
+/** Tiles from the nearest start per guard-difficulty step: under one step only Easy guards, under two Easy/Normal, further out the full spread (the zone graph's hop count has no meaning on a hand-made map). */
+const GUARD_DEPTH_STEP = 18
+/** Gate guards use the Lethal band from this far out, Impossible before it. */
+const LETHAL_GATE_DISTANCE = 30
+/** Gate guards are stronger than the Impossible/Lethal band alone (the full generator's 'strong' border setting). */
+const GATE_GUARD_SCALE = 1.5
+/** Ceiling for a gate guard: the Lethal band times the scale reached 150K+, far past what a border should cost. */
+const GATE_GUARD_MAX_VALUE = 60000
+/** Chance a new treasure object gets a guard (the rest stand free, like the odd unguarded pile on a real map). */
+const TREASURE_GUARD_CHANCE = 0.95
+/** Fairness attempts: 30% fewer than the full generator's, since every attempt here runs every layer on the whole map. */
+const MAX_BALANCE_ATTEMPTS = Math.round(FULL_MAP_BALANCE_ATTEMPTS * 0.7)
+/** Resource piles (gold, ore, wood, ...) are cheap to take: only this share of them keeps a guard. */
+const RESOURCE_GUARD_SHARE = 0.5
 
 export interface OnMapLayers {
   /** Strength words shared by treasure and guards. */
@@ -74,12 +103,16 @@ export interface OnMapLayers {
   terrain?: OnMapTerrainLayer
   /** Obstacles along the borders between zones, with gates (needs zones: the terrain layer's zones, or the map's own `areas`). */
   borders?: boolean
+  /** Borders follow the player areas the user painted on the map, not the terrain layer's zones. */
+  definedZones?: boolean
   /** Lakes in the zones that have no start city. `chance` is the full generator's waterChance (0-1). */
   water?: { chance: number }
   /** Hills and dry valleys (with their ramps). */
   elevation?: { hillChance: number; valleyChance: number }
   /** Roads: the cities are joined by stone roads and mines and dwellings get spurs (`spurChance`) to the nearest road. */
   roads?: { spurChance: number }
+  /** Mines (and a start's dust) with their guards, placed like the generator does: start-kit distances around each start city, mine count by size in the other regions. */
+  mines?: Record<string, never>
   /** Rivers with their source mountains and end pools. */
   rivers?: { count: number }
   /** Treasure piles, artifacts, dwellings and hires with their guards, in the zones that have no start city. */
@@ -95,7 +128,11 @@ export interface OnMapLayers {
 export interface OnMapResult {
   container: MapContainer
   /** Things added, by layer. */
-  added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; mines: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  /** What the placement auto-fix did and what it could not fix, without the problems the map already had. */
+  warnings: string[]
+  /** How even the players' areas are after the run (null: the map has no painted player areas to compare). */
+  balance: PlayerBalance | null
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -114,7 +151,51 @@ function scatterKeeping(state: PlacementState, run: (scratch: PlacementState) =>
   return kept
 }
 
-export function generateOnMap(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number): OnMapResult {
+/** Thrown when the run is cancelled; nothing has been written to the open map by then. */
+export class OnMapCancelled extends Error {
+  constructor() { super('Generating cancelled') }
+}
+
+/**
+ * The whole run, re-rolled for fairness like the full generator (generate-map-file.ts): the finished map is scored with the same
+ * `computePlayerBalance` the Stats panel shows, and while the score is under the target another attempt is made from the original map.
+ * The best attempt wins. `onProgress` gets the name of the layer about to run and 0-100; the thread is released after each report so the dialog can repaint.
+ */
+export async function generateOnMap(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number, onProgress?: (label: string, pct: number) => void, signal?: AbortSignal): Promise<OnMapResult> {
+  const checkCancelled = (): void => { if (signal?.aborted) throw new OnMapCancelled() }
+  const balanceOf = (result: { container: MapContainer }): PlayerBalance | null => computePlayerBalance(extractMapContext(containerToRawBlocks(result.container)), catalog)
+  const windowed = (lo: number, hi: number, prefix: string) => (label: string, pct: number): void => onProgress?.(`${prefix}${label}`, Math.round(lo + (pct / 100) * (hi - lo)))
+  const FIRST_ATTEMPT_END = 70
+  let best = await generateOnMapOnce(container, catalog, layers, rng, windowed(0, FIRST_ATTEMPT_END, ''), signal)
+  checkCancelled()
+  let bestBalance = balanceOf(best)
+  let bestScore = bestBalance?.score ?? 100
+  onProgress?.(i18n.t('rmg.progress.checkingFairness', { score: bestScore }), FIRST_ATTEMPT_END)
+  await yieldToUI()
+  checkCancelled()
+  const slice = (98 - FIRST_ATTEMPT_END) / (MAX_BALANCE_ATTEMPTS - 1)
+  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && bestScore < BALANCE_TARGET_SCORE; attempt++) {
+    const lo = Math.round(FIRST_ATTEMPT_END + (attempt - 2) * slice)
+    const prefix = i18n.t('rmg.progress.rebalancePrefix', { attempt, max: MAX_BALANCE_ATTEMPTS, score: bestScore })
+    onProgress?.(`${prefix}${i18n.t('rmg.progress.startingOver')}`, lo)
+    await yieldToUI()
+    const next = await generateOnMapOnce(container, catalog, layers, rng, windowed(lo, Math.round(lo + slice), prefix), signal)
+    checkCancelled()
+    const nextBalance = balanceOf(next)
+    const nextScore = nextBalance?.score ?? 100
+    if (nextScore > bestScore) { best = next; bestBalance = nextBalance; bestScore = nextScore }
+  }
+  return { ...best, balance: bestBalance }
+}
+
+async function generateOnMapOnce(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number, onProgress?: (label: string, pct: number) => void, signal?: AbortSignal): Promise<Omit<OnMapResult, 'balance'>> {
+  const progress = async (labelKey: string, pct: number): Promise<void> => {
+    if (signal?.aborted) throw new OnMapCancelled()
+    if (!onProgress) return
+    onProgress(`${i18n.t(`mapGrid.generateOnMap.${labelKey}` as never)}…`, pct)
+    await yieldToUI()
+    if (signal?.aborted) throw new OnMapCancelled()
+  }
   const ctx = extractMapContext(containerToRawBlocks(container))
   const { sizeX, sizeZ } = ctx
   const tileCount = sizeX * sizeZ
@@ -127,6 +208,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   let terrainChanges: { node: number; biomeId: number }[] = []
   let terrainZoneIds: number[] | undefined
   if (layers.terrain) {
+    await progress('terrain', 5)
     const occupied = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: ctx.placedObjects, levelsMap: ctx.levelsMap, climbsMap: ctx.climbsMap, waterMap: ctx.waterMap }, catalog)
     for (const o of ctx.placedObjects) occupied.add(o.node)
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) occupied.add(node) })
@@ -148,6 +230,12 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
         if (Math.hypot(x - sx, z - sz) <= protectRadius) nearStart.add(z * sizeX + x)
       }
     }
+  }
+  /** Tiles to the nearest start city (far away when the map has none, so everything gets the full guard spread). */
+  const distanceToStart = (node: number): number => {
+    let best = Infinity
+    for (const s of startNodes) best = Math.min(best, Math.hypot((s % sizeX) - (node % sizeX), Math.floor(s / sizeX) - Math.floor(node / sizeX)))
+    return best === Infinity ? 1000 : best
   }
   const awayFromStarts = new Map<number, number[]>()
   for (const [zoneId, tiles] of terrain.tilesByZone) awayFromStarts.set(zoneId, tiles.filter((n) => !nearStart.has(n)))
@@ -180,7 +268,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const roadChanges: { node: number; roadId: number }[] = []
   let riverChanges: { node: number; s: number; isWaterfall?: boolean }[] = []
   const squads: ConcreteSquadPlacement[] = []
-  const added = { terrain: terrainChanges.length, borders: 0, water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
+  const added = { terrain: terrainChanges.length, borders: 0, water: 0, elevation: 0, roads: 0, rivers: 0, mines: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
 
   // Keeps lakes and hills off the things the player must be able to walk between: start cities, existing mines and dwellings, zone centres.
   const keyNodes = ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map((o) => o.node)
@@ -188,6 +276,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const protectedAnchors = new Set<number>([...state.usedAnchors, ...walkable, ...nearStart])
 
   if (layers.water) {
+    await progress('water', 12)
     const result = scatterZoneWater({
       sizeX, sizeZ, zones: placerZones, tilesByZone: terrain.tilesByZone, tileBiome: tiles,
       excludedNodes: new Set(terrain.zoneAnchorNode.values()), connectNodes, blocked: state.blocked, usedAnchors: protectedAnchors, rng, chance: layers.water.chance,
@@ -199,6 +288,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   if (layers.elevation) {
+    await progress('elevation', 20)
     const taken = new Set<number>(waterNodes)
     levels.forEach((l, node) => { if (l !== 0) taken.add(node) })
     const common = {
@@ -216,7 +306,88 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) state.blocked.add(node)
   }
 
+  const schema = applySchemaTuning(BUILTIN_RMG_SCHEMA, EMPTY_TUNING)
+  const baseDifficulty = catalog.rmgSchema?.difficulties?.[difficultyIndex(layers.settings.difficulty)] ?? schema.difficulties[difficultyIndex(layers.settings.difficulty)]
+  const difficulty = baseDifficulty ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : undefined
+  const guardedByTreasure = new Set<number>()
+  /** Treasure objects placed here: the guard pass rolls a guard for the ones the populator did not already guard. */
+  const newTreasure: ZonePlacement[] = []
+  /** Resource piles that rolled "no guard": neither the populator's guard nor the guard pass gives them one. */
+  const unguardedResourceNodes = new Set<number>()
+
+  if (layers.mines) {
+    await progress('mines', 28)
+    // The generator's own mine placement: every start gets its wood and ore mines and dust at the start-kit distances, and every neutral region gets
+    // mines by its size. A start's "zone" is the ground around its city (a hand-made map has no player zones), the regions are the neutral zones.
+    const claimedBy = new Map<number, number>()
+    startNodes.forEach((s, i) => {
+      const sx = s % sizeX
+      const sz = Math.floor(s / sizeX)
+      for (let z = Math.max(0, sz - START_ZONE_RADIUS); z <= Math.min(sizeZ - 1, sz + START_ZONE_RADIUS); z++) {
+        for (let x = Math.max(0, sx - START_ZONE_RADIUS); x <= Math.min(sizeX - 1, sx + START_ZONE_RADIUS); x++) {
+          const node = z * sizeX + x
+          const d = Math.hypot(x - sx, z - sz)
+          if (d > START_ZONE_RADIUS) continue
+          const other = claimedBy.get(node)
+          if (other === undefined || d < Math.hypot(x - (startNodes[other] % sizeX), z - Math.floor(startNodes[other] / sizeX))) claimedBy.set(node, i)
+        }
+      }
+    })
+    const mineZones: ZoneSpec[] = []
+    const mineTiles = new Map<number, number[]>()
+    const mineBiome = new Map<number, BiomeId>()
+    const mineAnchor = new Map<number, number>()
+    startNodes.forEach((s, i) => {
+      const id = START_ZONE_ID_BASE + i
+      mineZones.push({ id, kind: 'player', playerIndex: i + 1, size: 1 })
+      mineTiles.set(id, [...claimedBy].filter(([node, owner]) => owner === i && !excluded.has(node)).map(([node]) => node))
+      mineBiome.set(id, tiles[s] as BiomeId)
+      mineAnchor.set(id, s)
+    })
+    for (const zone of terrain.zones) {
+      mineZones.push({ id: zone.id, kind: 'neutral', size: zone.size })
+      mineTiles.set(zone.id, (terrain.tilesByZone.get(zone.id) ?? []).filter((n) => !claimedBy.has(n) && !excluded.has(n)))
+      mineBiome.set(zone.id, terrain.zoneBiome.get(zone.id) as BiomeId)
+    }
+    const scratchState: PlacementState = { ...state, blocked: new Set(state.blocked), usedAnchors: new Set(state.usedAnchors), guardTileByNode: new Map(state.guardTileByNode), reservedGuardTiles: new Set(state.reservedGuardTiles) }
+    const result = createZonePopulator({
+      sizeX, sizeZ, zones: mineZones, tilesByZone: mineTiles, zoneBiome: mineBiome, catalogById, objectLogicsById: buildObjectLogicsIndex(catalog), state: scratchState, rng,
+      catalog, difficulty, guardTuning: EMPTY_TUNING.guards, zoneAnchorNode: mineAnchor, randomCityCount: 0,
+    }).populateKeyObjects()
+    const cheb = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
+    // Only the mines and the dust are wanted (the populator also lays out a start's dwellings and hires). A start that already has such a resource keeps it.
+    const objects = result.placements.filter((p) => p.sid !== 'random-squad')
+    const isKept = (p: ZonePlacement): boolean => {
+      if (!p.sid.startsWith('mine_') && p.sid !== 'resource_dust') return false
+      const owner = claimedBy.get(p.node)
+      if (owner === undefined || (p.sid !== 'mine_wood' && p.sid !== 'mine_ore' && p.sid !== 'resource_dust')) return true
+      return !ctx.placedObjects.some((o) => o.type === 0 && o.sid === p.sid && cheb(o.node, startNodes[owner]) <= START_KIT_REACH)
+    }
+    const kept = new Map<ZonePlacement, boolean>(objects.map((o) => [o, isKept(o)]))
+    const guardOwnerKept = (node: number): boolean => {
+      let best: ZonePlacement | undefined
+      for (const o of objects) if (cheb(o.node, node) <= GUARD_TIE_RADIUS && (!best || cheb(o.node, node) < cheb(best.node, node))) best = o
+      return best ? kept.get(best) === true : false
+    }
+    let mineCount = 0
+    for (const p of result.placements) {
+      const keep = p.sid === 'random-squad' ? guardOwnerKept(p.node) : kept.get(p) === true
+      if (!keep || !tryPlaceAt(p.sid, p.node, sizeX, sizeZ, catalogById, state)) continue
+      additions.push({ ...p, tempId: state.nextTempId++ })
+      if (p.sid !== 'random-squad') guardedByTreasure.add(p.node)
+      mineCount++
+    }
+    for (const s of result.concreteSquads) {
+      if (!guardOwnerKept(s.node)) continue
+      state.usedAnchors.add(s.node)
+      squads.push({ ...s, tempId: state.nextTempId++ })
+      mineCount++
+    }
+    added.mines = mineCount
+  }
+
   if (layers.roads) {
+    await progress('roads', 36)
     const existingRoads = new Map<number, number>()
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) existingRoads.set(node, r) })
     const toPoint = (o: (typeof ctx.placedObjects)[number]) => ({ sid: o.sid, node: o.node, rotation: o.rotation })
@@ -225,7 +396,10 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       blocked: new Set([...state.blocked, ...state.usedAnchors]),
       sizeX, sizeZ, rng, catalogById, existingRoads, spurChance: layers.roads.spurChance,
       cities: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.isCity)).map(toPoint),
-      spurPoints: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map(toPoint),
+      spurPoints: [
+        ...ctx.placedObjects.filter((o) => o.type === 0 && (o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map(toPoint),
+        ...additions.filter((p) => p.sid.startsWith('mine_')).map((p) => ({ sid: p.sid, node: p.node, rotation: p.rotation })),
+      ],
     })
     for (const [node, roadId] of newRoads) {
       roadChanges.push({ node, roadId })
@@ -237,12 +411,37 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     added.roads = newRoads.size
   }
 
-  const schema = applySchemaTuning(BUILTIN_RMG_SCHEMA, EMPTY_TUNING)
-  const baseDifficulty = catalog.rmgSchema?.difficulties?.[difficultyIndex(layers.settings.difficulty)] ?? schema.difficulties[difficultyIndex(layers.settings.difficulty)]
-  const difficulty = baseDifficulty ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : undefined
-  const guardedByTreasure = new Set<number>()
+  // The gates are decided before the treasure and decoration layers run, so they keep off the corridors; the walls themselves come after them.
+  if (layers.borders) await progress('borders', 44)
+  let borderSetup: { zoneIdByNode: number[]; zoneBiome: Map<number, BiomeId>; plan: BorderGatePlan } | undefined
+  if (layers.borders) {
+    // The zones the terrain layer just laid out, else the zones the map already has (a generated map's areas).
+    let zoneIdByNode = terrainZoneIds
+    if (layers.definedZones) {
+      // The player areas the user painted (0 = no area): ground outside every area counts as one more zone, so each area gets a wall toward it.
+      if (!ctx.customAreasPainting.some((id) => id !== 0)) throw new Error('The map has no player areas to put borders around')
+      zoneIdByNode = Array.from({ length: tileCount }, (_, node) => ctx.customAreasPainting[node] ?? 0)
+    }
+    if (!zoneIdByNode && ctx.zoneAreas.length > 1) {
+      const ids = new Array<number>(tileCount).fill(-1)
+      for (const area of ctx.zoneAreas) for (const node of area.nodes) if (node >= 0 && node < tileCount) ids[node] = area.id
+      if (ids.filter((id) => id !== -1).length >= tileCount / 2) zoneIdByNode = ids
+    }
+    if (!zoneIdByNode) throw new Error('The map has no zones to put borders between')
+    const biomeVotes = new Map<number, Map<number, number>>()
+    zoneIdByNode.forEach((zoneId, node) => {
+      const votes = biomeVotes.get(zoneId) ?? new Map<number, number>()
+      votes.set(tiles[node], (votes.get(tiles[node]) ?? 0) + 1)
+      biomeVotes.set(zoneId, votes)
+    })
+    const zoneBiome = new Map<number, BiomeId>([...biomeVotes].map(([zoneId, votes]) => [zoneId, [...votes].sort((a, b) => b[1] - a[1])[0][0] as BiomeId]))
+    const plan = planBorderGates({ sizeX, sizeZ, zoneIdByNode, state, roadNodes })
+    for (const node of plan.corridors) excluded.add(node)
+    borderSetup = { zoneIdByNode, zoneBiome, plan }
+  }
 
   if (layers.treasures) {
+    await progress('treasures', 52)
     const landByZone = new Map<number, number[]>()
     for (const [zoneId, tiles] of awayFromStarts) landByZone.set(zoneId, tiles.filter((n) => !excluded.has(n)))
     const populatorOptions = {
@@ -267,18 +466,20 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const wanted = layers.treasures.types
     // One decision per object (chosen kind; scroll boxes also only SCROLL_BOX_KEEP of the time; Pandora's boxes never), so its guard can follow it.
     const keepObject = new Map<ZonePlacement, boolean>(objects.map((o) => [o, o.sid !== 'pandora_box' && wanted.has(treasureTypeOf(o.sid, artifactSids)) && (!SCROLL_BOX_SIDS.has(o.sid) || rng() < SCROLL_BOX_KEEP)]))
-    /** Whether the treasure object nearest to a guard is kept (undefined: no treasure object close by). */
+    for (const o of objects) if (keepObject.get(o) && treasureTypeOf(o.sid, artifactSids) === 'resources' && rng() >= RESOURCE_GUARD_SHARE) unguardedResourceNodes.add(o.node)
+    /** Whether the treasure object nearest to a guard is kept and may keep its guard (undefined: no treasure object close by). */
     const guardedObjectWanted = (node: number): boolean | undefined => {
       let best: ZonePlacement | undefined
       for (const o of objects) if (near(o.node, node) <= GUARD_TIE_RADIUS && (!best || near(o.node, node) < near(best.node, node))) best = o
-      return best ? keepObject.get(best) : undefined
+      return best ? keepObject.get(best) === true && !unguardedResourceNodes.has(best.node) : undefined
     }
     let treasureCount = 0
     for (const p of result.placements) {
       const keep = p.sid === 'random-squad' ? guardedObjectWanted(p.node) ?? true : keepObject.get(p) === true
       if (!keep || !tryPlaceAt(p.sid, p.node, sizeX, sizeZ, catalogById, state)) continue
-      additions.push({ ...p, tempId: state.nextTempId++ })
-      guardedByTreasure.add(p.node)
+      const placed = { ...p, tempId: state.nextTempId++ }
+      additions.push(placed)
+      if (p.sid !== 'random-squad') newTreasure.push(placed)
       treasureCount++
     }
     for (const s of result.concreteSquads) {
@@ -291,6 +492,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   if (layers.rivers) {
+    await progress('rivers', 62)
     const wallNodes = new Set<number>()
     for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) wallNodes.add(node)
     const river = carveRiversOnMap({
@@ -302,27 +504,29 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     added.rivers = river.tiles
   }
 
-  if (layers.borders) {
-    // The zones the terrain layer just laid out, else the zones the map already has (a generated map's areas).
-    let zoneIdByNode = terrainZoneIds
-    if (!zoneIdByNode && ctx.zoneAreas.length > 1) {
-      const ids = new Array<number>(tileCount).fill(-1)
-      for (const area of ctx.zoneAreas) for (const node of area.nodes) if (node >= 0 && node < tileCount) ids[node] = area.id
-      if (ids.filter((id) => id !== -1).length >= tileCount / 2) zoneIdByNode = ids
-    }
-    if (!zoneIdByNode) throw new Error('The map has no zones to put borders between')
-    const biomeVotes = new Map<number, Map<number, number>>()
-    zoneIdByNode.forEach((zoneId, node) => {
-      const votes = biomeVotes.get(zoneId) ?? new Map<number, number>()
-      votes.set(tiles[node], (votes.get(tiles[node]) ?? 0) + 1)
-      biomeVotes.set(zoneId, votes)
-    })
-    const zoneBiome = new Map<number, BiomeId>([...biomeVotes].map(([zoneId, votes]) => [zoneId, [...votes].sort((a, b) => b[1] - a[1])[0][0] as BiomeId]))
-    const walls = wallZoneBorders({ sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById, state, rng, openNodes: excluded, roadNodes })
+  const gateGuardTemplates: { node: number; overrides: NonNullable<ZonePlacement['randomSquadOverrides']> }[] = []
+  if (borderSetup) {
+    const { zoneIdByNode, zoneBiome, plan } = borderSetup
+    const walls = wallZoneBorders({ sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById, state, rng, openNodes: excluded, plan })
     additions.push(...walls)
     added.borders = walls.length
+    // A gate is a chokepoint on the way to everything past it: it gets a guard that is never easy, whatever its distance from a start.
+    // An object already standing on the crossing's first tile (a walkable decoration) pushes the guard to the next tile of the gate.
+    for (const candidates of plan.gates) {
+      const node = candidates.find((c) => !state.usedAnchors.has(c))
+      if (node === undefined) continue
+      const label = distanceToStart(node) >= LETHAL_GATE_DISTANCE ? 'Lethal' : 'Impossible'
+      const range = pickSquadRange([label], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
+      const requestedValue = Math.min(GATE_GUARD_MAX_VALUE, Math.round(randomInRange(range.min, range.max, rng) * GATE_GUARD_SCALE * (baseDifficulty?.borderGuardMultiplier ?? 1)))
+      const overrides = { requestedValue, fraction: sampleFraction(tiles[node] as BiomeId, 0.7, rng), weeklyIncrementBonus: baseDifficulty?.zoneGuardWeeklyIncrement }
+      state.usedAnchors.add(node)
+      additions.push({ tempId: state.nextTempId++, sid: 'random-squad', node, randomSquadOverrides: overrides })
+      gateGuardTemplates.push({ node, overrides })
+      added.borders++
+    }
   }
 
+  if (layers.decorations) await progress('decorations', 72)
   const deco = layers.decorations
   const sceneryTypes = deco ? DECORATION_TYPES.filter((type) => deco.types.has(type) && type !== 'animals' && type !== 'fx') : []
   if (deco && sceneryTypes.length > 0) {
@@ -338,7 +542,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   if (deco && (deco.types.has('animals') || deco.types.has('fx'))) {
     const fauna = scatterKeeping(state, (scratch) => scatterZoneFauna({
       sizeX, sizeZ, zones: terrain.zones, tilesByZone: terrain.tilesByZone, zoneBiome: terrain.zoneBiome, waterNodes, catalogById,
-      mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state: scratch, rng,
+      mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...(borderSetup?.plan.corridors ?? [])]), state: scratch, rng,
     }), (p) => deco.types.has(decorationTypeOf(p.sid, catalogById) as DecorationType), sizeX, sizeZ, catalogById)
     additions.push(...fauna)
     added.fauna = fauna.length
@@ -347,9 +551,11 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   let newInteractables: ZonePlacement[] = []
   const inter = layers.interactables
   if (inter) {
+    await progress('interactables', 82)
+    // Never Pandora's boxes, like the full generator (its reward is too strong); the interactables list does not exclude them.
     newInteractables = scatterZoneInteractables({
       sizeX, sizeZ, zones: placerZones, tilesByZone: awayFromStarts, catalogById, excludedNodes: excluded, state, rng, riverNodes,
-      density: inter.density, disabledInteractableSids: new Set(inter.disabledSids), rarity: buildInteractableRarity(catalog),
+      density: inter.density, disabledInteractableSids: new Set([...inter.disabledSids, 'pandora_box']), rarity: buildInteractableRarity(catalog),
     })
     additions.push(...newInteractables)
     added.interactables = newInteractables.length
@@ -357,26 +563,62 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
 
   const enc = layers.encounters
   if (enc) {
+    await progress('encounters', 88)
     const guardPositions = ctx.placedObjects.filter((o) => o.type === 2 || (o.type === 0 && o.sid === 'random-squad')).map((o) => o.node)
     const isGuarded = (node: number): boolean => guardPositions.some((g) => Math.max(Math.abs((g % sizeX) - (node % sizeX)), Math.abs(Math.floor(g / sizeX) - Math.floor(node / sizeX))) <= GUARDED_RADIUS)
     const artifactSids = new Set(collectArtifactSids(catalog))
     const existing: ZonePlacement[] = []
-    const decided = new Set<number>(guardedByTreasure)
+    const decided = new Set<number>([...guardedByTreasure, ...unguardedResourceNodes])
+    // A new treasure object counts as guarded only when a guard really stands beside it: the populator also decides "no guard" for some, and those get the roll below.
+    const guardNodesNow = [...additions.filter((p) => p.sid === 'random-squad'), ...squads].map((g) => g.node)
+    const cheb = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
+    for (const o of newTreasure) if (guardNodesNow.some((g) => cheb(g, o.node) <= GUARDED_RADIUS)) decided.add(o.node)
     for (const o of ctx.placedObjects) {
       if (o.type !== 0 || !isGuardCandidate(o.sid, artifactSids)) continue
       if (!enc.guardExisting || isGuarded(o.node)) { decided.add(o.node); continue }
       existing.push({ tempId: state.nextTempId++, sid: o.sid, node: o.node })
     }
     const result = scatterProximityGuards({
-      sizeX, sizeZ, placements: existing, zoneIdByNode: terrain.zoneIdByNode, zoneBiome: terrain.zoneBiome, zoneDistances: terrain.zoneDistances,
+      sizeX, sizeZ, placements: existing, depthOfNode: (node) => Math.floor(distanceToStart(node) / GUARD_DEPTH_STEP), zoneIdByNode: terrain.zoneIdByNode, zoneBiome: terrain.zoneBiome, zoneDistances: terrain.zoneDistances,
       playerZoneIds: terrain.zones.filter((z) => z.kind === 'player').map((z) => z.id), catalogById, catalog, objectVariety: 0.4,
       squadDensity: enc.density, state, rng, difficulty, guardTuning: EMPTY_TUNING.guards, decidedNodes: decided, laterPlacements: newInteractables,
     })
     additions.push(...result.guardPlacements)
     squads.push(...result.concreteSquads)
     added.encounters = result.guardPlacements.length + result.concreteSquads.length
+    if (enc.density > 0 && newTreasure.length > 0) {
+      const treasureGuards = scatterProximityGuards({
+        sizeX, sizeZ, placements: newTreasure, depthOfNode: (node) => Math.floor(distanceToStart(node) / GUARD_DEPTH_STEP), zoneIdByNode: terrain.zoneIdByNode, zoneBiome: terrain.zoneBiome, zoneDistances: terrain.zoneDistances,
+        playerZoneIds: [], catalogById, catalog, objectVariety: 0.4,
+        squadDensity: TREASURE_GUARD_CHANCE, state, rng, difficulty, guardTuning: EMPTY_TUNING.guards, decidedNodes: decided,
+      })
+      additions.push(...treasureGuards.guardPlacements)
+      squads.push(...treasureGuards.concreteSquads)
+      added.encounters += treasureGuards.guardPlacements.length + treasureGuards.concreteSquads.length
+    }
   }
 
+  // Last word on the borders: walk the finished map like a hero and close every way between two zones that is still open (a gap the user left,
+  // a crossing a later layer widened) with a wall plug, or with a gate-strength guard where nothing can be built.
+  if (borderSetup && gateGuardTemplates.length > 0) {
+    const { zoneIdByNode, zoneBiome, plan } = borderSetup
+    const guardNodes = new Set<number>([
+      ...ctx.placedObjects.filter((o) => o.type === 2 || (o.type === 0 && o.sid === 'random-squad')).map((o) => o.node),
+      ...additions.filter((p) => p.sid === 'random-squad').map((p) => p.node),
+      ...squads.map((s) => s.node),
+    ])
+    // Roads and rivers are in the blocked set so nothing is built on them, but a hero walks them.
+    const blocked = new Set(state.blocked)
+    for (const node of [...roadNodes, ...riverNodes]) blocked.delete(node)
+    const leaks = closeBorderLeaks({
+      sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById, blocked, guardNodes, importantNodes: new Set(state.usedAnchors),
+      keepOpen: new Set([...roadNodes, ...riverNodes, ...plan.corridors]), guardTemplates: gateGuardTemplates, state, rng,
+    })
+    additions.push(...leaks.plugs, ...leaks.guards)
+    added.borders += leaks.plugs.length + leaks.guards.length
+  }
+
+  await progress('generating', 94)
   // Commit onto a copy of the container: tile layers first, then objects, then the concrete squads (their own entity type).
   let block1 = container.chunks[0]
   let block2 = container.chunks[1]
@@ -398,5 +640,13 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const chunks = [...container.chunks]
   chunks[0] = block1
   chunks[1] = block2
-  return { container: { ...container, chunks }, added }
+  const committed: MapContainer = { ...container, chunks }
+
+  // The same placement auto-fix the full generator ends with (bounds, entrances, reachability, overlaps), but it may only move or remove what was just
+  // generated: the user's own objects stay where they are.
+  const before = new Set(ctx.placedObjects.map((o) => o.key))
+  const fresh = new Set(extractMapContext(containerToRawBlocks(committed)).placedObjects.map((o) => o.key).filter((key) => !before.has(key)))
+  const knownIssues = new Set(findMapValidationIssues(ctx, catalog).map((issue) => i18n.t('validate.map.unresolved', { issue: describeMapValidationIssue(issue) })))
+  const fixedResult = runPlacementAutoFix(committed, catalog, { mayChange: (type, id) => fresh.has(`${type}:${id}`), fixElevation: !!layers.elevation })
+  return { container: fixedResult.fixed, added, warnings: fixedResult.warnings.filter((w) => !knownIssues.has(w)) }
 }

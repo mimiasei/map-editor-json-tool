@@ -87,6 +87,8 @@ interface MapDocumentStore {
    *  was fixed) so the dialog reacts the same way it already does after any
    *  other edit. Returns a summary for the dialog to show. */
   autoFixMapValidationIssues: () => { fixedCount: number; unresolvedCount: number }
+  /** Deletes objects named by the validation dialog (the flagged object or what blocks its entrance), as undoable edits, and re-derives the issue list. */
+  deleteMapValidationObjects: (objectIds: number[]) => void
   /** On-demand full placement check + auto-fix (bounds, entrance-to-
    *  convergence, and portal-aware reachability-to-convergence) for the
    *  Toolbar's manual "Validate" button — manually-built maps get the exact
@@ -165,6 +167,13 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         set({ mapValidationIssues: remaining.length > 0 ? remaining : null })
         const fixedCount = bounds.fixes.length + entrance.deletions.length + entrance.relocations.length
         return { fixedCount, unresolvedCount: remaining.length }
+      },
+
+      deleteMapValidationObjects: (objectIds) => {
+        for (const id of objectIds) get().applyEdit({ kind: 'deleteObject', entityType: 0, entityId: id })
+        const after = get().container
+        const remaining = after ? findMapValidationIssues(extractMapContext(containerToRawBlocks(after)), useCatalogStore.getState().catalog) : []
+        set({ mapValidationIssues: remaining.length > 0 ? remaining : null })
       },
 
       autoFixMapPlacementIssues: () => {

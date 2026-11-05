@@ -49,6 +49,10 @@ export interface MapStats {
   riverLength: number
   roadTileTotal: number
   resourceCounts: [string, number][]
+  /** `random-res` placeholders. */
+  randomResourceCount: number
+  /** Real artifact pickups plus `random-item` placeholders. */
+  artifactCount: number
   chestCount: number
   portalLinkCounts: { kind: string; count: number }[]
   blockingPct: number
@@ -66,10 +70,11 @@ function pct(count: number, total: number): number {
   return total > 0 ? (count / total) * 100 : 0
 }
 
-/** Zones with no player city spawner in them. A generated map lists its zones in `areas`; a hand-made one only has the painted player regions. */
+/** Zones with no player city spawner in them. A generated map lists its zones in `areas`; a hand-made one only has the painted regions. */
 function countNeutralZones({ zoneAreas, customAreasPainting, placedObjects }: MapContext): number {
   const cities = placedObjects.filter((o) => o.type === 0 && o.sid === 'city-spawner')
-  if (zoneAreas.length > 0) {
+  // A hand-made map has one `areas` entry covering every tile (mymap128): that is no zone list, the painted areas are.
+  if (zoneAreas.length > 1) {
     const owned = new Set(zoneAreas.filter((a) => cities.some((c) => a.nodes.includes(c.node))).map((a) => a.id))
     return zoneAreas.length - owned.size
   }
@@ -156,8 +161,13 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
   // ── Resources / chests ────────────────────────────────────────────────────
   const resourceCounts = new Map<string, number>()
   let chestCount = 0
+  let randomResourceCount = 0
+  let artifactCount = 0
+  const artifactPickupSids = new Set(catalog ? collectArtifactSids(catalog) : [])
   for (const o of placedObjects) {
     if (o.type !== 0) continue
+    if (o.sid === 'random-res') randomResourceCount++
+    if (o.sid === 'random-item' || artifactPickupSids.has(o.sid)) artifactCount++
     if ((RESOURCE_SIDS as readonly string[]).includes(o.sid) || (STORAGE_SIDS as readonly string[]).includes(o.sid)) {
       resourceCounts.set(o.sid, (resourceCounts.get(o.sid) ?? 0) + 1)
     }
@@ -219,6 +229,8 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     resourceCounts: [...resourceCounts.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
+    randomResourceCount,
+    artifactCount,
     chestCount,
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,

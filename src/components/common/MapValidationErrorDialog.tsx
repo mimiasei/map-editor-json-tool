@@ -14,21 +14,28 @@
 // handleExport) funnel into the same commitToDisk and need to surface the
 // same dialog, matching UnsavedChangesDialog's own single-mount pattern.
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle } from '@/components/ui/icons'
+import { AlertTriangle, Trash2 } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import {describeMapValidationIssue} from '@/lib/map-grid/map-validation'
 import { useTranslation } from 'react-i18next'
 import { focusTileInMapGrid } from '@/lib/map-grid/focus-tile'
+import { useCatalogStore } from '@/store/useCatalogStore'
+import { extractMapContext } from '@/lib/map-extract'
+import { containerToRawBlocks } from '@/store/useMapDocumentStore'
+import { findEntranceBlockers } from '@/lib/map-grid/entrance-validation'
 
 export default function MapValidationErrorDialog() {
   const { t } = useTranslation()
   const issues = useMapDocumentStore((s) => s.mapValidationIssues)
   const clearMapValidationIssues = useMapDocumentStore((s) => s.clearMapValidationIssues)
   const autoFixMapValidationIssues = useMapDocumentStore((s) => s.autoFixMapValidationIssues)
+  const deleteMapValidationObjects = useMapDocumentStore((s) => s.deleteMapValidationObjects)
+  const container = useMapDocumentStore((s) => s.container)
+  const catalog = useCatalogStore((s) => s.catalog)
   // Last Auto-fix result, shown until the dialog closes or another attempt
   // runs — not persisted in the store since it's purely this dialog's own
   // transient feedback, not state anything else needs to react to.
@@ -46,6 +53,15 @@ export default function MapValidationErrorDialog() {
     focusTileInMapGrid(x, z, node)
   }
 
+  // What blocks each flagged entrance, found once per issue list (a footprint walk over every object).
+  const blockersByIssue = useMemo(() => {
+    const map = new Map<number, number[]>()
+    if (!container || !issues || !issues.some((v) => v.kind === 'blockedEntrance')) return map
+    const context = extractMapContext(containerToRawBlocks(container))
+    for (const v of issues) if (v.kind === 'blockedEntrance') map.set(v.id, findEntranceBlockers(context, catalog, v.id).map((o) => o.id))
+    return map
+  }, [container, issues, catalog])
+
   return (
     <Dialog
       open={issues !== null}
@@ -61,9 +77,17 @@ export default function MapValidationErrorDialog() {
             <p>{t('common.mapValidationErrorDialog.intro')}</p>
             <ul className="space-y-0.5">
               {(issues ?? []).map((v, i) => (
-                <li key={i}>
-                  <button type="button" className="text-left underline-offset-2 hover:underline" title={t('common.mapValidationErrorDialog.showOnMap')} onClick={() => showIssue(v.x, v.z, v.node)}>
+                <li key={i} className="flex items-start gap-1">
+                  <button type="button" className="flex-1 text-left underline-offset-2 hover:underline" title={t('common.mapValidationErrorDialog.showOnMap')} onClick={() => showIssue(v.x, v.z, v.node)}>
                     • {describeMapValidationIssue(v)}
+                  </button>
+                  {v.kind === 'blockedEntrance' && (blockersByIssue.get(v.id)?.length ?? 0) > 0 && (
+                    <button type="button" className="shrink-0 rounded px-1 text-xs underline-offset-2 hover:underline" title={t('common.mapValidationErrorDialog.deleteBlockersTitle')} onClick={() => deleteMapValidationObjects(blockersByIssue.get(v.id) ?? [])}>
+                      {t('common.mapValidationErrorDialog.deleteBlockers')}
+                    </button>
+                  )}
+                  <button type="button" className="shrink-0 rounded p-0.5 hover:bg-destructive/20" title={t('common.mapValidationErrorDialog.deleteObject')} onClick={() => deleteMapValidationObjects([v.id])}>
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </li>
               ))}

@@ -2,7 +2,7 @@
 // Runs chosen layers of the random map generator on the map that is open (generate-on-map.ts). Existing content is never touched,
 // and the whole result is one undo step.
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
@@ -22,8 +22,10 @@ import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { readTemplateAndCatalog } from '@/lib/rmg/generate-map-file'
-import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
-import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
+import { BALANCE_TARGET_SCORE } from '@/lib/rmg/generate-map-file'
+import { ProgressStatus } from '@/components/common/ProgressStatus'
+import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
+import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, OnMapCancelled, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
 
 interface Props {
   open: boolean
@@ -34,6 +36,9 @@ const ALL_BIOMES: readonly BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
 /** The tiles of a valley are rare in hand-made maps and in the game's own generator, so only hills get a slider. */
 const VALLEY_CHANCE = 0.03
+/** The decoration slider's values behind the Sparse/Normal/Dense choice next to richness and difficulty (Normal is the slider's default). */
+const DECORATION_DENSITY_PRESETS = { sparse: 0.15, normal: 0.35, dense: 0.6 }
+type DecorationPreset = keyof typeof DECORATION_DENSITY_PRESETS
 
 function Layer({ title, on, onChange, children }: { title: string; on: boolean; onChange: (on: boolean) => void; children?: ReactNode }) {
   return (
@@ -63,14 +68,15 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [richness, setRichness] = useState<RmgRichness>('medium')
   const [difficulty, setDifficulty] = useState<RmgDifficulty>('normal')
   const [terrainOn, setTerrainOn] = useState(false)
-  const [terrainMode, setTerrainMode] = useState<'zones' | 'patches'>('zones')
+  const [terrainMode, setTerrainMode] = useState<'zones' | 'patches' | 'defined'>('zones')
   const [terrainScope, setTerrainScope] = useState<'unpainted' | 'all'>('unpainted')
   const [terrainBiomes, setTerrainBiomes] = useState<Set<BiomeId>>(new Set(ALL_BIOMES))
   const [bordersOn, setBordersOn] = useState(false)
   const [waterOn, setWaterOn] = useState(false)
-  const [waterChance, setWaterChance] = useState(0.3)
+  const [waterChance, setWaterChance] = useState(0.4)
   const [elevationOn, setElevationOn] = useState(false)
   const [hillChance, setHillChance] = useState(0.5)
+  const [minesOn, setMinesOn] = useState(false)
   const [roadsOn, setRoadsOn] = useState(false)
   const [spurChance, setSpurChance] = useState(0.8)
   const [riversOn, setRiversOn] = useState(false)
@@ -80,7 +86,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [treasureTypes, setTreasureTypes] = useState<Set<TreasureType>>(new Set(TREASURE_TYPES))
   const [decorationsOn, setDecorationsOn] = useState(true)
   const [decorationTypes, setDecorationTypes] = useState<Set<DecorationType>>(new Set(DECORATION_TYPES))
-  const [decorationDensity, setDecorationDensity] = useState(0.35)
+  const [decorationDensity, setDecorationDensity] = useState(DECORATION_DENSITY_PRESETS.normal)
   const [biomePurity, setBiomePurity] = useState(0.9)
   const [highContrast, setHighContrast] = useState(false)
   const [interactablesOn, setInteractablesOn] = useState(true)
@@ -93,13 +99,27 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
+  const [balance, setBalance] = useState<OnMapResult['balance']>(null)
+  /** After Finish the layer settings are out of the way: only the four choices above and the summary stay. */
+  const [finishMode, setFinishMode] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
+  // Closing the dialog cancels a run in progress: nothing is written to the map until it has finished.
+  useEffect(() => { if (!open) abortRef.current?.abort() }, [open])
+  const [progress, setProgress] = useState<{ pct: number; label: string } | null>(null)
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
   const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
-  const zonesAvailable = (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
+  const decorationPreset = (Object.keys(DECORATION_DENSITY_PRESETS) as DecorationPreset[]).find((id) => Math.abs(DECORATION_DENSITY_PRESETS[id] - decorationDensity) < 0.001)
+  // Lakes: the full generator's own few/some/many chances (its Islands need a whole-map layout, so they are left out).
+  const waterLevels = WATER_LEVELS.filter((l) => l.id !== 'islands')
+  const waterLevel = waterLevels.find((l) => Math.abs(l.waterChance - waterChance) < 0.001)
+  const definedZones = terrainOn && terrainMode === 'defined'
+  const definedAreaCount = useMapContextStore((s) => new Set((s.context?.customAreasPainting ?? []).filter((id) => id !== 0)).size)
+  const zonesAvailable = definedZones ? definedAreaCount > 0 : (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
   const bordersChosen = bordersOn && zonesAvailable
 
-  const nothingChosen = (!terrainOn || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
+  const nothingChosen = (!terrainOn || definedZones || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !minesOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
   /** `finish`: every layer on with every kind, and the terrain laid out with zones when the map is still a blank one-biome map (otherwise the terrain stays). */
   const handleGenerate = (finish = false) => {
@@ -107,41 +127,54 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
     if (!current || !catalog) return
     setBusy(true)
     setError(null)
+    const abort = new AbortController()
+    abortRef.current = abort
     setResult(null)
+    setWarnings([])
+    setBalance(null)
+    setFinishMode(finish)
     // Let the busy state paint before the synchronous generation blocks the thread.
     window.setTimeout(async () => {
       try {
         const tilesMap = useMapContextStore.getState().context?.tilesMap ?? []
         const blank = tilesMap.length > 0 && tilesMap.every((b) => b === tilesMap[0])
-        const terrainLayer = finish ? (blank ? { mode: 'zones' as const, scope: 'unpainted' as const, biomes: new Set<BiomeId>(ALL_BIOMES) } : undefined) : terrainOn ? { mode: terrainMode, scope: terrainScope, biomes: terrainBiomes } : undefined
+        // Painted player areas on a map with terrain of its own: Finish builds the borders around them, the way the user drew the zones.
+        const paintedAreas = finish && !blank && definedAreaCount > 1
+        const terrainLayer = finish ? (blank ? { mode: 'zones' as const, scope: 'unpainted' as const, biomes: new Set<BiomeId>(ALL_BIOMES) } : undefined) : terrainOn && terrainMode !== 'defined' ? { mode: terrainMode, scope: terrainScope, biomes: terrainBiomes } : undefined
         const template = terrainLayer?.mode === 'zones' ? (await readTemplateAndCatalog())?.template : undefined
         if (terrainLayer?.mode === 'zones' && !template) throw new Error(t('mapGrid.generateOnMap.needsDesktop'))
-        const out = generateOnMap(current, catalog, {
+        const out = await generateOnMap(current, catalog, {
           settings: { richness, difficulty },
           terrain: terrainLayer ? { ...terrainLayer, template } : undefined,
-          borders: finish ? blank || mapZoneCount > 1 : bordersChosen,
+          borders: finish ? blank || paintedAreas || mapZoneCount > 1 : bordersChosen,
+          definedZones: finish ? paintedAreas : bordersChosen && definedZones,
           water: finish || waterOn ? { chance: waterChance } : undefined,
           elevation: finish || elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
+          mines: finish || minesOn ? {} : undefined,
           roads: finish || roadsOn ? { spurChance } : undefined,
           rivers: finish || riversOn ? { count: riverCount } : undefined,
           treasures: finish || treasuresOn ? { density: treasureDensity, types: finish ? new Set(TREASURE_TYPES) : treasureTypes } : undefined,
           decorations: finish || decorationsOn ? { types: finish ? new Set(DECORATION_TYPES) : decorationTypes, density: decorationDensity, biomePurity, allowHighContrastBiomes: highContrast } : undefined,
           interactables: finish || interactablesOn ? { density: interactableDensity, disabledSids } : undefined,
           encounters: finish || encountersOn ? { density: encounterDensity, guardExisting } : undefined,
-        }, createSeededRng(Math.floor(Math.random() * 2 ** 31)))
+        }, createSeededRng(Math.floor(Math.random() * 2 ** 31)), (label, pct) => setProgress({ label, pct }), abort.signal)
         // One store write = one undo step (applyEdit does the same per edit).
         useMapDocumentStore.setState({ container: out.container, mapIsDirty: true })
         useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(out.container)))
         setResult(out.added)
+        setWarnings(out.warnings)
+        setBalance(out.balance)
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(e instanceof OnMapCancelled ? t('mapGrid.generateOnMap.cancelled') : e instanceof Error ? e.message : String(e))
       } finally {
         setBusy(false)
+        setProgress(null)
+        abortRef.current = null
       }
     }, 30)
   }
 
-  const levelLabel = (group: 'richness' | 'difficulty', id: string) => t(`common.generateRandomMapDialog.levels.${group}.${id}` as never)
+  const levelLabel = (group: 'richness' | 'difficulty' | 'water', id: string) => t(`common.generateRandomMapDialog.levels.${group}.${id}` as never)
 
   return (
     <>
@@ -172,18 +205,44 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                   <SelectContent>{DIFFICULTY_LEVELS.map((l) => (<SelectItem key={l.id} value={l.id}>{levelLabel('difficulty', l.id)}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('mapGrid.generateOnMap.decorationDensity')}</Label>
+                <Select value={decorationPreset ?? ''} onValueChange={(v) => setDecorationDensity(DECORATION_DENSITY_PRESETS[v as DecorationPreset])}>
+                  <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={t('mapGrid.generateOnMap.densityCustom')} /></SelectTrigger>
+                  <SelectContent>{(Object.keys(DECORATION_DENSITY_PRESETS) as DecorationPreset[]).map((id) => (<SelectItem key={id} value={id}>{t(`mapGrid.generateOnMap.density_${id}` as never)}</SelectItem>))}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('common.generateRandomMapDialog.water')}</Label>
+                <Select value={waterLevel?.id ?? ''} onValueChange={(v) => setWaterChance(waterLevels.find((l) => l.id === v)?.waterChance ?? waterChance)}>
+                  <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={t('mapGrid.generateOnMap.densityCustom')} /></SelectTrigger>
+                  <SelectContent>{waterLevels.map((l) => (<SelectItem key={l.id} value={l.id}>{levelLabel('water', l.id)}</SelectItem>))}</SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {result && (
+              <div className="space-y-1">
+                <p className="text-xs text-emerald-600">{t('mapGrid.generateOnMap.done', result)}</p>
+                {balance && <p className="text-xs">{t(balance.score < BALANCE_TARGET_SCORE && balance.reasons.length > 0 ? 'rmg.fairnessWarningReasons' : 'rmg.fairnessWarning', { score: balance.score, verdict: t(`validate.balance.verdicts.${balance.verdict}` as never), reasons: balance.reasons.join('; ') })}</p>}
+                {warnings.slice(0, 6).map((w) => <p key={w} className="text-xs text-muted-foreground">{w}</p>)}
+              </div>
+            )}
+
+            {!finishMode && (
+            <>
             <Layer title={t('mapGrid.generateOnMap.terrain')} on={terrainOn} onChange={setTerrainOn}>
               <div className="grid grid-cols-2 gap-3">
-                <Select value={terrainMode} onValueChange={(v) => setTerrainMode(v as 'zones' | 'patches')}>
+                <Select value={terrainMode} onValueChange={(v) => setTerrainMode(v as 'zones' | 'patches' | 'defined')}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="zones">{t('mapGrid.generateOnMap.terrainZones')}</SelectItem>
                     <SelectItem value="patches">{t('mapGrid.generateOnMap.terrainPatches')}</SelectItem>
+                    <SelectItem value="defined" disabled={definedAreaCount === 0}>{t('mapGrid.generateOnMap.terrainDefined')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={terrainScope} onValueChange={(v) => setTerrainScope(v as 'unpainted' | 'all')}>
+                <Select value={terrainScope} disabled={definedZones} onValueChange={(v) => setTerrainScope(v as 'unpainted' | 'all')}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unpainted">{t('mapGrid.generateOnMap.scopeUnpainted')}</SelectItem>
@@ -191,11 +250,13 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className={definedZones ? 'opacity-50 pointer-events-none' : undefined}>
               <CheckGroup
                 options={ALL_BIOMES.map((id) => ({ id, label: BIOME_NAMES[id] }))}
                 selected={terrainBiomes}
                 onChange={setTerrainBiomes}
               />
+              </div>
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.borders')} on={bordersChosen} onChange={setBordersOn}>
@@ -208,6 +269,10 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
             <Layer title={t('mapGrid.generateOnMap.elevation')} on={elevationOn} onChange={setElevationOn}>
               <SliderRow label={t('mapGrid.generateOnMap.amount')} value={hillChance} min={0.1} max={1} step={0.05} onChange={setHillChance} />
+            </Layer>
+
+            <Layer title={t('mapGrid.generateOnMap.mines')} on={minesOn} onChange={setMinesOn}>
+              <p className="text-xs text-muted-foreground">{t('mapGrid.generateOnMap.minesHint')}</p>
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.roads')} on={roadsOn} onChange={setRoadsOn}>
@@ -265,14 +330,20 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
             </Layer>
 
             <p className="text-xs text-muted-foreground">{t('mapGrid.generateOnMap.keepsExisting')}</p>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {result && <p className="text-xs text-emerald-600">{t('mapGrid.generateOnMap.done', result)}</p>}
+            </>
+            )}
           </div>
-          <div className="px-6 py-3 border-t border-border flex justify-end gap-2 shrink-0">
+          <div className="px-6 py-3 border-t border-border flex items-center justify-end gap-2 shrink-0">
+            <div className="flex-1 min-w-0">{progress && <ProgressStatus value={progress.pct} label={progress.label} />}</div>
+            {busy && <Button size="sm" variant="destructive" onClick={() => abortRef.current?.abort()}>{t('mapGrid.generateOnMap.cancel')}</Button>}
             <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>{t('ui.close')}</Button>
-            <Button size="sm" disabled={busy || nothingChosen || !catalog} onClick={() => handleGenerate()}>
-              {busy ? t('mapGrid.generateOnMap.generating') : t('mapGrid.generateOnMap.generate')}
-            </Button>
+            {finishMode ? (
+              <Button size="sm" disabled={busy} onClick={() => setFinishMode(false)}>{t('mapGrid.generateOnMap.backToSettings')}</Button>
+            ) : (
+              <Button size="sm" disabled={busy || nothingChosen || !catalog} onClick={() => handleGenerate()}>
+                {busy ? t('mapGrid.generateOnMap.generating') : t('mapGrid.generateOnMap.generate')}
+              </Button>
+            )}
           </div>
         </DraggableDialogContent>
       </Dialog>

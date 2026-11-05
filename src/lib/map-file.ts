@@ -280,7 +280,10 @@ export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean
   await commitToDisk(mapPath, scenarioState.scenario)
   if (mapPath !== scenarioState.mapFilePath) {
     const name = mapPath.replace(/\\/g, '/').split('/').pop() ?? mapPath
-    scenarioState.setMapFile(mapPath, sidecarPathFor(mapPath, name))
+    const sidecarPath = sidecarPathFor(mapPath, name)
+    scenarioState.setMapFile(mapPath, sidecarPath)
+    // The header and toolbar show the saved .map name, not the "New Map.map" it was created as.
+    scenarioState.setCurrentFile(sidecarPath, name)
   }
   return 'saved'
 }
