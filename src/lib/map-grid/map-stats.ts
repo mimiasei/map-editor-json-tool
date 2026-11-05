@@ -49,6 +49,10 @@ export interface MapStats {
   riverLength: number
   roadTileTotal: number
   resourceCounts: [string, number][]
+  /** `random-res` placeholders. */
+  randomResourceCount: number
+  /** Real artifact pickups plus `random-item` placeholders. */
+  artifactCount: number
   chestCount: number
   portalLinkCounts: { kind: string; count: number }[]
   blockingPct: number
@@ -156,8 +160,13 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
   // ── Resources / chests ────────────────────────────────────────────────────
   const resourceCounts = new Map<string, number>()
   let chestCount = 0
+  let randomResourceCount = 0
+  let artifactCount = 0
+  const artifactPickupSids = new Set(catalog ? collectArtifactSids(catalog) : [])
   for (const o of placedObjects) {
     if (o.type !== 0) continue
+    if (o.sid === 'random-res') randomResourceCount++
+    if (o.sid === 'random-item' || artifactPickupSids.has(o.sid)) artifactCount++
     if ((RESOURCE_SIDS as readonly string[]).includes(o.sid) || (STORAGE_SIDS as readonly string[]).includes(o.sid)) {
       resourceCounts.set(o.sid, (resourceCounts.get(o.sid) ?? 0) + 1)
     }
@@ -219,6 +228,8 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     resourceCounts: [...resourceCounts.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
+    randomResourceCount,
+    artifactCount,
     chestCount,
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,

@@ -606,6 +606,8 @@
       "noRoadsPainted": "Доріг не намальовано.",
       "resourcesStorage": "Ресурси й сховища",
       "noResourceStoragePickupsPlaced": "Підбирань ресурсів чи сховищ не розміщено.",
+      "randomResources": "Випадкові ресурси",
+      "artifacts": "Артефакти (випадкові й звичайні)",
       "noMinesPlaced": "Шахт не розміщено.",
       "interactablesByCategory": "Інтерактивні об'єкти за категоріями",
       "noInteractablesPlaced": "Інтерактивних об'єктів не розміщено.",

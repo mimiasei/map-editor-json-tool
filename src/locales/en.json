@@ -572,6 +572,8 @@
       "noRoadsPainted": "No roads painted.",
       "resourcesStorage": "Resources & Storage",
       "noResourceStoragePickupsPlaced": "No resource/storage pickups placed.",
+      "randomResources": "Random resources",
+      "artifacts": "Artifacts (random and real)",
       "noMinesPlaced": "No mines placed.",
       "interactablesByCategory": "Interactables by Category",
       "noInteractablesPlaced": "No interactables placed.",

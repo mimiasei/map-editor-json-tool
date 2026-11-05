@@ -564,6 +564,8 @@
       "noRoadsPainted": "Ingen veier malt.",
       "resourcesStorage": "Ressurser og lager",
       "noResourceStoragePickupsPlaced": "Ingen ressurs-/lageroppsamlinger plassert.",
+      "randomResources": "Tilfeldige ressurser",
+      "artifacts": "Artefakter (tilfeldige og ekte)",
       "noMinesPlaced": "Ingen gruver plassert.",
       "interactablesByCategory": "Interaktive objekter etter kategori",
       "noInteractablesPlaced": "Ingen interaktive objekter plassert.",

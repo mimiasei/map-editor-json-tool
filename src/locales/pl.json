@@ -606,6 +606,8 @@
       "noRoadsPainted": "Nie namalowano dróg.",
       "resourcesStorage": "Zasoby i magazyny",
       "noResourceStoragePickupsPlaced": "Nie umieszczono zasobów ani magazynów do zebrania.",
+      "randomResources": "Losowe zasoby",
+      "artifacts": "Artefakty (losowe i zwykłe)",
       "noMinesPlaced": "Nie umieszczono kopalń.",
       "interactablesByCategory": "Obiekty interaktywne według kategorii",
       "noInteractablesPlaced": "Nie umieszczono obiektów interaktywnych.",

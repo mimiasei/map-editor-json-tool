@@ -606,6 +606,8 @@
       "noRoadsPainted": "Дороги не нарисованы.",
       "resourcesStorage": "Ресурсы и хранилища",
       "noResourceStoragePickupsPlaced": "Ресурсы и хранилища не размещены.",
+      "randomResources": "Случайные ресурсы",
+      "artifacts": "Артефакты (случайные и обычные)",
       "noMinesPlaced": "Шахты не размещены.",
       "interactablesByCategory": "Интерактивные объекты по категориям",
       "noInteractablesPlaced": "Интерактивные объекты не размещены.",

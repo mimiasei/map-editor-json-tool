@@ -585,6 +585,8 @@
       "noRoadsPainted": "Aucune route dessinée.",
       "resourcesStorage": "Ressources et stockage",
       "noResourceStoragePickupsPlaced": "Aucune ressource ni aucun stockage placé.",
+      "randomResources": "Ressources aléatoires",
+      "artifacts": "Artefacts (aléatoires et réels)",
       "noMinesPlaced": "Aucune mine placée.",
       "interactablesByCategory": "Objets interactifs par catégorie",
       "noInteractablesPlaced": "Aucun objet interactif placé.",

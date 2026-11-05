@@ -514,7 +514,7 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
 
       <div>
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('common.statsDialog.resourcesStorage')}</h3>
-        <CountList rows={stats.resourceCounts} emptyLabel={t('common.statsDialog.noResourceStoragePickupsPlaced')} />
+        <CountList rows={[...stats.resourceCounts, ...(stats.randomResourceCount > 0 ? [[t('common.statsDialog.randomResources'), stats.randomResourceCount] as [string, number]] : []), ...(stats.artifactCount > 0 ? [[t('common.statsDialog.artifacts'), stats.artifactCount] as [string, number]] : [])]} emptyLabel={t('common.statsDialog.noResourceStoragePickupsPlaced')} />
       </div>
 
       <div>
