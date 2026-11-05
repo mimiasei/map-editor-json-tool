@@ -70,10 +70,11 @@ function pct(count: number, total: number): number {
   return total > 0 ? (count / total) * 100 : 0
 }
 
-/** Zones with no player city spawner in them. A generated map lists its zones in `areas`; a hand-made one only has the painted player regions. */
+/** Zones with no player city spawner in them. A generated map lists its zones in `areas`; a hand-made one only has the painted regions. */
 function countNeutralZones({ zoneAreas, customAreasPainting, placedObjects }: MapContext): number {
   const cities = placedObjects.filter((o) => o.type === 0 && o.sid === 'city-spawner')
-  if (zoneAreas.length > 0) {
+  // A hand-made map has one `areas` entry covering every tile (mymap128): that is no zone list, the painted areas are.
+  if (zoneAreas.length > 1) {
     const owned = new Set(zoneAreas.filter((a) => cities.some((c) => a.nodes.includes(c.node))).map((a) => a.id))
     return zoneAreas.length - owned.size
   }
