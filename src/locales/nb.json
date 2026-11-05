@@ -1197,6 +1197,7 @@
       "density_normal": "Normal",
       "density_dense": "Tett",
       "densityCustom": "Egendefinert",
+      "backToSettings": "Tilbake til innstillinger",
       "generate": "Generer",
       "generating": "Genererer…"
     },

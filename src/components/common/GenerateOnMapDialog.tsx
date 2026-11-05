@@ -22,6 +22,7 @@ import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { readTemplateAndCatalog } from '@/lib/rmg/generate-map-file'
+import { BALANCE_TARGET_SCORE } from '@/lib/rmg/generate-map-file'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
 import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
@@ -99,6 +100,9 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
+  const [balance, setBalance] = useState<OnMapResult['balance']>(null)
+  /** After Finish the layer settings are out of the way: only the four choices above and the summary stay. */
+  const [finishMode, setFinishMode] = useState(false)
   const [progress, setProgress] = useState<{ pct: number; label: string } | null>(null)
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
@@ -122,6 +126,8 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
     setError(null)
     setResult(null)
     setWarnings([])
+    setBalance(null)
+    setFinishMode(finish)
     // Let the busy state paint before the synchronous generation blocks the thread.
     window.setTimeout(async () => {
       try {
@@ -152,6 +158,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
         useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(out.container)))
         setResult(out.added)
         setWarnings(out.warnings)
+        setBalance(out.balance)
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e))
       } finally {
@@ -208,6 +215,17 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
               </div>
             </div>
 
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {result && (
+              <div className="space-y-1">
+                <p className="text-xs text-emerald-600">{t('mapGrid.generateOnMap.done', result)}</p>
+                {balance && <p className="text-xs">{t(balance.score < BALANCE_TARGET_SCORE && balance.reasons.length > 0 ? 'rmg.fairnessWarningReasons' : 'rmg.fairnessWarning', { score: balance.score, verdict: t(`validate.balance.verdicts.${balance.verdict}` as never), reasons: balance.reasons.join('; ') })}</p>}
+                {warnings.slice(0, 6).map((w) => <p key={w} className="text-xs text-muted-foreground">{w}</p>)}
+              </div>
+            )}
+
+            {!finishMode && (
+            <>
             <Layer title={t('mapGrid.generateOnMap.terrain')} on={terrainOn} onChange={setTerrainOn}>
               <div className="grid grid-cols-2 gap-3">
                 <Select value={terrainMode} onValueChange={(v) => setTerrainMode(v as 'zones' | 'patches' | 'defined')}>
@@ -306,16 +324,19 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
             </Layer>
 
             <p className="text-xs text-muted-foreground">{t('mapGrid.generateOnMap.keepsExisting')}</p>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {result && <p className="text-xs text-emerald-600">{t('mapGrid.generateOnMap.done', result)}</p>}
-            {result && warnings.slice(0, 6).map((w) => <p key={w} className="text-xs text-muted-foreground">{w}</p>)}
+            </>
+            )}
           </div>
           <div className="px-6 py-3 border-t border-border flex items-center justify-end gap-2 shrink-0">
             <div className="flex-1 min-w-0">{progress && <ProgressStatus value={progress.pct} label={progress.label} />}</div>
             <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>{t('ui.close')}</Button>
-            <Button size="sm" disabled={busy || nothingChosen || !catalog} onClick={() => handleGenerate()}>
-              {busy ? t('mapGrid.generateOnMap.generating') : t('mapGrid.generateOnMap.generate')}
-            </Button>
+            {finishMode ? (
+              <Button size="sm" disabled={busy} onClick={() => setFinishMode(false)}>{t('mapGrid.generateOnMap.backToSettings')}</Button>
+            ) : (
+              <Button size="sm" disabled={busy || nothingChosen || !catalog} onClick={() => handleGenerate()}>
+                {busy ? t('mapGrid.generateOnMap.generating') : t('mapGrid.generateOnMap.generate')}
+              </Button>
+            )}
           </div>
         </DraggableDialogContent>
       </Dialog>

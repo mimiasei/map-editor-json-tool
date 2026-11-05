@@ -28,8 +28,8 @@ import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-
 
 /** A generation scoring below this is re-rolled (up to `MAX_BALANCE_ATTEMPTS`
  *  total); the best-scoring attempt wins. */
-const BALANCE_TARGET_SCORE = 85
-const MAX_BALANCE_ATTEMPTS = 4
+export const BALANCE_TARGET_SCORE = 85
+export const MAX_BALANCE_ATTEMPTS = 4
 /** Below the minimum acceptable score a map is not accepted while attempts remain: it keeps re-rolling up to `MAX_ATTEMPTS_BELOW_MIN` total. */
 const MAX_ATTEMPTS_BELOW_MIN = 10
 const MAX_MIN_ACCEPTABLE_SCORE = 67

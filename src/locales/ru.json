@@ -1255,6 +1255,7 @@
       "density_normal": "Обычный",
       "density_dense": "Плотный",
       "densityCustom": "Другая",
+      "backToSettings": "Назад к настройкам",
       "generate": "Сгенерировать",
       "generating": "Генерация…"
     },

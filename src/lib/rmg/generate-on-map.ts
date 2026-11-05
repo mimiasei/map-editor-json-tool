@@ -33,6 +33,8 @@ import { RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-v
 import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
 import i18n from '@/lib/i18n'
+import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
+import { BALANCE_TARGET_SCORE, MAX_BALANCE_ATTEMPTS } from './generate-map-file'
 import { yieldToUI } from '@/lib/async-utils'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { describeMapValidationIssue, findMapValidationIssues } from '@/lib/map-grid/map-validation'
@@ -127,6 +129,8 @@ export interface OnMapResult {
   added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; mines: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
   /** What the placement auto-fix did and what it could not fix, without the problems the map already had. */
   warnings: string[]
+  /** How even the players' areas are after the run (null: the map has no painted player areas to compare). */
+  balance: PlayerBalance | null
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -145,8 +149,35 @@ function scatterKeeping(state: PlacementState, run: (scratch: PlacementState) =>
   return kept
 }
 
-/** `onProgress` gets the name of the layer about to run and 0-100; the thread is released after each report so the dialog can repaint. */
+/**
+ * The whole run, re-rolled for fairness like the full generator (generate-map-file.ts): the finished map is scored with the same
+ * `computePlayerBalance` the Stats panel shows, and while the score is under the target another attempt is made from the original map.
+ * The best attempt wins. `onProgress` gets the name of the layer about to run and 0-100; the thread is released after each report so the dialog can repaint.
+ */
 export async function generateOnMap(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number, onProgress?: (label: string, pct: number) => void): Promise<OnMapResult> {
+  const balanceOf = (result: { container: MapContainer }): PlayerBalance | null => computePlayerBalance(extractMapContext(containerToRawBlocks(result.container)), catalog)
+  const windowed = (lo: number, hi: number, prefix: string) => (label: string, pct: number): void => onProgress?.(`${prefix}${label}`, Math.round(lo + (pct / 100) * (hi - lo)))
+  const FIRST_ATTEMPT_END = 70
+  let best = await generateOnMapOnce(container, catalog, layers, rng, windowed(0, FIRST_ATTEMPT_END, ''))
+  let bestBalance = balanceOf(best)
+  let bestScore = bestBalance?.score ?? 100
+  onProgress?.(i18n.t('rmg.progress.checkingFairness', { score: bestScore }), FIRST_ATTEMPT_END)
+  await yieldToUI()
+  const slice = (98 - FIRST_ATTEMPT_END) / (MAX_BALANCE_ATTEMPTS - 1)
+  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && bestScore < BALANCE_TARGET_SCORE; attempt++) {
+    const lo = Math.round(FIRST_ATTEMPT_END + (attempt - 2) * slice)
+    const prefix = i18n.t('rmg.progress.rebalancePrefix', { attempt, max: MAX_BALANCE_ATTEMPTS, score: bestScore })
+    onProgress?.(`${prefix}${i18n.t('rmg.progress.startingOver')}`, lo)
+    await yieldToUI()
+    const next = await generateOnMapOnce(container, catalog, layers, rng, windowed(lo, Math.round(lo + slice), prefix))
+    const nextBalance = balanceOf(next)
+    const nextScore = nextBalance?.score ?? 100
+    if (nextScore > bestScore) { best = next; bestBalance = nextBalance; bestScore = nextScore }
+  }
+  return { ...best, balance: bestBalance }
+}
+
+async function generateOnMapOnce(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number, onProgress?: (label: string, pct: number) => void): Promise<Omit<OnMapResult, 'balance'>> {
   const progress = async (labelKey: string, pct: number): Promise<void> => {
     if (!onProgress) return
     onProgress(`${i18n.t(`mapGrid.generateOnMap.${labelKey}` as never)}…`, pct)
