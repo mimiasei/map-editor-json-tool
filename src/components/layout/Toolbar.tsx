@@ -50,6 +50,7 @@ import {
   PenLine,
   Braces,
   AlertTriangle,
+  Trash2,
   CheckCircle,
   Undo2,
   Redo2,
@@ -83,7 +84,8 @@ import {
 } from '@/components/ui/icons'
 import ToolButton from '@/components/map-grid/ToolButton'
 import { cn } from '@/lib/utils'
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, type MouseEvent } from 'react'
+import { findEntranceBlockers } from '@/lib/map-grid/entrance-validation'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ImportH3mDialog from '@/components/common/ImportH3mDialog'
@@ -127,6 +129,24 @@ interface ToolbarProps {
   onSave?: () => void
   /** Called when Save As is triggered */
   onSaveAs?: () => void
+}
+
+/** The delete buttons of one entry in the Validate list: the object itself, and (when known) the objects standing in the way. Clicks do not reach the entry's own jump-to-tile click. */
+function IssueDeleteButtons({ onDelete, onDeleteBlockers, blockerCount }: { onDelete: () => void; onDeleteBlockers?: () => void; blockerCount?: number }) {
+  const { t } = useTranslation()
+  const stop = (fn: () => void) => (e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); fn() }
+  return (
+    <span className="flex shrink-0 items-start gap-1">
+      {onDeleteBlockers && (blockerCount ?? 0) > 0 && (
+        <button type="button" className="rounded px-1 text-xs underline-offset-2 hover:underline" title={t('common.mapValidationErrorDialog.deleteBlockersTitle')} onClick={stop(onDeleteBlockers)}>
+          {t('common.mapValidationErrorDialog.deleteBlockers')}
+        </button>
+      )}
+      <button type="button" className="rounded p-0.5 hover:bg-destructive/20" title={t('common.mapValidationErrorDialog.deleteObject')} onClick={stop(onDelete)}>
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </span>
+  )
 }
 
 // Text tabs of the view switch; the tools themselves are ToolButtons (map-grid/ToolButton.tsx), like the Map Grid's own.
@@ -657,7 +677,7 @@ export default function Toolbar({
     setFairnessOpen(true)
   }
 
-  const handleOpenValidate = () => {
+  const recheckPlacement = () => {
     const context = useMapContextStore.getState().context
     setMapPlacementCheck(
       context
@@ -668,8 +688,29 @@ export default function Toolbar({
           }
         : null,
     )
+  }
+
+  const handleOpenValidate = () => {
+    recheckPlacement()
     setValidateOpen(true)
   }
+
+  /** Deletes objects/squads named by a Validate entry (undoable edits) and lists the problems again. */
+  const deleteFromValidate = (targets: { entityType: 0 | 2; id: number }[]) => {
+    for (const { entityType, id } of targets) useMapDocumentStore.getState().applyEdit({ kind: 'deleteObject', entityType, entityId: id })
+    recheckPlacement()
+  }
+  /** What blocks each flagged entrance (type-0 objects), worked out once per list: it walks every object's footprint. */
+  const entranceBlockerMap = useMemo(() => {
+    const map = new Map<number, { entityType: 0; id: number }[]>()
+    const context = useMapContextStore.getState().context
+    if (!context || !mapPlacementCheck) return map
+    for (const issue of mapPlacementCheck.issues) {
+      if (issue.kind === 'blockedEntrance') map.set(issue.id, findEntranceBlockers(context, catalog, issue.id).map((o) => ({ entityType: 0 as const, id: o.id })))
+    }
+    return map
+  }, [mapPlacementCheck, catalog])
+  const entranceBlockers = (id: number): { entityType: 0; id: number }[] => entranceBlockerMap.get(id) ?? []
 
   const handleAutoFixPlacement = () => {
     setPlacementAutoFixing(true)
@@ -1124,7 +1165,14 @@ export default function Toolbar({
             {mapPlacementCheck?.issues.map((issue, i) => (
               <Alert key={`bounds-entrance-${i}`} variant="destructive" className="cursor-pointer hover:bg-destructive/10" title={t('common.mapValidationErrorDialog.showOnMap')} onClick={() => focusOnTile(issue.x, issue.z, issue.node)}>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="ml-2">{describeMapValidationIssue(issue)}</AlertDescription>
+                <AlertDescription className="ml-2 flex items-start gap-2">
+                  <span className="flex-1">{describeMapValidationIssue(issue)}</span>
+                  <IssueDeleteButtons
+                    onDelete={() => deleteFromValidate([{ entityType: 0, id: issue.id }])}
+                    onDeleteBlockers={issue.kind === 'blockedEntrance' ? () => deleteFromValidate(entranceBlockers(issue.id)) : undefined}
+                    blockerCount={issue.kind === 'blockedEntrance' ? entranceBlockers(issue.id).length : 0}
+                  />
+                </AlertDescription>
               </Alert>
             ))}
             {mapPlacementCheck?.unreachable.map((issue, i) => (
@@ -1133,7 +1181,14 @@ export default function Toolbar({
                      onClick={() => focusOnTile(issue.x, issue.z, issue.node)}
               >
                 <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-                <AlertDescription className="ml-2">{describeUnreachablePlacement(issue)}</AlertDescription>
+                <AlertDescription className="ml-2 flex items-start gap-2">
+                  <span className="flex-1">{describeUnreachablePlacement(issue)}</span>
+                  <IssueDeleteButtons
+                    onDelete={() => deleteFromValidate([{ entityType: issue.entityType, id: issue.id }])}
+                    onDeleteBlockers={() => deleteFromValidate(issue.blockedBy.map((b) => ({ entityType: 0 as const, id: b.id })))}
+                    blockerCount={issue.blockedBy.length}
+                  />
+                </AlertDescription>
               </Alert>
             ))}
               {mapPlacementCheck && mapPlacementCheck.isolated.length > 0 && (
@@ -1147,7 +1202,10 @@ export default function Toolbar({
                               onClick={() => focusOnTile(issue.x, issue.z, issue.node)}
                           >
                               <AlertTriangle className="h-4 w-4" />
-                              <AlertDescription className="ml-2">{describeIsolatedPlayerStart(issue)}</AlertDescription>
+                              <AlertDescription className="ml-2 flex items-start gap-2">
+                                <span className="flex-1">{describeIsolatedPlayerStart(issue)}</span>
+                                <IssueDeleteButtons onDelete={() => deleteFromValidate([{ entityType: 0, id: issue.id }])} />
+                              </AlertDescription>
                           </Alert>
                       ))}
                   </>
