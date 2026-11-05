@@ -517,7 +517,7 @@ export default function Toolbar({
     const freshSidecarPath = useScenarioStore.getState().sidecarPath
     if (isTauri() && freshSidecarPath) {
       await saveToPath(freshSidecarPath, json)
-      setCurrentFile(freshSidecarPath, freshSidecarPath.replace(/\\/g, '/').split('/').pop() ?? freshSidecarPath)
+      // Keep showing the .map's name (set by commitMapWithPathPrompt), not the sidecar's.
       markClean()
       return
     }
