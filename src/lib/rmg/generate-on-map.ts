@@ -32,6 +32,9 @@ import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/sq
 import { RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
+import i18n from '@/lib/i18n'
+import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
+import { describeMapValidationIssue, findMapValidationIssues } from '@/lib/map-grid/map-validation'
 
 /** The Map Grid's own decoration subcategories (decoration-subcategories.ts), so the names match the object browser and the stats. The game has no bush
  *  objects; shrub-like things are in walkable (grass, flowers, mushrooms) or other. */
@@ -121,6 +124,8 @@ export interface OnMapResult {
   container: MapContainer
   /** Things added, by layer. */
   added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; mines: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  /** What the placement auto-fix did and what it could not fix, without the problems the map already had. */
+  warnings: string[]
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -572,5 +577,13 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const chunks = [...container.chunks]
   chunks[0] = block1
   chunks[1] = block2
-  return { container: { ...container, chunks }, added }
+  const committed: MapContainer = { ...container, chunks }
+
+  // The same placement auto-fix the full generator ends with (bounds, entrances, reachability, overlaps), but it may only move or remove what was just
+  // generated: the user's own objects stay where they are.
+  const before = new Set(ctx.placedObjects.map((o) => o.key))
+  const fresh = new Set(extractMapContext(containerToRawBlocks(committed)).placedObjects.map((o) => o.key).filter((key) => !before.has(key)))
+  const knownIssues = new Set(findMapValidationIssues(ctx, catalog).map((issue) => i18n.t('validate.map.unresolved', { issue: describeMapValidationIssue(issue) })))
+  const fixedResult = runPlacementAutoFix(committed, catalog, { mayChange: (type, id) => fresh.has(`${type}:${id}`), fixElevation: !!layers.elevation })
+  return { container: fixedResult.fixed, added, warnings: fixedResult.warnings.filter((w) => !knownIssues.has(w)) }
 }

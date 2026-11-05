@@ -97,6 +97,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
   const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
@@ -115,6 +116,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
     setBusy(true)
     setError(null)
     setResult(null)
+    setWarnings([])
     // Let the busy state paint before the synchronous generation blocks the thread.
     window.setTimeout(async () => {
       try {
@@ -144,6 +146,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
         useMapDocumentStore.setState({ container: out.container, mapIsDirty: true })
         useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(out.container)))
         setResult(out.added)
+        setWarnings(out.warnings)
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e))
       } finally {
@@ -292,6 +295,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
             <p className="text-xs text-muted-foreground">{t('mapGrid.generateOnMap.keepsExisting')}</p>
             {error && <p className="text-xs text-destructive">{error}</p>}
             {result && <p className="text-xs text-emerald-600">{t('mapGrid.generateOnMap.done', result)}</p>}
+            {result && warnings.slice(0, 6).map((w) => <p key={w} className="text-xs text-muted-foreground">{w}</p>)}
           </div>
           <div className="px-6 py-3 border-t border-border flex justify-end gap-2 shrink-0">
             <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>{t('ui.close')}</Button>
