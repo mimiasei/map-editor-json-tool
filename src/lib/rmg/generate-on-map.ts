@@ -33,6 +33,7 @@ import { RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-v
 import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
 import i18n from '@/lib/i18n'
+import { yieldToUI } from '@/lib/async-utils'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { describeMapValidationIssue, findMapValidationIssues } from '@/lib/map-grid/map-validation'
 
@@ -144,7 +145,13 @@ function scatterKeeping(state: PlacementState, run: (scratch: PlacementState) =>
   return kept
 }
 
-export function generateOnMap(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number): OnMapResult {
+/** `onProgress` gets the name of the layer about to run and 0-100; the thread is released after each report so the dialog can repaint. */
+export async function generateOnMap(container: MapContainer, catalog: GameCatalog, layers: OnMapLayers, rng: () => number, onProgress?: (label: string, pct: number) => void): Promise<OnMapResult> {
+  const progress = async (labelKey: string, pct: number): Promise<void> => {
+    if (!onProgress) return
+    onProgress(`${i18n.t(`mapGrid.generateOnMap.${labelKey}` as never)}…`, pct)
+    await yieldToUI()
+  }
   const ctx = extractMapContext(containerToRawBlocks(container))
   const { sizeX, sizeZ } = ctx
   const tileCount = sizeX * sizeZ
@@ -157,6 +164,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   let terrainChanges: { node: number; biomeId: number }[] = []
   let terrainZoneIds: number[] | undefined
   if (layers.terrain) {
+    await progress('terrain', 5)
     const occupied = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: ctx.placedObjects, levelsMap: ctx.levelsMap, climbsMap: ctx.climbsMap, waterMap: ctx.waterMap }, catalog)
     for (const o of ctx.placedObjects) occupied.add(o.node)
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) occupied.add(node) })
@@ -224,6 +232,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const protectedAnchors = new Set<number>([...state.usedAnchors, ...walkable, ...nearStart])
 
   if (layers.water) {
+    await progress('water', 12)
     const result = scatterZoneWater({
       sizeX, sizeZ, zones: placerZones, tilesByZone: terrain.tilesByZone, tileBiome: tiles,
       excludedNodes: new Set(terrain.zoneAnchorNode.values()), connectNodes, blocked: state.blocked, usedAnchors: protectedAnchors, rng, chance: layers.water.chance,
@@ -235,6 +244,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   if (layers.elevation) {
+    await progress('elevation', 20)
     const taken = new Set<number>(waterNodes)
     levels.forEach((l, node) => { if (l !== 0) taken.add(node) })
     const common = {
@@ -262,6 +272,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const unguardedResourceNodes = new Set<number>()
 
   if (layers.mines) {
+    await progress('mines', 28)
     // The generator's own mine placement: every start gets its wood and ore mines and dust at the start-kit distances, and every neutral region gets
     // mines by its size. A start's "zone" is the ground around its city (a hand-made map has no player zones), the regions are the neutral zones.
     const claimedBy = new Map<number, number>()
@@ -332,6 +343,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   if (layers.roads) {
+    await progress('roads', 36)
     const existingRoads = new Map<number, number>()
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) existingRoads.set(node, r) })
     const toPoint = (o: (typeof ctx.placedObjects)[number]) => ({ sid: o.sid, node: o.node, rotation: o.rotation })
@@ -356,6 +368,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   // The gates are decided before the treasure and decoration layers run, so they keep off the corridors; the walls themselves come after them.
+  if (layers.borders) await progress('borders', 44)
   let borderSetup: { zoneIdByNode: number[]; zoneBiome: Map<number, BiomeId>; plan: BorderGatePlan } | undefined
   if (layers.borders) {
     // The zones the terrain layer just laid out, else the zones the map already has (a generated map's areas).
@@ -384,6 +397,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   if (layers.treasures) {
+    await progress('treasures', 52)
     const landByZone = new Map<number, number[]>()
     for (const [zoneId, tiles] of awayFromStarts) landByZone.set(zoneId, tiles.filter((n) => !excluded.has(n)))
     const populatorOptions = {
@@ -434,6 +448,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   }
 
   if (layers.rivers) {
+    await progress('rivers', 62)
     const wallNodes = new Set<number>()
     for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) wallNodes.add(node)
     const river = carveRiversOnMap({
@@ -467,6 +482,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     }
   }
 
+  if (layers.decorations) await progress('decorations', 72)
   const deco = layers.decorations
   const sceneryTypes = deco ? DECORATION_TYPES.filter((type) => deco.types.has(type) && type !== 'animals' && type !== 'fx') : []
   if (deco && sceneryTypes.length > 0) {
@@ -491,6 +507,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   let newInteractables: ZonePlacement[] = []
   const inter = layers.interactables
   if (inter) {
+    await progress('interactables', 82)
     // Never Pandora's boxes, like the full generator (its reward is too strong); the interactables list does not exclude them.
     newInteractables = scatterZoneInteractables({
       sizeX, sizeZ, zones: placerZones, tilesByZone: awayFromStarts, catalogById, excludedNodes: excluded, state, rng, riverNodes,
@@ -502,6 +519,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
 
   const enc = layers.encounters
   if (enc) {
+    await progress('encounters', 88)
     const guardPositions = ctx.placedObjects.filter((o) => o.type === 2 || (o.type === 0 && o.sid === 'random-squad')).map((o) => o.node)
     const isGuarded = (node: number): boolean => guardPositions.some((g) => Math.max(Math.abs((g % sizeX) - (node % sizeX)), Math.abs(Math.floor(g / sizeX) - Math.floor(node / sizeX))) <= GUARDED_RADIUS)
     const artifactSids = new Set(collectArtifactSids(catalog))
@@ -556,6 +574,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     added.borders += leaks.plugs.length + leaks.guards.length
   }
 
+  await progress('generating', 94)
   // Commit onto a copy of the container: tile layers first, then objects, then the concrete squads (their own entity type).
   let block1 = container.chunks[0]
   let block2 = container.chunks[1]

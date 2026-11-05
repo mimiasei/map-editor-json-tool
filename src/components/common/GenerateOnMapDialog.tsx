@@ -22,6 +22,7 @@ import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { readTemplateAndCatalog } from '@/lib/rmg/generate-map-file'
+import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
 import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
 
@@ -98,6 +99,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<OnMapResult['added'] | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
+  const [progress, setProgress] = useState<{ pct: number; label: string } | null>(null)
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
   const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
@@ -130,7 +132,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
         const terrainLayer = finish ? (blank ? { mode: 'zones' as const, scope: 'unpainted' as const, biomes: new Set<BiomeId>(ALL_BIOMES) } : undefined) : terrainOn && terrainMode !== 'defined' ? { mode: terrainMode, scope: terrainScope, biomes: terrainBiomes } : undefined
         const template = terrainLayer?.mode === 'zones' ? (await readTemplateAndCatalog())?.template : undefined
         if (terrainLayer?.mode === 'zones' && !template) throw new Error(t('mapGrid.generateOnMap.needsDesktop'))
-        const out = generateOnMap(current, catalog, {
+        const out = await generateOnMap(current, catalog, {
           settings: { richness, difficulty },
           terrain: terrainLayer ? { ...terrainLayer, template } : undefined,
           borders: finish ? blank || paintedAreas || mapZoneCount > 1 : bordersChosen,
@@ -144,7 +146,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           decorations: finish || decorationsOn ? { types: finish ? new Set(DECORATION_TYPES) : decorationTypes, density: decorationDensity, biomePurity, allowHighContrastBiomes: highContrast } : undefined,
           interactables: finish || interactablesOn ? { density: interactableDensity, disabledSids } : undefined,
           encounters: finish || encountersOn ? { density: encounterDensity, guardExisting } : undefined,
-        }, createSeededRng(Math.floor(Math.random() * 2 ** 31)))
+        }, createSeededRng(Math.floor(Math.random() * 2 ** 31)), (label, pct) => setProgress({ label, pct }))
         // One store write = one undo step (applyEdit does the same per edit).
         useMapDocumentStore.setState({ container: out.container, mapIsDirty: true })
         useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(out.container)))
@@ -154,6 +156,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
         setError(e instanceof Error ? e.message : String(e))
       } finally {
         setBusy(false)
+        setProgress(null)
       }
     }, 30)
   }
@@ -307,7 +310,8 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
             {result && <p className="text-xs text-emerald-600">{t('mapGrid.generateOnMap.done', result)}</p>}
             {result && warnings.slice(0, 6).map((w) => <p key={w} className="text-xs text-muted-foreground">{w}</p>)}
           </div>
-          <div className="px-6 py-3 border-t border-border flex justify-end gap-2 shrink-0">
+          <div className="px-6 py-3 border-t border-border flex items-center justify-end gap-2 shrink-0">
+            <div className="flex-1 min-w-0">{progress && <ProgressStatus value={progress.pct} label={progress.label} />}</div>
             <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>{t('ui.close')}</Button>
             <Button size="sm" disabled={busy || nothingChosen || !catalog} onClick={() => handleGenerate()}>
               {busy ? t('mapGrid.generateOnMap.generating') : t('mapGrid.generateOnMap.generate')}
