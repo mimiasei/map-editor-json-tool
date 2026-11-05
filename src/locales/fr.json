@@ -1184,7 +1184,7 @@
       "interactables": "Objets interactifs",
       "chooseInteractables": "Choisir les objets interactifs ({{count}} exclus)",
       "keepsExisting": "Les objets, le terrain, les routes et les rivières existants ne sont jamais modifiés. L’eau, le relief, les trésors et les objets interactifs restent à 12 tuiles des villes de départ. Tout est ajouté en une seule étape d’annulation.",
-      "done": "{{terrain}} tuiles de terrain, {{borders}} obstacles de frontière, {{water}} tuiles d’eau, {{elevation}} tuiles de relief, {{roads}} tuiles de route, {{rivers}} tuiles de rivière, {{treasures}} objets de trésor, {{decorations}} décors, {{fauna}} animaux et effets, {{interactables}} objets interactifs, {{encounters}} gardes ajoutés.",
+      "done": "{{terrain}} tuiles de terrain, {{borders}} obstacles de frontière, {{water}} tuiles d’eau, {{elevation}} tuiles de relief, {{roads}} tuiles de route, {{rivers}} tuiles de rivière, {{mines}} objets de mine, {{treasures}} objets de trésor, {{decorations}} décors, {{fauna}} animaux et effets, {{interactables}} objets interactifs, {{encounters}} gardes ajoutés.",
       "water": "Eau",
       "elevation": "Relief",
       "treasures": "Trésors",
@@ -1217,6 +1217,8 @@
       "borders": "Frontières de zones",
       "bordersHint": "Obstacles le long des frontières entre zones, avec des passages (là où une route traverse, et au moins un par frontière).",
       "bordersNeedZones": "Nécessite des zones : utilisez Terrain avec zones ci-dessus, ou une carte qui en a déjà.",
+      "mines": "Mines",
+      "minesHint": "Bois, minerai et poussière près de chaque ville de départ, et des mines dans les autres zones selon leur taille, avec gardes.",
       "generate": "Générer",
       "generating": "Génération…"
     },

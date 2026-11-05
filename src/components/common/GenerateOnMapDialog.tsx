@@ -71,6 +71,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [waterChance, setWaterChance] = useState(0.3)
   const [elevationOn, setElevationOn] = useState(false)
   const [hillChance, setHillChance] = useState(0.5)
+  const [minesOn, setMinesOn] = useState(false)
   const [roadsOn, setRoadsOn] = useState(false)
   const [spurChance, setSpurChance] = useState(0.8)
   const [riversOn, setRiversOn] = useState(false)
@@ -101,7 +102,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const zonesAvailable = definedZones ? definedAreaCount > 0 : (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
   const bordersChosen = bordersOn && zonesAvailable
 
-  const nothingChosen = (!terrainOn || definedZones || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
+  const nothingChosen = (!terrainOn || definedZones || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !minesOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
   /** `finish`: every layer on with every kind, and the terrain laid out with zones when the map is still a blank one-biome map (otherwise the terrain stays). */
   const handleGenerate = (finish = false) => {
@@ -125,6 +126,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           definedZones: !finish && bordersChosen && definedZones,
           water: finish || waterOn ? { chance: waterChance } : undefined,
           elevation: finish || elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
+          mines: finish || minesOn ? {} : undefined,
           roads: finish || roadsOn ? { spurChance } : undefined,
           rivers: finish || riversOn ? { count: riverCount } : undefined,
           treasures: finish || treasuresOn ? { density: treasureDensity, types: finish ? new Set(TREASURE_TYPES) : treasureTypes } : undefined,
@@ -214,6 +216,10 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
             <Layer title={t('mapGrid.generateOnMap.elevation')} on={elevationOn} onChange={setElevationOn}>
               <SliderRow label={t('mapGrid.generateOnMap.amount')} value={hillChance} min={0.1} max={1} step={0.05} onChange={setHillChance} />
+            </Layer>
+
+            <Layer title={t('mapGrid.generateOnMap.mines')} on={minesOn} onChange={setMinesOn}>
+              <p className="text-xs text-muted-foreground">{t('mapGrid.generateOnMap.minesHint')}</p>
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.roads')} on={roadsOn} onChange={setRoadsOn}>

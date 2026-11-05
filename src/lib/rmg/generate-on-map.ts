@@ -23,6 +23,7 @@ import { scatterZoneFauna } from './zone-fauna'
 import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneObstacles } from './zone-decoration'
 import { scatterZoneWater } from './zone-water'
+import type { ZoneSpec } from './zone-graph'
 import { createPlacementState, createZonePopulator, tryPlaceAt, type ConcreteSquadPlacement, type PlacementState, type ZonePlacement } from './zone-population'
 import { carveRiversOnMap, layRoads } from './on-map-linework'
 import { wallZoneBorders } from './on-map-borders'
@@ -66,6 +67,11 @@ const START_PROTECT_MAX_SHARE = 0.35
 const START_PROTECT_MIN_RADIUS = 5
 /** Largest factor the treasure amount is raised by when only some kinds are ticked (the unticked ones are thrown away, so a plain amount would shrink). */
 const MAX_KIND_COMPENSATION = 6
+/** The ground around a start city that its mines and dust are placed in (the start kit puts them 5-17 tiles out). */
+const START_ZONE_RADIUS = 20
+const START_KIT_REACH = 17
+/** Ids of the stand-in start zones, clear of the terrain regions' ids. */
+const START_ZONE_ID_BASE = 100000
 
 export interface OnMapLayers {
   /** Strength words shared by treasure and guards. */
@@ -82,6 +88,8 @@ export interface OnMapLayers {
   elevation?: { hillChance: number; valleyChance: number }
   /** Roads: the cities are joined by stone roads and mines and dwellings get spurs (`spurChance`) to the nearest road. */
   roads?: { spurChance: number }
+  /** Mines (and a start's dust) with their guards, placed like the generator does: start-kit distances around each start city, mine count by size in the other regions. */
+  mines?: Record<string, never>
   /** Rivers with their source mountains and end pools. */
   rivers?: { count: number }
   /** Treasure piles, artifacts, dwellings and hires with their guards, in the zones that have no start city. */
@@ -97,7 +105,7 @@ export interface OnMapLayers {
 export interface OnMapResult {
   container: MapContainer
   /** Things added, by layer. */
-  added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
+  added: { terrain: number; borders: number; water: number; elevation: number; roads: number; rivers: number; mines: number; treasures: number; decorations: number; fauna: number; interactables: number; encounters: number }
 }
 
 function decorationTypeOf(sid: string, catalogById: Map<string, CatalogMapObject>): DecorationSubcategory {
@@ -182,7 +190,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const roadChanges: { node: number; roadId: number }[] = []
   let riverChanges: { node: number; s: number; isWaterfall?: boolean }[] = []
   const squads: ConcreteSquadPlacement[] = []
-  const added = { terrain: terrainChanges.length, borders: 0, water: 0, elevation: 0, roads: 0, rivers: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
+  const added = { terrain: terrainChanges.length, borders: 0, water: 0, elevation: 0, roads: 0, rivers: 0, mines: 0, treasures: 0, decorations: 0, fauna: 0, interactables: 0, encounters: 0 }
 
   // Keeps lakes and hills off the things the player must be able to walk between: start cities, existing mines and dwellings, zone centres.
   const keyNodes = ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map((o) => o.node)
@@ -218,6 +226,81 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     for (let node = 0; node < tileCount; node++) if (isElevationWallTile(node, sizeX, sizeZ, levels, climbs)) state.blocked.add(node)
   }
 
+  const schema = applySchemaTuning(BUILTIN_RMG_SCHEMA, EMPTY_TUNING)
+  const baseDifficulty = catalog.rmgSchema?.difficulties?.[difficultyIndex(layers.settings.difficulty)] ?? schema.difficulties[difficultyIndex(layers.settings.difficulty)]
+  const difficulty = baseDifficulty ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : undefined
+  const guardedByTreasure = new Set<number>()
+
+  if (layers.mines) {
+    // The generator's own mine placement: every start gets its wood and ore mines and dust at the start-kit distances, and every neutral region gets
+    // mines by its size. A start's "zone" is the ground around its city (a hand-made map has no player zones), the regions are the neutral zones.
+    const claimedBy = new Map<number, number>()
+    startNodes.forEach((s, i) => {
+      const sx = s % sizeX
+      const sz = Math.floor(s / sizeX)
+      for (let z = Math.max(0, sz - START_ZONE_RADIUS); z <= Math.min(sizeZ - 1, sz + START_ZONE_RADIUS); z++) {
+        for (let x = Math.max(0, sx - START_ZONE_RADIUS); x <= Math.min(sizeX - 1, sx + START_ZONE_RADIUS); x++) {
+          const node = z * sizeX + x
+          const d = Math.hypot(x - sx, z - sz)
+          if (d > START_ZONE_RADIUS) continue
+          const other = claimedBy.get(node)
+          if (other === undefined || d < Math.hypot(x - (startNodes[other] % sizeX), z - Math.floor(startNodes[other] / sizeX))) claimedBy.set(node, i)
+        }
+      }
+    })
+    const mineZones: ZoneSpec[] = []
+    const mineTiles = new Map<number, number[]>()
+    const mineBiome = new Map<number, BiomeId>()
+    const mineAnchor = new Map<number, number>()
+    startNodes.forEach((s, i) => {
+      const id = START_ZONE_ID_BASE + i
+      mineZones.push({ id, kind: 'player', playerIndex: i + 1, size: 1 })
+      mineTiles.set(id, [...claimedBy].filter(([node, owner]) => owner === i && !excluded.has(node)).map(([node]) => node))
+      mineBiome.set(id, tiles[s] as BiomeId)
+      mineAnchor.set(id, s)
+    })
+    for (const zone of terrain.zones) {
+      mineZones.push({ id: zone.id, kind: 'neutral', size: zone.size })
+      mineTiles.set(zone.id, (terrain.tilesByZone.get(zone.id) ?? []).filter((n) => !claimedBy.has(n) && !excluded.has(n)))
+      mineBiome.set(zone.id, terrain.zoneBiome.get(zone.id) as BiomeId)
+    }
+    const scratchState: PlacementState = { ...state, blocked: new Set(state.blocked), usedAnchors: new Set(state.usedAnchors), guardTileByNode: new Map(state.guardTileByNode), reservedGuardTiles: new Set(state.reservedGuardTiles) }
+    const result = createZonePopulator({
+      sizeX, sizeZ, zones: mineZones, tilesByZone: mineTiles, zoneBiome: mineBiome, catalogById, objectLogicsById: buildObjectLogicsIndex(catalog), state: scratchState, rng,
+      catalog, difficulty, guardTuning: EMPTY_TUNING.guards, zoneAnchorNode: mineAnchor, randomCityCount: 0,
+    }).populateKeyObjects()
+    const cheb = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
+    // Only the mines and the dust are wanted (the populator also lays out a start's dwellings and hires). A start that already has such a resource keeps it.
+    const objects = result.placements.filter((p) => p.sid !== 'random-squad')
+    const isKept = (p: ZonePlacement): boolean => {
+      if (!p.sid.startsWith('mine_') && p.sid !== 'resource_dust') return false
+      const owner = claimedBy.get(p.node)
+      if (owner === undefined || (p.sid !== 'mine_wood' && p.sid !== 'mine_ore' && p.sid !== 'resource_dust')) return true
+      return !ctx.placedObjects.some((o) => o.type === 0 && o.sid === p.sid && cheb(o.node, startNodes[owner]) <= START_KIT_REACH)
+    }
+    const kept = new Map<ZonePlacement, boolean>(objects.map((o) => [o, isKept(o)]))
+    const guardOwnerKept = (node: number): boolean => {
+      let best: ZonePlacement | undefined
+      for (const o of objects) if (cheb(o.node, node) <= GUARD_TIE_RADIUS && (!best || cheb(o.node, node) < cheb(best.node, node))) best = o
+      return best ? kept.get(best) === true : false
+    }
+    let mineCount = 0
+    for (const p of result.placements) {
+      const keep = p.sid === 'random-squad' ? guardOwnerKept(p.node) : kept.get(p) === true
+      if (!keep || !tryPlaceAt(p.sid, p.node, sizeX, sizeZ, catalogById, state)) continue
+      additions.push({ ...p, tempId: state.nextTempId++ })
+      if (p.sid !== 'random-squad') guardedByTreasure.add(p.node)
+      mineCount++
+    }
+    for (const s of result.concreteSquads) {
+      if (!guardOwnerKept(s.node)) continue
+      state.usedAnchors.add(s.node)
+      squads.push({ ...s, tempId: state.nextTempId++ })
+      mineCount++
+    }
+    added.mines = mineCount
+  }
+
   if (layers.roads) {
     const existingRoads = new Map<number, number>()
     ctx.roadsMap.forEach((r, node) => { if (r !== 0) existingRoads.set(node, r) })
@@ -227,7 +310,10 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       blocked: new Set([...state.blocked, ...state.usedAnchors]),
       sizeX, sizeZ, rng, catalogById, existingRoads, spurChance: layers.roads.spurChance,
       cities: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid === 'city-spawner' || o.isCity)).map(toPoint),
-      spurPoints: ctx.placedObjects.filter((o) => o.type === 0 && (o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map(toPoint),
+      spurPoints: [
+        ...ctx.placedObjects.filter((o) => o.type === 0 && (o.sid.startsWith('mine_') || o.sid.startsWith('barracks_'))).map(toPoint),
+        ...additions.filter((p) => p.sid.startsWith('mine_')).map((p) => ({ sid: p.sid, node: p.node, rotation: p.rotation })),
+      ],
     })
     for (const [node, roadId] of newRoads) {
       roadChanges.push({ node, roadId })
@@ -238,11 +324,6 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     }
     added.roads = newRoads.size
   }
-
-  const schema = applySchemaTuning(BUILTIN_RMG_SCHEMA, EMPTY_TUNING)
-  const baseDifficulty = catalog.rmgSchema?.difficulties?.[difficultyIndex(layers.settings.difficulty)] ?? schema.difficulties[difficultyIndex(layers.settings.difficulty)]
-  const difficulty = baseDifficulty ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : undefined
-  const guardedByTreasure = new Set<number>()
 
   if (layers.treasures) {
     const landByZone = new Map<number, number[]>()

@@ -1213,7 +1213,7 @@
       "interactables": "Obiekty interaktywne",
       "chooseInteractables": "Wybierz obiekty interaktywne (wykluczono: {{count}})",
       "keepsExisting": "Istniejące obiekty, teren, drogi i rzeki nigdy nie są zmieniane. Woda, wzgórza, skarby i obiekty interaktywne trzymają się 12 pól od miast startowych. Wszystko dodawane jest w jednym kroku cofania.",
-      "done": "Dodano: pola terenu {{terrain}}, pola wody przeszkody graniczne {{borders}}, {{water}}, pola wzgórz/dolin {{elevation}}, pola dróg {{roads}}, pola rzek {{rivers}}, obiekty skarbów {{treasures}}, dekoracje {{decorations}}, zwierzęta i efekty {{fauna}}, obiekty interaktywne {{interactables}}, strażnicy {{encounters}}.",
+      "done": "Dodano: pola terenu {{terrain}}, pola wody przeszkody graniczne {{borders}}, {{water}}, pola wzgórz/dolin {{elevation}}, pola dróg {{roads}}, pola rzek {{rivers}}, obiekty skarbów obiekty kopalni {{mines}}, {{treasures}}, dekoracje {{decorations}}, zwierzęta i efekty {{fauna}}, obiekty interaktywne {{interactables}}, strażnicy {{encounters}}.",
       "water": "Woda",
       "elevation": "Wzniesienia",
       "treasures": "Skarby",
@@ -1246,6 +1246,8 @@
       "borders": "Granice stref",
       "bordersHint": "Przeszkody wzdłuż granic między strefami, z przejściami (tam, gdzie krzyżuje się droga, i co najmniej jedno na granicę).",
       "bordersNeedZones": "Wymaga stref: użyj powyżej Terenu ze strefami albo mapy, która już je ma.",
+      "mines": "Kopalnie",
+      "minesHint": "Drewno, ruda i pył przy każdym mieście startowym oraz kopalnie w pozostałych obszarach zależnie od rozmiaru, ze strażnikami.",
       "generate": "Generuj",
       "generating": "Generowanie…"
     },

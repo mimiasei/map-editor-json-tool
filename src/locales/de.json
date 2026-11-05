@@ -1155,7 +1155,7 @@
       "interactables": "Interaktionsobjekte",
       "chooseInteractables": "Interaktionsobjekte wählen ({{count}} ausgeschlossen)",
       "keepsExisting": "Vorhandene Objekte, Gelände, Straßen und Flüsse werden nie verändert. Wasser, Hügel, Schätze und Interaktionsobjekte bleiben 12 Felder von Startstädten entfernt. Alles wird in einem Rückgängig-Schritt hinzugefügt.",
-      "done": "{{terrain}} Geländefelder, {{borders}} Grenzhindernisse, {{water}} Wasserfelder, {{elevation}} Hügel-/Talfelder, {{roads}} Straßenfelder, {{rivers}} Flussfelder, {{treasures}} Schatzobjekte, {{decorations}} Dekorationen, {{fauna}} Tiere und Effekte, {{interactables}} Interaktionsobjekte, {{encounters}} Wächter hinzugefügt.",
+      "done": "{{terrain}} Geländefelder, {{borders}} Grenzhindernisse, {{water}} Wasserfelder, {{elevation}} Hügel-/Talfelder, {{roads}} Straßenfelder, {{rivers}} Flussfelder, {{mines}} Minenobjekte, {{treasures}} Schatzobjekte, {{decorations}} Dekorationen, {{fauna}} Tiere und Effekte, {{interactables}} Interaktionsobjekte, {{encounters}} Wächter hinzugefügt.",
       "water": "Wasser",
       "elevation": "Höhenunterschiede",
       "treasures": "Schätze",
@@ -1188,6 +1188,8 @@
       "borders": "Zonengrenzen",
       "bordersHint": "Hindernisse entlang der Grenzen zwischen Zonen, mit Durchgängen (wo eine Straße kreuzt, und mindestens einer je Grenze).",
       "bordersNeedZones": "Benötigt Zonen: oben Gelände mit Zonen verwenden oder eine Karte, die schon Zonen hat.",
+      "mines": "Minen",
+      "minesHint": "Holz, Erz und Staub nahe jeder Startstadt und Minen in den übrigen Gebieten nach Größe, mit Wächtern.",
       "generate": "Generieren",
       "generating": "Generiere…"
     },
