@@ -27,6 +27,8 @@ import type { ZoneSpec } from './zone-graph'
 import { createPlacementState, createZonePopulator, tryPlaceAt, type ConcreteSquadPlacement, type PlacementState, type ZonePlacement } from './zone-population'
 import { carveRiversOnMap, layRoads } from './on-map-linework'
 import { wallZoneBorders } from './on-map-borders'
+import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
+import { RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { paintOnMapTerrain, type OnMapTerrainLayer } from './on-map-terrain'
 import { zonesFromTerrain } from './zones-from-terrain'
 
@@ -72,6 +74,12 @@ const START_ZONE_RADIUS = 20
 const START_KIT_REACH = 17
 /** Ids of the stand-in start zones, clear of the terrain regions' ids. */
 const START_ZONE_ID_BASE = 100000
+/** Tiles from the nearest start per guard-difficulty step: under one step only Easy guards, under two Easy/Normal, further out the full spread (the zone graph's hop count has no meaning on a hand-made map). */
+const GUARD_DEPTH_STEP = 18
+/** Gate guards use the Lethal band from this far out, Impossible before it. */
+const LETHAL_GATE_DISTANCE = 30
+/** Gate guards are stronger than the Impossible/Lethal band alone (the full generator's 'strong' border setting). */
+const GATE_GUARD_SCALE = 1.5
 
 export interface OnMapLayers {
   /** Strength words shared by treasure and guards. */
@@ -159,6 +167,12 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       }
     }
   }
+  /** Tiles to the nearest start city (far away when the map has none, so everything gets the full guard spread). */
+  const distanceToStart = (node: number): number => {
+    let best = Infinity
+    for (const s of startNodes) best = Math.min(best, Math.hypot((s % sizeX) - (node % sizeX), Math.floor(s / sizeX) - Math.floor(node / sizeX)))
+    return best === Infinity ? 1000 : best
+  }
   const awayFromStarts = new Map<number, number[]>()
   for (const [zoneId, tiles] of terrain.tilesByZone) awayFromStarts.set(zoneId, tiles.filter((n) => !nearStart.has(n)))
 
@@ -230,6 +244,8 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const baseDifficulty = catalog.rmgSchema?.difficulties?.[difficultyIndex(layers.settings.difficulty)] ?? schema.difficulties[difficultyIndex(layers.settings.difficulty)]
   const difficulty = baseDifficulty ? { ...baseDifficulty, zoneGuardMultiplier: baseDifficulty.zoneGuardMultiplier * CLASSIC_ZONE_GUARD_SCALE } : undefined
   const guardedByTreasure = new Set<number>()
+  /** Treasure objects placed here: the guard pass rolls a guard for the ones the populator did not already guard. */
+  const newTreasure: ZonePlacement[] = []
 
   if (layers.mines) {
     // The generator's own mine placement: every start gets its wood and ore mines and dust at the start-kit distances, and every neutral region gets
@@ -360,8 +376,10 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     for (const p of result.placements) {
       const keep = p.sid === 'random-squad' ? guardedObjectWanted(p.node) ?? true : keepObject.get(p) === true
       if (!keep || !tryPlaceAt(p.sid, p.node, sizeX, sizeZ, catalogById, state)) continue
-      additions.push({ ...p, tempId: state.nextTempId++ })
-      guardedByTreasure.add(p.node)
+      const placed = { ...p, tempId: state.nextTempId++ }
+      additions.push(placed)
+      if (p.sid !== 'random-squad') newTreasure.push(placed)
+      if (result.decidedNodes.has(p.node)) guardedByTreasure.add(p.node)
       treasureCount++
     }
     for (const s of result.concreteSquads) {
@@ -406,9 +424,22 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       biomeVotes.set(zoneId, votes)
     })
     const zoneBiome = new Map<number, BiomeId>([...biomeVotes].map(([zoneId, votes]) => [zoneId, [...votes].sort((a, b) => b[1] - a[1])[0][0] as BiomeId]))
-    const walls = wallZoneBorders({ sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById, state, rng, openNodes: excluded, roadNodes })
+    const { walls, gates } = wallZoneBorders({ sizeX, sizeZ, zoneIdByNode, zoneBiome, mapObjects: catalog.mapObjects, catalogById, state, rng, openNodes: excluded, roadNodes })
     additions.push(...walls)
     added.borders = walls.length
+    // A gate is a chokepoint on the way to everything past it: it gets a guard that is never easy, whatever its distance from a start.
+    for (const node of gates) {
+      if (state.usedAnchors.has(node)) continue
+      const label = distanceToStart(node) >= LETHAL_GATE_DISTANCE ? 'Lethal' : 'Impossible'
+      const range = pickSquadRange([label], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
+      const requestedValue = Math.round(randomInRange(range.min, range.max, rng) * GATE_GUARD_SCALE * (baseDifficulty?.borderGuardMultiplier ?? 1))
+      state.usedAnchors.add(node)
+      additions.push({
+        tempId: state.nextTempId++, sid: 'random-squad', node,
+        randomSquadOverrides: { requestedValue, fraction: sampleFraction(tiles[node] as BiomeId, 0.7, rng), weeklyIncrementBonus: baseDifficulty?.zoneGuardWeeklyIncrement },
+      })
+      added.borders++
+    }
   }
 
   const deco = layers.decorations
@@ -456,7 +487,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       existing.push({ tempId: state.nextTempId++, sid: o.sid, node: o.node })
     }
     const result = scatterProximityGuards({
-      sizeX, sizeZ, placements: existing, zoneIdByNode: terrain.zoneIdByNode, zoneBiome: terrain.zoneBiome, zoneDistances: terrain.zoneDistances,
+      sizeX, sizeZ, placements: [...existing, ...newTreasure], depthOfNode: (node) => Math.floor(distanceToStart(node) / GUARD_DEPTH_STEP), zoneIdByNode: terrain.zoneIdByNode, zoneBiome: terrain.zoneBiome, zoneDistances: terrain.zoneDistances,
       playerZoneIds: terrain.zones.filter((z) => z.kind === 'player').map((z) => z.id), catalogById, catalog, objectVariety: 0.4,
       squadDensity: enc.density, state, rng, difficulty, guardTuning: EMPTY_TUNING.guards, decidedNodes: decided, laterPlacements: newInteractables,
     })

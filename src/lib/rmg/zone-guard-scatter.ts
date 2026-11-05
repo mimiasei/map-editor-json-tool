@@ -128,6 +128,8 @@ export interface ScatterProximityGuardsOptions {
   /** Chance per neutral zone of one guard standing on its own, at least
    *  LONE_GUARD_MIN_DISTANCE tiles from every object entrance. Omitted: 0. */
   loneGuardChance?: number
+  /** How far a candidate is from the start, in guard-difficulty steps (0 = Easy only, 1 = Easy/Normal, 2+ = the full spread). Omitted: from the zone graph. A map without a zone graph has no hop distances. */
+  depthOfNode?: (node: number) => number
 }
 
 /** A lone guard keeps at least this many tiles (Chebyshev) from every
@@ -142,7 +144,7 @@ export interface ScatterProximityGuardsResult {
 export function scatterProximityGuards(options: ScatterProximityGuardsOptions): ScatterProximityGuardsResult {
   const guardPlacements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
-  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning, decidedNodes, laterPlacements = [], loneGuardChance = 0 } = options
+  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning, decidedNodes, laterPlacements = [], loneGuardChance = 0, depthOfNode } = options
   const tunedChances = guardTuning ? [...Object.values(guardTuning.chance), ...Object.values(guardTuning.chanceBySid)] : []
   if (squadDensity <= 0 && loneGuardChance <= 0 && !tunedChances.some((c) => c !== undefined && c > 0)) return { guardPlacements, concreteSquads }
   const playerZoneSet = new Set(playerZoneIds)
@@ -180,7 +182,7 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
     // Every roll happens BEFORE the (non-deterministic) position search, so a
     // failed position can never desync a zone's replayed roll sequence.
     if (rng() >= guardChance) continue
-    const depth = depthOf(zoneId)
+    const depth = depthOfNode ? depthOfNode(candidate.node) : depthOf(zoneId)
     const labels = difficultyLabelsForDepth(depth)
     const range = pickSquadRange(labels, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
     const baseValue = randomInRange(range.min, range.max, rng)
