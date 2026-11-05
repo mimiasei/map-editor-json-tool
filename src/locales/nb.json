@@ -385,6 +385,9 @@
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Kartet lagret med problemer",
       "showOnMap": "Klikk på en oppføring for å vise den på kartet.",
+      "deleteObject": "Slett dette objektet",
+      "deleteBlockers": "Slett blokkering",
+      "deleteBlockersTitle": "Slett det som blokkerer inngangen til dette objektet",
       "autoFix": "Rett opp automatisk",
       "intro": "Kartet ble lagret, men følgende objekt(er) har problemer:",
       "autoFixResult": "Automatisk retting løste {{fixed}} problem(er) — {{remaining}} kunne fortsatt ikke rettes automatisk. Rett dem opp manuelt."

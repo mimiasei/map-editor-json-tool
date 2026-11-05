@@ -385,6 +385,9 @@
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Karte mit Problemen gespeichert",
       "showOnMap": "Auf einen Eintrag klicken, um ihn auf der Karte zu zeigen.",
+      "deleteObject": "Dieses Objekt löschen",
+      "deleteBlockers": "Blocker löschen",
+      "deleteBlockersTitle": "Löschen, was den Eingang dieses Objekts blockiert",
       "autoFix": "Automatisch beheben",
       "intro": "Die Karte wurde gespeichert, aber die folgenden Objekte haben Probleme:",
       "autoFixResult": "Die automatische Korrektur hat {{fixed}} Problem(e) gelöst — {{remaining}} konnten nicht automatisch behoben werden. Beheben Sie sie manuell."

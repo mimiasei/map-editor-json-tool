@@ -393,6 +393,9 @@
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Map Saved With Issues",
       "showOnMap": "Click an entry to show it on the map.",
+      "deleteObject": "Delete this object",
+      "deleteBlockers": "Delete blocker",
+      "deleteBlockersTitle": "Delete what blocks this object’s entrance",
       "autoFix": "Auto-fix",
       "intro": "The map was saved, but the following object(s) have problems:",
       "autoFixResult": "Auto-fix resolved {{fixed}} issue(s) — {{remaining}} still couldn't be fixed automatically. Fix them manually."

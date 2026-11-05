@@ -96,3 +96,42 @@ export function findBlockedEntrancePlacements(
 
   return violations
 }
+
+/** The objects whose solid cells block a flagged object's entrance, for the group that needs the fewest removed (one open side is enough). Empty when
+ *  every group is also blocked by water or an elevation wall: no object removal would help. */
+export function findEntranceBlockers(
+  context: EntranceValidationContext,
+  catalog: GameCatalog | null,
+  targetId: number,
+): PlacedObject[] {
+  const { sizeX, sizeZ } = context
+  const catalogById = new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o]))
+  const placedObjects = (context.placedObjects as PlacedObject[]).filter((o) => o.type === 0)
+  const target = placedObjects.find((o) => o.id === targetId)
+  if (!target) return []
+  const blocked = buildBlockedTileSet(context, catalog)
+  const ownersByNode = new Map<number, PlacedObject[]>()
+  for (const obj of placedObjects) {
+    if (obj.id === targetId) continue
+    for (const cell of computeFootprintTiles(catalogById.get(obj.sid), obj.x, obj.z, obj.rotation)) {
+      if (cell.value !== 1) continue
+      const node = cell.z * sizeX + cell.x
+      const owners = ownersByNode.get(node)
+      if (owners) owners.push(obj)
+      else ownersByNode.set(node, [obj])
+    }
+  }
+  let best: PlacedObject[] | null = null
+  for (const group of entranceGroups(computeFootprintTiles(catalogById.get(target.sid), target.x, target.z, target.rotation), sizeX, sizeZ)) {
+    const blockers = new Map<number, PlacedObject>()
+    let removable = true
+    for (const node of [group.entranceNode, ...group.protectedNodes]) {
+      if (!blocked.has(node)) continue
+      const owners = ownersByNode.get(node)
+      if (!owners || owners.length === 0) { removable = false; break }
+      for (const owner of owners) blockers.set(owner.id, owner)
+    }
+    if (removable && (best === null || blockers.size < best.length)) best = [...blockers.values()]
+  }
+  return best ?? []
+}

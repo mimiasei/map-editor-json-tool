@@ -411,6 +411,9 @@
     "mapValidationErrorDialog": {
       "mapSavedWithIssues": "Mapa zapisana z problemami",
       "showOnMap": "Kliknij pozycję, aby pokazać ją na mapie.",
+      "deleteObject": "Usuń ten obiekt",
+      "deleteBlockers": "Usuń blokadę",
+      "deleteBlockersTitle": "Usuń to, co blokuje wejście do tego obiektu",
       "autoFix": "Napraw automatycznie",
       "intro": "Mapa została zapisana, ale poniższe obiekty mają problemy:",
       "autoFixResult": "Automatyczna naprawa rozwiązała problemy: {{fixed}} — pozostałe ({{remaining}}) nie dały się naprawić automatycznie. Napraw je ręcznie."
