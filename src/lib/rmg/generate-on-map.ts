@@ -81,6 +81,8 @@ const GUARD_DEPTH_STEP = 18
 const LETHAL_GATE_DISTANCE = 30
 /** Gate guards are stronger than the Impossible/Lethal band alone (the full generator's 'strong' border setting). */
 const GATE_GUARD_SCALE = 1.5
+/** Ceiling for a gate guard: the Lethal band times the scale reached 150K+, far past what a border should cost. */
+const GATE_GUARD_MAX_VALUE = 60000
 /** Chance a new treasure object gets a guard (the rest stand free, like the odd unguarded pile on a real map). */
 const TREASURE_GUARD_CHANCE = 0.95
 
@@ -446,7 +448,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
       if (node === undefined) continue
       const label = distanceToStart(node) >= LETHAL_GATE_DISTANCE ? 'Lethal' : 'Impossible'
       const range = pickSquadRange([label], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
-      const requestedValue = Math.round(randomInRange(range.min, range.max, rng) * GATE_GUARD_SCALE * (baseDifficulty?.borderGuardMultiplier ?? 1))
+      const requestedValue = Math.min(GATE_GUARD_MAX_VALUE, Math.round(randomInRange(range.min, range.max, rng) * GATE_GUARD_SCALE * (baseDifficulty?.borderGuardMultiplier ?? 1)))
       const overrides = { requestedValue, fraction: sampleFraction(tiles[node] as BiomeId, 0.7, rng), weeklyIncrementBonus: baseDifficulty?.zoneGuardWeeklyIncrement }
       state.usedAnchors.add(node)
       additions.push({ tempId: state.nextTempId++, sid: 'random-squad', node, randomSquadOverrides: overrides })
