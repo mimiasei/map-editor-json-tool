@@ -11,7 +11,7 @@ import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { findMapValidationIssues, describeMapValidationIssue, type MapValidationIssue } from '@/lib/map-grid/map-validation'
 import {
-  findUnreachablePlacements, describeUnreachablePlacement, type UnreachablePlacement,
+  findUnreachablePlacements, PLAYER_START_SIDS, describeUnreachablePlacement, type UnreachablePlacement,
   findIsolatedPlayerStarts, describeIsolatedPlayerStart, type IsolatedPlayerStart,
 } from '@/lib/map-grid/reachability-validation'
 import { checkForUpdate } from '@/lib/updater'
@@ -225,6 +225,8 @@ export default function Toolbar({
   const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
+  /** Which bulk delete is waiting for its confirmation in the Validate dialog. */
+  const [bulkDelete, setBulkDelete] = useState<'blockers' | 'objects' | null>(null)
   // On-demand only (per issue: no continuous/auto-validation while editing)
   // — (re)computed just before the Validate dialog opens, never on every
   // render like the scenario `validation` below. null means either "not
@@ -691,6 +693,7 @@ export default function Toolbar({
   }
 
   const handleOpenValidate = () => {
+    setBulkDelete(null)
     recheckPlacement()
     setValidateOpen(true)
   }
@@ -711,6 +714,27 @@ export default function Toolbar({
     return map
   }, [mapPlacementCheck, catalog])
   const entranceBlockers = (id: number): { entityType: 0; id: number }[] => entranceBlockerMap.get(id) ?? []
+  /** Everything the Validate list names, and everything it names as standing in the way, each object once. */
+  const bulkTargets = useMemo(() => {
+    const objects = new Map<string, { entityType: 0 | 2; id: number; sid: string }>()
+    const blockers = new Map<string, { entityType: 0 | 2; id: number; sid: string }>()
+    if (mapPlacementCheck) {
+      for (const issue of mapPlacementCheck.issues) objects.set(`0:${issue.id}`, { entityType: 0, id: issue.id, sid: issue.sid })
+      for (const issue of mapPlacementCheck.unreachable) {
+        objects.set(`${issue.entityType}:${issue.id}`, { entityType: issue.entityType, id: issue.id, sid: issue.sid })
+        for (const b of issue.blockedBy) blockers.set(`0:${b.id}`, { entityType: 0, id: b.id, sid: b.sid })
+      }
+      for (const issue of mapPlacementCheck.isolated) objects.set(`0:${issue.id}`, { entityType: 0, id: issue.id, sid: issue.sid })
+      for (const [flaggedId, list] of entranceBlockerMap) {
+        for (const b of list) if (b.id !== flaggedId) blockers.set(`0:${b.id}`, { ...b, sid: '' })
+      }
+    }
+    return { objects: [...objects.values()], blockers: [...blockers.values()] }
+  }, [mapPlacementCheck, entranceBlockerMap])
+  const runBulkDelete = () => {
+    if (bulkDelete) deleteFromValidate(bulkDelete === 'blockers' ? bulkTargets.blockers : bulkTargets.objects)
+    setBulkDelete(null)
+  }
 
   const handleAutoFixPlacement = () => {
     setPlacementAutoFixing(true)
@@ -1148,6 +1172,33 @@ export default function Toolbar({
                 </Button>
               )}
             </div>
+            {bulkTargets.objects.length > 0 && (
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
+                {bulkDelete === null ? (
+                  <>
+                    {bulkTargets.blockers.length > 0 && (
+                      <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => setBulkDelete('blockers')}>
+                        <Trash2 className="mr-1 h-3 w-3" />{t('layout.toolbar.deleteAllBlockers', { count: bulkTargets.blockers.length })}
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => setBulkDelete('objects')}>
+                      <Trash2 className="mr-1 h-3 w-3" />{t('layout.toolbar.deleteAllObjects', { count: bulkTargets.objects.length })}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1">
+                    <span className="flex-1 text-xs">
+                      {t('layout.toolbar.confirmDeleteObjects', { count: (bulkDelete === 'blockers' ? bulkTargets.blockers : bulkTargets.objects).length })}
+                      {bulkDelete === 'objects' && bulkTargets.objects.some((o) => PLAYER_START_SIDS.has(o.sid)) && (
+                        <> {t('layout.toolbar.confirmDeleteStarts', { count: bulkTargets.objects.filter((o) => PLAYER_START_SIDS.has(o.sid)).length })}</>
+                      )}
+                    </span>
+                    <Button size="sm" variant="destructive" className="h-6 px-2 text-xs" onClick={runBulkDelete}>{t('layout.toolbar.confirmDelete')}</Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setBulkDelete(null)}>{t('layout.toolbar.cancelDelete')}</Button>
+                  </div>
+                )}
+              </div>
+            )}
             {placementSectionOpen && (
               <>
             {!mapPlacementCheck && (
