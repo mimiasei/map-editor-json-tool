@@ -85,6 +85,8 @@ const GATE_GUARD_SCALE = 1.5
 const GATE_GUARD_MAX_VALUE = 60000
 /** Chance a new treasure object gets a guard (the rest stand free, like the odd unguarded pile on a real map). */
 const TREASURE_GUARD_CHANCE = 0.95
+/** Resource piles (gold, ore, wood, ...) are cheap to take: only this share of them keeps a guard. */
+const RESOURCE_GUARD_SHARE = 0.5
 
 export interface OnMapLayers {
   /** Strength words shared by treasure and guards. */
@@ -251,6 +253,8 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   const guardedByTreasure = new Set<number>()
   /** Treasure objects placed here: the guard pass rolls a guard for the ones the populator did not already guard. */
   const newTreasure: ZonePlacement[] = []
+  /** Resource piles that rolled "no guard": neither the populator's guard nor the guard pass gives them one. */
+  const unguardedResourceNodes = new Set<number>()
 
   if (layers.mines) {
     // The generator's own mine placement: every start gets its wood and ore mines and dust at the start-kit distances, and every neutral region gets
@@ -399,11 +403,12 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const wanted = layers.treasures.types
     // One decision per object (chosen kind; scroll boxes also only SCROLL_BOX_KEEP of the time; Pandora's boxes never), so its guard can follow it.
     const keepObject = new Map<ZonePlacement, boolean>(objects.map((o) => [o, o.sid !== 'pandora_box' && wanted.has(treasureTypeOf(o.sid, artifactSids)) && (!SCROLL_BOX_SIDS.has(o.sid) || rng() < SCROLL_BOX_KEEP)]))
-    /** Whether the treasure object nearest to a guard is kept (undefined: no treasure object close by). */
+    for (const o of objects) if (keepObject.get(o) && treasureTypeOf(o.sid, artifactSids) === 'resources' && rng() >= RESOURCE_GUARD_SHARE) unguardedResourceNodes.add(o.node)
+    /** Whether the treasure object nearest to a guard is kept and may keep its guard (undefined: no treasure object close by). */
     const guardedObjectWanted = (node: number): boolean | undefined => {
       let best: ZonePlacement | undefined
       for (const o of objects) if (near(o.node, node) <= GUARD_TIE_RADIUS && (!best || near(o.node, node) < near(best.node, node))) best = o
-      return best ? keepObject.get(best) : undefined
+      return best ? keepObject.get(best) === true && !unguardedResourceNodes.has(best.node) : undefined
     }
     let treasureCount = 0
     for (const p of result.placements) {
@@ -496,7 +501,7 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
     const isGuarded = (node: number): boolean => guardPositions.some((g) => Math.max(Math.abs((g % sizeX) - (node % sizeX)), Math.abs(Math.floor(g / sizeX) - Math.floor(node / sizeX))) <= GUARDED_RADIUS)
     const artifactSids = new Set(collectArtifactSids(catalog))
     const existing: ZonePlacement[] = []
-    const decided = new Set<number>(guardedByTreasure)
+    const decided = new Set<number>([...guardedByTreasure, ...unguardedResourceNodes])
     // A new treasure object counts as guarded only when a guard really stands beside it: the populator also decides "no guard" for some, and those get the roll below.
     const guardNodesNow = [...additions.filter((p) => p.sid === 'random-squad'), ...squads].map((g) => g.node)
     const cheb = (a: number, b: number): number => Math.max(Math.abs((a % sizeX) - (b % sizeX)), Math.abs(Math.floor(a / sizeX) - Math.floor(b / sizeX)))
