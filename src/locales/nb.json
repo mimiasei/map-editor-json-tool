@@ -1198,6 +1198,8 @@
       "density_dense": "Tett",
       "densityCustom": "Egendefinert",
       "backToSettings": "Tilbake til innstillinger",
+      "cancel": "Avbryt",
+      "cancelled": "Genereringen ble avbrutt. Kartet ble ikke endret.",
       "generate": "Generer",
       "generating": "Genererer…"
     },

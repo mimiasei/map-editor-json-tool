@@ -1198,6 +1198,8 @@
       "density_dense": "Dicht",
       "densityCustom": "Benutzerdefiniert",
       "backToSettings": "Zurück zu den Einstellungen",
+      "cancel": "Abbrechen",
+      "cancelled": "Generierung abgebrochen. Die Karte wurde nicht verändert.",
       "generate": "Generieren",
       "generating": "Generiere…"
     },

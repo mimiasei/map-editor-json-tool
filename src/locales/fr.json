@@ -1227,6 +1227,8 @@
       "density_dense": "Dense",
       "densityCustom": "Personnalisée",
       "backToSettings": "Retour aux réglages",
+      "cancel": "Annuler",
+      "cancelled": "Génération annulée. La carte n’a pas été modifiée.",
       "generate": "Générer",
       "generating": "Génération…"
     },

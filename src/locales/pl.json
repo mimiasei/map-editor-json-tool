@@ -1256,6 +1256,8 @@
       "density_dense": "Gęsta",
       "densityCustom": "Własna",
       "backToSettings": "Wróć do ustawień",
+      "cancel": "Anuluj",
+      "cancelled": "Generowanie anulowane. Mapa nie została zmieniona.",
       "generate": "Generuj",
       "generating": "Generowanie…"
     },

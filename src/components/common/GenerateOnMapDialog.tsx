@@ -2,7 +2,7 @@
 // Runs chosen layers of the random map generator on the map that is open (generate-on-map.ts). Existing content is never touched,
 // and the whole result is one undo step.
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
@@ -25,7 +25,7 @@ import { readTemplateAndCatalog } from '@/lib/rmg/generate-map-file'
 import { BALANCE_TARGET_SCORE } from '@/lib/rmg/generate-map-file'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
-import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
+import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, OnMapCancelled, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
 
 interface Props {
   open: boolean
@@ -103,6 +103,9 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [balance, setBalance] = useState<OnMapResult['balance']>(null)
   /** After Finish the layer settings are out of the way: only the four choices above and the summary stay. */
   const [finishMode, setFinishMode] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
+  // Closing the dialog cancels a run in progress: nothing is written to the map until it has finished.
+  useEffect(() => { if (!open) abortRef.current?.abort() }, [open])
   const [progress, setProgress] = useState<{ pct: number; label: string } | null>(null)
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
@@ -124,6 +127,8 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
     if (!current || !catalog) return
     setBusy(true)
     setError(null)
+    const abort = new AbortController()
+    abortRef.current = abort
     setResult(null)
     setWarnings([])
     setBalance(null)
@@ -152,7 +157,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           decorations: finish || decorationsOn ? { types: finish ? new Set(DECORATION_TYPES) : decorationTypes, density: decorationDensity, biomePurity, allowHighContrastBiomes: highContrast } : undefined,
           interactables: finish || interactablesOn ? { density: interactableDensity, disabledSids } : undefined,
           encounters: finish || encountersOn ? { density: encounterDensity, guardExisting } : undefined,
-        }, createSeededRng(Math.floor(Math.random() * 2 ** 31)), (label, pct) => setProgress({ label, pct }))
+        }, createSeededRng(Math.floor(Math.random() * 2 ** 31)), (label, pct) => setProgress({ label, pct }), abort.signal)
         // One store write = one undo step (applyEdit does the same per edit).
         useMapDocumentStore.setState({ container: out.container, mapIsDirty: true })
         useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(out.container)))
@@ -160,10 +165,11 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
         setWarnings(out.warnings)
         setBalance(out.balance)
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(e instanceof OnMapCancelled ? t('mapGrid.generateOnMap.cancelled') : e instanceof Error ? e.message : String(e))
       } finally {
         setBusy(false)
         setProgress(null)
+        abortRef.current = null
       }
     }, 30)
   }
@@ -329,6 +335,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
           </div>
           <div className="px-6 py-3 border-t border-border flex items-center justify-end gap-2 shrink-0">
             <div className="flex-1 min-w-0">{progress && <ProgressStatus value={progress.pct} label={progress.label} />}</div>
+            {busy && <Button size="sm" variant="destructive" onClick={() => abortRef.current?.abort()}>{t('mapGrid.generateOnMap.cancel')}</Button>}
             <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>{t('ui.close')}</Button>
             {finishMode ? (
               <Button size="sm" disabled={busy} onClick={() => setFinishMode(false)}>{t('mapGrid.generateOnMap.backToSettings')}</Button>

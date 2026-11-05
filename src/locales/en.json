@@ -1206,6 +1206,8 @@
       "density_dense": "Dense",
       "densityCustom": "Custom",
       "backToSettings": "Back to settings",
+      "cancel": "Cancel",
+      "cancelled": "Generating cancelled. The map was not changed.",
       "generate": "Generate",
       "generating": "Generating…"
     },

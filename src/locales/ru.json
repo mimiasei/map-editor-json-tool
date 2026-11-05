@@ -1256,6 +1256,8 @@
       "density_dense": "Плотный",
       "densityCustom": "Другая",
       "backToSettings": "Назад к настройкам",
+      "cancel": "Отмена",
+      "cancelled": "Генерация отменена. Карта не изменена.",
       "generate": "Сгенерировать",
       "generating": "Генерация…"
     },

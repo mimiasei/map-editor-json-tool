@@ -1256,6 +1256,8 @@
       "density_dense": "Щільний",
       "densityCustom": "Інша",
       "backToSettings": "Назад до налаштувань",
+      "cancel": "Скасувати",
+      "cancelled": "Генерацію скасовано. Карту не змінено.",
       "generate": "Згенерувати",
       "generating": "Генерація…"
     },
