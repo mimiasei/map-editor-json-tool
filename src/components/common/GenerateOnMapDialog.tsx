@@ -22,7 +22,7 @@ import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { decorationSubcategoryName } from '@/lib/map-grid/decoration-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { readTemplateAndCatalog } from '@/lib/rmg/generate-map-file'
-import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
+import { DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type RmgDifficulty, type RmgRichness } from '@/lib/rmg/classic-presets'
 import { DECORATION_TYPES, TREASURE_TYPES, generateOnMap, type DecorationType, type OnMapResult, type TreasureType } from '@/lib/rmg/generate-on-map'
 
 interface Props {
@@ -71,7 +71,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [terrainBiomes, setTerrainBiomes] = useState<Set<BiomeId>>(new Set(ALL_BIOMES))
   const [bordersOn, setBordersOn] = useState(false)
   const [waterOn, setWaterOn] = useState(false)
-  const [waterChance, setWaterChance] = useState(0.3)
+  const [waterChance, setWaterChance] = useState(0.4)
   const [elevationOn, setElevationOn] = useState(false)
   const [hillChance, setHillChance] = useState(0.5)
   const [minesOn, setMinesOn] = useState(false)
@@ -102,6 +102,9 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
   const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
   const decorationPreset = (Object.keys(DECORATION_DENSITY_PRESETS) as DecorationPreset[]).find((id) => Math.abs(DECORATION_DENSITY_PRESETS[id] - decorationDensity) < 0.001)
+  // Lakes: the full generator's own few/some/many chances (its Islands need a whole-map layout, so they are left out).
+  const waterLevels = WATER_LEVELS.filter((l) => l.id !== 'islands')
+  const waterLevel = waterLevels.find((l) => Math.abs(l.waterChance - waterChance) < 0.001)
   const definedZones = terrainOn && terrainMode === 'defined'
   const definedAreaCount = useMapContextStore((s) => new Set((s.context?.customAreasPainting ?? []).filter((id) => id !== 0)).size)
   const zonesAvailable = definedZones ? definedAreaCount > 0 : (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
@@ -155,7 +158,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
     }, 30)
   }
 
-  const levelLabel = (group: 'richness' | 'difficulty', id: string) => t(`common.generateRandomMapDialog.levels.${group}.${id}` as never)
+  const levelLabel = (group: 'richness' | 'difficulty' | 'water', id: string) => t(`common.generateRandomMapDialog.levels.${group}.${id}` as never)
 
   return (
     <>
@@ -171,7 +174,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
               <Button size="sm" disabled={busy || !catalog} onClick={() => handleGenerate(true)}>{t('mapGrid.generateOnMap.finish')}</Button>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">{t('common.generateRandomMapDialog.richness')}</Label>
                 <Select value={richness} onValueChange={(v) => setRichness(v as RmgRichness)}>
@@ -191,6 +194,13 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                 <Select value={decorationPreset ?? ''} onValueChange={(v) => setDecorationDensity(DECORATION_DENSITY_PRESETS[v as DecorationPreset])}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={t('mapGrid.generateOnMap.densityCustom')} /></SelectTrigger>
                   <SelectContent>{(Object.keys(DECORATION_DENSITY_PRESETS) as DecorationPreset[]).map((id) => (<SelectItem key={id} value={id}>{t(`mapGrid.generateOnMap.density_${id}` as never)}</SelectItem>))}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('common.generateRandomMapDialog.water')}</Label>
+                <Select value={waterLevel?.id ?? ''} onValueChange={(v) => setWaterChance(waterLevels.find((l) => l.id === v)?.waterChance ?? waterChance)}>
+                  <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={t('mapGrid.generateOnMap.densityCustom')} /></SelectTrigger>
+                  <SelectContent>{waterLevels.map((l) => (<SelectItem key={l.id} value={l.id}>{levelLabel('water', l.id)}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
             </div>
