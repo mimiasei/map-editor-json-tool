@@ -1231,8 +1231,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // biome+level, an unrelated concept for this tool).
   const applyZoneBucketFill = useCallback((node: number, zoneId: number) => {
     const startZone = customAreasPainting[node] ?? 0
+    // Stops at blocked tiles (a closed wall) and at the edge of the clicked tile's biome (open ground between two terrains).
+    const startBiome = tilesMap[node]
     const region = floodFillRegion(node, sizeX, sizeZ, (n) => {
-      if (blockedTileSet.has(n)) return false
+      if (blockedTileSet.has(n) || tilesMap[n] !== startBiome) return false
       const z = customAreasPainting[n] ?? 0
       return z === 0 || z === startZone
     })
@@ -1240,7 +1242,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // A city or mine inside the area is part of it: its blocked tiles are painted too (see zone-fill.ts).
     const inside = enclosedBlockedTiles(region, (n) => blockedTileSet.has(n), (n) => (customAreasPainting[n] ?? 0) === 0 || customAreasPainting[n] === startZone, sizeX, sizeZ)
     applyEdit({ kind: 'paintZone', changes: [...region, ...inside].map((n) => ({ node: n, zoneId })) }, 'bucket-fill player area')
-  }, [customAreasPainting, sizeX, sizeZ, blockedTileSet, applyEdit])
+  }, [customAreasPainting, tilesMap, sizeX, sizeZ, blockedTileSet, applyEdit])
 
   // Interactable brush settings + pool — declared here (rather than
   // alongside the rest of the tool below) so applyRectangleFill's
