@@ -1178,6 +1178,7 @@
       "riverCount": "Anzahl",
       "terrain": "Gelände",
       "terrainZones": "Mit Zonen",
+      "terrainDefined": "Definierte Zonen verwenden",
       "terrainPatches": "Organische Flecken",
       "scopeUnpainted": "Nur unbemalte Felder",
       "scopeAll": "Alle freien Felder",

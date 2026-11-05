@@ -1236,6 +1236,7 @@
       "riverCount": "Кількість",
       "terrain": "Місцевість",
       "terrainZones": "Із зонами",
+      "terrainDefined": "Використати задані зони",
       "terrainPatches": "Органічні плями",
       "scopeUnpainted": "Лише нерозфарбовані клітинки",
       "scopeAll": "Усі вільні клітинки",

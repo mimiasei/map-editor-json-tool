@@ -63,7 +63,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [richness, setRichness] = useState<RmgRichness>('medium')
   const [difficulty, setDifficulty] = useState<RmgDifficulty>('normal')
   const [terrainOn, setTerrainOn] = useState(false)
-  const [terrainMode, setTerrainMode] = useState<'zones' | 'patches'>('zones')
+  const [terrainMode, setTerrainMode] = useState<'zones' | 'patches' | 'defined'>('zones')
   const [terrainScope, setTerrainScope] = useState<'unpainted' | 'all'>('unpainted')
   const [terrainBiomes, setTerrainBiomes] = useState<Set<BiomeId>>(new Set(ALL_BIOMES))
   const [bordersOn, setBordersOn] = useState(false)
@@ -96,10 +96,12 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
   const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
-  const zonesAvailable = (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
+  const definedZones = terrainOn && terrainMode === 'defined'
+  const definedAreaCount = useMapContextStore((s) => new Set((s.context?.customAreasPainting ?? []).filter((id) => id !== 0)).size)
+  const zonesAvailable = definedZones ? definedAreaCount > 0 : (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
   const bordersChosen = bordersOn && zonesAvailable
 
-  const nothingChosen = (!terrainOn || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
+  const nothingChosen = (!terrainOn || definedZones || terrainBiomes.size === 0) && !bordersChosen && !waterOn && !elevationOn && !roadsOn && !riversOn && (!treasuresOn || treasureTypes.size === 0) && (!decorationsOn || decorationTypes.size === 0) && !interactablesOn && !encountersOn
 
   /** `finish`: every layer on with every kind, and the terrain laid out with zones when the map is still a blank one-biome map (otherwise the terrain stays). */
   const handleGenerate = (finish = false) => {
@@ -113,13 +115,14 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
       try {
         const tilesMap = useMapContextStore.getState().context?.tilesMap ?? []
         const blank = tilesMap.length > 0 && tilesMap.every((b) => b === tilesMap[0])
-        const terrainLayer = finish ? (blank ? { mode: 'zones' as const, scope: 'unpainted' as const, biomes: new Set<BiomeId>(ALL_BIOMES) } : undefined) : terrainOn ? { mode: terrainMode, scope: terrainScope, biomes: terrainBiomes } : undefined
+        const terrainLayer = finish ? (blank ? { mode: 'zones' as const, scope: 'unpainted' as const, biomes: new Set<BiomeId>(ALL_BIOMES) } : undefined) : terrainOn && terrainMode !== 'defined' ? { mode: terrainMode, scope: terrainScope, biomes: terrainBiomes } : undefined
         const template = terrainLayer?.mode === 'zones' ? (await readTemplateAndCatalog())?.template : undefined
         if (terrainLayer?.mode === 'zones' && !template) throw new Error(t('mapGrid.generateOnMap.needsDesktop'))
         const out = generateOnMap(current, catalog, {
           settings: { richness, difficulty },
           terrain: terrainLayer ? { ...terrainLayer, template } : undefined,
           borders: finish ? blank || mapZoneCount > 1 : bordersChosen,
+          definedZones: !finish && bordersChosen && definedZones,
           water: finish || waterOn ? { chance: waterChance } : undefined,
           elevation: finish || elevationOn ? { hillChance, valleyChance: VALLEY_CHANCE } : undefined,
           roads: finish || roadsOn ? { spurChance } : undefined,
@@ -176,14 +179,15 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
             <Layer title={t('mapGrid.generateOnMap.terrain')} on={terrainOn} onChange={setTerrainOn}>
               <div className="grid grid-cols-2 gap-3">
-                <Select value={terrainMode} onValueChange={(v) => setTerrainMode(v as 'zones' | 'patches')}>
+                <Select value={terrainMode} onValueChange={(v) => setTerrainMode(v as 'zones' | 'patches' | 'defined')}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="zones">{t('mapGrid.generateOnMap.terrainZones')}</SelectItem>
                     <SelectItem value="patches">{t('mapGrid.generateOnMap.terrainPatches')}</SelectItem>
+                    <SelectItem value="defined" disabled={definedAreaCount === 0}>{t('mapGrid.generateOnMap.terrainDefined')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={terrainScope} onValueChange={(v) => setTerrainScope(v as 'unpainted' | 'all')}>
+                <Select value={terrainScope} disabled={definedZones} onValueChange={(v) => setTerrainScope(v as 'unpainted' | 'all')}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unpainted">{t('mapGrid.generateOnMap.scopeUnpainted')}</SelectItem>
@@ -191,11 +195,13 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className={definedZones ? 'opacity-50 pointer-events-none' : undefined}>
               <CheckGroup
                 options={ALL_BIOMES.map((id) => ({ id, label: BIOME_NAMES[id] }))}
                 selected={terrainBiomes}
                 onChange={setTerrainBiomes}
               />
+              </div>
             </Layer>
 
             <Layer title={t('mapGrid.generateOnMap.borders')} on={bordersChosen} onChange={setBordersOn}>

@@ -74,6 +74,8 @@ export interface OnMapLayers {
   terrain?: OnMapTerrainLayer
   /** Obstacles along the borders between zones, with gates (needs zones: the terrain layer's zones, or the map's own `areas`). */
   borders?: boolean
+  /** Borders follow the player areas the user painted on the map, not the terrain layer's zones. */
+  definedZones?: boolean
   /** Lakes in the zones that have no start city. `chance` is the full generator's waterChance (0-1). */
   water?: { chance: number }
   /** Hills and dry valleys (with their ramps). */
@@ -305,6 +307,11 @@ export function generateOnMap(container: MapContainer, catalog: GameCatalog, lay
   if (layers.borders) {
     // The zones the terrain layer just laid out, else the zones the map already has (a generated map's areas).
     let zoneIdByNode = terrainZoneIds
+    if (layers.definedZones) {
+      // The player areas the user painted (0 = no area): ground outside every area counts as one more zone, so each area gets a wall toward it.
+      if (!ctx.customAreasPainting.some((id) => id !== 0)) throw new Error('The map has no player areas to put borders around')
+      zoneIdByNode = Array.from({ length: tileCount }, (_, node) => ctx.customAreasPainting[node] ?? 0)
+    }
     if (!zoneIdByNode && ctx.zoneAreas.length > 1) {
       const ids = new Array<number>(tileCount).fill(-1)
       for (const area of ctx.zoneAreas) for (const node of area.nodes) if (node >= 0 && node < tileCount) ids[node] = area.id

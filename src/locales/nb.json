@@ -1178,6 +1178,7 @@
       "riverCount": "Antall",
       "terrain": "Terreng",
       "terrainZones": "Med soner",
+      "terrainDefined": "Bruk definerte soner",
       "terrainPatches": "Organiske flekker",
       "scopeUnpainted": "Bare umalte felt",
       "scopeAll": "Alle frie felt",

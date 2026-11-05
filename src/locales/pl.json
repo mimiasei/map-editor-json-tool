@@ -1236,6 +1236,7 @@
       "riverCount": "Liczba",
       "terrain": "Teren",
       "terrainZones": "Ze strefami",
+      "terrainDefined": "Użyj zdefiniowanych stref",
       "terrainPatches": "Organiczne plamy",
       "scopeUnpainted": "Tylko niepomalowane pola",
       "scopeAll": "Wszystkie wolne pola",

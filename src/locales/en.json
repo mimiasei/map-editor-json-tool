@@ -1186,6 +1186,7 @@
       "riverCount": "Count",
       "terrain": "Terrain",
       "terrainZones": "With zones",
+      "terrainDefined": "Use defined zones",
       "terrainPatches": "Organic patches",
       "scopeUnpainted": "Only unpainted tiles",
       "scopeAll": "All free tiles",

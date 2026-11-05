@@ -1207,6 +1207,7 @@
       "riverCount": "Nombre",
       "terrain": "Terrain",
       "terrainZones": "Avec zones",
+      "terrainDefined": "Utiliser les zones définies",
       "terrainPatches": "Taches organiques",
       "scopeUnpainted": "Tuiles non peintes seulement",
       "scopeAll": "Toutes les tuiles libres",

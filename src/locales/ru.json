@@ -1236,6 +1236,7 @@
       "riverCount": "Количество",
       "terrain": "Местность",
       "terrainZones": "С зонами",
+      "terrainDefined": "Использовать заданные зоны",
       "terrainPatches": "Органические пятна",
       "scopeUnpainted": "Только нераскрашенные клетки",
       "scopeAll": "Все свободные клетки",
