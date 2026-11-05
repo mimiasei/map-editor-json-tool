@@ -1221,6 +1221,11 @@
       "bordersNeedZones": "Nécessite des zones : utilisez Terrain avec zones ci-dessus, ou une carte qui en a déjà.",
       "mines": "Mines",
       "minesHint": "Bois, minerai et poussière près de chaque ville de départ, et des mines dans les autres zones selon leur taille, avec gardes.",
+      "decorationDensity": "Densité du décor",
+      "density_sparse": "Clairsemée",
+      "density_normal": "Normale",
+      "density_dense": "Dense",
+      "densityCustom": "Personnalisée",
       "generate": "Générer",
       "generating": "Génération…"
     },

@@ -1200,6 +1200,11 @@
       "bordersNeedZones": "Needs zones: use Terrain with zones above, or a map that already has zones.",
       "mines": "Mines",
       "minesHint": "Wood, ore and dust near each start city, and mines in the other areas by size, with guards.",
+      "decorationDensity": "Decoration density",
+      "density_sparse": "Sparse",
+      "density_normal": "Normal",
+      "density_dense": "Dense",
+      "densityCustom": "Custom",
       "generate": "Generate",
       "generating": "Generating…"
     },

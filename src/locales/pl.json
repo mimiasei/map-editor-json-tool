@@ -1250,6 +1250,11 @@
       "bordersNeedZones": "Wymaga stref: użyj powyżej Terenu ze strefami albo mapy, która już je ma.",
       "mines": "Kopalnie",
       "minesHint": "Drewno, ruda i pył przy każdym mieście startowym oraz kopalnie w pozostałych obszarach zależnie od rozmiaru, ze strażnikami.",
+      "decorationDensity": "Gęstość dekoracji",
+      "density_sparse": "Rzadka",
+      "density_normal": "Normalna",
+      "density_dense": "Gęsta",
+      "densityCustom": "Własna",
       "generate": "Generuj",
       "generating": "Generowanie…"
     },

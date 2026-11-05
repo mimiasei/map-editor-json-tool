@@ -1192,6 +1192,11 @@
       "bordersNeedZones": "Trenger soner: bruk Terreng med soner over, eller et kart som allerede har soner.",
       "mines": "Gruver",
       "minesHint": "Tre, malm og støv nær hver startby, og gruver i de andre områdene etter størrelse, med voktere.",
+      "decorationDensity": "Dekortetthet",
+      "density_sparse": "Spredt",
+      "density_normal": "Normal",
+      "density_dense": "Tett",
+      "densityCustom": "Egendefinert",
       "generate": "Generer",
       "generating": "Genererer…"
     },

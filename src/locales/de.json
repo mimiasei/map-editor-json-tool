@@ -1192,6 +1192,11 @@
       "bordersNeedZones": "Benötigt Zonen: oben Gelände mit Zonen verwenden oder eine Karte, die schon Zonen hat.",
       "mines": "Minen",
       "minesHint": "Holz, Erz und Staub nahe jeder Startstadt und Minen in den übrigen Gebieten nach Größe, mit Wächtern.",
+      "decorationDensity": "Dekorationsdichte",
+      "density_sparse": "Spärlich",
+      "density_normal": "Normal",
+      "density_dense": "Dicht",
+      "densityCustom": "Benutzerdefiniert",
       "generate": "Generieren",
       "generating": "Generiere…"
     },

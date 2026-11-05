@@ -34,6 +34,9 @@ const ALL_BIOMES: readonly BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
 /** The tiles of a valley are rare in hand-made maps and in the game's own generator, so only hills get a slider. */
 const VALLEY_CHANCE = 0.03
+/** The decoration slider's values behind the Sparse/Normal/Dense choice next to richness and difficulty (Normal is the slider's default). */
+const DECORATION_DENSITY_PRESETS = { sparse: 0.15, normal: 0.35, dense: 0.6 }
+type DecorationPreset = keyof typeof DECORATION_DENSITY_PRESETS
 
 function Layer({ title, on, onChange, children }: { title: string; on: boolean; onChange: (on: boolean) => void; children?: ReactNode }) {
   return (
@@ -81,7 +84,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
   const [treasureTypes, setTreasureTypes] = useState<Set<TreasureType>>(new Set(TREASURE_TYPES))
   const [decorationsOn, setDecorationsOn] = useState(true)
   const [decorationTypes, setDecorationTypes] = useState<Set<DecorationType>>(new Set(DECORATION_TYPES))
-  const [decorationDensity, setDecorationDensity] = useState(0.35)
+  const [decorationDensity, setDecorationDensity] = useState(DECORATION_DENSITY_PRESETS.normal)
   const [biomePurity, setBiomePurity] = useState(0.9)
   const [highContrast, setHighContrast] = useState(false)
   const [interactablesOn, setInteractablesOn] = useState(true)
@@ -97,6 +100,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
 
   // Borders need zones: the ones the terrain layer lays out in this run, or the map's own (a generated map keeps them as areas).
   const mapZoneCount = useMapContextStore((s) => s.context?.zoneAreas?.length ?? 0)
+  const decorationPreset = (Object.keys(DECORATION_DENSITY_PRESETS) as DecorationPreset[]).find((id) => Math.abs(DECORATION_DENSITY_PRESETS[id] - decorationDensity) < 0.001)
   const definedZones = terrainOn && terrainMode === 'defined'
   const definedAreaCount = useMapContextStore((s) => new Set((s.context?.customAreasPainting ?? []).filter((id) => id !== 0)).size)
   const zonesAvailable = definedZones ? definedAreaCount > 0 : (terrainOn && terrainMode === 'zones') || mapZoneCount > 1
@@ -164,7 +168,7 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
               <Button size="sm" disabled={busy || !catalog} onClick={() => handleGenerate(true)}>{t('mapGrid.generateOnMap.finish')}</Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">{t('common.generateRandomMapDialog.richness')}</Label>
                 <Select value={richness} onValueChange={(v) => setRichness(v as RmgRichness)}>
@@ -177,6 +181,13 @@ export default function GenerateOnMapDialog({ open, onOpenChange }: Props) {
                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as RmgDifficulty)}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>{DIFFICULTY_LEVELS.map((l) => (<SelectItem key={l.id} value={l.id}>{levelLabel('difficulty', l.id)}</SelectItem>))}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('mapGrid.generateOnMap.decorationDensity')}</Label>
+                <Select value={decorationPreset ?? ''} onValueChange={(v) => setDecorationDensity(DECORATION_DENSITY_PRESETS[v as DecorationPreset])}>
+                  <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={t('mapGrid.generateOnMap.densityCustom')} /></SelectTrigger>
+                  <SelectContent>{(Object.keys(DECORATION_DENSITY_PRESETS) as DecorationPreset[]).map((id) => (<SelectItem key={id} value={id}>{t(`mapGrid.generateOnMap.density_${id}` as never)}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
             </div>
