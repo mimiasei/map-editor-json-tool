@@ -30,6 +30,7 @@ import type {
   CatalogRmgZoneLayout,
 } from './types'
 import { CATALOG_SCHEMA_VERSION } from './types'
+import { fillDescriptionPlaceholders } from './description-values'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1014,6 +1015,19 @@ export async function buildCatalog(
     ])
 
   inferInteractableBiomes(mapObjects, factions)
+
+  // "Gives the first visiting hero {0} XP." -> the numbers from objects_logic (and hero buffs), as a range where variants differ.
+  const heroBuffs = new Map<string, Record<string, unknown>>()
+  for (const path of zipFilesUnder(zip, 'DB/heroes_buffs/')) {
+    for (const entry of await readJsonArray(zip, path)) {
+      const id = str(entry.id)
+      if (id) heroBuffs.set(id, entry)
+    }
+  }
+  const logicById = new Map(objectLogics.map((l) => [l.id, l.raw]))
+  for (const obj of mapObjects) {
+    if (obj.description) obj.description = fillDescriptionPlaceholders(obj.description, obj.id, logicById.get(obj.id), heroBuffs)
+  }
 
   const rmgTemplateStrings: Record<string, string> = {}
   for (const [sid, text] of locMap) {

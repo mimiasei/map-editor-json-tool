@@ -508,4 +508,5 @@ export interface GameCatalog {
 // v15: squad templates also carry rollChance, requiredValue, maxValue and per-unit max values (random-squad example preview).
 // v16: rmgTemplateContentLists/rmgTemplateContentPools hold the per-template Core/generator pools and lists excluded from
 // the generic arrays above (they would skew interactable-rarity stats), looked up by name by the template-driven RMG content pass.
-export const CATALOG_SCHEMA_VERSION = 16
+// v17: CatalogMapObject.description has its {0}/{1} numbers filled in from objects_logic (ranges where variants differ).
+export const CATALOG_SCHEMA_VERSION = 17
