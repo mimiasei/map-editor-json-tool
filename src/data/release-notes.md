@@ -2,26 +2,18 @@ Desktop release for macOS (Apple Silicon), Windows, and Linux.
 
 ### What's new since 0.9.4
 
-- **Map Grid looks much closer to the game.** Terrain uses the game's own biome ground textures (blended per biome, with a fade between neighbouring biomes), cliffs use the game's cliff pieces, ramps show as shaded slopes, and roads and rivers are drawn with the game's own pieces. Objects are rendered from the game's 3D models, and city spawners show the chosen faction's city.
-- **Water**: shore fade, a translucent teal surface with ripples and glints (switch in the Map Grid settings), and water spreads over a newly lowered area connected to existing water when you release the stroke.
-- **Fairness check**: a new button next to Validate scores the map with the same algorithm the random map generator uses, with recommendations, a "not compared" list and a per-player decorations section.
-- **Link portals** in the Map Grid by clicking the partner portal (two-way, with unlink). Not yet verified in the game.
-- **Story Builder**: wizard that builds a whole story (quests, dialogs, counters, texts) from premade stories or your own idea, with an optional AI text writer (Gemini / Groq key) and offline phrase banks.
-- **Quests are now saved inside the .map** (Block 4), so published maps actually run their quests in the game.
-- **File > Open Recent** lists your recent maps and projects, newest first.
-- **Objects can be stacked** on top of each other with a rearrangeable order; mirrored objects and objects rotated 180/270 degrees are drawn flipped.
-- **Bucket-filling a Player Area** now also paints the blocked tiles of objects inside it (e.g. a city's footprint).
-- Starting artifacts for custom heroes, a Hero tool for placing random heroes, Actions Before/After editing for zones and objects, map pickers inside the Map Grid, and a Duplicate button on actions.
-- Random map generator: max heroes per player setting, and it remembers your last settings.
-- Map Grid: drawing quality setting, object browser Size filter and Reset all, a banner when painting Player Areas while they are hidden in settings, a styled paint toolbar with new icons, and faster edits.
-- **New Walkables brush** (flower icon, right of Trees): scatters grass, flowers and mushrooms with the same biome-mix settings as Trees.
-- **Trees and Obstacles brushes mix more biomes on Snow and Lava** when high-contrast biomes are off: Snow also takes Grass pine trees, Deathland and Dirt; Lava also takes Deathland and Grass. The Mountains share in Obstacles now starts at 50%.
-- **The eraser removes objects while you drag**, instead of only when you release the mouse button (rivers, roads and ramps still go on release).
-- **Random cities can be given an owner and a faction** in the info column. A new random city now starts with no owner ("None", as in GME) instead of becoming Player 1's when GME opens the map. "Neutral" owners are now called "None".
-- **The Map Grid pans with the right mouse button**, as in GME (it was the middle button), and a banner with a progress bar shows while the terrain textures load.
-- **Encounter difficulty ranges are higher** (Easy 1050-5250, Normal 5251-10500, Difficult 10501-15750, Impossible 15751-21000, Lethal 21001-50000). Ranges you have edited yourself are kept.
-- **Saving no longer pops up a list of map issues**; the Validate button still lists them on demand.
-- **Help > What's new** shows these notes.
-- Elevation now blocks the lower ring around a raised area, as verified in the game.
+- **Generate on this map** (Map Grid) runs the random map generator on top of the map you have open: pick layers one by one (terrain, decorations, interactables, treasures, encounters, water, elevation, roads, rivers, zone borders) or press **Finish the map**. Nothing you placed is moved or deleted, and the whole run is one undo step.
+- **Random maps got a lot closer to the game's own**: zone count follows the map size (new Chain layout), hires, artifacts, chests, resource piles, guards and neutral cities are filled at the game templates' density, borders have sturdier walls and gates, and a map below the minimum fairness is re-rolled. With a game template picked, its mandatory objects (mines, mana wells, markets and so on) and treasure budgets are placed too.
+- **Random map Quality setting** (Fast / Normal / Thorough): how many fairness re-rolls and sense-check passes run. The pass keeps powerful objects away from the start cities, puts village-type objects (windmill, stables, tavern, market...) near them, caps strong objects by map size, and repairs by deleting the less important of two clashing objects.
+- **Map Grid looks much closer to the game**: the game's own ground textures, cliffs, ramps, roads, rivers, water and 3D object models, with a Walkables brush, stacked objects and right-mouse panning as in GME.
+- **Fairness check** button: scores the map with the generator's own algorithm and gives recommendations.
+- **Validate dialog** can delete the object or what blocks it, one by one or all at once.
+- **Quests are now saved inside the .map**, so published maps actually run their quests in the game.
+- **Story Builder**: builds a whole story (quests, dialogs, counters, texts) from premade stories or your own idea, with an optional AI text writer and offline phrase banks.
+- **Game Database**: object and artifact descriptions now show their real numbers (e.g. "Gives the first visiting hero 6000-10000 XP"), objects and artifacts show the game's value, and creatures, artifacts and objects can be sorted by name or value.
+- **New interface languages**: French, German, Ukrainian, Russian, Norwegian and Polish (first drafts, not reviewed by native speakers), a new toolbar with a Map | Quests switch, and a new start screen.
+- Map Stats shows Random resources, Artifacts, Road Tiles and Neutral Zones; File > Open Recent; random cities can have an owner and faction; the eraser removes objects while you drag.
 
-See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/compare/v0.9.4...v0.9.5-5) for what changed.
+Not played in the game yet: Generate on this map, the Chain layout, the quality pass and the template-based placement. The new texts in fr/de/nb/pl/ru/uk need native review.
+
+See [CHANGELOG](https://github.com/mimiasei/map-editor-json-tool/compare/v0.9.4...main) for what changed.
