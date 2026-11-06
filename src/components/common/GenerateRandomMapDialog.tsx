@@ -76,6 +76,7 @@ import {
     DEFAULT_MAX_HEROES,
     DIFFICULTY_LEVELS,
     RICHNESS_LEVELS,
+    QUALITY_LEVELS,
     WATER_LEVELS,
     buildClassicOptions,
     type ClassicSettings
@@ -469,6 +470,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         winOptions: classicMode && !gameTemplate ? classic.winOptions : undefined,
         randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
         mirrored: mirroredMap,
+        quality: classic.quality,
         boundaryGuardStrength: opts.boundaryGuardStrength,
         squadDensity: opts.squadDensity,
         roadWindingAmplitude: opts.roadWindingAmplitude,
@@ -898,10 +900,11 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                         [t('common.generateRandomMapDialog.complexity'), t('common.generateRandomMapDialog.complexityInfo'), classic.complexity, 'complexity', COMPLEXITY_LEVELS],
                         [t('common.generateRandomMapDialog.difficulty'), t('common.generateRandomMapDialog.difficultyInfo'), classic.difficulty, 'difficulty', DIFFICULTY_LEVELS],
                         [t('common.generateRandomMapDialog.water'), t('common.generateRandomMapDialog.waterInfo'), classic.water, 'water', WATER_LEVELS],
+                        [t('common.generateRandomMapDialog.quality'), t('common.generateRandomMapDialog.qualityInfo'), classic.quality ?? 'normal', 'quality', QUALITY_LEVELS],
                       ] as const).map(([label, info, value, key, options]) => {
                         // The template sets richness, objects and water itself (the game has no override): shown greyed out. Richness has no
                         // honest one-step equivalent, so it only says so. Difficulty is the player's own setting in the game and stays free.
-                        const fromTemplate = !!gameTemplate && key !== 'difficulty'
+                        const fromTemplate = !!gameTemplate && key !== 'difficulty' && key !== 'quality'
                         const templateLevel = key === 'complexity' ? templateSummary?.complexity?.level : key === 'water' ? templateSummary?.water?.level : undefined
                         const templateNumber = key === 'complexity' ? templateSummary?.complexity?.obstaclesFill : key === 'water' ? templateSummary?.water?.lakesFill : undefined
                         const shown = fromTemplate ? templateLevel ?? '' : value

@@ -200,6 +200,8 @@ export interface GenerateRandomMapOptions {
   randomPlayerFaction?: boolean
   /** A left-right mirror image map for an even player count (zone-mirror.ts): the right half copies the left. Not with a game template, islands or portals. */
   mirrored?: boolean
+  /** Interactable picks favour weak objects over strong ones by power tier (object-power.ts); the Quality setting turns it on above Fast. */
+  powerAwareInteractables?: boolean
   /** VCMI-style zone-to-zone guarded chokepoints (issue #210 Milestone 6,
    *  researched directly from VCMI's own `ConnectionsPlacer.cpp`/
    *  `ObjectManager.cpp::chooseGuard`) — `'none'` (the default) skips this
@@ -340,7 +342,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent: requestedWater = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals: requestedPortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, mirrored = false, randomCityCount, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, includePandoraBox = false, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent: requestedWater = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals: requestedPortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, mirrored = false, powerAwareInteractables = false, randomCityCount, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, includePandoraBox = false, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
   if (mirrored && gameTemplateJson) throw new Error('A mirrored map cannot use a game template')
   // Islands and portals link zones across water in ways that are not mirrored, so a mirrored map has neither.
   const waterContent = mirrored && requestedWater === 'islands' ? 'normal' : requestedWater
@@ -1645,7 +1647,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
     excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng, riverNodes,
     density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
-    rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid),
+    rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid, powerAwareInteractables),
     pandoraChancePerNeutralZone: includePandoraBox ? PANDORA_CHANCE_PER_NEUTRAL_ZONE : 0,
     skipZoneIds: templateContentZoneIds,
     zoneCaps: new Map([...contentCountLimitsByZoneId].map(([zoneId, rows]) => [zoneId, new Map(rows.map((r) => [r.sid, r.maxCount]))])),

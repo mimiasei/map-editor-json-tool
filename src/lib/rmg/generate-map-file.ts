@@ -25,6 +25,8 @@ import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePl
 import { closeGuardFreeRoutesInContainer } from './zone-mirror-routes'
 import { yieldToUI } from '@/lib/async-utils'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
+import { runQualityPass } from './quality-pass'
+import type { RmgQuality } from './classic-presets'
 
 /** A generation scoring below this is re-rolled (up to `MAX_BALANCE_ATTEMPTS`
  *  total); the best-scoring attempt wins. */
@@ -44,8 +46,26 @@ export function minAcceptableFairness(sizeX: number, sizeZ: number, playerCount:
   return Math.max(FLOOR_MIN_ACCEPTABLE_SCORE, Math.min(MAX_MIN_ACCEPTABLE_SCORE, Math.round(fitted)))
 }
 
+interface QualityPreset {
+  /** Fairness attempts while the score is at or above the minimum, and while below it (see MAX_ATTEMPTS_BELOW_MIN). */
+  attempts: number
+  attemptsBelowMin: number
+  /** A map scoring at least this is accepted. */
+  targetScore: number
+  /** Rounds of the quality pass (quality-pass.ts); 0 skips it. */
+  passIterations: number
+}
+
+/** Normal is what the generator always did, plus one round of the quality pass. */
+export const QUALITY_PRESETS: Record<RmgQuality, QualityPreset> = {
+  fast: { attempts: 1, attemptsBelowMin: 1, targetScore: BALANCE_TARGET_SCORE, passIterations: 0 },
+  normal: { attempts: MAX_BALANCE_ATTEMPTS, attemptsBelowMin: MAX_ATTEMPTS_BELOW_MIN, targetScore: BALANCE_TARGET_SCORE, passIterations: 1 },
+  thorough: { attempts: 8, attemptsBelowMin: 14, targetScore: 90, passIterations: 3 },
+}
+
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
+  quality?: RmgQuality
 }
 
 /** Reads the same bundled `template.map`/loaded-catalog pair
@@ -114,25 +134,34 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   // the Stats panel shows, measured on the finished map, decides the re-roll.
   const fairnessOf = (result: { container: MapContainer }): number =>
     computePlayerBalance(extractMapContext(containerToRawBlocks(result.container)), catalog)?.score ?? 100
-  let best = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(0, 60, '') })
+  const quality = QUALITY_PRESETS[options.quality ?? 'normal']
+  const generation: GenerateRandomMapOptions = { ...options, powerAwareInteractables: options.quality !== 'fast' }
+  let best = await generateRandomMap(loaded.template, catalog, { ...generation, onProgress: reportWindow(0, 60, '') })
   let bestScore = fairnessOf(best)
   options.onProgress?.(i18n.t('rmg.progress.checkingFairness', { score: bestScore }), 60)
   await yieldToUI()
   const minAcceptable = minAcceptableFairness(options.sizeX, options.sizeZ, options.playerCount)
-  const attemptsAllowed = (): number => (bestScore < minAcceptable ? MAX_ATTEMPTS_BELOW_MIN : MAX_BALANCE_ATTEMPTS)
+  const attemptsAllowed = (): number => (bestScore < minAcceptable ? quality.attemptsBelowMin : quality.attempts)
   // The re-rolls share the 60-90% stretch, so each slice shrinks to fit the longest run.
-  const slice = 30 / (MAX_ATTEMPTS_BELOW_MIN - 1)
-  for (let attempt = 2; attempt <= attemptsAllowed() && !options.gameTemplateJson && !options.terrainOnly && bestScore < BALANCE_TARGET_SCORE; attempt++) {
+  const slice = 30 / Math.max(1, Math.max(quality.attemptsBelowMin, quality.attempts) - 1)
+  for (let attempt = 2; attempt <= attemptsAllowed() && !options.gameTemplateJson && !options.terrainOnly && bestScore < quality.targetScore; attempt++) {
     const lo = Math.round(60 + (attempt - 2) * slice)
     const prefix = i18n.t('rmg.progress.rebalancePrefix', { attempt, max: attemptsAllowed(), score: bestScore })
     options.onProgress?.(`${prefix}${i18n.t('rmg.progress.startingOver')}`, lo)
     await yieldToUI()
-    const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, Math.round(lo + slice), prefix) })
+    const next = await generateRandomMap(loaded.template, catalog, { ...generation, onProgress: reportWindow(lo, Math.round(lo + slice), prefix) })
     const nextScore = fairnessOf(next)
     if (nextScore > bestScore) { best = next; bestScore = nextScore }
   }
   options.onProgress?.(i18n.t('rmg.progress.playerZonesBalanced'), 90)
-  const { container, balanceReport } = best
+  const { balanceReport } = best
+  let container = best.container
+  // A mirrored map must stay a mirror image and a game template decides where its own objects go, so neither gets one-sided moves.
+  if (quality.passIterations > 0 && !options.mirrored && !options.gameTemplateJson && !options.terrainOnly) {
+    options.onProgress?.(i18n.t('rmg.progress.qualityPass'), 91)
+    await yieldToUI()
+    container = runQualityPass(container, catalog, { iterations: quality.passIterations, rng: options.rng ?? Math.random }).container
+  }
 
   options.onProgress?.(i18n.t('rmg.progress.autoFixing'), 92)
   await yieldToUI()

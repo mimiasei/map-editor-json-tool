@@ -204,6 +204,8 @@
       "complexity": "Komplexität",
       "difficulty": "Schwierigkeitsgrad",
       "richnessInfo": "Wie wertvoll die Schätze sind — von armen Haufen und billigen Gebäuden bis zu reichen mit mächtigen Artefakten. Nutzt die eigenen Reichtumsstufen des Spiels.",
+      "quality": "Qualität",
+      "qualityInfo": "Wie viele Qualitätsprüfungen laufen, bevor die Karte fertig ist. Schnell nimmt das erste Layout und überspringt die Plausibilitätsprüfung. Normal würfelt ein unfaires Layout bis zu 4-mal neu und prüft einmal, dass mächtige Objekte von den Startpunkten wegbleiben und Dorfobjekte in ihrer Nähe stehen. Gründlich würfelt bis zu 8-mal neu, strebt einen faireren Wert an und wiederholt diese Prüfung dreimal. Je höher, desto langsamer.",
       "complexityInfo": "Wie belebt die Karte ist — skaliert Dekoration, interaktive Objekte, Schatzhaufen und Wächtertrupps gemeinsam.",
       "difficultyInfo": "Wie stark die Wächtertrupps sind und wie schnell sie jede Woche wachsen, mit den sechs Schwierigkeitsgraden des Spiels. Neutrale Städte erhalten Wächter auf höheren Stufen, und der Lobby-Schwierigkeitsgrad der Karte wird entsprechend gesetzt.",
       "water": "Wasser",
@@ -219,6 +221,11 @@
         "advanced": "Fortgeschritten"
       },
       "levels": {
+        "quality": {
+          "fast": "Schnell",
+          "normal": "Normal",
+          "thorough": "Gründlich"
+        },
         "richness": {
           "poor": "Gering",
           "modest": "Bescheiden",
@@ -3257,6 +3264,7 @@
       "checkingReachability": "Erreichbarkeit wird geprüft und Zonen werden repariert",
       "writingPlacements": "Platzierungen werden geschrieben",
       "playerZonesBalanced": "Spielerzonen ausbalanciert",
+      "qualityPass": "Karte wird auf Plausibilität geprüft",
       "autoFixing": "Überlappungen und Höhen werden automatisch korrigiert",
       "validatingReachability": "Endgültige Erreichbarkeit wird geprüft",
       "writingMapFile": "Kartendatei wird geschrieben",
