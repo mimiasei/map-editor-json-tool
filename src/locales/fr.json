@@ -1598,6 +1598,7 @@
       "searchSidName": "Rechercher par sid / nom",
       "noObjectsMatchTheseFilters": "Aucun objet ne correspond à ces filtres.",
       "noCreaturesMatchTheseFilters": "Aucune créature ne correspond à ces filtres.",
+      "objectValue": "Valeur : {{value}}",
       "type": "Type :",
       "noPlaceableTemplateForThis": "Aucun modèle plaçable pour cette créature",
       "factionTier": "{{faction}} - Rang {{tier}}",

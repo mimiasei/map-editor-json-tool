@@ -1630,6 +1630,7 @@
       "searchSidName": "Шукати sid / назву",
       "noObjectsMatchTheseFilters": "Жоден об'єкт не відповідає цим фільтрам.",
       "noCreaturesMatchTheseFilters": "Жодна істота не відповідає цим фільтрам.",
+      "objectValue": "Вартість: {{value}}",
       "type": "Тип:",
       "noPlaceableTemplateForThis": "Для цієї істоти немає шаблону для розміщення",
       "factionTier": "{{faction}} — рівень {{tier}}",

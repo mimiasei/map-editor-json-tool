@@ -1574,6 +1574,7 @@
       "searchSidName": "Search sid / name",
       "noObjectsMatchTheseFilters": "No objects match these filters.",
       "noCreaturesMatchTheseFilters": "No creatures match these filters.",
+      "objectValue": "Value: {{value}}",
       "type": "Type:",
       "noPlaceableTemplateForThis": "No placeable template for this creature",
       "factionTier": "{{faction}} - Tier {{tier}}",

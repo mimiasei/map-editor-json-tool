@@ -1630,6 +1630,7 @@
       "searchSidName": "Szukaj sid / nazwy",
       "noObjectsMatchTheseFilters": "Żadne obiekty nie pasują do tych filtrów.",
       "noCreaturesMatchTheseFilters": "Żadne stworzenia nie pasują do tych filtrów.",
+      "objectValue": "Wartość: {{value}}",
       "type": "Typ:",
       "noPlaceableTemplateForThis": "Brak szablonu do umieszczenia dla tego stworzenia",
       "factionTier": "{{faction}} - poziom {{tier}}",

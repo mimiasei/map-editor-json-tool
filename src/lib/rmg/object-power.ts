@@ -5,6 +5,7 @@
 // 1-2 village-type objects within 15 tiles. The quality pass (quality-pass.ts) and the interactable pick weights both read this file.
 
 import type { GameCatalog } from '@/lib/catalog/types'
+import { objectValue } from '@/lib/catalog/description-values'
 
 export type PowerTier = 'weak' | 'medium' | 'strong' | 'veryStrong'
 
@@ -16,8 +17,6 @@ export const SETTLEMENT_SIDS = new Set(['windmill', 'village', 'stables', 'peasa
 
 const powerCache = new WeakMap<GameCatalog, Map<string, number>>()
 
-interface LogicVariant { rollChance?: number; value?: number }
-
 /** Roll-weighted mean `value` over an object's variants, else its `goodsValue`; undefined when the object has neither. */
 export function interactablePower(catalog: GameCatalog | null, sid: string): number | undefined {
   if (!catalog?.objectLogics) return undefined
@@ -26,14 +25,8 @@ export function interactablePower(catalog: GameCatalog | null, sid: string): num
     table = new Map()
     for (const logic of catalog.objectLogics) {
       if (!POWER_SOURCES.has(logic.sourcePath) || logic.id.startsWith('campaign_')) continue
-      const variants = Array.isArray(logic.raw.variants) ? (logic.raw.variants as LogicVariant[]) : []
-      const priced = variants.filter((v) => typeof v.value === 'number')
-      if (priced.length > 0) {
-        const total = priced.reduce((s, v) => s + (v.rollChance ?? 1), 0) || 1
-        table.set(logic.id, priced.reduce((s, v) => s + (v.value as number) * (v.rollChance ?? 1), 0) / total)
-      } else if (typeof logic.raw.goodsValue === 'number') {
-        table.set(logic.id, logic.raw.goodsValue)
-      }
+      const price = objectValue(logic.raw)
+      if (price) table.set(logic.id, price.value)
     }
     powerCache.set(catalog, table)
   }

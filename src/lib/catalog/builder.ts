@@ -30,7 +30,7 @@ import type {
   CatalogRmgZoneLayout,
 } from './types'
 import { CATALOG_SCHEMA_VERSION } from './types'
-import { fillDescriptionPlaceholders } from './description-values'
+import { fillArtifactDescription, fillDescriptionPlaceholders, objectValue } from './description-values'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -225,6 +225,7 @@ async function collectArtifacts(zip: JSZip, locMap: Map<string, string>): Promis
       seen.add(id)
       const nameSid = str(entry.name || entry.id)
       const name = loc(locMap, nameSid) ?? loc(locMap, id) ?? nameSid
+      const description = loc(locMap, str(entry.description)) ?? loc(locMap, `${id}_description`)
       artifacts.push({
         id,
         name,
@@ -233,6 +234,8 @@ async function collectArtifacts(zip: JSZip, locMap: Map<string, string>): Promis
         // wrong key (issue #150 audit); fixed alongside adding `raw` below.
         slot: str(entry.slot_ || '') || undefined,
         rarity: str(entry.rarity || '') || undefined,
+        description: description ? fillArtifactDescription(description, entry) : undefined,
+        value: typeof entry.goodsValue === 'number' ? entry.goodsValue : undefined,
         raw: entry,
       })
     }
@@ -1027,6 +1030,8 @@ export async function buildCatalog(
   const logicById = new Map(objectLogics.map((l) => [l.id, l.raw]))
   for (const obj of mapObjects) {
     if (obj.description) obj.description = fillDescriptionPlaceholders(obj.description, obj.id, logicById.get(obj.id), heroBuffs)
+    const price = objectValue(logicById.get(obj.id))
+    if (price) { obj.value = Math.round(price.value); obj.valueMin = price.min; obj.valueMax = price.max }
   }
 
   const rmgTemplateStrings: Record<string, string> = {}

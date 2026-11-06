@@ -113,3 +113,59 @@ export function fillDescriptionPlaceholders(description: string, sid: string, lo
     return valueOf(kind) ?? match
   })
 }
+
+// ─── Artifacts ────────────────────────────────────────────────────────────────
+// DB/items entries carry `bonuses[] {type, parameters, upgrade {increment}}` and `maxLevel`. The {n} of an artifact text are that artifact's
+// distinct bonus amounts in order (the last parameter: "spellPower,12" -> 12, "defencePer,0.15" -> 15 when the text has "{1}%"); "+X Attack and
+// Defense" with two equal bonuses shares one {0}. Checked over all 134 artifact texts with placeholders: a text whose bonuses are ability sids
+// (Heroic Strike, battle buffs) or has fewer distinct amounts than placeholders (chain_link "tier-{0} and {1}") keeps its {n}. maxLevel 1 means
+// no upgrade (legions_step uses artifact_tech_cannot_be_upgraded), so the top level is base + increment * (maxLevel - 1); maxLevel 999 is unbounded
+// (boreolos parts) and shows the base only.
+
+interface ArtifactAmount { base: number; increment: number }
+
+function artifactAmounts(entry: Json): ArtifactAmount[] {
+  const out: ArtifactAmount[] = []
+  for (const bonus of asArray(entry.bonuses)) {
+    const p = params(bonus)
+    const base = p.length > 0 ? num(p[p.length - 1]) : undefined
+    if (base === undefined) continue
+    const increment = num(((bonus.upgrade ?? {}) as Json).increment) ?? 0
+    if (!out.some((a) => a.base === Math.abs(base))) out.push({ base: Math.abs(base), increment: Math.abs(increment) })
+  }
+  return out
+}
+
+/** An artifact's description with its {n} replaced by the bonus amounts (as "base-top" where upgrades raise it). */
+export function fillArtifactDescription(description: string, entry: Json): string {
+  if (!/\{\d\}/.test(description)) return description
+  const amounts = artifactAmounts(entry)
+  const maxLevel = num(entry.maxLevel) ?? 1
+  return description.replace(/\{(\d)\}(%?)/g, (match, index: string, percent: string) => {
+    const amount = amounts[Number(index)]
+    if (!amount) return match
+    const scale = percent ? 100 : 1
+    const round = (v: number): number => Math.round(v * scale * 1000) / 1000
+    const lo = round(amount.base)
+    const hi = maxLevel > 1 && maxLevel <= 10 && amount.increment > 0 ? round(amount.base + amount.increment * (maxLevel - 1)) : lo
+    return (lo === hi ? String(lo) : `${lo}-${hi}`) + percent
+  })
+}
+
+// ─── Value ────────────────────────────────────────────────────────────────────
+
+/** The game's price for an objects_logic entry: its variants' `value` (roll-weighted mean, plus the min/max when they differ), else `goodsValue`. */
+export function objectValue(logic: Json | undefined): { value: number; min?: number; max?: number } | undefined {
+  if (!logic) return undefined
+  const priced = asArray(logic.variants).filter((v) => typeof v.value === 'number')
+  if (priced.length > 0) {
+    const total = priced.reduce((s, v) => s + (num(v.rollChance) ?? 1), 0) || 1
+    const mean = priced.reduce((s, v) => s + (v.value as number) * (num(v.rollChance) ?? 1), 0) / total
+    const values = priced.map((v) => v.value as number)
+    const min = Math.min(...values)
+    const max = Math.max(...values)
+    return min === max ? { value: mean } : { value: mean, min, max }
+  }
+  const goods = num(logic.goodsValue)
+  return goods === undefined ? undefined : { value: goods }
+}

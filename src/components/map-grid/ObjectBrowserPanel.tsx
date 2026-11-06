@@ -823,13 +823,18 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               // Most decorations/fx/animals/blocks have no real description
               // string at all (see CatalogMapObject.description) — skip the
               // tooltip entirely rather than show an empty hover box.
-              if (!o.description) return row
+              if (!o.description && o.value === undefined) return row
               return (
                 <Tooltip key={o.id}>
                   <TooltipTrigger asChild>{row}</TooltipTrigger>
                   <TooltipContent side="left" className="max-w-64 space-y-1 text-left">
                     <p className="text-xs font-semibold">{localName(catalog, 'mapObjects', o)}</p>
-                    <p className="text-xs leading-relaxed">{o.description}</p>
+                    {o.description && <p className="text-xs leading-relaxed">{o.description}</p>}
+                    {o.value !== undefined && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('mapGrid.objectBrowserPanel.objectValue', { value: o.valueMin !== undefined ? `${o.valueMin}-${o.valueMax}` : o.value })}
+                      </p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               )

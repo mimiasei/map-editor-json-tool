@@ -1566,6 +1566,7 @@
       "searchSidName": "SID / Name suchen",
       "noObjectsMatchTheseFilters": "Keine Objekte entsprechen diesen Filtern.",
       "noCreaturesMatchTheseFilters": "Keine Kreaturen entsprechen diesen Filtern.",
+      "objectValue": "Wert: {{value}}",
       "type": "Art:",
       "noPlaceableTemplateForThis": "Keine platzierbare Vorlage für diese Kreatur",
       "factionTier": "{{faction}} - Klasse {{tier}}",

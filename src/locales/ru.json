@@ -1630,6 +1630,7 @@
       "searchSidName": "Поиск по sid / названию",
       "noObjectsMatchTheseFilters": "Нет объектов, соответствующих этим фильтрам.",
       "noCreaturesMatchTheseFilters": "Нет существ, соответствующих этим фильтрам.",
+      "objectValue": "Стоимость: {{value}}",
       "type": "Тип:",
       "noPlaceableTemplateForThis": "Для этого существа нет размещаемого шаблона",
       "factionTier": "{{faction}} — ранг {{tier}}",

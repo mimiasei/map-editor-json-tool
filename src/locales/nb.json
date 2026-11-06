@@ -1566,6 +1566,7 @@
       "searchSidName": "Søk sid / navn",
       "noObjectsMatchTheseFilters": "Ingen objekter samsvarer med disse filtrene.",
       "noCreaturesMatchTheseFilters": "Ingen skapninger samsvarer med disse filtrene.",
+      "objectValue": "Verdi: {{value}}",
       "type": "Type:",
       "noPlaceableTemplateForThis": "Ingen plasserbar mal for denne skapningen",
       "factionTier": "{{faction}} - Nivå {{tier}}",
