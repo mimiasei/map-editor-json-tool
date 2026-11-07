@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { HOTKEY_DEFS, hotkeyDef } from '@/lib/hotkeys'
+import { HOTKEY_DEFS, hotkeyDef, isReservedCombo } from '@/lib/hotkeys'
 
 // Only the user's changes are stored (id -> combo, '' = switched off), so shortcuts added in later releases get their default.
 interface HotkeyState {
   overrides: Record<string, string>
   setCombo: (id: string, combo: string) => void
   reset: (id: string) => void
+  /** Gives `combo` to `id` and switches off `takeFrom`, the shortcut that had it. */
+  moveCombo: (id: string, combo: string, takeFrom: string) => void
   resetAll: () => void
 }
 
@@ -15,6 +17,7 @@ export const useHotkeyStore = create<HotkeyState>()(
     (set) => ({
       overrides: {},
       setCombo: (id, combo) => set((s) => ({ overrides: { ...s.overrides, [id]: combo } })),
+      moveCombo: (id, combo, takeFrom) => set((s) => ({ overrides: { ...s.overrides, [takeFrom]: '', [id]: combo } })),
       reset: (id) => set((s) => {
         const rest = { ...s.overrides }
         delete rest[id]
@@ -40,4 +43,13 @@ export function findHotkeyConflict(overrides: Record<string, string>, id: string
   const def = hotkeyDef(id)
   if (!def || !combo) return undefined
   return HOTKEY_DEFS.find((d) => d.id !== id && d.scope === def.scope && effectiveCombo(overrides, d.id) === combo)?.id
+}
+
+export type ComboCheck = { status: 'ok' } | { status: 'reserved' } | { status: 'conflict'; otherId: string }
+
+/** Whether `id` may take `combo`: not reserved, and not already in effect for another shortcut of the same scope. */
+export function checkCombo(overrides: Record<string, string>, id: string, combo: string): ComboCheck {
+  if (isReservedCombo(combo)) return { status: 'reserved' }
+  const otherId = findHotkeyConflict(overrides, id, combo)
+  return otherId ? { status: 'conflict', otherId } : { status: 'ok' }
 }

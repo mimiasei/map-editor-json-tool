@@ -82,7 +82,10 @@ import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
-import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { copyObjects, flipHorizontal, isCopyable, planPaste, rotateClockwise } from '@/lib/map-grid/clipboard'
+import { combineSelection, keysInRectangle } from '@/lib/map-grid/selection'
+import { applyPaste, type PasteResult } from '@/lib/map-grid/paste-apply'
+import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, mergeStrokeDecisions, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
@@ -96,6 +99,7 @@ import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import MapGameSettingsDialog from '@/components/map-grid/MapGameSettingsDialog'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
+import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -162,6 +166,10 @@ import {
   StepDown,
   Freehand,
   RectSelect,
+  ClipboardCopy,
+  ClipboardPaste,
+  FlipHorizontal,
+  RotateCw,
 } from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 import { useTranslation, Trans } from 'react-i18next'
@@ -837,7 +845,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects' | 'select'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -935,9 +943,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // move — user-requested: nothing showed until release before this) and
   // the final commit, so what's on screen right before release is exactly
   // what gets applied, never a fresh unrelated re-roll.
-  const sampleObstacleAdditions = useCallback((nodes: number[]): { node: number; sid: string }[] => {
+  const sampleObstacleAdditions = useCallback((nodes: number[], decided?: ReadonlyMap<number, string | null>): { node: number; sid: string }[] => {
     if (!fuzzyObstaclePools || nodes.length === 0) return []
     const distances = computeFuzzyDistances(nodes, sizeX)
+    if (decided) for (const n of decided.keys()) distances.delete(n)
     // Pools (pool_small etc.) only look right at a minimum brush size —
     // measured from the stroke's own bounding box so this works the same
     // whether it came from a freehand drag or a Rectangle selection. The
@@ -959,8 +968,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     })
   }, [fuzzyObstaclePools, sizeX, tilesMap, obstacleMountainChance, obstaclePoolChance, obstacleBiomePurity, obstacleAllowHighContrast])
   const [obstacleStaged, setObstacleStaged] = useState<{ node: number; sid: string }[]>([])
+  // Per-stroke memory of what each tile got, so a growing stroke never re-rolls the tiles it already painted.
+  const obstacleDecidedRef = useRef(new Map<number, string | null>())
   const previewObstacleStroke = useCallback((nodes: number[]) => {
-    setObstacleStaged(sampleObstacleAdditions(nodes))
+    const decided = obstacleDecidedRef.current
+    setObstacleStaged(mergeStrokeDecisions(decided, nodes, sampleObstacleAdditions(nodes, decided)))
   }, [sampleObstacleAdditions])
   // Rectangle mode's whole region is known synchronously on release, so it
   // passes `nodes` to sample fresh and apply immediately — the freehand
@@ -970,11 +982,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const additions = nodes ? sampleObstacleAdditions(nodes) : obstacleStaged
     if (additions.length === 0) return
     applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'scatter obstacles')
+    obstacleDecidedRef.current.clear()
     setObstacleStaged([])
   }, [obstacleStaged, sampleObstacleAdditions, applyEdit])
   const stopObstaclePainting = () => {
     setObstacleBrushActive(false)
     obstacleDragRef.current = null
+    obstacleDecidedRef.current.clear()
     setObstacleStaged([])
   }
 
@@ -991,10 +1005,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => (catalog ? buildWalkablePools(catalog) : null),
     [catalog],
   )
-  const sampleTreeAdditions = useCallback((nodes: number[]): { node: number; sid: string }[] => {
+  const sampleTreeAdditions = useCallback((nodes: number[], decided?: ReadonlyMap<number, string | null>): { node: number; sid: string }[] => {
     const pools = treeKind === 'flowers' ? walkablePools : treePools
     if (!pools || nodes.length === 0) return []
     const distances = computeFuzzyDistances(nodes, sizeX)
+    if (decided) for (const n of decided.keys()) distances.delete(n)
     const sampled = sampleFuzzyObstacles(distances, (n) => {
       const v = tilesMap[n]
       return v >= 1 && v <= 7 ? (v as BiomeId) : undefined
@@ -1004,18 +1019,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return treeKind === 'flowers' ? rebalanceGrass(sampled, pools, flowerGrassChance) : sampled
   }, [treeKind, treePools, walkablePools, sizeX, tilesMap, treeBiomePurity, treeAllowHighContrast, flowerBiomePurity, flowerAllowHighContrast, flowerGrassChance])
   const [treeStaged, setTreeStaged] = useState<{ node: number; sid: string }[]>([])
+  const treeDecidedRef = useRef(new Map<number, string | null>())
   const previewTreeStroke = useCallback((nodes: number[]) => {
-    setTreeStaged(sampleTreeAdditions(nodes))
+    const decided = treeDecidedRef.current
+    setTreeStaged(mergeStrokeDecisions(decided, nodes, sampleTreeAdditions(nodes, decided)))
   }, [sampleTreeAdditions])
   const commitTreeStroke = useCallback((nodes?: number[]) => {
     const additions = nodes ? sampleTreeAdditions(nodes) : treeStaged
     if (additions.length === 0) return
     applyEdit({ kind: 'paintObjects', additions, deletions: [] }, treeKind === 'flowers' ? 'scatter walkables' : 'scatter trees')
+    treeDecidedRef.current.clear()
     setTreeStaged([])
   }, [treeStaged, sampleTreeAdditions, applyEdit, treeKind])
   const stopTreePainting = () => {
     setTreesActive(false)
     treeDragRef.current = null
+    treeDecidedRef.current.clear()
     setTreeStaged([])
   }
 
@@ -1028,6 +1047,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // step, unlike the single-object Delete tool in the info panel — Ctrl+Z
   // covers an eraser mistake same as any other edit).
   const [eraserActive, setEraserActive] = useState(false)
+  // ── Select / copy / paste of objects (see map-grid/clipboard.ts). 'select' picks objects (click, Ctrl+click, rectangle), 'paste' lets the copied
+  // area follow the cursor until Esc. Ends whenever another tool starts (effect further down).
+  const [copyMode, setCopyMode] = useState<'off' | 'select' | 'paste'>('off')
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+  const [pasteAnchor, setPasteAnchor] = useState<{ x: number; z: number } | null>(null)
+  const [copyNote, setCopyNote] = useState<string | null>(null)
+  const clipboard = useMapGridStore((s) => s.clipboard)
+  const setClipboard = useMapGridStore((s) => s.setClipboard)
   const eraserDragRef = useRef<Set<number> | null>(null)
   const stopEraser = () => { setEraserActive(false); setErasedKeys(new Set()) }
   // The tile index registers an object on every footprint cell, the same overlap rule commitEraserStroke deletes by.
@@ -1761,6 +1788,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       return
     }
+    // Select / paste: a left press starts a selection rectangle (a plain click is a one-tile rectangle) or stamps the copied area.
+    if (copyMode === 'select') {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        rectangleDragRef.current = { tool: 'select', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+        setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+      }
+      return
+    }
+    if (copyMode === 'paste') {
+      stampPaste()
+      return
+    }
     // Paint mode replaces panning entirely while active — a pointer-down
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
@@ -1950,6 +1991,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
       obstacleDragRef.current = new Set()
+      obstacleDecidedRef.current.clear()
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
@@ -1978,6 +2020,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
       treeDragRef.current = new Set()
+      treeDecidedRef.current.clear()
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
@@ -2115,6 +2158,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [transform, sizeZ])
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (copyMode === 'paste') {
+      const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      setPasteAnchor((prev) => (prev && prev.x === x && prev.z === z ? prev : { x, z }))
+    }
     if (rectangleDragRef.current) {
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -2344,6 +2391,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // array, but not safe to add to applyRectangleFill's own deps list.
       if (drag.tool === 'objects') {
         commitObjectPaintStroke(nodesInRectangle(bounds, sizeX))
+      } else if (drag.tool === 'select') {
+        applySelectHit(bounds, e.ctrlKey || e.metaKey)
       } else {
         applyRectangleFill(drag.tool, bounds)
       }
@@ -4016,6 +4065,104 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return existing.sid === paintedSid
   }, [catalog])
 
+  // ── Select / copy / paste (map-grid/selection.ts, clipboard.ts, paste-apply.ts) ──────────────────────────────────────────────────────────────
+  const templateLookup = useCallback((sid: string) => findMapObject(catalog, sid), [catalog])
+  const isDecorationSid = useCallback((sid: string) => findMapObject(catalog, sid)?.category === 'environments', [catalog])
+  const objectByKey = useMemo(() => new Map(placedObjects.map((o) => [o.key, o])), [placedObjects])
+  const selectedObjects = useMemo(
+    () => [...selectedKeys].map((k) => objectByKey.get(k)).filter((o): o is PlacedObject => !!o),
+    [selectedKeys, objectByKey],
+  )
+
+  // A click picks the top object of the tile (Ctrl toggles it); a dragged rectangle picks everything standing in it (Ctrl adds).
+  const applySelectHit = (bounds: RectangleBounds, additive: boolean) => {
+    const single = bounds.minX === bounds.maxX && bounds.minZ === bounds.maxZ
+    let hits: string[]
+    if (single) {
+      const item = primaryByNode.get(bounds.minZ * sizeX + bounds.minX)?.primary
+      hits = item && isCopyable(item) ? [item.key] : []
+    } else {
+      hits = keysInRectangle(bounds.minX, bounds.maxX, bounds.minZ, bounds.maxZ, sizeX, (n) => tileIndex.get(n) ?? [])
+    }
+    setCopyNote(null)
+    setSelectedKeys((prev) => combineSelection(prev, hits, additive ? (single ? 'toggle' : 'add') : 'replace'))
+  }
+
+  const copySelection = () => {
+    const clip = copyObjects(selectedObjects, templateLookup, isDecorationSid)
+    if (!clip) { setCopyNote(t('mapGrid.mapGridDialog.copy.nothingToCopy')); return }
+    setClipboard(clip)
+    setCopyMode('paste')
+    setCopyNote(t('mapGrid.mapGridDialog.copy.copied', { count: clip.items.length }))
+  }
+
+  const flipClipboard = () => { if (clipboard) setClipboard(flipHorizontal(clipboard, templateLookup)) }
+  const turnClipboard = () => { if (clipboard) setClipboard(rotateClockwise(clipboard)) }
+
+  const terrainBlockedForPaste = useCallback((node: number) => terrainBlockedSet.has(node), [terrainBlockedSet])
+  // The copied area is centred on the tile under the cursor.
+  const pastePlan = useMemo(() => {
+    if (copyMode !== 'paste' || !clipboard || !pasteAnchor) return null
+    const originX = pasteAnchor.x - Math.floor(clipboard.width / 2)
+    const originZ = pasteAnchor.z - Math.floor(clipboard.height / 2)
+    return { originX, originZ, placements: planPaste(clipboard, originX, originZ, templateLookup, sizeX, sizeZ, terrainBlockedForPaste) }
+  }, [copyMode, clipboard, pasteAnchor, templateLookup, sizeX, sizeZ, terrainBlockedForPaste])
+
+  const stampPaste = () => {
+    if (!pastePlan) return
+    const out: { result?: PasteResult } = {}
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => { out.result = applyPaste(pastePlan.placements, sizeX, apply, new Set(placedObjects.filter((o) => o.type === 0).map((o) => `${o.sid}@${o.node}`))) })
+    } catch (e) {
+      logError(`Failed to paste: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    const { result } = out
+    if (result) setCopyNote(t('mapGrid.mapGridDialog.copy.pasted', { placed: result.placed, blocked: result.blocked, skipped: result.propsSkipped }))
+  }
+
+  // Every other tool off: the start of Select and of pasting a library prefab.
+  const stopAllTools = () => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
+
+  const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
+
+  // Ends when another tool starts, so a stale Select cannot swallow that tool's clicks.
+  const otherToolActive = !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || !!moveState || !!portalLinkFrom
+  useEffect(() => {
+    if (copyMode !== 'off' && otherToolActive) stopCopyMode()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [copyMode, otherToolActive])
+
+  useEffect(() => {
+    if (!open || copyMode === 'off') return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      if (copyMode === 'paste') { setCopyMode('select'); setPasteAnchor(null) }
+      else if (selectedKeys.size > 0) setSelectedKeys(new Set())
+      else stopCopyMode()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, copyMode, selectedKeys, clipboard, selectedObjects, templateLookup])
+
+  // Outlines of the selected objects and the paste preview, as one layer so each tile needs no element of its own.
+  const selectionOutlines = useMemo(() => {
+    const boxes: { key: string; minX: number; maxX: number; minZ: number; maxZ: number }[] = []
+    for (const obj of selectedObjects) {
+      const cells = (obj.type === 0 ? resolveFootprintCells(obj, catalog).filter((c) => c.value !== 0) : [])
+      const xs = cells.map((c) => c.x)
+      const zs = cells.map((c) => c.z)
+      boxes.push(cells.length === 0
+        ? { key: obj.key, minX: obj.x, maxX: obj.x, minZ: obj.z, maxZ: obj.z }
+        : { key: obj.key, minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs) })
+    }
+    return boxes
+  }, [selectedObjects, catalog])
+
   const applyImageColorMapping = useCallback(async (
     result: ImageColorMappingResult,
     onProgress: (completed: number, total: number) => void,
@@ -4258,12 +4405,37 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     startDelete(target)
   }
 
+  const pressToolButton = (id: string): boolean => {
+    const button = document.querySelector<HTMLButtonElement>(`[data-hotkey-tool="${id}"]`)
+    if (!button || button.disabled) return false
+    button.click()
+    return true
+  }
+
   useHotkeys('mapGrid', {
     gridUndo: () => gridHistory(false),
     gridRedo: () => gridHistory(true),
     gridRedoAlt: () => gridHistory(true),
     gridDelete: deleteSelected,
     gridDeleteAlt: deleteSelected,
+    gridCopy: () => {
+      if (copyMode !== 'select' || selectedKeys.size === 0) return false
+      copySelection()
+    },
+    gridPaste: () => {
+      if (!clipboard || otherToolActive) return false
+      setCopyMode('paste')
+    },
+    gridFlip: () => {
+      if (copyMode !== 'paste') return false
+      flipClipboard()
+    },
+    gridRotate: () => {
+      if (copyMode !== 'paste') return false
+      turnClipboard()
+    },
+    // Presses the tool's idle toolbar button; a tool that is already running has no such button, so the key then does nothing.
+    ...Object.fromEntries(["toolTerrain","toolObjects","toolSpawner","toolHero","toolLandmark","toolEncounter","toolResource","toolLevel","toolRamp","toolWater","toolRiver","toolRoad","toolObstacles","toolTrees","toolWalkables","toolPlayerAreas","toolEraser","toolSelect"].map((id) => [id, () => pressToolButton(id)])),
   }, open)
 
 
@@ -4577,7 +4749,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Paintbrush className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.terrain')}
+                  hotkeyId="toolTerrain" label={t('mapGrid.mapGridDialog.terrain')}
                   title={t('mapGrid.mapGridDialog.paintTerrain')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
                 />
@@ -4629,7 +4801,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Box className="h-3.5 w-3.5" />}
-                  label={t('shared.objects')}
+                  hotkeyId="toolObjects" label={t('shared.objects')}
                   title={t('mapGrid.mapGridDialog.placeANewObject')}
                   onClick={() => { if (isSingleTileSid(placingSid)) stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 />
@@ -4665,7 +4837,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Castle className="h-3.5 w-3.5" />}
-                  label={t('shared.spawner')}
+                  hotkeyId="toolSpawner" label={t('shared.spawner')}
                   title={t('mapGrid.mapGridDialog.placeACityOrHero')}
                   onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid(spawnerKind === 'city' ? 'city-spawner' : 'hero-spawner') }}
                 />
@@ -4683,7 +4855,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<UserRound className="h-3.5 w-3.5" />}
-                  label={t('common.statsDialog.hero')}
+                  hotkeyId="toolHero" label={t('common.statsDialog.hero')}
                   title={t('mapGrid.mapGridDialog.placeAHeroThatBelongs')}
                   onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid('random-hero') }}
                 />
@@ -4709,7 +4881,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Landmark className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.landmark')}
+                  hotkeyId="toolLandmark" label={t('mapGrid.mapGridDialog.landmark')}
                   title={t('mapGrid.mapGridDialog.landmarkDragToPlaceRandom')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); stopZonePainting(); setInteractableActive(true) }}
                 />
@@ -4734,7 +4906,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Swords className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.encounter')}
+                  hotkeyId="toolEncounter" label={t('mapGrid.mapGridDialog.encounter')}
                   title={t('mapGrid.mapGridDialog.encounterDragToPlaceRandom')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSquadActive(true) }}
                 />
@@ -4747,7 +4919,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopResourcePainting} title={t('mapGrid.mapGridDialog.stopEsc')}><Cancel className="h-3.5 w-3.5" /></Button>
                 </div>
               ) : (
-                <ToolButton icon={<Gem className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.resource')} title={t('mapGrid.mapGridDialog.resourceDragToScatterResource')}
+                <ToolButton icon={<Gem className="h-3.5 w-3.5" />} hotkeyId="toolResource" label={t('mapGrid.mapGridDialog.resource')} title={t('mapGrid.mapGridDialog.resourceDragToScatterResource')}
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setResourceActive(true) }} />
               )}
            
@@ -4797,7 +4969,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Layers className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.level')}
+                  hotkeyId="toolLevel" label={t('mapGrid.mapGridDialog.level')}
                   title={t('mapGrid.mapGridDialog.paintElevationLevel')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
                 />
@@ -4824,7 +4996,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<TrendingUpDown className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.ramp')}
+                  hotkeyId="toolRamp" label={t('mapGrid.mapGridDialog.ramp')}
                   title={t('mapGrid.mapGridDialog.rampDragOntoTheLower')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRampActive(true) }}
                 />
@@ -4862,7 +5034,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Droplets className="h-3.5 w-3.5" />}
-                  label={t('common.generateRandomMapDialog.water')}
+                  hotkeyId="toolWater" label={t('common.generateRandomMapDialog.water')}
                   title={t('mapGrid.mapGridDialog.floodFillWaterClickA')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); setWaterBrush(1) }}
                 />
@@ -4886,7 +5058,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Waves className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.river')}
+                  hotkeyId="toolRiver" label={t('mapGrid.mapGridDialog.river')}
                   title={t('mapGrid.mapGridDialog.drawARiverDragTo')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
                 />
@@ -4926,7 +5098,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Milestone className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.road')}
+                  hotkeyId="toolRoad" label={t('mapGrid.mapGridDialog.road')}
                   title={t('mapGrid.mapGridDialog.paintARoadDirtOr')}
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRoadBrush(1) }}
                 />
@@ -4970,7 +5142,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   ) : (
                     <ToolButton
                       icon={<Mountain className="h-3.5 w-3.5" />}
-                      label={t('common.templateDetailsDialog.obstacles')}
+                      hotkeyId="toolObstacles" label={t('common.templateDetailsDialog.obstacles')}
                       title={t('mapGrid.mapGridDialog.fuzzyObstacleBrushDragTo')}
                       onClick={() => {
                         stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
@@ -5016,7 +5188,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   ) : (
                     <ToolButton
                       icon={<Trees className="h-3.5 w-3.5" />}
-                      label={t('mapGrid.mapGridDialog.trees')}
+                      hotkeyId="toolTrees" label={t('mapGrid.mapGridDialog.trees')}
                       title={t('mapGrid.mapGridDialog.treeBrushDragToScatter')}
                       onClick={() => {
                         stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
@@ -5028,7 +5200,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {!treesActive && walkablePools && (
                     <ToolButton
                       icon={<Flower2 className="h-3.5 w-3.5" />}
-                      label={t('mapGrid.mapGridDialog.walkables')}
+                      hotkeyId="toolWalkables" label={t('mapGrid.mapGridDialog.walkables')}
                       title={t('mapGrid.mapGridDialog.walkablesBrushDragToScatter')}
                       onClick={() => {
                         stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
@@ -5134,7 +5306,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.playerAreas')} title={t('mapGrid.mapGridDialog.playerAreasPaintColorCoded')}
+                <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} hotkeyId="toolPlayerAreas" label={t('mapGrid.mapGridDialog.playerAreas')} title={t('mapGrid.mapGridDialog.playerAreasPaintColorCoded')}
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
               )}
               
@@ -5156,7 +5328,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : (
                 <ToolButton
                   icon={<Eraser className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.eraser')}
+                  hotkeyId="toolEraser" label={t('mapGrid.mapGridDialog.eraser')}
                   title={t('mapGrid.mapGridDialog.eraserDragToDeleteObjects')}
                   onClick={() => {
                     stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
@@ -5165,6 +5337,55 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 />
               )}
               
+              {/* Select / copy / paste of objects (map-grid/clipboard.ts). Select: click, Ctrl+click or drag a rectangle; Ctrl+C copies, then the
+                  copied area follows the cursor until Esc; click stamps it (one undo step). M flips it, R turns decoration groups. */}
+              {copyMode !== 'off' ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <RectSelect className="h-3.5 w-3.5" />
+                    {copyMode === 'paste' ? t('mapGrid.mapGridDialog.copy.pasting') : t('mapGrid.mapGridDialog.copy.selected', { count: selectedKeys.size })}
+                  </Button>
+                  {copyMode === 'select' && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={copySelection} title={t('mapGrid.mapGridDialog.copy.copyTitle')}>
+                      <ClipboardCopy className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboard || copyMode === 'paste'} onClick={() => setCopyMode('paste')} title={t('mapGrid.mapGridDialog.copy.pasteTitle')}>
+                    <ClipboardPaste className="h-3.5 w-3.5" />
+                  </Button>
+                  {copyMode === 'paste' && (
+                    <>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={flipClipboard} title={t('mapGrid.mapGridDialog.copy.flipTitle')}>
+                        <FlipHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={turnClipboard} title={t('mapGrid.mapGridDialog.copy.rotateTitle')}>
+                        <RotateCw className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
+                  <PrefabLibraryPopover
+                    clipboard={clipboard}
+                    knowsSid={(sid, type) => type === 2 || !!findMapObject(catalog, sid)}
+                    onUse={(clip, note) => { stopAllTools(); setClipboard(clip); setPasteAnchor(null); setCopyNote(note); setCopyMode('paste') }}
+                  />
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopCopyMode} title={t('mapGrid.mapGridDialog.stopEsc')}>
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                  {copyNote && <span className="text-xs text-muted-foreground">{copyNote}</span>}
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<RectSelect className="h-3.5 w-3.5" />}
+                  hotkeyId="toolSelect" label={t('mapGrid.mapGridDialog.copy.select')}
+                  title={t('mapGrid.mapGridDialog.copy.selectTitle')}
+                  onClick={() => {
+                    stopAllTools()
+                    setCopyNote(null)
+                    setCopyMode('select')
+                  }}
+                />
+              )}
+
               {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
                   own doc comment for why player-start spawners are kept and
                   why this is one atomic edit rather than a per-object loop. */}
@@ -6131,6 +6352,50 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     boxSizing: 'border-box',
                   }}
                 />
+              )}
+              {/* Select / paste layer: outlines of the selected objects, and the copied area (blue where it can land, red where it cannot) following the cursor. */}
+              {(selectionOutlines.length > 0 || pastePlan) && (
+                <div className="absolute left-0 top-0 pointer-events-none" style={{ transform: `translate(${transform.x}px, ${transform.y}px)` }}>
+                  {copyMode !== 'paste' && selectionOutlines.map((b) => (
+                    <div
+                      key={b.key}
+                      className="absolute rounded-sm border-2 border-cyan-400 bg-cyan-400/15"
+                      style={{
+                        left: b.minX * effectiveCellPx,
+                        top: (sizeZ - 1 - b.maxZ) * effectiveCellPx,
+                        width: (b.maxX - b.minX + 1) * effectiveCellPx,
+                        height: (b.maxZ - b.minZ + 1) * effectiveCellPx,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  ))}
+                  {pastePlan && clipboard && (
+                    <>
+                      <div
+                        className="absolute rounded-sm border-2 border-dashed border-sky-400"
+                        style={{
+                          left: pastePlan.originX * effectiveCellPx,
+                          top: (sizeZ - 1 - (pastePlan.originZ + clipboard.height - 1)) * effectiveCellPx,
+                          width: clipboard.width * effectiveCellPx,
+                          height: clipboard.height * effectiveCellPx,
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      {pastePlan.placements.slice(0, 1500).flatMap((p, i) => p.cells.map((c) => (
+                        <div
+                          key={`${i}:${c.x}:${c.z}`}
+                          className={`absolute ${p.ok ? 'bg-sky-400/40' : 'bg-red-500/50'}`}
+                          style={{
+                            left: c.x * effectiveCellPx,
+                            top: (sizeZ - 1 - c.z) * effectiveCellPx,
+                            width: effectiveCellPx,
+                            height: effectiveCellPx,
+                          }}
+                        />
+                      )))}
+                    </>
+                  )}
+                </div>
               )}
               {settings.showGridHover && hoveredNode !== null && !brushToolActive && (
                 <div

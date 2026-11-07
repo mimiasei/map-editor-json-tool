@@ -115,6 +115,8 @@ interface MapDocumentStore {
    *  document itself now *is* the current state. Returns the id an
    *  'addObject'/'addMarker' edit allocated, if any. */
   applyEdit: (edit: MapSaveEdit) => number | undefined
+  /** Runs `build`, which calls `apply` for each edit, and stores the result as ONE undo step (a paste is many edits). Nothing is stored if `build` throws. */
+  applyEditsAsOne: (build: (apply: (edit: MapSaveEdit) => number | undefined) => void) => void
   /** Persist the current in-memory document to `mapFilePath` — always
    *  writes and clears mapIsDirty; also sets `mapValidationIssues` (see
    *  CommitResult) when a save-time check finds a problem, purely for the
@@ -227,6 +229,20 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         set({ container: next, mapIsDirty: true })
         useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(next)))
         return newId
+      },
+
+      applyEditsAsOne: (build) => {
+        const start = get().container
+        if (!start) throw new Error('No .map document is currently loaded')
+        let working = start
+        build((edit) => {
+          const { container: next, newId } = applyMapEdit(working, edit)
+          working = next
+          return newId
+        })
+        if (working === start) return
+        set({ container: working, mapIsDirty: true })
+        useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(working)))
       },
 
       commitToDisk: async (mapFilePath, scenario) => {

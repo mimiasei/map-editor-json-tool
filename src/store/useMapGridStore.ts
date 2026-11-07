@@ -6,6 +6,7 @@
 // does for useScenarioStore/useMapContextStore.
 
 import { create } from 'zustand'
+import type { ObjectClipboard } from '@/lib/map-grid/clipboard'
 
 interface MapGridStore {
   /** Tile node clicked in the grid, or null if none/cleared. */
@@ -14,6 +15,9 @@ interface MapGridStore {
    *  hidden until a new cell is clicked (selectNode always reopens it). */
   columnClosed: boolean
   focusRequest: FocusRequest | null
+  /** Copied objects (Ctrl+C in the Select tool). Kept here, not in the dialog, so it survives closing the Map Grid. */
+  clipboard: ObjectClipboard | null
+  setClipboard: (clipboard: ObjectClipboard | null) => void
   selectNode: (node: number) => void
   closeColumn: () => void
   requestFocus: (x: number, z: number) => void
@@ -28,6 +32,8 @@ export const useMapGridStore = create<MapGridStore>((set) => ({
     selectedNode: null,
     columnClosed: false,
     focusRequest: null,
+    clipboard: null,
+    setClipboard: (clipboard) => set({ clipboard }),
     selectNode: (node) => set({ selectedNode: node, columnClosed: false }),
     closeColumn: () => set({ columnClosed: true }),
     requestFocus: (x, z) => set({ focusRequest: { x, z, requestId: ++nextFocusRequestId } }),
