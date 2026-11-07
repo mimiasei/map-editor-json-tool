@@ -21,6 +21,7 @@ import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-reque
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
 import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
 import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
+import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import NewMapDialog from '@/components/common/NewMapDialog'
 import GenerateOnMapDialog from '@/components/common/GenerateOnMapDialog'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
@@ -1113,17 +1114,19 @@ export default function Toolbar({
 
       {/* Fairness dialog */}
       <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+        <DraggableDialogContent className="p-0 gap-0" defaultWidth={620} defaultHeight={640} minWidth={420} minHeight={320} storageKey="fairness">
+          <DraggableDialogDragHandle className="shrink-0 border-b border-border px-6 py-4 pr-10">
             <DialogTitle>{t('layout.toolbar.mapFairness')}</DialogTitle>
-          </DialogHeader>
-          <PlayerBalancePanel balance={fairness} />
-          <ZoneEconomySection economy={zoneEconomy} />
-          <DecorationBalanceSection decoration={decorationBalance} />
-          <p className="text-xs text-muted-foreground">
-            {t('layout.toolbar.theSameScoreTheRandom')}
-          </p>
-        </DialogContent>
+          </DraggableDialogDragHandle>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+            <PlayerBalancePanel balance={fairness} />
+            <ZoneEconomySection economy={zoneEconomy} />
+            <DecorationBalanceSection decoration={decorationBalance} />
+            <p className="text-xs text-muted-foreground">
+              {t('layout.toolbar.theSameScoreTheRandom')}
+            </p>
+          </div>
+        </DraggableDialogContent>
       </Dialog>
 
       {/* Validate dialog */}
