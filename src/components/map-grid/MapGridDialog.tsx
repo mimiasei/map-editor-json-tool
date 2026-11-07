@@ -99,6 +99,7 @@ import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import MapGameSettingsDialog from '@/components/map-grid/MapGameSettingsDialog'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
+import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -4107,6 +4108,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (result) setCopyNote(t('mapGrid.mapGridDialog.copy.pasted', { placed: result.placed, blocked: result.blocked, skipped: result.propsSkipped }))
   }
 
+  // Every other tool off: the start of Select and of pasting a library prefab.
+  const stopAllTools = () => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
+
   const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
 
   // Ends when another tool starts, so a stale Select cannot swallow that tool's clicks.
@@ -5357,12 +5361,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   hotkeyId="toolSelect" label={t('mapGrid.mapGridDialog.copy.select')}
                   title={t('mapGrid.mapGridDialog.copy.selectTitle')}
                   onClick={() => {
-                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                    stopAllTools()
                     setCopyNote(null)
                     setCopyMode('select')
                   }}
                 />
               )}
+
+              <PrefabLibraryPopover
+                clipboard={clipboard}
+                knowsSid={(sid, type) => type === 2 || !!findMapObject(catalog, sid)}
+                onUse={(clip, note) => { stopAllTools(); setClipboard(clip); setPasteAnchor(null); setCopyNote(note); setCopyMode('paste') }}
+              />
 
               {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
                   own doc comment for why player-start spawners are kept and
