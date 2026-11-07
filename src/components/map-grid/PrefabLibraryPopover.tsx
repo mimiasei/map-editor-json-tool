@@ -73,14 +73,14 @@ export default function PrefabLibraryPopover({ clipboard, knowsSid, onUse }: Pro
           <BookOpen className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 space-y-2 p-2" data-nodrag>
-        <div className="flex items-center gap-1">
+      <PopoverContent align="start" className="w-[21rem] space-y-2 p-2" data-nodrag>
+        <div className="flex items-center justify-between gap-1">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') save() }}
             placeholder={t('mapGrid.mapGridDialog.library.namePlaceholder')}
-            className="h-7 text-xs"
+            className="h-7 w-60 flex-none text-xs"
           />
           <Button size="sm" className="h-7 text-xs" disabled={!clipboard} onClick={save} title={clipboard ? undefined : t('mapGrid.mapGridDialog.library.copyFirst')}>
             {t('mapGrid.mapGridDialog.library.save')}
