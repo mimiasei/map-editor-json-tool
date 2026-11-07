@@ -524,3 +524,23 @@ export function sampleFuzzyObstacles(
   }
   return additions
 }
+
+/**
+ * Keeps a drag stroke's preview stable. Each preview used to re-sample every tile of the stroke, so tiles painted earlier changed object whenever the
+ * stroke grew. `decided` remembers the outcome per node (a sid, or null for "nothing here"); only nodes not in it are sampled (the caller drops the
+ * decided ones from the distances it passes to `sampleFuzzyObstacles`), and the stroke's additions are read back from the map.
+ */
+export function mergeStrokeDecisions(
+  decided: Map<number, string | null>,
+  nodes: readonly number[],
+  fresh: readonly { node: number; sid: string }[],
+): { node: number; sid: string }[] {
+  for (const n of nodes) if (!decided.has(n)) decided.set(n, null)
+  for (const a of fresh) decided.set(a.node, a.sid)
+  const out: { node: number; sid: string }[] = []
+  for (const n of nodes) {
+    const sid = decided.get(n)
+    if (sid) out.push({ node: n, sid })
+  }
+  return out
+}

@@ -85,7 +85,7 @@ import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '
 import { copyObjects, flipHorizontal, isCopyable, planPaste, rotateClockwise } from '@/lib/map-grid/clipboard'
 import { combineSelection, keysInRectangle } from '@/lib/map-grid/selection'
 import { applyPaste, type PasteResult } from '@/lib/map-grid/paste-apply'
-import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, mergeStrokeDecisions, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
@@ -943,9 +943,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // move — user-requested: nothing showed until release before this) and
   // the final commit, so what's on screen right before release is exactly
   // what gets applied, never a fresh unrelated re-roll.
-  const sampleObstacleAdditions = useCallback((nodes: number[]): { node: number; sid: string }[] => {
+  const sampleObstacleAdditions = useCallback((nodes: number[], decided?: ReadonlyMap<number, string | null>): { node: number; sid: string }[] => {
     if (!fuzzyObstaclePools || nodes.length === 0) return []
     const distances = computeFuzzyDistances(nodes, sizeX)
+    if (decided) for (const n of decided.keys()) distances.delete(n)
     // Pools (pool_small etc.) only look right at a minimum brush size —
     // measured from the stroke's own bounding box so this works the same
     // whether it came from a freehand drag or a Rectangle selection. The
@@ -967,8 +968,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     })
   }, [fuzzyObstaclePools, sizeX, tilesMap, obstacleMountainChance, obstaclePoolChance, obstacleBiomePurity, obstacleAllowHighContrast])
   const [obstacleStaged, setObstacleStaged] = useState<{ node: number; sid: string }[]>([])
+  // Per-stroke memory of what each tile got, so a growing stroke never re-rolls the tiles it already painted.
+  const obstacleDecidedRef = useRef(new Map<number, string | null>())
   const previewObstacleStroke = useCallback((nodes: number[]) => {
-    setObstacleStaged(sampleObstacleAdditions(nodes))
+    const decided = obstacleDecidedRef.current
+    setObstacleStaged(mergeStrokeDecisions(decided, nodes, sampleObstacleAdditions(nodes, decided)))
   }, [sampleObstacleAdditions])
   // Rectangle mode's whole region is known synchronously on release, so it
   // passes `nodes` to sample fresh and apply immediately — the freehand
@@ -978,11 +982,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const additions = nodes ? sampleObstacleAdditions(nodes) : obstacleStaged
     if (additions.length === 0) return
     applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'scatter obstacles')
+    obstacleDecidedRef.current.clear()
     setObstacleStaged([])
   }, [obstacleStaged, sampleObstacleAdditions, applyEdit])
   const stopObstaclePainting = () => {
     setObstacleBrushActive(false)
     obstacleDragRef.current = null
+    obstacleDecidedRef.current.clear()
     setObstacleStaged([])
   }
 
@@ -999,10 +1005,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => (catalog ? buildWalkablePools(catalog) : null),
     [catalog],
   )
-  const sampleTreeAdditions = useCallback((nodes: number[]): { node: number; sid: string }[] => {
+  const sampleTreeAdditions = useCallback((nodes: number[], decided?: ReadonlyMap<number, string | null>): { node: number; sid: string }[] => {
     const pools = treeKind === 'flowers' ? walkablePools : treePools
     if (!pools || nodes.length === 0) return []
     const distances = computeFuzzyDistances(nodes, sizeX)
+    if (decided) for (const n of decided.keys()) distances.delete(n)
     const sampled = sampleFuzzyObstacles(distances, (n) => {
       const v = tilesMap[n]
       return v >= 1 && v <= 7 ? (v as BiomeId) : undefined
@@ -1012,18 +1019,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return treeKind === 'flowers' ? rebalanceGrass(sampled, pools, flowerGrassChance) : sampled
   }, [treeKind, treePools, walkablePools, sizeX, tilesMap, treeBiomePurity, treeAllowHighContrast, flowerBiomePurity, flowerAllowHighContrast, flowerGrassChance])
   const [treeStaged, setTreeStaged] = useState<{ node: number; sid: string }[]>([])
+  const treeDecidedRef = useRef(new Map<number, string | null>())
   const previewTreeStroke = useCallback((nodes: number[]) => {
-    setTreeStaged(sampleTreeAdditions(nodes))
+    const decided = treeDecidedRef.current
+    setTreeStaged(mergeStrokeDecisions(decided, nodes, sampleTreeAdditions(nodes, decided)))
   }, [sampleTreeAdditions])
   const commitTreeStroke = useCallback((nodes?: number[]) => {
     const additions = nodes ? sampleTreeAdditions(nodes) : treeStaged
     if (additions.length === 0) return
     applyEdit({ kind: 'paintObjects', additions, deletions: [] }, treeKind === 'flowers' ? 'scatter walkables' : 'scatter trees')
+    treeDecidedRef.current.clear()
     setTreeStaged([])
   }, [treeStaged, sampleTreeAdditions, applyEdit, treeKind])
   const stopTreePainting = () => {
     setTreesActive(false)
     treeDragRef.current = null
+    treeDecidedRef.current.clear()
     setTreeStaged([])
   }
 
@@ -1980,6 +1991,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
       obstacleDragRef.current = new Set()
+      obstacleDecidedRef.current.clear()
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
@@ -2008,6 +2020,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
       treeDragRef.current = new Set()
+      treeDecidedRef.current.clear()
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
