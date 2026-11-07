@@ -100,6 +100,8 @@ import {
   PlusIcon,
   RedoIcon,
   RefreshCwIcon,
+  FlipHorizontalIcon,
+  Rotate01Icon,
   RepeatIcon,
   SaveIcon,
   ScrollTextIcon,
@@ -238,6 +240,8 @@ export const Pickaxe = make(PickaxeIcon, 'Pickaxe')
 export const Plus = make(PlusIcon, 'Plus')
 export const Redo2 = make(RedoIcon, 'Redo2')
 export const RefreshCw = make(RefreshCwIcon, 'RefreshCw')
+export const FlipHorizontal = make(FlipHorizontalIcon, 'FlipHorizontal')
+export const RotateCw = make(Rotate01Icon, 'RotateCw')
 export const Repeat = make(RepeatIcon, 'Repeat')
 export const Repeat2 = make(RepeatIcon, 'Repeat2')
 export const Save = make(SaveIcon, 'Save')

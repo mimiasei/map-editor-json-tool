@@ -82,6 +82,9 @@ import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
+import { canRotate as canRotateClipboard, copyObjects, flipHorizontal, isCopyable, planPaste, rotateClockwise } from '@/lib/map-grid/clipboard'
+import { combineSelection, keysInRectangle } from '@/lib/map-grid/selection'
+import { applyPaste, type PasteResult } from '@/lib/map-grid/paste-apply'
 import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
@@ -162,6 +165,10 @@ import {
   StepDown,
   Freehand,
   RectSelect,
+  ClipboardCopy,
+  ClipboardPaste,
+  FlipHorizontal,
+  RotateCw,
 } from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 import { useTranslation, Trans } from 'react-i18next'
@@ -837,7 +844,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects' | 'select'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -1028,6 +1035,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // step, unlike the single-object Delete tool in the info panel — Ctrl+Z
   // covers an eraser mistake same as any other edit).
   const [eraserActive, setEraserActive] = useState(false)
+  // ── Select / copy / paste of objects (see map-grid/clipboard.ts). 'select' picks objects (click, Ctrl+click, rectangle), 'paste' lets the copied
+  // area follow the cursor until Esc. Ends whenever another tool starts (effect further down).
+  const [copyMode, setCopyMode] = useState<'off' | 'select' | 'paste'>('off')
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+  const [pasteAnchor, setPasteAnchor] = useState<{ x: number; z: number } | null>(null)
+  const [copyNote, setCopyNote] = useState<string | null>(null)
+  const clipboard = useMapGridStore((s) => s.clipboard)
+  const setClipboard = useMapGridStore((s) => s.setClipboard)
   const eraserDragRef = useRef<Set<number> | null>(null)
   const stopEraser = () => { setEraserActive(false); setErasedKeys(new Set()) }
   // The tile index registers an object on every footprint cell, the same overlap rule commitEraserStroke deletes by.
@@ -1761,6 +1776,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       return
     }
+    // Select / paste: a left press starts a selection rectangle (a plain click is a one-tile rectangle) or stamps the copied area.
+    if (copyMode === 'select') {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        rectangleDragRef.current = { tool: 'select', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+        setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+      }
+      return
+    }
+    if (copyMode === 'paste') {
+      stampPaste()
+      return
+    }
     // Paint mode replaces panning entirely while active — a pointer-down
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
@@ -2115,6 +2144,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [transform, sizeZ])
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (copyMode === 'paste') {
+      const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      setPasteAnchor((prev) => (prev && prev.x === x && prev.z === z ? prev : { x, z }))
+    }
     if (rectangleDragRef.current) {
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -2344,6 +2377,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // array, but not safe to add to applyRectangleFill's own deps list.
       if (drag.tool === 'objects') {
         commitObjectPaintStroke(nodesInRectangle(bounds, sizeX))
+      } else if (drag.tool === 'select') {
+        applySelectHit(bounds, e.ctrlKey || e.metaKey)
       } else {
         applyRectangleFill(drag.tool, bounds)
       }
@@ -4016,6 +4051,113 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return existing.sid === paintedSid
   }, [catalog])
 
+  // ── Select / copy / paste (map-grid/selection.ts, clipboard.ts, paste-apply.ts) ──────────────────────────────────────────────────────────────
+  const templateLookup = useCallback((sid: string) => findMapObject(catalog, sid), [catalog])
+  const isDecorationSid = useCallback((sid: string) => findMapObject(catalog, sid)?.category === 'environments', [catalog])
+  const objectByKey = useMemo(() => new Map(placedObjects.map((o) => [o.key, o])), [placedObjects])
+  const selectedObjects = useMemo(
+    () => [...selectedKeys].map((k) => objectByKey.get(k)).filter((o): o is PlacedObject => !!o),
+    [selectedKeys, objectByKey],
+  )
+  const clipboardCanRotate = useMemo(() => !!clipboard && canRotateClipboard(clipboard, templateLookup), [clipboard, templateLookup])
+
+  // A click picks the top object of the tile (Ctrl toggles it); a dragged rectangle picks everything standing in it (Ctrl adds).
+  const applySelectHit = (bounds: RectangleBounds, additive: boolean) => {
+    const single = bounds.minX === bounds.maxX && bounds.minZ === bounds.maxZ
+    let hits: string[]
+    if (single) {
+      const item = primaryByNode.get(bounds.minZ * sizeX + bounds.minX)?.primary
+      hits = item && isCopyable(item) ? [item.key] : []
+    } else {
+      hits = keysInRectangle(bounds.minX, bounds.maxX, bounds.minZ, bounds.maxZ, sizeX, (n) => tileIndex.get(n) ?? [])
+    }
+    setCopyNote(null)
+    setSelectedKeys((prev) => combineSelection(prev, hits, additive ? (single ? 'toggle' : 'add') : 'replace'))
+  }
+
+  const copySelection = () => {
+    const clip = copyObjects(selectedObjects, templateLookup, isDecorationSid)
+    if (!clip) { setCopyNote(t('mapGrid.mapGridDialog.copy.nothingToCopy')); return }
+    setClipboard(clip)
+    setCopyMode('paste')
+    setCopyNote(t('mapGrid.mapGridDialog.copy.copied', { count: clip.items.length }))
+  }
+
+  const flipClipboard = () => { if (clipboard) setClipboard(flipHorizontal(clipboard, templateLookup)) }
+  const turnClipboard = () => { if (clipboard && clipboardCanRotate) setClipboard(rotateClockwise(clipboard)) }
+
+  const terrainBlockedForPaste = useCallback((node: number) => terrainBlockedSet.has(node), [terrainBlockedSet])
+  // The copied area is centred on the tile under the cursor.
+  const pastePlan = useMemo(() => {
+    if (copyMode !== 'paste' || !clipboard || !pasteAnchor) return null
+    const originX = pasteAnchor.x - Math.floor(clipboard.width / 2)
+    const originZ = pasteAnchor.z - Math.floor(clipboard.height / 2)
+    return { originX, originZ, placements: planPaste(clipboard, originX, originZ, templateLookup, sizeX, sizeZ, terrainBlockedForPaste) }
+  }, [copyMode, clipboard, pasteAnchor, templateLookup, sizeX, sizeZ, terrainBlockedForPaste])
+
+  const stampPaste = () => {
+    if (!pastePlan) return
+    const out: { result?: PasteResult } = {}
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => { out.result = applyPaste(pastePlan.placements, sizeX, apply, new Set(placedObjects.filter((o) => o.type === 0).map((o) => `${o.sid}@${o.node}`))) })
+    } catch (e) {
+      logError(`Failed to paste: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    const { result } = out
+    if (result) setCopyNote(t('mapGrid.mapGridDialog.copy.pasted', { placed: result.placed, blocked: result.blocked, skipped: result.propsSkipped }))
+  }
+
+  const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
+
+  // Ends when another tool starts, so a stale Select cannot swallow that tool's clicks.
+  const otherToolActive = !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || !!moveState || !!portalLinkFrom
+  useEffect(() => {
+    if (copyMode !== 'off' && otherToolActive) stopCopyMode()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [copyMode, otherToolActive])
+
+  useEffect(() => {
+    if (!open || copyMode === 'off') return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      const mod = e.ctrlKey || e.metaKey
+      const key = e.key.toLowerCase()
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        if (copyMode === 'paste') { setCopyMode('select'); setPasteAnchor(null) }
+        else if (selectedKeys.size > 0) setSelectedKeys(new Set())
+        else stopCopyMode()
+      } else if (mod && key === 'c') {
+        if (copyMode === 'select' && selectedKeys.size > 0) { e.preventDefault(); copySelection() }
+      } else if (mod && key === 'v') {
+        if (clipboard) { e.preventDefault(); setCopyMode('paste') }
+      } else if (!mod && copyMode === 'paste' && key === 'm') {
+        flipClipboard()
+      } else if (!mod && copyMode === 'paste' && key === 'r') {
+        turnClipboard()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, copyMode, selectedKeys, clipboard, selectedObjects, clipboardCanRotate, templateLookup])
+
+  // Outlines of the selected objects and the paste preview, as one layer so each tile needs no element of its own.
+  const selectionOutlines = useMemo(() => {
+    const boxes: { key: string; minX: number; maxX: number; minZ: number; maxZ: number }[] = []
+    for (const obj of selectedObjects) {
+      const cells = (obj.type === 0 ? resolveFootprintCells(obj, catalog).filter((c) => c.value !== 0) : [])
+      const xs = cells.map((c) => c.x)
+      const zs = cells.map((c) => c.z)
+      boxes.push(cells.length === 0
+        ? { key: obj.key, minX: obj.x, maxX: obj.x, minZ: obj.z, maxZ: obj.z }
+        : { key: obj.key, minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs) })
+    }
+    return boxes
+  }, [selectedObjects, catalog])
+
   const applyImageColorMapping = useCallback(async (
     result: ImageColorMappingResult,
     onProgress: (completed: number, total: number) => void,
@@ -5165,6 +5307,50 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 />
               )}
               
+              {/* Select / copy / paste of objects (map-grid/clipboard.ts). Select: click, Ctrl+click or drag a rectangle; Ctrl+C copies, then the
+                  copied area follows the cursor until Esc; click stamps it (one undo step). M flips it, R turns decoration groups. */}
+              {copyMode !== 'off' ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <RectSelect className="h-3.5 w-3.5" />
+                    {copyMode === 'paste' ? t('mapGrid.mapGridDialog.copy.pasting') : t('mapGrid.mapGridDialog.copy.selected', { count: selectedKeys.size })}
+                  </Button>
+                  {copyMode === 'select' && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={copySelection} title={t('mapGrid.mapGridDialog.copy.copyTitle')}>
+                      <ClipboardCopy className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboard || copyMode === 'paste'} onClick={() => setCopyMode('paste')} title={t('mapGrid.mapGridDialog.copy.pasteTitle')}>
+                    <ClipboardPaste className="h-3.5 w-3.5" />
+                  </Button>
+                  {copyMode === 'paste' && (
+                    <>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={flipClipboard} title={t('mapGrid.mapGridDialog.copy.flipTitle')}>
+                        <FlipHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboardCanRotate} onClick={turnClipboard} title={clipboardCanRotate ? t('mapGrid.mapGridDialog.copy.rotateTitle') : t('mapGrid.mapGridDialog.copy.rotateUnavailableTitle')}>
+                        <RotateCw className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopCopyMode} title={t('mapGrid.mapGridDialog.stopEsc')}>
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                  {copyNote && <span className="text-xs text-muted-foreground">{copyNote}</span>}
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<RectSelect className="h-3.5 w-3.5" />}
+                  label={t('mapGrid.mapGridDialog.copy.select')}
+                  title={t('mapGrid.mapGridDialog.copy.selectTitle')}
+                  onClick={() => {
+                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                    setCopyNote(null)
+                    setCopyMode('select')
+                  }}
+                />
+              )}
+
               {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
                   own doc comment for why player-start spawners are kept and
                   why this is one atomic edit rather than a per-object loop. */}
@@ -6131,6 +6317,50 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     boxSizing: 'border-box',
                   }}
                 />
+              )}
+              {/* Select / paste layer: outlines of the selected objects, and the copied area (blue where it can land, red where it cannot) following the cursor. */}
+              {(selectionOutlines.length > 0 || pastePlan) && (
+                <div className="absolute left-0 top-0 pointer-events-none" style={{ transform: `translate(${transform.x}px, ${transform.y}px)` }}>
+                  {copyMode !== 'paste' && selectionOutlines.map((b) => (
+                    <div
+                      key={b.key}
+                      className="absolute rounded-sm border-2 border-cyan-400 bg-cyan-400/15"
+                      style={{
+                        left: b.minX * effectiveCellPx,
+                        top: (sizeZ - 1 - b.maxZ) * effectiveCellPx,
+                        width: (b.maxX - b.minX + 1) * effectiveCellPx,
+                        height: (b.maxZ - b.minZ + 1) * effectiveCellPx,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  ))}
+                  {pastePlan && clipboard && (
+                    <>
+                      <div
+                        className="absolute rounded-sm border-2 border-dashed border-sky-400"
+                        style={{
+                          left: pastePlan.originX * effectiveCellPx,
+                          top: (sizeZ - 1 - (pastePlan.originZ + clipboard.height - 1)) * effectiveCellPx,
+                          width: clipboard.width * effectiveCellPx,
+                          height: clipboard.height * effectiveCellPx,
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      {pastePlan.placements.slice(0, 1500).flatMap((p, i) => p.cells.map((c) => (
+                        <div
+                          key={`${i}:${c.x}:${c.z}`}
+                          className={`absolute ${p.ok ? 'bg-sky-400/40' : 'bg-red-500/50'}`}
+                          style={{
+                            left: c.x * effectiveCellPx,
+                            top: (sizeZ - 1 - c.z) * effectiveCellPx,
+                            width: effectiveCellPx,
+                            height: effectiveCellPx,
+                          }}
+                        />
+                      )))}
+                    </>
+                  )}
+                </div>
               )}
               {settings.showGridHover && hoveredNode !== null && !brushToolActive && (
                 <div
