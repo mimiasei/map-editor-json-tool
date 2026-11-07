@@ -204,6 +204,8 @@
       "complexity": "Kompleksitet",
       "difficulty": "Vanskelighetsgrad",
       "richnessInfo": "Hvor verdifull skatten er — fra fattige hauger og billige bygninger til rike med mektige artefakter. Bruker spillets egne rikdomsnivåer.",
+      "quality": "Kvalitet",
+      "qualityInfo": "Hvor mange kvalitetssjekker som kjøres før kartet er ferdig. Rask tar første oppsett og hopper over fornuftssjekken. Normal trekker et urettferdig oppsett på nytt opptil 4 ganger og sjekker én gang at kraftige objekter holder seg unna startene og at landsbyobjekter står nær dem. Grundig trekker på nytt opptil 8 ganger, sikter mot en rettferdigere score og gjentar sjekken tre ganger. Jo høyere, desto tregere.",
       "complexityInfo": "Hvor travelt kartet er — skalerer dekor, interaktive objekter, skattehauger og vokterhærer sammen.",
       "difficultyInfo": "Hvor sterke vokterhærene er og hvor fort de vokser hver uke, med spillets egne seks vanskelighetsgrader. Nøytrale byer får vokterne på høyere nivåer, og kartets lobbyvanskelighet settes tilsvarende.",
       "water": "Vann",
@@ -219,6 +221,11 @@
         "advanced": "Avansert"
       },
       "levels": {
+        "quality": {
+          "fast": "Rask",
+          "normal": "Normal",
+          "thorough": "Grundig"
+        },
         "richness": {
           "poor": "Fattig",
           "modest": "Beskjeden",
@@ -1559,6 +1566,7 @@
       "searchSidName": "Søk sid / navn",
       "noObjectsMatchTheseFilters": "Ingen objekter samsvarer med disse filtrene.",
       "noCreaturesMatchTheseFilters": "Ingen skapninger samsvarer med disse filtrene.",
+      "objectValue": "Verdi: {{value}}",
       "type": "Type:",
       "noPlaceableTemplateForThis": "Ingen plasserbar mal for denne skapningen",
       "factionTier": "{{faction}} - Nivå {{tier}}",
@@ -2557,6 +2565,10 @@
       "onlyShowItemsPlacedOr": "Vis bare gjenstander plassert eller referert til på dette kartet",
       "noItemsPlacedOrUsed": "Ingen gjenstander plassert eller brukt på dette kartet.",
       "noMatches": "Ingen treff.",
+      "sortBy": "Sorter etter",
+      "sortName": "Navn",
+      "sortValueHigh": "Verdi (høy til lav)",
+      "sortValueLow": "Verdi (lav til høy)",
       "filtered": " (filtrert)",
       "showingBuiltInDataLoad": "Viser innebygde data. Last inn Core.zip for hele katalogen.",
       "selectAnItemToSee": "Velg en gjenstand for å se detaljer",
@@ -3257,6 +3269,7 @@
       "checkingReachability": "Sjekker tilgjengelighet og reparerer soner",
       "writingPlacements": "Skriver plasseringer",
       "playerZonesBalanced": "Spillersoner balansert",
+      "qualityPass": "Sjekker at kartet gir mening",
       "autoFixing": "Retter overlappinger og høyde automatisk",
       "validatingReachability": "Validerer endelig tilgjengelighet",
       "writingMapFile": "Skriver kartfil",

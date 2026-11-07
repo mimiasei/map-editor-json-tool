@@ -12,6 +12,14 @@ import type { RmgSchema } from './rmg-schema'
 import { LAYOUT_ARCHETYPES, type LayoutArchetype } from './zone-archetypes'
 import type { WinConditionId, WinOptions } from './win-conditions'
 
+/** How many quality checks a generation runs before the map is done (see QUALITY_PRESETS in generate-map-file.ts). */
+export type RmgQuality = 'fast' | 'normal' | 'thorough'
+export const QUALITY_LEVELS: { id: RmgQuality; label: string }[] = [
+  { id: 'fast', label: 'Fast' },
+  { id: 'normal', label: 'Normal' },
+  { id: 'thorough', label: 'Thorough' },
+]
+
 export type RmgRichness = 'poor' | 'modest' | 'medium' | 'rich' | 'very_rich'
 export type RmgComplexity = 'sparse' | 'light' | 'medium' | 'dense' | 'very_dense'
 export type RmgWaterLevel = 'none' | 'few' | 'some' | 'many' | 'islands'
@@ -68,6 +76,8 @@ export function difficultyIndex(difficulty: RmgDifficulty): number {
 }
 
 export interface ClassicSettings {
+  /** Unset = normal. */
+  quality?: RmgQuality
   richness: RmgRichness
   complexity: RmgComplexity
   difficulty: RmgDifficulty

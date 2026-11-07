@@ -207,6 +207,8 @@
       "complexity": "Complexity",
       "difficulty": "Difficulty",
       "richnessInfo": "How valuable the treasure is — from poor piles and cheap buildings to rich ones with powerful artifacts. Uses the game's own richness tiers.",
+      "quality": "Quality",
+      "qualityInfo": "How many quality checks run before the map is done. Fast takes the first layout and skips the sense check. Normal re-rolls an unfair layout up to 4 times and checks once that powerful objects stay away from the starts and village objects stand near them. Thorough re-rolls up to 8 times, aims for a fairer score and runs that check three times. Slower the higher it goes.",
       "complexityInfo": "How busy the map is — scales decoration, interactable objects, treasure piles and guard squads together.",
       "difficultyInfo": "How strong the guard squads are and how fast they grow each week, using the game's own six difficulty levels. Neutral cities get guards at higher levels, and the map's lobby difficulty is set to match.",
       "water": "Water",
@@ -222,6 +224,11 @@
         "advanced": "Advanced"
       },
       "levels": {
+        "quality": {
+          "fast": "Fast",
+          "normal": "Normal",
+          "thorough": "Thorough"
+        },
         "richness": {
           "poor": "Poor",
           "modest": "Modest",
@@ -1567,6 +1574,7 @@
       "searchSidName": "Search sid / name",
       "noObjectsMatchTheseFilters": "No objects match these filters.",
       "noCreaturesMatchTheseFilters": "No creatures match these filters.",
+      "objectValue": "Value: {{value}}",
       "type": "Type:",
       "noPlaceableTemplateForThis": "No placeable template for this creature",
       "factionTier": "{{faction}} - Tier {{tier}}",
@@ -2565,6 +2573,10 @@
       "onlyShowItemsPlacedOr": "Only show items placed or referenced on this map",
       "noItemsPlacedOrUsed": "No items placed or used on this map.",
       "noMatches": "No matches.",
+      "sortBy": "Sort by",
+      "sortName": "Name",
+      "sortValueHigh": "Value (high to low)",
+      "sortValueLow": "Value (low to high)",
       "filtered": " (filtered)",
       "showingBuiltInDataLoad": "Showing built-in data. Load Core.zip for the full catalog.",
       "selectAnItemToSee": "Select an item to see details",
@@ -3265,6 +3277,7 @@
       "checkingReachability": "Checking reachability and repairing zones",
       "writingPlacements": "Writing placements",
       "playerZonesBalanced": "Player zones balanced",
+      "qualityPass": "Checking that the map makes sense",
       "autoFixing": "Auto-fixing overlaps and elevation",
       "validatingReachability": "Validating final reachability",
       "writingMapFile": "Writing map file",

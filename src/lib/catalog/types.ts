@@ -59,6 +59,8 @@ export interface CatalogArtifact {
   slot?: string
   rarity?: string
   description?: string
+  /** DB/items goodsValue: the game's price for the artifact. */
+  value?: number
   /** The untouched Core/DB/items/items/*.json array entry, kept as a clone
    *  template for custom artifact identities (issue #150) — same "raw here,
    *  resolved where shown" split as CatalogHero.raw/CatalogMapObject.raw.
@@ -115,6 +117,11 @@ export interface CatalogMapObject {
    *  pure decorations/fx/animals/blocks generally don't. Used by the Map
    *  Grid's object browser hover tooltip. */
   description?: string
+  /** The game's price for the object (objects_logic variants' `value`, roll-weighted mean; else `goodsValue`). `valueMin`/`valueMax` are set when
+   *  variants differ. Absent for objects with no logic entry or no price (decorations, mines, resource piles). */
+  value?: number
+  valueMin?: number
+  valueMax?: number
   /** Footprint width/depth in tiles (Map Grid multi-tile rendering + blocked-
    *  tile overlay research) — promoted out of `raw` since most real objects
    *  are NOT 1×1 (confirmed: ~73% of 858 real templates are bigger). Default
@@ -508,4 +515,6 @@ export interface GameCatalog {
 // v15: squad templates also carry rollChance, requiredValue, maxValue and per-unit max values (random-squad example preview).
 // v16: rmgTemplateContentLists/rmgTemplateContentPools hold the per-template Core/generator pools and lists excluded from
 // the generic arrays above (they would skew interactable-rarity stats), looked up by name by the template-driven RMG content pass.
-export const CATALOG_SCHEMA_VERSION = 16
+// v17: CatalogMapObject.description has its {0}/{1} numbers filled in from objects_logic (ranges where variants differ).
+// v18: artifact descriptions (numbers filled in) and `value` on artifacts and map objects.
+export const CATALOG_SCHEMA_VERSION = 18

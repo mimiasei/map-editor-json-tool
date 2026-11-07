@@ -204,6 +204,8 @@
       "complexity": "Complexité",
       "difficulty": "Difficulté",
       "richnessInfo": "La valeur des trésors, des tas pauvres et des bâtiments bon marché jusqu'aux tas riches avec de puissants artefacts. Utilise les propres niveaux de richesse du jeu.",
+      "quality": "Qualité",
+      "qualityInfo": "Nombre de contrôles de qualité avant la fin de la carte. Rapide garde la première disposition et saute la vérification de cohérence. Normal relance une disposition inéquitable jusqu’à 4 fois et vérifie une fois que les objets puissants restent loin des départs et que les objets de village sont proches. Approfondi relance jusqu’à 8 fois, vise un meilleur score d’équité et répète cette vérification trois fois. Plus c’est élevé, plus c’est lent.",
       "complexityInfo": "À quel point la carte est chargée : agit ensemble sur le décor, les objets interactifs, les tas de trésors et les pelotons de garde.",
       "difficultyInfo": "La force des pelotons de garde et la vitesse à laquelle ils croissent chaque semaine, selon les six niveaux de difficulté du jeu. Les villes neutres reçoivent des gardes aux niveaux supérieurs, et la difficulté du salon de la carte est réglée en conséquence.",
       "water": "Eau",
@@ -219,6 +221,11 @@
         "advanced": "Avancé"
       },
       "levels": {
+        "quality": {
+          "fast": "Rapide",
+          "normal": "Normal",
+          "thorough": "Approfondi"
+        },
         "richness": {
           "poor": "Pauvre",
           "modest": "Modeste",
@@ -1591,6 +1598,7 @@
       "searchSidName": "Rechercher par sid / nom",
       "noObjectsMatchTheseFilters": "Aucun objet ne correspond à ces filtres.",
       "noCreaturesMatchTheseFilters": "Aucune créature ne correspond à ces filtres.",
+      "objectValue": "Valeur : {{value}}",
       "type": "Type :",
       "noPlaceableTemplateForThis": "Aucun modèle plaçable pour cette créature",
       "factionTier": "{{faction}} - Rang {{tier}}",
@@ -2599,6 +2607,10 @@
       "onlyShowItemsPlacedOr": "Afficher uniquement les éléments placés ou référencés sur cette carte",
       "noItemsPlacedOrUsed": "Aucun élément placé ou utilisé sur cette carte.",
       "noMatches": "Aucune correspondance.",
+      "sortBy": "Trier par",
+      "sortName": "Nom",
+      "sortValueHigh": "Valeur (décroissante)",
+      "sortValueLow": "Valeur (croissante)",
       "filtered": " (filtré)",
       "showingBuiltInDataLoad": "Affichage des données intégrées. Chargez Core.zip pour le catalogue complet.",
       "selectAnItemToSee": "Sélectionnez un élément pour voir les détails",
@@ -3303,6 +3315,7 @@
       "checkingReachability": "Vérification de l'accessibilité et réparation des zones",
       "writingPlacements": "Écriture des placements",
       "playerZonesBalanced": "Zones de joueur équilibrées",
+      "qualityPass": "Vérification de la cohérence de la carte",
       "autoFixing": "Correction automatique des chevauchements et de l'altitude",
       "validatingReachability": "Validation de l'accessibilité finale",
       "writingMapFile": "Écriture du fichier de carte",

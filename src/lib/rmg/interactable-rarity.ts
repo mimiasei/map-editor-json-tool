@@ -11,6 +11,7 @@
 
 import type { GameCatalog } from '@/lib/catalog/types'
 import { INTERACTABLE_RARE_SIDS } from './object-variety'
+import { interactablePower, powerTier, SETTLEMENT_SIDS, TIER_PICK_FACTOR } from './object-power'
 
 /** Weight of a sid the content lists don't mention (typical list weights run 12-175). */
 export const DEFAULT_INTERACTABLE_WEIGHT = 50
@@ -54,13 +55,16 @@ function listStats(lists: NonNullable<GameCatalog['rmgContentLists']>): ListStat
 
 const RARE_TIER = new Set<string>(INTERACTABLE_RARE_SIDS)
 
-export function buildInteractableRarity(catalog: GameCatalog | undefined, weightBySid: Record<string, number> = {}): InteractableRarity {
+/** `powerAware` multiplies a sid's list weight by its power tier's factor (object-power.ts), so strong banks come up less often than weak ones; a tuning override is used as given. */
+export function buildInteractableRarity(catalog: GameCatalog | undefined, weightBySid: Record<string, number> = {}, powerAware = false): InteractableRarity {
   const stats = catalog?.rmgContentLists && catalog.rmgContentLists.length > 0 ? listStats(catalog.rmgContentLists) : undefined
   const weight = (sid: string): number => {
     const override = weightBySid[sid]
     if (override !== undefined) return override
     if (RARE_TIER.has(sid) || stats?.zeroOnly.has(sid)) return 0
-    return stats?.weights.get(sid) ?? DEFAULT_INTERACTABLE_WEIGHT
+    const listed = stats?.weights.get(sid) ?? DEFAULT_INTERACTABLE_WEIGHT
+    const power = powerAware && !SETTLEMENT_SIDS.has(sid) ? interactablePower(catalog ?? null, sid) : undefined
+    return power === undefined ? listed : listed * TIER_PICK_FACTOR[powerTier(power)]
   }
   return { weight, isBlocked: (sid) => !(weight(sid) > 0) }
 }

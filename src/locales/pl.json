@@ -204,6 +204,8 @@
       "complexity": "Złożoność",
       "difficulty": "Trudność",
       "richnessInfo": "Jak cenne są skarby — od ubogich stosów i tanich budynków po bogate, z potężnymi artefaktami. Korzysta z własnych poziomów bogactwa gry.",
+      "quality": "Jakość",
+      "qualityInfo": "Ile kontroli jakości zostanie wykonanych, zanim mapa będzie gotowa. Szybka bierze pierwszy układ i pomija kontrolę sensowności. Normalna losuje niesprawiedliwy układ ponownie do 4 razy i raz sprawdza, czy potężne obiekty są z dala od startów, a obiekty wiejskie stoją blisko nich. Dokładna losuje do 8 razy, celuje w uczciwszy wynik i powtarza tę kontrolę trzykrotnie. Im wyżej, tym wolniej.",
       "complexityInfo": "Jak tłoczna jest mapa — skaluje razem dekoracje, obiekty interaktywne, stosy skarbów i oddziały strażników.",
       "difficultyInfo": "Jak silne są oddziały strażników i jak szybko rosną co tydzień, według sześciu poziomów trudności gry. Miasta neutralne dostają strażników na wyższych poziomach, a trudność mapy w lobby jest ustawiana odpowiednio.",
       "water": "Woda",
@@ -219,6 +221,11 @@
         "advanced": "Zaawansowane"
       },
       "levels": {
+        "quality": {
+          "fast": "Szybka",
+          "normal": "Normalna",
+          "thorough": "Dokładna"
+        },
         "richness": {
           "poor": "Ubogie",
           "modest": "Skromne",
@@ -1623,6 +1630,7 @@
       "searchSidName": "Szukaj sid / nazwy",
       "noObjectsMatchTheseFilters": "Żadne obiekty nie pasują do tych filtrów.",
       "noCreaturesMatchTheseFilters": "Żadne stworzenia nie pasują do tych filtrów.",
+      "objectValue": "Wartość: {{value}}",
       "type": "Typ:",
       "noPlaceableTemplateForThis": "Brak szablonu do umieszczenia dla tego stworzenia",
       "factionTier": "{{faction}} - poziom {{tier}}",
@@ -2642,6 +2650,10 @@
       "onlyShowItemsPlacedOr": "Pokaż tylko elementy umieszczone lub użyte na tej mapie",
       "noItemsPlacedOrUsed": "Na tej mapie nie umieszczono ani nie użyto żadnych elementów.",
       "noMatches": "Brak wyników.",
+      "sortBy": "Sortuj według",
+      "sortName": "Nazwa",
+      "sortValueHigh": "Wartość (malejąco)",
+      "sortValueLow": "Wartość (rosnąco)",
       "filtered": " (przefiltrowane)",
       "showingBuiltInDataLoad": "Wyświetlane są dane wbudowane. Wczytaj Core.zip, aby zobaczyć pełny katalog.",
       "selectAnItemToSee": "Wybierz element, aby zobaczyć szczegóły",
@@ -3350,6 +3362,7 @@
       "checkingReachability": "Sprawdzanie osiągalności i naprawa stref",
       "writingPlacements": "Zapisywanie rozmieszczenia",
       "playerZonesBalanced": "Strefy graczy zrównoważone",
+      "qualityPass": "Sprawdzanie, czy mapa ma sens",
       "autoFixing": "Automatyczna naprawa nakładania i wysokości",
       "validatingReachability": "Sprawdzanie końcowej osiągalności",
       "writingMapFile": "Zapisywanie pliku mapy",

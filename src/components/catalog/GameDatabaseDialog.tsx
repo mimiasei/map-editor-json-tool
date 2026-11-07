@@ -434,6 +434,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
   const [activeTab, setActiveTab] = useState<TabId>('heroes')
   const [search, setSearch] = useState('')
   const [onlyUsed, setOnlyUsed] = useState(false)
+  const [sortBy, setSortBy] = useState<'name' | 'valueHigh' | 'valueLow'>('name')
   const [onlyNew, setOnlyNew] = useState(false)
   const newIdsByTab = useMemo(() => {
     const byTab = new Map<string, Set<string>>()
@@ -562,11 +563,13 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
     }
   }, [catalog, activeTab])
 
+  const sortable = activeTab === 'creatures' || activeTab === 'artifacts' || activeTab === 'mapObjects'
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     const fs = filterState
 
-    return items.filter((item) => {
+    const shown = items.filter((item) => {
       if (onlyUsed && totalCount(item.id) === 0) return false
       if (newOnly && !newIds?.has(item.id)) return false
       if (q && !item.name.toLowerCase().includes(q) && !item.id.toLowerCase().includes(q)) return false
@@ -604,8 +607,19 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
 
       return true
     })
+    if (!sortable || sortBy === 'name') return shown
+    // Creatures use their squad value; items without one go last in either direction.
+    const valueOf = (item: CatalogItem): number | undefined =>
+      activeTab === 'creatures' ? (item as CatalogItem & { squadValue?: number }).squadValue : (item as CatalogItem & { value?: number }).value
+    const dir = sortBy === 'valueHigh' ? -1 : 1
+    return [...shown].sort((a, b) => {
+      const va = valueOf(a)
+      const vb = valueOf(b)
+      if (va === undefined || vb === undefined) return va === vb ? 0 : va === undefined ? 1 : -1
+      return (va - vb) * dir || a.name.localeCompare(b.name)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts])
+  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts, sortBy])
 
   // Heroes are shown grouped by faction, in the game's own faction order. Null for
   // every other tab, which keeps its flat list.
@@ -732,6 +746,20 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
                   />
                 )}
               </div>
+              {sortable && (
+                <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border">
+                  <span className="text-xs text-muted-foreground shrink-0">{t('catalog.gameDatabaseDialog.sortBy')}</span>
+                  <select
+                    className="h-7 min-w-0 flex-1 rounded-md border border-input bg-background px-1.5 text-xs"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  >
+                    <option value="name">{t('catalog.gameDatabaseDialog.sortName')}</option>
+                    <option value="valueHigh">{t('catalog.gameDatabaseDialog.sortValueHigh')}</option>
+                    <option value="valueLow">{t('catalog.gameDatabaseDialog.sortValueLow')}</option>
+                  </select>
+                </div>
+              )}
 
               {/* Item list */}
               <ScrollArea className="flex-1 min-h-0">
