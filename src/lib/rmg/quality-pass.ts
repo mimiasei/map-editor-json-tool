@@ -16,7 +16,7 @@ import type { PlacedObject } from '@/types/map-context'
 import { applyMapEdit, type MapSaveEdit } from '@/lib/map-save'
 import { extractMapContext } from '@/lib/map-extract'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
-import { computeFootprintTiles, entranceGroups, isFootprintInBounds } from '@/lib/map-grid/footprint'
+import { computeFootprintTiles, entranceGroups, guardsAtEntrances, isFootprintInBounds } from '@/lib/map-grid/footprint'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { findNearestValidPosition } from '@/lib/map-grid/relocate'
@@ -37,8 +37,6 @@ export interface QualityPassResult {
   pulled: number
 }
 
-/** Guard squads and objects count as "at an entrance" within this Chebyshev distance of an entrance tile. */
-const GUARD_REACH = 1
 /** A village object is never put closer to a start than this, so it does not crowd the city. */
 const SETTLEMENT_MIN_DISTANCE = 5
 /** Importance of things the map is built around: never deleted to repair something else. */
@@ -93,9 +91,7 @@ function buildWorld(container: MapContainer, catalog: GameCatalog): World {
 
 /** Squads standing at one of the object's entrance tiles: its guards. */
 function guardsOf(w: World, o: PlacedObject): PlacedObject[] {
-  const entrances = entranceGroups(footprintOf(w, o), w.sizeX, w.sizeZ).map((g) => g.entranceNode)
-  if (entrances.length === 0) return []
-  return w.squads.filter((s) => entrances.some((n) => Math.max(Math.abs((n % w.sizeX) - s.x), Math.abs(Math.floor(n / w.sizeX) - s.z)) <= GUARD_REACH))
+  return guardsAtEntrances(footprintOf(w, o), w.squads, w.sizeX, w.sizeZ)
 }
 
 function deleteWithGuards(w: World, o: PlacedObject): void {

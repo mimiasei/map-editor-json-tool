@@ -397,7 +397,9 @@
       "deleteBlockersTitle": "Löschen, was den Eingang dieses Objekts blockiert",
       "autoFix": "Automatisch beheben",
       "intro": "Die Karte wurde gespeichert, aber die folgenden Objekte haben Probleme:",
-      "autoFixResult": "Die automatische Korrektur hat {{fixed}} Problem(e) gelöst — {{remaining}} konnten nicht automatisch behoben werden. Beheben Sie sie manuell."
+      "autoFixResult": "Die automatische Korrektur hat {{fixed}} Problem(e) gelöst — {{remaining}} konnten nicht automatisch behoben werden. Beheben Sie sie manuell.",
+      "scaleGuard": "Wache anpassen",
+      "scaleGuardTitle": "Setzt den Zufallstrupp-Wert der Wache auf einen für dieses Objekt typischen Wert"
     },
     "newMapDialog": {
       "createNewMap": "Neue Karte erstellen",
@@ -2300,7 +2302,8 @@
       "viewQuests": "Aufgaben",
       "statistics": "Statistiken",
       "saveAs": "Speichern unter",
-      "saveAsTitle": "Dateinamen wählen: speichert die .map und ihr Szenario-JSON"
+      "saveAsTitle": "Dateinamen wählen: speichert die .map und ihr Szenario-JSON",
+      "guardRewardSection": "Wachenstärke im Verhältnis zur Belohnung"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} ist in einem separaten Fenster geöffnet",
@@ -3251,7 +3254,10 @@
       "blocker": "{{sid}} (ID {{id}})",
       "isolatedPlayerStart": "{{sid}} (ID {{id}}) von Spieler {{owner}} bei ({{x}}, {{z}}) kann den Start keines anderen Spielers erreichen — kein verbundener Pfad und kein überbrückendes Portal. Die Seite mit weniger echtem Karteninhalt ist für diesen Spieler praktisch unspielbar, auch wenn findUnreachablePlacements nichts davon meldet (sie ist weiterhin „erreichbar“, nur eben allein vom anderen Spieler).",
       "autoFixed": "{{count}} Platzierungsproblem(e) automatisch behoben.",
-      "unresolved": "Ungelöst: {{issue}}"
+      "unresolved": "Ungelöst: {{issue}}",
+      "guardUnder": "{{where}} — Wache im Wert von {{guard}} bei einem Objekt mit Preis {{reward}} ({{pct}} %): viel schwächer als in jeder mitgelieferten Karte",
+      "guardOver": "{{where}} — Wache im Wert von {{guard}} ist das {{times}}-Fache des Objektpreises ({{reward}}): mehr als in mitgelieferten Karten, sie wird womöglich nie besiegt",
+      "guardNearStart": "{{where}} — ein starkes Objekt nur {{distance}} Felder vom nächsten Start entfernt: mitgelieferte Karten halten diese weiter weg"
     },
     "balance": {
       "startLabel": "Spieler {{owner}} ({{x}}, {{z}})",

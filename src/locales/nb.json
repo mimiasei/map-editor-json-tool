@@ -397,7 +397,9 @@
       "deleteBlockersTitle": "Slett det som blokkerer inngangen til dette objektet",
       "autoFix": "Rett opp automatisk",
       "intro": "Kartet ble lagret, men følgende objekt(er) har problemer:",
-      "autoFixResult": "Automatisk retting løste {{fixed}} problem(er) — {{remaining}} kunne fortsatt ikke rettes automatisk. Rett dem opp manuelt."
+      "autoFixResult": "Automatisk retting løste {{fixed}} problem(er) — {{remaining}} kunne fortsatt ikke rettes automatisk. Rett dem opp manuelt.",
+      "scaleGuard": "Skaler vakt",
+      "scaleGuardTitle": "Setter vaktens tilfeldige tropp til en typisk verdi for dette objektet"
     },
     "newMapDialog": {
       "createNewMap": "Opprett nytt kart",
@@ -2300,7 +2302,8 @@
       "viewQuests": "Oppdrag",
       "statistics": "Statistikk",
       "saveAs": "Lagre som",
-      "saveAsTitle": "Velg filnavn: lagrer .map-filen og scenario-JSON-en"
+      "saveAsTitle": "Velg filnavn: lagrer .map-filen og scenario-JSON-en",
+      "guardRewardSection": "Vaktstyrke mot belønning"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} er åpent i et eget vindu",
@@ -3251,7 +3254,10 @@
       "blocker": "{{sid}} (id {{id}})",
       "isolatedPlayerStart": "Spiller {{owner}} sin {{sid}} (id {{id}}) ved ({{x}}, {{z}}) kan ikke nå noen annen spillers start — ingen sammenhengende vei eller brobyggende portal. Den siden som har minst av kartets ekte innhold er i praksis uspillbar for den spilleren, selv om findUnreachablePlacements ikke vil flagge noe av det (det er fortsatt «tilgjengelig», bare kun for den andre spilleren).",
       "autoFixed": "Rettet automatisk {{count}} plasseringsproblem(er).",
-      "unresolved": "Uløst: {{issue}}"
+      "unresolved": "Uløst: {{issue}}",
+      "guardUnder": "{{where}} — vakt verdt {{guard}} for et objekt priset til {{reward}} ({{pct}} %): mye svakere enn i noe medfølgende kart",
+      "guardOver": "{{where}} — vakt verdt {{guard}} er {{times}} ganger objektets pris ({{reward}}): mer enn medfølgende kart bruker, den blir kanskje aldri tatt",
+      "guardNearStart": "{{where}} — et sterkt objekt bare {{distance}} ruter fra nærmeste start: medfølgende kart holder disse lenger unna"
     },
     "balance": {
       "startLabel": "Spiller {{owner}} ({{x}}, {{z}})",

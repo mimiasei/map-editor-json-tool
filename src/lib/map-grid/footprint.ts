@@ -278,3 +278,13 @@ export function clampAnchorToFootprintBounds(
     z: Math.min(Math.max(anchorZ, minZ), maxZ),
   }
 }
+
+/** Guard squads and objects count as "at an entrance" within this Chebyshev distance of an entrance tile. */
+export const GUARD_REACH = 1
+
+/** Squads standing at one of the footprint's entrance tiles: the object's guards. */
+export function guardsAtEntrances<S extends { x: number; z: number }>(cells: FootprintCell[], squads: S[], sizeX: number, sizeZ: number): S[] {
+  const entrances = entranceGroups(cells, sizeX, sizeZ).map((g) => g.entranceNode)
+  if (entrances.length === 0) return []
+  return squads.filter((s) => entrances.some((n) => Math.max(Math.abs((n % sizeX) - s.x), Math.abs(Math.floor(n / sizeX) - s.z)) <= GUARD_REACH))
+}

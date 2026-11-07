@@ -405,7 +405,9 @@
       "deleteBlockersTitle": "Delete what blocks this object’s entrance",
       "autoFix": "Auto-fix",
       "intro": "The map was saved, but the following object(s) have problems:",
-      "autoFixResult": "Auto-fix resolved {{fixed}} issue(s) — {{remaining}} still couldn't be fixed automatically. Fix them manually."
+      "autoFixResult": "Auto-fix resolved {{fixed}} issue(s) — {{remaining}} still couldn't be fixed automatically. Fix them manually.",
+      "scaleGuard": "Scale guard",
+      "scaleGuardTitle": "Set the guard's random-squad value to a typical value for this object"
     },
     "newMapDialog": {
       "createNewMap": "Create New Map",
@@ -2308,7 +2310,8 @@
       "viewQuests": "Quests",
       "statistics": "Statistics",
       "saveAs": "Save As",
-      "saveAsTitle": "Choose a file name: saves the .map and its scenario JSON"
+      "saveAsTitle": "Choose a file name: saves the .map and its scenario JSON",
+      "guardRewardSection": "Guard strength vs. reward"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} is open in a separate window",
@@ -3259,7 +3262,10 @@
       "blocker": "{{sid}} (id {{id}})",
       "isolatedPlayerStart": "Player {{owner}}'s {{sid}} (id {{id}}) at ({{x}}, {{z}}) can't reach any other player's start — no connected path or bridging portal. Whichever side has less of the map's real content is effectively unplayable for that player, even though findUnreachablePlacements won't flag any of it (it's still \"reachable\", just only by the other player).",
       "autoFixed": "Auto-fixed {{count}} placement issue(s).",
-      "unresolved": "Unresolved: {{issue}}"
+      "unresolved": "Unresolved: {{issue}}",
+      "guardUnder": "{{where}} — guard worth {{guard}} for an object priced {{reward}} ({{pct}}%): much weaker than any shipped map uses",
+      "guardOver": "{{where}} — guard worth {{guard}} is {{times}}× the object's price ({{reward}}): more than shipped maps use, it may never be taken",
+      "guardNearStart": "{{where}} — a strong object only {{distance}} tiles from the nearest start: shipped maps keep these further out"
     },
     "balance": {
       "startLabel": "Player {{owner}} ({{x}}, {{z}})",
