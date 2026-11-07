@@ -15,6 +15,7 @@ import {
   findIsolatedPlayerStarts, describeIsolatedPlayerStart, type IsolatedPlayerStart,
 } from '@/lib/map-grid/reachability-validation'
 import { findGuardRewardMismatches, describeGuardRewardMismatch, scaleGuardEdit, type GuardRewardMismatch } from '@/lib/map-grid/guard-reward'
+import { computeZoneEconomy, type ZoneEconomy } from '@/lib/map-grid/zone-economy'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
@@ -97,7 +98,7 @@ import HotkeysDialog from '@/components/common/HotkeysDialog'
 import { useHotkeyCombo } from '@/store/useHotkeyStore'
 import { comboLabel } from '@/lib/hotkeys'
 import WhatsNewDialog from '@/components/common/WhatsNewDialog'
-import PlayerBalancePanel, { DecorationBalanceSection } from '@/components/common/PlayerBalancePanel'
+import PlayerBalancePanel, { DecorationBalanceSection, ZoneEconomySection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 import { ImageIcon } from '@/components/ui/icons'
@@ -224,6 +225,7 @@ export default function Toolbar({
   const mapView = !!mapGridOpen || rmgOpen
   const [fairness, setFairness] = useState<PlayerBalance | null>(null)
   const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
+  const [zoneEconomy, setZoneEconomy] = useState<ZoneEconomy | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   /** Which bulk delete is waiting for its confirmation in the Validate dialog. */
@@ -679,6 +681,7 @@ export default function Toolbar({
     const context = useMapContextStore.getState().context
     setFairness(context ? computePlayerBalance(context, catalog) : null)
     setDecorationBalance(context ? computeDecorationBalance(context, catalog) : null)
+    setZoneEconomy(context && catalog ? computeZoneEconomy(context, catalog) : null)
     setFairnessOpen(true)
   }
 
@@ -1115,6 +1118,7 @@ export default function Toolbar({
             <DialogTitle>{t('layout.toolbar.mapFairness')}</DialogTitle>
           </DialogHeader>
           <PlayerBalancePanel balance={fairness} />
+          <ZoneEconomySection economy={zoneEconomy} />
           <DecorationBalanceSection decoration={decorationBalance} />
           <p className="text-xs text-muted-foreground">
             {t('layout.toolbar.theSameScoreTheRandom')}
