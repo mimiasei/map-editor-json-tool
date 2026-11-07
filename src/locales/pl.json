@@ -423,7 +423,9 @@
       "deleteBlockersTitle": "Usuń to, co blokuje wejście do tego obiektu",
       "autoFix": "Napraw automatycznie",
       "intro": "Mapa została zapisana, ale poniższe obiekty mają problemy:",
-      "autoFixResult": "Automatyczna naprawa rozwiązała problemy: {{fixed}} — pozostałe ({{remaining}}) nie dały się naprawić automatycznie. Napraw je ręcznie."
+      "autoFixResult": "Automatyczna naprawa rozwiązała problemy: {{fixed}} — pozostałe ({{remaining}}) nie dały się naprawić automatycznie. Napraw je ręcznie.",
+      "scaleGuard": "Dopasuj straż",
+      "scaleGuardTitle": "Ustawia wartość losowego oddziału straży na typową dla tego obiektu"
     },
     "newMapDialog": {
       "createNewMap": "Utwórz nową mapę",
@@ -466,7 +468,23 @@
       "decorationsAreAboutEvenBetween": "Dekoracje są mniej więcej równo rozłożone między graczami.",
       "fairness": "Uczciwość <b>{{score}}/100</b> <v>{{verdict}}</v>",
       "mineSummary": "{{mines}} · pól: {{distance}}",
-      "blockedSummary": "{{percent}}% (pól: {{tiles}})"
+      "blockedSummary": "{{percent}}% (pól: {{tiles}})",
+      "area": "Obszar",
+      "income": "Dochód / dzień",
+      "guarded": "Strzeżone",
+      "unguarded": "Niestrzeżone",
+      "strong": "Silne",
+      "guardValue": "Wartość straży",
+      "incomeTitle": "Dzienny dochód z kopalń obszaru",
+      "guardedTitle": "Cena wycenionych obiektów obszaru, które mają straż (wbudowaną lub zewnętrzną)",
+      "unguardedTitle": "Cena wycenionych obiektów obszaru bez straży",
+      "strongTitle": "Silne i bardzo silne obiekty w obszarze",
+      "guardValueTitle": "Łączna wartość armii straży przy tych obiektach",
+      "zoneContents": "Co zawiera każdy obszar",
+      "neutralAreas": "Obszary neutralne",
+      "neutralArea": "Obszar neutralny {{zone}}",
+      "zoneValueUneven": "Sumy graczy różnią się o ponad 10% od mediany ({{totals}}).",
+      "zoneContentsNote": "Ceny to ceny obiektów z gry; stosy zasobów i skrzynie ich nie mają i nie są liczone. Kopalnie liczą się jako dzienny dochód. Obiekt liczy się w obszarze, którym pomalowane jest jego pole."
     },
     "publishDialog": {
       "overwrites": "nadpisuje",
@@ -2370,7 +2388,8 @@
       "viewQuests": "Zadania",
       "statistics": "Statystyki",
       "saveAs": "Zapisz jako",
-      "saveAsTitle": "Wybierz nazwę pliku: zapisuje plik .map i jego scenariusz JSON"
+      "saveAsTitle": "Wybierz nazwę pliku: zapisuje plik .map i jego scenariusz JSON",
+      "guardRewardSection": "Siła straży a nagroda"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} jest otwarte w osobnym oknie",
@@ -3344,7 +3363,10 @@
       "blocker": "{{sid}} (id {{id}})",
       "isolatedPlayerStart": "{{sid}} (id {{id}}) gracza {{owner}} w ({{x}}, {{z}}) nie może dotrzeć do startu żadnego innego gracza — brak połączonej ścieżki ani łączącego portalu. Ta strona, która ma mniej rzeczywistej zawartości mapy, jest dla swojego gracza w praktyce niegrywalna, mimo że findUnreachablePlacements niczego z tego nie oznaczy (nadal jest „osiągalne”, ale tylko dla drugiego gracza).",
       "autoFixed": "Automatycznie naprawiono problemy z rozmieszczeniem: {{count}}.",
-      "unresolved": "Nierozwiązane: {{issue}}"
+      "unresolved": "Nierozwiązane: {{issue}}",
+      "guardUnder": "{{where}} — straż o wartości {{guard}} przy obiekcie wycenionym na {{reward}} ({{pct}}%): znacznie słabsza niż w jakiejkolwiek dołączonej mapie",
+      "guardOver": "{{where}} — straż o wartości {{guard}} to {{times}}× cena obiektu ({{reward}}): więcej niż w dołączonych mapach, może nigdy nie zostać pokonana",
+      "guardNearStart": "{{where}} — silny obiekt tylko {{distance}} pól od najbliższego startu: dołączone mapy trzymają je dalej"
     },
     "balance": {
       "startLabel": "Gracz {{owner}} ({{x}}, {{z}})",

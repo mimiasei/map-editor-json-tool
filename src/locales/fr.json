@@ -410,7 +410,9 @@
       "deleteBlockersTitle": "Supprimer ce qui bloque l’entrée de cet objet",
       "autoFix": "Correction auto",
       "intro": "La carte a été enregistrée, mais les objets suivants présentent des problèmes :",
-      "autoFixResult": "La correction automatique a résolu {{fixed}} problème(s) ; {{remaining}} n'ont pas pu être corrigés automatiquement. Corrigez-les à la main."
+      "autoFixResult": "La correction automatique a résolu {{fixed}} problème(s) ; {{remaining}} n'ont pas pu être corrigés automatiquement. Corrigez-les à la main.",
+      "scaleGuard": "Ajuster la garde",
+      "scaleGuardTitle": "Règle la valeur de l'escouade aléatoire de la garde sur une valeur typique pour cet objet"
     },
     "newMapDialog": {
       "createNewMap": "Créer une nouvelle carte",
@@ -453,7 +455,23 @@
       "decorationsAreAboutEvenBetween": "Les décorations sont à peu près équilibrées entre les joueurs.",
       "fairness": "Équité <b>{{score}}/100</b> <v>{{verdict}}</v>",
       "mineSummary": "{{mines}} · {{distance}} cases",
-      "blockedSummary": "{{percent}} % ({{tiles}} cases)"
+      "blockedSummary": "{{percent}} % ({{tiles}} cases)",
+      "area": "Zone",
+      "income": "Revenu / jour",
+      "guarded": "Gardé",
+      "unguarded": "Non gardé",
+      "strong": "Puissant",
+      "guardValue": "Valeur des gardes",
+      "incomeTitle": "Revenu quotidien des mines de la zone",
+      "guardedTitle": "Prix des objets estimés de la zone qui ont une garde (intégrée ou extérieure)",
+      "unguardedTitle": "Prix des objets estimés de la zone sans garde",
+      "strongTitle": "Objets puissants et très puissants de la zone",
+      "guardValueTitle": "Valeur d’armée cumulée des gardes de ces objets",
+      "zoneContents": "Contenu de chaque zone",
+      "neutralAreas": "Zones neutres",
+      "neutralArea": "Zone neutre {{zone}}",
+      "zoneValueUneven": "Les totaux des joueurs s’écartent de plus de 10 % de la médiane ({{totals}}).",
+      "zoneContentsNote": "Les prix sont ceux du jeu ; les tas de ressources et coffres n’en ont pas et ne comptent pas. Les mines comptent comme revenu quotidien. Un objet compte dans la zone peinte sur sa case."
     },
     "publishDialog": {
       "overwrites": "remplace",
@@ -2335,7 +2353,8 @@
       "viewQuests": "Quêtes",
       "statistics": "Statistiques",
       "saveAs": "Sauvegarder sous",
-      "saveAsTitle": "Choisir un nom de fichier : sauvegarde la carte (.map) et son JSON de scénario"
+      "saveAsTitle": "Choisir un nom de fichier : sauvegarde la carte (.map) et son JSON de scénario",
+      "guardRewardSection": "Force de la garde et récompense"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} est ouvert dans une fenêtre séparée",
@@ -3297,7 +3316,10 @@
       "blocker": "{{sid}} (id {{id}})",
       "isolatedPlayerStart": "{{sid}} (id {{id}}) du joueur {{owner}} en ({{x}}, {{z}}) ne peut atteindre le départ d'aucun autre joueur : pas de chemin connecté ni de portail faisant le lien. Le côté qui a le moins du contenu réel de la carte est pratiquement injouable pour ce joueur, même si findUnreachablePlacements n'en signale rien (c'est toujours « accessible », mais seulement par l'autre joueur).",
       "autoFixed": "{{count}} problème(s) de placement corrigé(s) automatiquement.",
-      "unresolved": "Non résolu : {{issue}}"
+      "unresolved": "Non résolu : {{issue}}",
+      "guardUnder": "{{where}} — garde d'une valeur de {{guard}} pour un objet estimé à {{reward}} ({{pct}} %) : bien plus faible que dans toute carte livrée",
+      "guardOver": "{{where}} — la garde de valeur {{guard}} vaut {{times}} fois le prix de l'objet ({{reward}}) : plus que dans les cartes livrées, elle risque de ne jamais être battue",
+      "guardNearStart": "{{where}} — un objet puissant à seulement {{distance}} cases du départ le plus proche : les cartes livrées les placent plus loin"
     },
     "balance": {
       "startLabel": "Joueur {{owner}} ({{x}}, {{z}})",

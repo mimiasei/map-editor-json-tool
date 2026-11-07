@@ -397,7 +397,9 @@
       "deleteBlockersTitle": "Slett det som blokkerer inngangen til dette objektet",
       "autoFix": "Rett opp automatisk",
       "intro": "Kartet ble lagret, men følgende objekt(er) har problemer:",
-      "autoFixResult": "Automatisk retting løste {{fixed}} problem(er) — {{remaining}} kunne fortsatt ikke rettes automatisk. Rett dem opp manuelt."
+      "autoFixResult": "Automatisk retting løste {{fixed}} problem(er) — {{remaining}} kunne fortsatt ikke rettes automatisk. Rett dem opp manuelt.",
+      "scaleGuard": "Skaler vakt",
+      "scaleGuardTitle": "Setter vaktens tilfeldige tropp til en typisk verdi for dette objektet"
     },
     "newMapDialog": {
       "createNewMap": "Opprett nytt kart",
@@ -440,7 +442,23 @@
       "decorationsAreAboutEvenBetween": "Dekorasjonene er omtrent jevnt fordelt mellom spillerne.",
       "fairness": "Rettferdighet <b>{{score}}/100</b> <v>{{verdict}}</v>",
       "mineSummary": "{{mines}} · {{distance}} ruter",
-      "blockedSummary": "{{percent}} % ({{tiles}} ruter)"
+      "blockedSummary": "{{percent}} % ({{tiles}} ruter)",
+      "area": "Område",
+      "income": "Inntekt / dag",
+      "guarded": "Vokta",
+      "unguarded": "Uvokta",
+      "strong": "Sterke",
+      "guardValue": "Vaktverdi",
+      "incomeTitle": "Daglig inntekt fra områdets gruver",
+      "guardedTitle": "Pris på områdets prisede objekter som har vakt (innebygd eller utenfor)",
+      "unguardedTitle": "Pris på områdets prisede objekter uten vakt",
+      "strongTitle": "Sterke og svært sterke objekter i området",
+      "guardValueTitle": "Samlet hærverdi av vaktene ved disse objektene",
+      "zoneContents": "Hva hvert område inneholder",
+      "neutralAreas": "Nøytrale områder",
+      "neutralArea": "Nøytralt område {{zone}}",
+      "zoneValueUneven": "Spillernes totaler avviker mer enn 10 % fra medianen ({{totals}}).",
+      "zoneContentsNote": "Prisene er spillets egne objektpriser; ressurshauger og kister har ingen og telles ikke. Gruver telles som daglig inntekt. Objekter telles i området ruta deres er malt med."
     },
     "publishDialog": {
       "overwrites": "overskriver",
@@ -2300,7 +2318,8 @@
       "viewQuests": "Oppdrag",
       "statistics": "Statistikk",
       "saveAs": "Lagre som",
-      "saveAsTitle": "Velg filnavn: lagrer .map-filen og scenario-JSON-en"
+      "saveAsTitle": "Velg filnavn: lagrer .map-filen og scenario-JSON-en",
+      "guardRewardSection": "Vaktstyrke mot belønning"
     },
     "appShell": {
       "undockedPlaceholder": "{{label}} er åpent i et eget vindu",
@@ -3251,7 +3270,10 @@
       "blocker": "{{sid}} (id {{id}})",
       "isolatedPlayerStart": "Spiller {{owner}} sin {{sid}} (id {{id}}) ved ({{x}}, {{z}}) kan ikke nå noen annen spillers start — ingen sammenhengende vei eller brobyggende portal. Den siden som har minst av kartets ekte innhold er i praksis uspillbar for den spilleren, selv om findUnreachablePlacements ikke vil flagge noe av det (det er fortsatt «tilgjengelig», bare kun for den andre spilleren).",
       "autoFixed": "Rettet automatisk {{count}} plasseringsproblem(er).",
-      "unresolved": "Uløst: {{issue}}"
+      "unresolved": "Uløst: {{issue}}",
+      "guardUnder": "{{where}} — vakt verdt {{guard}} for et objekt priset til {{reward}} ({{pct}} %): mye svakere enn i noe medfølgende kart",
+      "guardOver": "{{where}} — vakt verdt {{guard}} er {{times}} ganger objektets pris ({{reward}}): mer enn medfølgende kart bruker, den blir kanskje aldri tatt",
+      "guardNearStart": "{{where}} — et sterkt objekt bare {{distance}} ruter fra nærmeste start: medfølgende kart holder disse lenger unna"
     },
     "balance": {
       "startLabel": "Spiller {{owner}} ({{x}}, {{z}})",

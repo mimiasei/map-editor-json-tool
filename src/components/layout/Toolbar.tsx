@@ -14,11 +14,14 @@ import {
   findUnreachablePlacements, PLAYER_START_SIDS, describeUnreachablePlacement, type UnreachablePlacement,
   findIsolatedPlayerStarts, describeIsolatedPlayerStart, type IsolatedPlayerStart,
 } from '@/lib/map-grid/reachability-validation'
+import { findGuardRewardMismatches, describeGuardRewardMismatch, scaleGuardEdit, type GuardRewardMismatch } from '@/lib/map-grid/guard-reward'
+import { computeZoneEconomy, type ZoneEconomy } from '@/lib/map-grid/zone-economy'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
 import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
 import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
+import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import NewMapDialog from '@/components/common/NewMapDialog'
 import GenerateOnMapDialog from '@/components/common/GenerateOnMapDialog'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
@@ -96,7 +99,7 @@ import HotkeysDialog from '@/components/common/HotkeysDialog'
 import { useHotkeyCombo } from '@/store/useHotkeyStore'
 import { comboLabel } from '@/lib/hotkeys'
 import WhatsNewDialog from '@/components/common/WhatsNewDialog'
-import PlayerBalancePanel, { DecorationBalanceSection } from '@/components/common/PlayerBalancePanel'
+import PlayerBalancePanel, { DecorationBalanceSection, ZoneEconomySection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 import { ImageIcon } from '@/components/ui/icons'
@@ -223,6 +226,7 @@ export default function Toolbar({
   const mapView = !!mapGridOpen || rmgOpen
   const [fairness, setFairness] = useState<PlayerBalance | null>(null)
   const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
+  const [zoneEconomy, setZoneEconomy] = useState<ZoneEconomy | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   /** Which bulk delete is waiting for its confirmation in the Validate dialog. */
@@ -233,6 +237,8 @@ export default function Toolbar({
   // checked yet this session" or "no map currently loaded".
   const [mapPlacementCheck, setMapPlacementCheck] = useState<{ issues: MapValidationIssue[]; unreachable: UnreachablePlacement[]; isolated: IsolatedPlayerStart[] } | null>(null)
   const [placementAutoFixing, setPlacementAutoFixing] = useState(false)
+  /** Advisory list next to the placement check: guards that do not fit their object. Needs the catalog, so empty without one. */
+  const [guardRewards, setGuardRewards] = useState<GuardRewardMismatch[]>([])
   const [importErrors,        setImportErrors]        = useState<string[]>([])
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
@@ -676,6 +682,7 @@ export default function Toolbar({
     const context = useMapContextStore.getState().context
     setFairness(context ? computePlayerBalance(context, catalog) : null)
     setDecorationBalance(context ? computeDecorationBalance(context, catalog) : null)
+    setZoneEconomy(context && catalog ? computeZoneEconomy(context, catalog) : null)
     setFairnessOpen(true)
   }
 
@@ -690,6 +697,7 @@ export default function Toolbar({
           }
         : null,
     )
+    setGuardRewards(context && catalog ? findGuardRewardMismatches(context, catalog) : [])
   }
 
   const handleOpenValidate = () => {
@@ -701,6 +709,12 @@ export default function Toolbar({
   /** Deletes objects/squads named by a Validate entry (undoable edits) and lists the problems again. */
   const deleteFromValidate = (targets: { entityType: 0 | 2; id: number }[]) => {
     for (const { entityType, id } of targets) useMapDocumentStore.getState().applyEdit({ kind: 'deleteObject', entityType, entityId: id })
+    recheckPlacement()
+  }
+  const scaleGuard = (mismatch: GuardRewardMismatch) => {
+    const edit = scaleGuardEdit(mismatch, catalog)
+    if (!edit) return
+    useMapDocumentStore.getState().applyEdit({ kind: 'setRandomSquadValue', ...edit })
     recheckPlacement()
   }
   /** What blocks each flagged entrance (type-0 objects), worked out once per list: it walks every object's footprint. */
@@ -1100,16 +1114,19 @@ export default function Toolbar({
 
       {/* Fairness dialog */}
       <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+        <DraggableDialogContent className="p-0 gap-0" defaultWidth={620} defaultHeight={640} minWidth={420} minHeight={320} storageKey="fairness">
+          <DraggableDialogDragHandle className="shrink-0 border-b border-border px-6 py-4 pr-10">
             <DialogTitle>{t('layout.toolbar.mapFairness')}</DialogTitle>
-          </DialogHeader>
-          <PlayerBalancePanel balance={fairness} />
-          <DecorationBalanceSection decoration={decorationBalance} />
-          <p className="text-xs text-muted-foreground">
-            {t('layout.toolbar.theSameScoreTheRandom')}
-          </p>
-        </DialogContent>
+          </DraggableDialogDragHandle>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+            <PlayerBalancePanel balance={fairness} />
+            <ZoneEconomySection economy={zoneEconomy} />
+            <DecorationBalanceSection decoration={decorationBalance} />
+            <p className="text-xs text-muted-foreground">
+              {t('layout.toolbar.theSameScoreTheRandom')}
+            </p>
+          </div>
+        </DraggableDialogContent>
       </Dialog>
 
       {/* Validate dialog */}
@@ -1262,6 +1279,34 @@ export default function Toolbar({
                   </>
               )}
             </>
+            )}
+            {guardRewards.length > 0 && (
+              <>
+                <div className="border-t border-border pt-2 text-xs font-medium text-muted-foreground">{t('layout.toolbar.guardRewardSection')}</div>
+                {guardRewards.map((m, i) => (
+                  <Alert key={`guard-reward-${i}`}
+                         className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                         onClick={() => focusOnTile(m.object.x, m.object.z, m.object.node)}
+                  >
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                    <AlertDescription className="ml-2 flex items-start gap-2">
+                      <span className="flex-1">{describeGuardRewardMismatch(m)}</span>
+                      <span className="flex shrink-0 items-start gap-1">
+                        {scaleGuardEdit(m, catalog) !== null && (
+                          <button type="button" className="rounded px-1 text-xs underline-offset-2 hover:underline" title={t('common.mapValidationErrorDialog.scaleGuardTitle')}
+                                  onClick={(e) => { e.stopPropagation(); scaleGuard(m) }}>
+                            {t('common.mapValidationErrorDialog.scaleGuard')}
+                          </button>
+                        )}
+                        <button type="button" className="rounded p-0.5 hover:bg-destructive/20" title={t('common.mapValidationErrorDialog.deleteObject')}
+                                onClick={(e) => { e.stopPropagation(); deleteFromValidate([{ entityType: 0, id: m.object.id }]) }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </>
             )}
           </div>
         </DialogContent>

@@ -1,5 +1,6 @@
 import type { PlayerBalance, BalanceDimension } from '@/lib/map-grid/player-balance'
 import type { DecorationBalance } from '@/lib/map-grid/decoration-balance'
+import { zoneTotalValue, type ZoneEconomy, type ZoneEconomyRow } from '@/lib/map-grid/zone-economy'
 import { useTranslation, Trans } from 'react-i18next'
 
 /** Player balance table + score (issue #255) — shared by the Stats panel and
@@ -114,6 +115,62 @@ export function DecorationBalanceSection({ decoration }: { decoration: Decoratio
       ) : (
         <p className="text-xs text-muted-foreground">{t('common.playerBalancePanel.decorationsAreAboutEvenBetween')}</p>
       )}
+    </div>
+  )
+}
+
+const RESOURCE_ORDER = ['gold', 'wood', 'ore', 'crystals', 'gemstones', 'mercury', 'dust']
+
+/** Value and guarding per Player Area and per neutral area (Fairness dialog only; not part of the score). */
+export function ZoneEconomySection({ economy }: { economy: ZoneEconomy | null }) {
+  const { t } = useTranslation()
+  if (!economy || (economy.players.length === 0 && economy.neutral.length === 0)) return null
+  const income = (r: ZoneEconomyRow) => RESOURCE_ORDER.filter((res) => r.income[res]).map((res) => `${r.income[res]} ${res}`).join(', ') || '–'
+  const table = (rows: ZoneEconomyRow[], label: (r: ZoneEconomyRow) => string) => (
+    <table className="w-full text-xs">
+      <thead>
+        <tr className="border-b border-border text-muted-foreground">
+          <th className="pb-1 text-left font-medium">{t('common.playerBalancePanel.area')}</th>
+          <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.incomeTitle')}>{t('common.playerBalancePanel.income')}</th>
+          <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.guardedTitle')}>{t('common.playerBalancePanel.guarded')}</th>
+          <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.unguardedTitle')}>{t('common.playerBalancePanel.unguarded')}</th>
+          <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.strongTitle')}>{t('common.playerBalancePanel.strong')}</th>
+          <th className="pb-1 text-right font-medium" title={t('common.playerBalancePanel.guardValueTitle')}>{t('common.playerBalancePanel.guardValue')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => {
+          const tone = r.flagged ? 'text-amber-600 dark:text-amber-400 font-medium' : ''
+          return (
+            <tr key={r.zoneId} className="border-b border-border/50">
+              <td className="py-1">{label(r)}</td>
+              <td className="py-1 text-right">{income(r)}</td>
+              <td className={`py-1 text-right ${tone}`}>{Math.round(r.guardedValue)}</td>
+              <td className={`py-1 text-right ${tone}`}>{Math.round(r.unguardedValue)}</td>
+              <td className="py-1 text-right">{r.strongCount}</td>
+              <td className="py-1 text-right">{Math.round(r.guardValue)}</td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold">{t('common.playerBalancePanel.zoneContents')}</p>
+      {economy.players.length > 0 && table(economy.players, (r) => t('shared.player2', { owner: r.owner }))}
+      {economy.players.some((r) => r.flagged) && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          {t('common.playerBalancePanel.zoneValueUneven', { totals: economy.players.map((r) => `${t('shared.player2', { owner: r.owner })}: ${Math.round(zoneTotalValue(r))}`).join(', ') })}
+        </p>
+      )}
+      {economy.neutral.length > 0 && (
+        <>
+          <p className="pt-1 text-xs font-semibold">{t('common.playerBalancePanel.neutralAreas')}</p>
+          {table(economy.neutral, (r) => t('common.playerBalancePanel.neutralArea', { zone: r.zoneId }))}
+        </>
+      )}
+      <p className="text-[11px] text-muted-foreground">{t('common.playerBalancePanel.zoneContentsNote')}</p>
     </div>
   )
 }
