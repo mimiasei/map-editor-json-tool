@@ -3357,8 +3357,22 @@
       "gridRedo": "Gjør om kartendring",
       "gridRedoAlt": "Gjør om kartendring (alternativ)",
       "gridDelete": "Slett valgt objekt",
-      "gridDeleteAlt": "Slett valgt objekt (alternativ)"
+      "gridDeleteAlt": "Slett valgt objekt (alternativ)",
+      "gridCopy": "Kopier valgte objekter",
+      "gridPaste": "Lim inn kopierte objekter",
+      "gridFlip": "Speilvend det innlimte området venstre-høyre",
+      "gridRotate": "Roter det innlimte området 90°"
     },
+    "groups": {
+      "app": "Generelt",
+      "mapEdit": "Kartvisning: redigering",
+      "mapClipboard": "Kartvisning: kopiering og liming",
+      "mapTools": "Kartvisning: verktøy"
+    },
+    "search": "Søk etter handlinger, verktøy eller taster…",
+    "noMatches": "Ingen snarveier passer til søket.",
+    "replace": "Erstatt",
+    "reserved": "Denne tasten er reservert (Esc avslutter verktøy; de andre tilhører nettleseren). Velg en annen.",
     "pressKeys": "Trykk tastene…",
     "none": "Ingen",
     "clear": "Fjern",

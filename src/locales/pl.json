@@ -3450,8 +3450,22 @@
       "gridRedo": "Ponów zmianę mapy",
       "gridRedoAlt": "Ponów zmianę mapy (alternatywnie)",
       "gridDelete": "Usuń zaznaczony obiekt",
-      "gridDeleteAlt": "Usuń zaznaczony obiekt (alternatywnie)"
+      "gridDeleteAlt": "Usuń zaznaczony obiekt (alternatywnie)",
+      "gridCopy": "Kopiuj zaznaczone obiekty",
+      "gridPaste": "Wklej skopiowane obiekty",
+      "gridFlip": "Odbij wklejany obszar lewo-prawo",
+      "gridRotate": "Obróć wklejany obszar o 90°"
     },
+    "groups": {
+      "app": "Ogólne",
+      "mapEdit": "Widok mapy: edycja",
+      "mapClipboard": "Widok mapy: kopiowanie i wklejanie",
+      "mapTools": "Widok mapy: narzędzia"
+    },
+    "search": "Szukaj akcji, narzędzi lub klawiszy…",
+    "noMatches": "Żaden skrót nie pasuje do wyszukiwania.",
+    "replace": "Zamień",
+    "reserved": "Ten klawisz jest zarezerwowany (Esc kończy narzędzia; pozostałe należą do przeglądarki). Wybierz inny.",
     "pressKeys": "Naciśnij klawisze…",
     "none": "Brak",
     "clear": "Wyczyść",

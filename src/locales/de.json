@@ -3357,8 +3357,22 @@
       "gridRedo": "Karten-Änderung wiederholen",
       "gridRedoAlt": "Karten-Änderung wiederholen (Alternative)",
       "gridDelete": "Gewähltes Objekt löschen",
-      "gridDeleteAlt": "Gewähltes Objekt löschen (Alternative)"
+      "gridDeleteAlt": "Gewähltes Objekt löschen (Alternative)",
+      "gridCopy": "Ausgewählte Objekte kopieren",
+      "gridPaste": "Kopierte Objekte einfügen",
+      "gridFlip": "Eingefügten Bereich links-rechts spiegeln",
+      "gridRotate": "Eingefügten Bereich um 90° drehen"
     },
+    "groups": {
+      "app": "Allgemein",
+      "mapEdit": "Kartenansicht: Bearbeiten",
+      "mapClipboard": "Kartenansicht: Kopieren und Einfügen",
+      "mapTools": "Kartenansicht: Werkzeuge"
+    },
+    "search": "Aktionen, Werkzeuge oder Tasten suchen…",
+    "noMatches": "Kein Kürzel passt zur Suche.",
+    "replace": "Ersetzen",
+    "reserved": "Diese Taste ist reserviert (Esc beendet Werkzeuge; die anderen gehören dem Browser). Bitte eine andere wählen.",
     "pressKeys": "Tasten drücken…",
     "none": "Keines",
     "clear": "Entfernen",

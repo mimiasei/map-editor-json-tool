@@ -3365,8 +3365,22 @@
       "gridRedo": "Redo map edit",
       "gridRedoAlt": "Redo map edit (alternative)",
       "gridDelete": "Delete selected object",
-      "gridDeleteAlt": "Delete selected object (alternative)"
+      "gridDeleteAlt": "Delete selected object (alternative)",
+      "gridCopy": "Copy selected objects",
+      "gridPaste": "Paste copied objects",
+      "gridFlip": "Flip the pasted area left-right",
+      "gridRotate": "Turn the pasted area 90°"
     },
+    "groups": {
+      "app": "General",
+      "mapEdit": "Map view: editing",
+      "mapClipboard": "Map view: copy and paste",
+      "mapTools": "Map view: tools"
+    },
+    "search": "Search actions, tools or keys…",
+    "noMatches": "No shortcut matches the search.",
+    "replace": "Replace",
+    "reserved": "This key is reserved (Esc ends tools; the others belong to the browser). Pick another.",
     "pressKeys": "Press keys…",
     "none": "None",
     "clear": "Clear",

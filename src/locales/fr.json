@@ -3403,8 +3403,22 @@
       "gridRedo": "Rétablir la modification de la carte",
       "gridRedoAlt": "Rétablir la modification de la carte (alternative)",
       "gridDelete": "Supprimer l'objet sélectionné",
-      "gridDeleteAlt": "Supprimer l'objet sélectionné (alternative)"
+      "gridDeleteAlt": "Supprimer l'objet sélectionné (alternative)",
+      "gridCopy": "Copier les objets sélectionnés",
+      "gridPaste": "Coller les objets copiés",
+      "gridFlip": "Retourner la zone collée gauche-droite",
+      "gridRotate": "Tourner la zone collée de 90°"
     },
+    "groups": {
+      "app": "Général",
+      "mapEdit": "Vue carte : édition",
+      "mapClipboard": "Vue carte : copier-coller",
+      "mapTools": "Vue carte : outils"
+    },
+    "search": "Chercher une action, un outil ou une touche…",
+    "noMatches": "Aucun raccourci ne correspond à la recherche.",
+    "replace": "Remplacer",
+    "reserved": "Cette touche est réservée (Échap termine les outils ; les autres appartiennent au navigateur). Choisissez-en une autre.",
     "pressKeys": "Appuyez sur les touches…",
     "none": "Aucun",
     "clear": "Effacer",
