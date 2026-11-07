@@ -82,7 +82,7 @@ import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
-import { canRotate as canRotateClipboard, copyObjects, flipHorizontal, isCopyable, planPaste, rotateClockwise } from '@/lib/map-grid/clipboard'
+import { copyObjects, flipHorizontal, isCopyable, planPaste, rotateClockwise } from '@/lib/map-grid/clipboard'
 import { combineSelection, keysInRectangle } from '@/lib/map-grid/selection'
 import { applyPaste, type PasteResult } from '@/lib/map-grid/paste-apply'
 import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
@@ -4059,7 +4059,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => [...selectedKeys].map((k) => objectByKey.get(k)).filter((o): o is PlacedObject => !!o),
     [selectedKeys, objectByKey],
   )
-  const clipboardCanRotate = useMemo(() => !!clipboard && canRotateClipboard(clipboard, templateLookup), [clipboard, templateLookup])
 
   // A click picks the top object of the tile (Ctrl toggles it); a dragged rectangle picks everything standing in it (Ctrl adds).
   const applySelectHit = (bounds: RectangleBounds, additive: boolean) => {
@@ -4084,7 +4083,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   const flipClipboard = () => { if (clipboard) setClipboard(flipHorizontal(clipboard, templateLookup)) }
-  const turnClipboard = () => { if (clipboard && clipboardCanRotate) setClipboard(rotateClockwise(clipboard)) }
+  const turnClipboard = () => { if (clipboard) setClipboard(rotateClockwise(clipboard)) }
 
   const terrainBlockedForPaste = useCallback((node: number) => terrainBlockedSet.has(node), [terrainBlockedSet])
   // The copied area is centred on the tile under the cursor.
@@ -4142,7 +4141,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, copyMode, selectedKeys, clipboard, selectedObjects, clipboardCanRotate, templateLookup])
+  }, [open, copyMode, selectedKeys, clipboard, selectedObjects, templateLookup])
 
   // Outlines of the selected objects and the paste preview, as one layer so each tile needs no element of its own.
   const selectionOutlines = useMemo(() => {
@@ -5328,7 +5327,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={flipClipboard} title={t('mapGrid.mapGridDialog.copy.flipTitle')}>
                         <FlipHorizontal className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboardCanRotate} onClick={turnClipboard} title={clipboardCanRotate ? t('mapGrid.mapGridDialog.copy.rotateTitle') : t('mapGrid.mapGridDialog.copy.rotateUnavailableTitle')}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={turnClipboard} title={t('mapGrid.mapGridDialog.copy.rotateTitle')}>
                         <RotateCw className="h-3.5 w-3.5" />
                       </Button>
                     </>

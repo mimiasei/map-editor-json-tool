@@ -1515,7 +1515,6 @@
         "pasteTitle": "Lim inn det kopierte området: det følger markøren, klikk for å sette inn, Esc for å stoppe (Ctrl+V)",
         "flipTitle": "Speilvend venstre-høyre (M)",
         "rotateTitle": "Roter 90° med klokka (R)",
-        "rotateUnavailableTitle": "Bare grupper av dekorasjoner med kvadratisk, sentrert fotavtrykk kan roteres",
         "nothingToCopy": "Ingenting å kopiere: spillerstarter, portaler og sonemarkører kopieres aldri.",
         "copied": "Kopierte {{count}} objekter. Klikk for å sette inn, M speilvender, R roterer, Esc stopper.",
         "pasted": "Limte inn {{placed}}; {{blocked}} blokkert; {{skipped}} egenskaper ikke overført."

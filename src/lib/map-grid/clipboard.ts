@@ -3,8 +3,8 @@
 // linked pairs, so a pasted copy would break the map. Positions are stored relative to the bottom-left corner of the copied area's footprint box.
 //
 // Mirroring uses the format's own mirrored variant (rotation + 10, flipped about the centre of the block tiles, see `mirrorSpan` in footprint.ts).
-// A 90 degree turn is offered only where it is exact under the footprint model: decorations whose solid footprint is a square with the anchor at its
-// centre (1x1 included). Quarter turns of other footprints are not modelled (footprint.ts), so the pivot could land a tile off.
+// A 90 degree turn moves every anchor around the area's centre and turns only unmirrored decorations; footprint quarter turns are not modelled
+// (footprint.ts), so large objects may land a tile off.
 
 import { computeFootprintTiles, type FootprintTemplate } from '@/lib/map-grid/footprint'
 import type { PlacedObject } from '@/types/map-context'
@@ -134,21 +134,22 @@ export function flipHorizontal(clip: ObjectClipboard, lookup: TemplateLookup): O
   }
 }
 
-/** Whether every item can be turned exactly: decorations with a square solid footprint centred on the anchor, none of them mirrored. */
-export function canRotate(clip: ObjectClipboard, lookup: TemplateLookup): boolean {
-  return clip.items.every((item) => {
-    if (!item.decoration || item.rotation >= 10) return false
-    const box = footprintBox(item.sid, item.type, item.rotation, lookup)
-    return box.x0 === -box.x1 && box.z0 === -box.z1 && box.x1 === box.z1
-  })
-}
-
-/** Turns the copied area a quarter clockwise on screen (only call when `canRotate`): a tile (x, z) goes to (z, width - 1 - x). */
+/**
+ * Turns the copied area a quarter clockwise on screen: every anchor goes from (x, z) to (z, width - 1 - x). Only unmirrored decorations also get
+ * rotation + 1; everything else keeps its own rotation and is just repositioned. Footprints are not rotated (see footprint.ts), so a non-square or
+ * off-centre object can end up a tile off; the paste preview shows blocked tiles and the user adjusts afterwards. Mirrored variants (10+) are left
+ * alone because their turning direction is unverified.
+ */
 export function rotateClockwise(clip: ObjectClipboard): ObjectClipboard {
   return {
     width: clip.height,
     height: clip.width,
-    items: clip.items.map((item) => ({ ...item, dx: item.dz, dz: clip.width - 1 - item.dx, rotation: (item.rotation + 1) % 4 })),
+    items: clip.items.map((item) => ({
+      ...item,
+      dx: item.dz,
+      dz: clip.width - 1 - item.dx,
+      rotation: item.decoration && item.rotation < 10 ? (item.rotation + 1) % 4 : item.rotation,
+    })),
   }
 }
 

@@ -1547,7 +1547,6 @@
         "pasteTitle": "Coller la zone copiée : elle suit le curseur, cliquer pour poser, Échap pour arrêter (Ctrl+V)",
         "flipTitle": "Retourner gauche-droite (M)",
         "rotateTitle": "Tourner de 90° dans le sens horaire (R)",
-        "rotateUnavailableTitle": "Seuls les groupes de décors à empreinte carrée et centrée peuvent être tournés",
         "nothingToCopy": "Rien à copier : les points de départ, portails et marqueurs de zone ne sont jamais copiés.",
         "copied": "{{count}} objets copiés. Cliquer pour poser, M retourne, R tourne, Échap arrête.",
         "pasted": "{{placed}} collés ; {{blocked}} bloqués ; {{skipped}} propriétés non reprises."

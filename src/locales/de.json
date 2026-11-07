@@ -1515,7 +1515,6 @@
         "pasteTitle": "Kopierten Bereich einfügen: er folgt dem Cursor, klicken zum Setzen, Esc zum Beenden (Strg+V)",
         "flipTitle": "Links-rechts spiegeln (M)",
         "rotateTitle": "Um 90° im Uhrzeigersinn drehen (R)",
-        "rotateUnavailableTitle": "Nur Gruppen aus Dekorationen mit quadratischem, zentriertem Grundriss können gedreht werden",
         "nothingToCopy": "Nichts zu kopieren: Spielerstarts, Portale und Zonenmarker werden nie kopiert.",
         "copied": "{{count}} Objekte kopiert. Klicken zum Setzen, M spiegelt, R dreht, Esc beendet.",
         "pasted": "{{placed}} eingefügt; {{blocked}} blockiert; {{skipped}} Eigenschaften nicht übernommen."

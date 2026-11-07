@@ -1523,7 +1523,6 @@
         "pasteTitle": "Paste the copied area: it follows the cursor, click to stamp, Esc to stop (Ctrl+V)",
         "flipTitle": "Flip left-right (M)",
         "rotateTitle": "Turn 90° clockwise (R)",
-        "rotateUnavailableTitle": "Only groups of decorations with square, centred footprints can be turned",
         "nothingToCopy": "Nothing to copy: player spawners, portals and zone markers are never copied.",
         "copied": "Copied {{count}} objects. Click to stamp, M flips, R turns, Esc stops.",
         "pasted": "Pasted {{placed}}; {{blocked}} blocked; {{skipped}} properties not carried over."
