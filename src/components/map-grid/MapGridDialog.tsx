@@ -5350,6 +5350,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </Button>
                     </>
                   )}
+                  <PrefabLibraryPopover
+                    clipboard={clipboard}
+                    knowsSid={(sid, type) => type === 2 || !!findMapObject(catalog, sid)}
+                    onUse={(clip, note) => { stopAllTools(); setClipboard(clip); setPasteAnchor(null); setCopyNote(note); setCopyMode('paste') }}
+                  />
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopCopyMode} title={t('mapGrid.mapGridDialog.stopEsc')}>
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
@@ -5367,12 +5372,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
-
-              <PrefabLibraryPopover
-                clipboard={clipboard}
-                knowsSid={(sid, type) => type === 2 || !!findMapObject(catalog, sid)}
-                onUse={(clip, note) => { stopAllTools(); setClipboard(clip); setPasteAnchor(null); setCopyNote(note); setCopyMode('paste') }}
-              />
 
               {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
                   own doc comment for why player-start spawners are kept and

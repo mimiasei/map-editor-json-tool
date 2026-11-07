@@ -7,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BookOpen, ClipboardPaste, Download, Trash2, Upload } from '@/components/ui/icons'
-import ToolButton from '@/components/map-grid/ToolButton'
 import { usePrefabStore } from '@/store/usePrefabStore'
 import { parsePrefabFile, serializePrefabs, usableClip, type Prefab } from '@/lib/map-grid/prefab-library'
 import type { ObjectClipboard } from '@/lib/map-grid/clipboard'
@@ -70,7 +69,9 @@ export default function PrefabLibraryPopover({ clipboard, knowsSid, onUse }: Pro
   return (
     <Popover onOpenChange={(o) => { if (!o) setNote(null) }}>
       <PopoverTrigger asChild>
-        <ToolButton icon={<BookOpen className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.library.title')} title={t('mapGrid.mapGridDialog.library.titleHint')} />
+        <Button variant="ghost" size="icon" className="h-6 w-6" title={`${t('mapGrid.mapGridDialog.library.title')}: ${t('mapGrid.mapGridDialog.library.titleHint')}`}>
+          <BookOpen className="h-3.5 w-3.5" />
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 space-y-2 p-2" data-nodrag>
         <div className="flex items-center gap-1">
