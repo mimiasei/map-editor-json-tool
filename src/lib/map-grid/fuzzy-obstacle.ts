@@ -50,7 +50,7 @@ import { isGrassSid, isGroundCoverSid } from './decoration-subcategories'
 /** catalog.mapObjects' own `biome` string differs from tile-side BIOME_NAMES
  *  only at id 2 ("Desert" vs "Sand") — see CatalogMapObject.biome's doc
  *  comment in catalog/types.ts. */
-const BIOME_ID_TO_CATALOG_BIOME: Record<BiomeId, string> = {
+export const BIOME_ID_TO_CATALOG_BIOME: Record<BiomeId, string> = {
   1: 'Grass', 2: 'Desert', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
 }
 const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]

@@ -33,7 +33,7 @@ export const BIOME_BASE_COLORS: Record<BiomeId, string> = {
 
 /** Water overlay colour per water id (DB/map/waters/waters.json has no colour data). Estimated by eye from an
  *  in-game screenshot of the test map water_colors.map (one lake per id), not read from game data. */
-const WATER_BASE_COLORS: Record<number, string> = {
+export const WATER_BASE_COLORS: Record<number, string> = {
   1: '#8a6a48', // Dirt — muddy brown
   2: '#16877f', // Sand — teal
   3: '#2c2858', // Death — dark violet
