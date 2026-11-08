@@ -120,6 +120,7 @@ import MapGridSettingsDialog, {
   TERRAIN_TEXTURE_STRENGTH,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
+import { pickFittingSid } from '@/lib/map-grid/image-color-mapping'
 import ImageColorMappingDialog, { type ImageColorMappingResult, type ImportedImage } from '@/components/map-grid/ImageColorMappingDialog'
 import {
     ZoomIn,
@@ -4171,6 +4172,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const waterChanges = new Map<number, number>()
     const waterLevelChanges = new Map<number, -1>()
     const additions: { node: number; sid: string; rotation?: number }[] = []
+    // Solid tiles of the decorations chosen so far: like a paint stroke's own footprints they keep a new one off them.
+    const claimed = new Set<number>()
     const total = sizeX * sizeZ
     const yieldToUi = () => new Promise<void>((resolve) => window.setTimeout(resolve, 0))
     for (let screenRow = 0; screenRow < sizeZ; screenRow++) {
@@ -4185,8 +4188,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterChanges.set(node, target.waterId)
           waterLevelChanges.set(node, -1)
         }
-        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
-          additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
+        else {
+          const cellsOf = (sid: string) => objectBlockedCells(sid, node % sizeX, Math.floor(node / sizeX), catalog).map((cell) => cell.z * sizeX + cell.x)
+          const sid = pickFittingSid(target.sids, Math.random, (s) => isNodeInBoundsForPlacement(s, node) && !isNodeBlockedForObjectPaint(node) && cellsOf(s).every((n) => !claimed.has(n)))
+          if (sid) {
+            for (const n of cellsOf(sid)) claimed.add(n)
+            additions.push({ node, sid, rotation: randomInitialRotation(sid) })
+          }
         }
       }
       const completed = Math.min(total, (screenRow + 1) * sizeX)
@@ -4205,7 +4213,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'paint assets from image')
     }
     setImageMappingOpen(false)
-  }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, randomInitialRotation, applyEdit])
+  }, [sizeX, sizeZ, catalog, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, randomInitialRotation, applyEdit])
 
   // Brush-radius parity with Terrain/Level/Obstacles (stagePaintNode's own
   // tilesInRadius expansion) — every tile in the circular brush gets the

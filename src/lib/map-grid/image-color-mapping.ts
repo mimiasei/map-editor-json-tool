@@ -3,11 +3,19 @@
 // water type or object. A colour key is the quantized "r,g,b,a" string. Everything here works on keys, so it runs without a canvas.
 
 import { BIOME_BASE_COLORS, WATER_BASE_COLORS, WATER_TYPE_NAMES, type BiomeId } from './terrain-colors'
+import { DECORATION_TYPES, decorationSids, type DecorationPools, type DecorationType } from './decoration-pools'
 
+/** What one image colour stands for. A decoration is a type plus biomes, not a named object: each painted tile gets a random variant of it. */
 export type ImageColorTarget =
   | { kind: 'terrain'; biomeId: BiomeId }
   | { kind: 'water'; waterId: number }
-  | { kind: 'object'; sid: string }
+  | { kind: 'decoration'; type: DecorationType; biomes: BiomeId[] }
+
+/** An `ImageColorTarget` with a decoration turned into the objects it may use, what the painter works from. */
+export type PaintTarget =
+  | { kind: 'terrain'; biomeId: BiomeId }
+  | { kind: 'water'; waterId: number }
+  | { kind: 'objects'; sids: string[] }
 
 export type ColorMapping = Record<string, ImageColorTarget>
 export type ColorLimit = 8 | 16 | 32
@@ -145,6 +153,32 @@ export function resolveFill(entryKeys: string[], mapping: ColorMapping, fillIgno
   return resolved
 }
 
+/** The mapping the painter gets: decorations become their variant lists. One with no variant (Lava has no hills) is dropped, its tiles stay as they are. */
+export function resolveTargets(mapping: ColorMapping, pools: DecorationPools | null): Record<string, PaintTarget> {
+  const out: Record<string, PaintTarget> = {}
+  for (const [key, target] of Object.entries(mapping)) {
+    if (target.kind !== 'decoration') {
+      out[key] = target
+      continue
+    }
+    const sids = pools ? decorationSids(pools, target.type, target.biomes) : []
+    if (sids.length > 0) out[key] = { kind: 'objects', sids }
+  }
+  return out
+}
+
+/** A random variant of `sids` that `fits` (room for its footprint), trying them in random order; undefined when none does. */
+export function pickFittingSid(sids: string[], rng: () => number, fits: (sid: string) => boolean): string | undefined {
+  const rest = [...sids]
+  while (rest.length > 0) {
+    const at = Math.floor(rng() * rest.length)
+    const sid = rest[at]
+    if (fits(sid)) return sid
+    rest.splice(at, 1)
+  }
+  return undefined
+}
+
 export interface SerializedImageMapping {
   version: 1
   name: string
@@ -167,7 +201,10 @@ export function parseMappingFile(text: string): { mappings: ColorMapping; colorL
     if (!/^\d+,\d+,\d+,\d+$/.test(key) || !target || typeof target !== 'object') continue
     if (target.kind === 'terrain' && BIOMES.includes(target.biomeId)) mappings[key] = target
     else if (target.kind === 'water' && Object.prototype.hasOwnProperty.call(WATER_TYPE_NAMES, target.waterId)) mappings[key] = target
-    else if (target.kind === 'object' && typeof target.sid === 'string' && target.sid.trim()) mappings[key] = target
+    else if (target.kind === 'decoration' && (DECORATION_TYPES as string[]).includes(target.type) && Array.isArray(target.biomes)) {
+      const biomes = BIOMES.filter((biome) => target.biomes.includes(biome))
+      if (biomes.length > 0) mappings[key] = { kind: 'decoration', type: target.type, biomes }
+    }
   }
   const colorLimit = COLOR_LIMITS.find((limit) => limit === parsed.colorLimit)
   return { mappings, colorLimit }
