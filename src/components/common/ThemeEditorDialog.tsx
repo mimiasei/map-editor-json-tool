@@ -153,6 +153,8 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
   const activeTheme = themes.find((th) => th.id === activeThemeId) ?? themes[0]
   const isDesktop = isTauri()
   const isDefault = activeTheme.id === 'default-light'
+  // While the skin is on, the theme's colours and 3D buttons have no effect (useApplyThemeSettings), so they are hidden.
+  const skinOn = isDesktop && gameSkin && skinReady
   const themeGroups = groupThemesByCategory(themes)
 
   const handleColorChange = useCallback(
@@ -253,124 +255,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
             </Select>
           </div>
 
-          <Separator />
-
-          {/* ── Theme selector ── */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.activeTheme')}</Label>
-            <div className="flex gap-2">
-              <Select value={activeThemeId} onValueChange={setActiveTheme}>
-                <SelectTrigger className="flex-1 h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {themeGroups.map((group) => (
-                    <SelectGroup key={group.label}>
-                      <SelectLabel>{group.label === 'Default' || group.label === 'Custom' ? t(`common.themeEditorDialog.groups.${group.label}`) : group.label}</SelectLabel>
-                      {group.themes.map((th) => (
-                        <SelectItem key={th.id} value={th.id}>
-                          {th.id === 'default-light' ? t('common.themeEditorDialog.defaultLightName') : th.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!isDefault && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 text-xs text-destructive hover:text-destructive"
-                  onClick={() => deleteTheme(activeTheme.id)}
-                >
-                  {t('common.themeEditorDialog.delete')}
-                </Button>
-              )}
-            </div>
-
-            {/* New theme */}
-            {showNewThemeInput ? (
-              <div className="flex gap-2">
-                <Input
-                  className="h-8 text-sm flex-1"
-                  placeholder={t('common.themeEditorDialog.themeName')}
-                  value={newThemeName}
-                  onChange={(e) => setNewThemeName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
-                  autoFocus
-                />
-                <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
-                  {t('shared.create')}
-                </Button>
-                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
-                  {t('shared.cancel')}
-                </Button>
-              </div>
-            ) : (
-              <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
-                {t('common.themeEditorDialog.newTheme')}
-              </Button>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* ── Color pickers ── */}
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.colors')}</Label>
-            <div className="space-y-3 pt-1">
-              {COLOR_FIELDS.map((key) => (
-                <ColorRow
-                  key={key}
-                  label={t(`common.themeEditorDialog.colorFields.${key}.label`)}
-                  description={t(`common.themeEditorDialog.colorFields.${key}.description`)}
-                  value={activeTheme.colors[key]}
-                  onChange={(hex) => handleColorChange(key, hex)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* ── Font size ── */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.fontSize')}</Label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={10}
-                max={18}
-                step={1}
-                value={activeTheme.fontSize}
-                onChange={(e) => handleFontSizeChange(Number(e.target.value))}
-                className="flex-1 accent-primary"
-              />
-              <span className="text-sm font-mono w-10 text-right tabular-nums">
-                {t('common.themeEditorDialog.px', { fontSize: activeTheme.fontSize })}
-              </span>
-            </div>
-            <div className="flex justify-between text-xs text-muted-foreground px-0.5">
-              <span>10</span>
-              <span>18</span>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* ── 3D buttons ── */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.3DButtons')}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.raisedStyleWithShadowAnd')}</p>
-            </div>
-            <Switch
-              checked={activeTheme.use3dButtons}
-              onCheckedChange={(checked) => updateTheme(activeTheme.id, { use3dButtons: checked })}
-            />
-          </div>
-
-          {/* ── Game skin (desktop only: the sprites come from the game folder) ── */}
+          {/* ── Game skin first (desktop only: the sprites come from the game folder); while on it replaces the theme controls below ── */}
           {isDesktop && (
             <>
               <Separator />
@@ -397,35 +282,164 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
             </>
           )}
 
+          {/* ── Theme controls (only meaningful without the skin, which brings its own palette) ── */}
+          {!skinOn && (
+            <>
+              <Separator />
+
+              {/* ── Theme selector ── */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.activeTheme')}</Label>
+                <div className="flex gap-2">
+                  <Select value={activeThemeId} onValueChange={setActiveTheme}>
+                    <SelectTrigger className="flex-1 h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {themeGroups.map((group) => (
+                        <SelectGroup key={group.label}>
+                          <SelectLabel>{group.label === 'Default' || group.label === 'Custom' ? t(`common.themeEditorDialog.groups.${group.label}`) : group.label}</SelectLabel>
+                          {group.themes.map((th) => (
+                            <SelectItem key={th.id} value={th.id}>
+                              {th.id === 'default-light' ? t('common.themeEditorDialog.defaultLightName') : th.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!isDefault && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs text-destructive hover:text-destructive"
+                      onClick={() => deleteTheme(activeTheme.id)}
+                    >
+                      {t('common.themeEditorDialog.delete')}
+                    </Button>
+                  )}
+                </div>
+
+                {/* New theme */}
+                {showNewThemeInput ? (
+                  <div className="flex gap-2">
+                    <Input
+                      className="h-8 text-sm flex-1"
+                      placeholder={t('common.themeEditorDialog.themeName')}
+                      value={newThemeName}
+                      onChange={(e) => setNewThemeName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
+                      autoFocus
+                    />
+                    <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
+                      {t('shared.create')}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
+                      {t('shared.cancel')}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
+                    {t('common.themeEditorDialog.newTheme')}
+                  </Button>
+                )}
+              </div>
+
+
+              <Separator />
+
+              {/* ── Color pickers ── */}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.colors')}</Label>
+                <div className="space-y-3 pt-1">
+                  {COLOR_FIELDS.map((key) => (
+                    <ColorRow
+                      key={key}
+                      label={t(`common.themeEditorDialog.colorFields.${key}.label`)}
+                      description={t(`common.themeEditorDialog.colorFields.${key}.description`)}
+                      value={activeTheme.colors[key]}
+                      onChange={(hex) => handleColorChange(key, hex)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+            </>
+          )}
+
           <Separator />
 
-          {/* ── Actions ── */}
-          <div className="flex flex-wrap gap-2 justify-between items-center">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={isDefault ? revertDefault : () => {
-                updateTheme(activeTheme.id, {
-                  ...DEFAULT_LIGHT_COLORS,
-                  fontSize: DEFAULT_FONT_SIZE,
-                  use3dButtons: false,
-                })
-              }}
-            >
-              {t('common.themeEditorDialog.revertToDefaults')}
-            </Button>
-            {isDesktop && (
-              <div className="flex gap-1.5">
-                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleImport}>
-                  {t('common.themeEditorDialog.import')}
-                </Button>
-                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleExport}>
-                  {t('common.themeEditorDialog.export')}
-                </Button>
-              </div>
-            )}
+          {/* ── Font size ── */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.fontSize')}</Label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={10}
+                max={18}
+                step={1}
+                value={activeTheme.fontSize}
+                onChange={(e) => handleFontSizeChange(Number(e.target.value))}
+                className="flex-1 accent-primary"
+              />
+              <span className="text-sm font-mono w-10 text-right tabular-nums">
+                {t('common.themeEditorDialog.px', { fontSize: activeTheme.fontSize })}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground px-0.5">
+              <span>10</span>
+              <span>18</span>
+            </div>
           </div>
+
+
+          {!skinOn && (
+            <>
+              <Separator />
+
+              {/* ── 3D buttons ── */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.3DButtons')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.raisedStyleWithShadowAnd')}</p>
+                </div>
+                <Switch
+                  checked={activeTheme.use3dButtons}
+                  onCheckedChange={(checked) => updateTheme(activeTheme.id, { use3dButtons: checked })}
+                />
+              </div>
+
+              <Separator />
+
+              {/* ── Actions ── */}
+              <div className="flex flex-wrap gap-2 justify-between items-center">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={isDefault ? revertDefault : () => {
+                    updateTheme(activeTheme.id, {
+                      ...DEFAULT_LIGHT_COLORS,
+                      fontSize: DEFAULT_FONT_SIZE,
+                      use3dButtons: false,
+                    })
+                  }}
+                >
+                  {t('common.themeEditorDialog.revertToDefaults')}
+                </Button>
+                {isDesktop && (
+                  <div className="flex gap-1.5">
+                    <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleImport}>
+                      {t('common.themeEditorDialog.import')}
+                    </Button>
+                    <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleExport}>
+                      {t('common.themeEditorDialog.export')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
         </div>
       </DialogContent>
