@@ -32,6 +32,8 @@ import { UI_LANGUAGES, nativeLanguageLabel } from '@/lib/languages'
 import { isUiLocaleAvailable } from '@/lib/i18n'
 import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
+import { getGameDir } from '@/lib/game-dir'
+import { extractUiSkin, isUiSkinAvailable, loadUiSkin } from '@/lib/ui-skin'
 
 interface ThemeEditorDialogProps {
   open: boolean
@@ -138,14 +140,21 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     createTheme,
     deleteTheme,
     revertDefault,
+    gameSkin,
+    setGameSkin,
   } = useThemeSettingsStore()
 
   const [newThemeName, setNewThemeName] = useState('')
   const [showNewThemeInput, setShowNewThemeInput] = useState(false)
+  const [skinReady, setSkinReady] = useState(isUiSkinAvailable())
+  const [skinBusy, setSkinBusy] = useState<{ done: number; total: number } | null>(null)
+  const [skinMessage, setSkinMessage] = useState<string | null>(null)
 
   const activeTheme = themes.find((th) => th.id === activeThemeId) ?? themes[0]
   const isDesktop = isTauri()
   const isDefault = activeTheme.id === 'default-light'
+  // While the skin is on, the theme's colours and 3D buttons have no effect (useApplyThemeSettings), so they are hidden.
+  const skinOn = isDesktop && gameSkin && skinReady
   const themeGroups = groupThemesByCategory(themes)
 
   const handleColorChange = useCallback(
@@ -161,6 +170,32 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     },
     [activeTheme.id, updateTheme],
   )
+
+  useEffect(() => {
+    if (open && isTauri()) void loadUiSkin().then(setSkinReady)
+  }, [open])
+
+  const handleExtractSkin = async () => {
+    setSkinMessage(null)
+    const gameDir = await getGameDir()
+    if (!gameDir) {
+      setSkinMessage(t('common.themeEditorDialog.gameSkinNoGame'))
+      return
+    }
+    setSkinBusy({ done: 0, total: 0 })
+    try {
+      const result = await extractUiSkin(gameDir, (p) => setSkinBusy({ done: p.done, total: p.total }))
+      setSkinReady(true)
+      setGameSkin(true)
+      if (result.missing.length > 0) {
+        setSkinMessage(t('common.themeEditorDialog.gameSkinMissing', { count: result.missing.length }))
+      }
+    } catch (e) {
+      setSkinMessage(t('common.themeEditorDialog.gameSkinFailed', { message: e instanceof Error ? e.message : String(e) }))
+    } finally {
+      setSkinBusy(null)
+    }
+  }
 
   const handleCreateTheme = () => {
     const name = newThemeName.trim() || 'Custom Theme'
@@ -218,86 +253,119 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">{t('settings.language.hint')}</p>
           </div>
 
-          <Separator />
-
-          {/* ── Theme selector ── */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.activeTheme')}</Label>
-            <div className="flex gap-2">
-              <Select value={activeThemeId} onValueChange={setActiveTheme}>
-                <SelectTrigger className="flex-1 h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {themeGroups.map((group) => (
-                    <SelectGroup key={group.label}>
-                      <SelectLabel>{group.label === 'Default' || group.label === 'Custom' ? t(`common.themeEditorDialog.groups.${group.label}`) : group.label}</SelectLabel>
-                      {group.themes.map((th) => (
-                        <SelectItem key={th.id} value={th.id}>
-                          {th.id === 'default-light' ? t('common.themeEditorDialog.defaultLightName') : th.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!isDefault && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 text-xs text-destructive hover:text-destructive"
-                  onClick={() => deleteTheme(activeTheme.id)}
-                >
-                  {t('common.themeEditorDialog.delete')}
-                </Button>
-              )}
-            </div>
-
-            {/* New theme */}
-            {showNewThemeInput ? (
-              <div className="flex gap-2">
-                <Input
-                  className="h-8 text-sm flex-1"
-                  placeholder={t('common.themeEditorDialog.themeName')}
-                  value={newThemeName}
-                  onChange={(e) => setNewThemeName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
-                  autoFocus
-                />
-                <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
-                  {t('shared.create')}
-                </Button>
-                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
-                  {t('shared.cancel')}
-                </Button>
+          {/* ── Game skin first (desktop only: the sprites come from the game folder); while on it replaces the theme controls below ── */}
+          {isDesktop && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.gameSkin')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{t('common.themeEditorDialog.gameSkinDescription')}</p>
+                  </div>
+                  <Switch checked={gameSkin && skinReady} disabled={!skinReady} onCheckedChange={setGameSkin} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" disabled={skinBusy !== null} onClick={handleExtractSkin}>
+                    {skinReady ? t('common.themeEditorDialog.gameSkinReextract') : t('common.themeEditorDialog.gameSkinExtract')}
+                  </Button>
+                  {skinBusy && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {t('common.themeEditorDialog.gameSkinExtracting', { done: skinBusy.done, total: skinBusy.total })}
+                    </span>
+                  )}
+                </div>
+                {skinMessage && <p className="text-xs text-muted-foreground">{skinMessage}</p>}
               </div>
-            ) : (
-              <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
-                {t('common.themeEditorDialog.newTheme')}
-              </Button>
-            )}
-          </div>
+            </>
+          )}
 
-          <Separator />
+          {/* ── Theme controls (only meaningful without the skin, which brings its own palette) ── */}
+          {!skinOn && (
+            <>
+              <Separator />
 
-          {/* ── Color pickers ── */}
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.colors')}</Label>
-            <div className="space-y-3 pt-1">
-              {COLOR_FIELDS.map((key) => (
-                <ColorRow
-                  key={key}
-                  label={t(`common.themeEditorDialog.colorFields.${key}.label`)}
-                  description={t(`common.themeEditorDialog.colorFields.${key}.description`)}
-                  value={activeTheme.colors[key]}
-                  onChange={(hex) => handleColorChange(key, hex)}
-                />
-              ))}
-            </div>
-          </div>
+              {/* ── Theme selector ── */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.activeTheme')}</Label>
+                <div className="flex gap-2">
+                  <Select value={activeThemeId} onValueChange={setActiveTheme}>
+                    <SelectTrigger className="flex-1 h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {themeGroups.map((group) => (
+                        <SelectGroup key={group.label}>
+                          <SelectLabel>{group.label === 'Default' || group.label === 'Custom' ? t(`common.themeEditorDialog.groups.${group.label}`) : group.label}</SelectLabel>
+                          {group.themes.map((th) => (
+                            <SelectItem key={th.id} value={th.id}>
+                              {th.id === 'default-light' ? t('common.themeEditorDialog.defaultLightName') : th.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!isDefault && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs text-destructive hover:text-destructive"
+                      onClick={() => deleteTheme(activeTheme.id)}
+                    >
+                      {t('common.themeEditorDialog.delete')}
+                    </Button>
+                  )}
+                </div>
+
+                {/* New theme */}
+                {showNewThemeInput ? (
+                  <div className="flex gap-2">
+                    <Input
+                      className="h-8 text-sm flex-1"
+                      placeholder={t('common.themeEditorDialog.themeName')}
+                      value={newThemeName}
+                      onChange={(e) => setNewThemeName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
+                      autoFocus
+                    />
+                    <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
+                      {t('shared.create')}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
+                      {t('shared.cancel')}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
+                    {t('common.themeEditorDialog.newTheme')}
+                  </Button>
+                )}
+              </div>
+
+
+              <Separator />
+
+              {/* ── Color pickers ── */}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.colors')}</Label>
+                <div className="space-y-3 pt-1">
+                  {COLOR_FIELDS.map((key) => (
+                    <ColorRow
+                      key={key}
+                      label={t(`common.themeEditorDialog.colorFields.${key}.label`)}
+                      description={t(`common.themeEditorDialog.colorFields.${key}.description`)}
+                      value={activeTheme.colors[key]}
+                      onChange={(hex) => handleColorChange(key, hex)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+            </>
+          )}
 
           <Separator />
 
@@ -324,49 +392,54 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
             </div>
           </div>
 
-          <Separator />
 
-          {/* ── 3D buttons ── */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.3DButtons')}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.raisedStyleWithShadowAnd')}</p>
-            </div>
-            <Switch
-              checked={activeTheme.use3dButtons}
-              onCheckedChange={(checked) => updateTheme(activeTheme.id, { use3dButtons: checked })}
-            />
-          </div>
+          {!skinOn && (
+            <>
+              <Separator />
 
-          <Separator />
-
-          {/* ── Actions ── */}
-          <div className="flex flex-wrap gap-2 justify-between items-center">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={isDefault ? revertDefault : () => {
-                updateTheme(activeTheme.id, {
-                  ...DEFAULT_LIGHT_COLORS,
-                  fontSize: DEFAULT_FONT_SIZE,
-                  use3dButtons: false,
-                })
-              }}
-            >
-              {t('common.themeEditorDialog.revertToDefaults')}
-            </Button>
-            {isDesktop && (
-              <div className="flex gap-1.5">
-                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleImport}>
-                  {t('common.themeEditorDialog.import')}
-                </Button>
-                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleExport}>
-                  {t('common.themeEditorDialog.export')}
-                </Button>
+              {/* ── 3D buttons ── */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.3DButtons')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.raisedStyleWithShadowAnd')}</p>
+                </div>
+                <Switch
+                  checked={activeTheme.use3dButtons}
+                  onCheckedChange={(checked) => updateTheme(activeTheme.id, { use3dButtons: checked })}
+                />
               </div>
-            )}
-          </div>
+
+              <Separator />
+
+              {/* ── Actions ── */}
+              <div className="flex flex-wrap gap-2 justify-between items-center">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={isDefault ? revertDefault : () => {
+                    updateTheme(activeTheme.id, {
+                      ...DEFAULT_LIGHT_COLORS,
+                      fontSize: DEFAULT_FONT_SIZE,
+                      use3dButtons: false,
+                    })
+                  }}
+                >
+                  {t('common.themeEditorDialog.revertToDefaults')}
+                </Button>
+                {isDesktop && (
+                  <div className="flex gap-1.5">
+                    <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleImport}>
+                      {t('common.themeEditorDialog.import')}
+                    </Button>
+                    <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleExport}>
+                      {t('common.themeEditorDialog.export')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
         </div>
       </DialogContent>

@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Język interfejsu",
-      "hint": "Dotyczy tylko tekstów samego edytora. Zadania, dialogi i inna zawartość mapy nie są tłumaczone."
+      "label": "Język interfejsu"
     }
   },
   "ui": {
@@ -896,6 +895,14 @@
       "px": "{{fontSize}} px",
       "3DButtons": "Przyciski 3D",
       "raisedStyleWithShadowAnd": "Wypukły styl z cieniem i efektem naciśnięcia",
+      "gameSkin": "Motyw gry",
+      "gameSkinDescription": "Rysuje interfejs grafiką samej gry.",
+      "gameSkinExtract": "Wyodrębnij z gry",
+      "gameSkinReextract": "Wyodrębnij ponownie",
+      "gameSkinExtracting": "Wyodrębnianie… {{done}}/{{total}}",
+      "gameSkinNoGame": "Nie znaleziono folderu gry.",
+      "gameSkinFailed": "Wyodrębnianie nie powiodło się: {{message}}",
+      "gameSkinMissing": "Nie znaleziono w tej wersji gry: {{count}} grafik.",
       "revertToDefaults": "Przywróć domyślne",
       "import": "Importuj",
       "export": "Eksportuj",

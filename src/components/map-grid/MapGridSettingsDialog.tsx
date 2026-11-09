@@ -25,6 +25,7 @@ import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, squadDifficultyName, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
 import { Settings, ChevronDown } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */
@@ -319,17 +320,16 @@ export default function MapGridSettingsDialog({
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${customQualityOpen ? 'rotate-180' : ''}`} />
                 </button>
               )}
-              <select
-                className="h-6 rounded border border-input bg-background px-1 text-xs"
-                value={settings.drawQuality}
-                onChange={(e) => setQualityChoice(e.target.value as DrawQualityChoice)}
-              >
-                <option value="low">{t('mapGrid.mapGridSettingsDialog.low')}</option>
-                <option value="medium">{t('mapGrid.mapGridSettingsDialog.medium')}</option>
-                <option value="high">{t('mapGrid.mapGridSettingsDialog.high')}</option>
-                <option value="ultra">{t('mapGrid.mapGridSettingsDialog.ultra')}</option>
-                <option value="custom">{t('mapGrid.mapGridSettingsDialog.custom')}</option>
-              </select>
+              <Select value={settings.drawQuality} onValueChange={(v) => setQualityChoice(v as DrawQualityChoice)}>
+                <SelectTrigger className="h-6 w-auto gap-2 px-2 py-0 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">{t('mapGrid.mapGridSettingsDialog.low')}</SelectItem>
+                  <SelectItem value="medium">{t('mapGrid.mapGridSettingsDialog.medium')}</SelectItem>
+                  <SelectItem value="high">{t('mapGrid.mapGridSettingsDialog.high')}</SelectItem>
+                  <SelectItem value="ultra">{t('mapGrid.mapGridSettingsDialog.ultra')}</SelectItem>
+                  <SelectItem value="custom">{t('mapGrid.mapGridSettingsDialog.custom')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground">

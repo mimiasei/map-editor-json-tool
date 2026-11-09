@@ -1,0 +1,283 @@
+/* ─── Game skin ──────────────────────────────────────────────────────────────
+   Added to <html> by useApplyThemeSettings while the Game skin is on and its sprites are extracted (desktop only).
+   It replaces the theme palette and follows the app's light/dark toggle (`.dark` on <html>), so this file is imported after
+   index.css (`.dark` is there).
+
+   What comes from the game's assets: the artwork (dialog frame, buttons, text fields, dropdown, tabs, tooltips), with the
+   colours baked into it. What is CSS here: everything else (page and panel backgrounds, text, borders, switches,
+   scrollbars). The dark palette was sampled from those sprites: navy panels (#151c2c), blue fields (#1b3451), gold trim
+   (#dbc999 / #c9a25a), cream text (#efe6cf). The light palette is parchment and navy, chosen by hand: the game has no light
+   UI. Controls drawn with sprites stay dark in both (their artwork is dark) and keep cream text (`--skin-ink`).
+   The text font is a matching sans: the game's own UI font was not found as a Font asset in its data files.
+
+   The sprites are extracted per user (src/lib/ui-skin.ts) and reach the CSS as `--skin-<key>` (the url) and
+   `--skin-<key>-slice` (border-image-slice in image pixels, top right bottom left).
+
+   Every frame is drawn with `border-width: 0` and a `border-image-width` instead of a real border: the image paints over
+   the padding, so turning the skin on does not change any layout. Sizes are in em so frames follow the font size.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.skin-game {
+  --skin-ink: 43 50% 87%;
+  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* Light: parchment panels, navy text */
+.skin-game:not(.dark) {
+  --background: 44 37% 86%;
+  --foreground: 222 35% 13%;
+  --card: 44 49% 91%;
+  --card-foreground: 222 35% 13%;
+  --popover: 44 49% 91%;
+  --popover-foreground: 222 35% 13%;
+  --primary: 35 45% 33%;
+  --primary-foreground: 44 74% 94%;
+  --secondary: 215 23% 84%;
+  --secondary-foreground: 222 35% 13%;
+  --muted: 44 31% 81%;
+  --muted-foreground: 224 19% 38%;
+  --accent: 45 32% 78%;
+  --accent-foreground: 222 35% 13%;
+  --border: 43 21% 65%;
+  --input: 215 23% 84%;
+  --ring: 38 45% 37%;
+  --scrollbar-track: 44 31% 81%;
+  --scrollbar-thumb: 42 19% 58%;
+  --app-background: #8f8a78;
+  --column-left: #efe8d6;
+  --column-center: #e9e2cf;
+  --column-right: #e2d9c1;
+}
+
+/* Dark: navy panels, gold trim, cream text */
+.skin-game.dark {
+  --background: 222 35% 13%;
+  --foreground: 43 50% 87%;
+  --card: 221 35% 16%;
+  --card-foreground: 43 50% 87%;
+  --popover: 212 50% 21%;
+  --popover-foreground: 43 50% 87%;
+  --primary: 39 51% 57%;
+  --primary-foreground: 40 53% 7%;
+  --secondary: 212 50% 21%;
+  --secondary-foreground: 43 50% 87%;
+  --muted: 223 33% 16%;
+  --muted-foreground: 214 26% 65%;
+  --accent: 220 35% 22%;
+  --accent-foreground: 43 50% 87%;
+  --border: 223 25% 31%;
+  --input: 212 50% 21%;
+  --ring: 44 48% 73%;
+  --scrollbar-track: 224 43% 10%;
+  --scrollbar-thumb: 220 24% 38%;
+  --app-background: #0b1020;
+  --column-left: #121a2c;
+  --column-center: #151e33;
+  --column-right: #18223a;
+}
+
+/* ── Dialogs ──
+   The frame sits in ::before behind the content (z-index -1 inside an isolated stacking context), so dialogs that set
+   their own padding keep their layout and the resize handles of DraggableDialogContent stay on top.
+   Popover content also has role="dialog", but it carries data-side. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) {
+  isolation: isolate;
+  background: hsl(var(--background));
+  border-width: 0;
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 0.55);
+}
+
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border: 0 solid transparent;
+  border-image: var(--skin-dialog-frame) var(--skin-dialog-frame-slice) fill / 26px stretch;
+}
+
+/* The dialog frame's border area is a navy backdrop, which is a dark band on parchment. Light mode uses the game's thin
+   modal frame instead (a bronze double line with a transparent centre). */
+.skin-game:not(.dark) :is([role="dialog"], [role="alertdialog"]):not([data-side])::before {
+  border-image: var(--skin-modal-frame) var(--skin-modal-frame-slice) / 8px stretch;
+}
+
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
+  color: hsl(var(--ring));
+}
+
+/* ── Buttons ──
+   Bronze pill for outline / secondary / destructive, green for the default (primary) action. The pill art is a
+   three-part strip (rounded caps 133px wide in a 79px-high sprite), so the caps are ~1.68x the button height. Icon
+   buttons (data-size="icon") keep the plain palette. */
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 3.2em stretch;
+  border-radius: 999px;
+  color: hsl(var(--skin-ink));
+  font-weight: 600;
+  padding-inline: 1.5em;
+}
+
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]):hover:not(:disabled) {
+  border-image-source: var(--skin-button-hover);
+}
+
+.skin-game button[data-variant="destructive"]:not([data-size="icon"]) {
+  color: #f2a58a;
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]) {
+  background:
+    var(--skin-button-green-left) left / auto 100% no-repeat,
+    var(--skin-button-green-right) right / auto 100% no-repeat,
+    var(--skin-button-green-center) center / 100% 100% no-repeat;
+  border-radius: 999px;
+  color: hsl(var(--skin-ink));
+  font-weight: 600;
+  padding-inline: 1.4em;
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
+  background-image: var(--skin-button-green-left-hover), var(--skin-button-green-right-hover), var(--skin-button-green-center-hover);
+}
+
+/* ── Toggles and tabs ── (their card art is dark, so the text is cream in light mode too)
+   The game has no tab or toolbar-button art, so these use its thin gold-edged navy card (Card_Tultips). */
+.skin-game button[data-variant="ghost"]:hover:not(:disabled),
+.skin-game [role="tab"] {
+  color: hsl(var(--skin-ink));
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-card-hover) var(--skin-card-hover-slice) fill / 4px stretch;
+  border-radius: 0;
+}
+
+.skin-game [role="tab"] {
+  border-image-source: var(--skin-card);
+}
+
+.skin-game button[aria-pressed="true"]:not(:disabled),
+.skin-game [role="tab"][aria-selected="true"] {
+  color: hsl(var(--skin-ink));
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-card-pressed) var(--skin-card-pressed-slice) fill / 4px stretch;
+  border-radius: 0;
+}
+
+/* ── Text fields ──
+   KeyField is a pill with 32px caps in a 76px-high sprite: caps are ~0.42x the field height, about 0.85em here (fields are
+   24-32px high). The padding is left to the field's own classes: search fields put an icon on the left and rely on pl-7.
+   A pill's ring follows border-radius, so keep it round. Textareas are too tall for a pill and get plain CSS. */
+.skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-field) var(--skin-field-slice) fill / 0 0.85em stretch;
+  border-radius: 999px;
+  color: hsl(var(--skin-ink));
+}
+
+.skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type]))::placeholder {
+  color: hsl(var(--skin-ink) / 0.55);
+  font-size: 0.9em;
+}
+
+/* Search icons sit on top of the (dark) field; their muted colour is dark in light mode. */
+.skin-game svg.absolute.text-muted-foreground {
+  color: hsl(var(--skin-ink) / 0.7);
+}
+
+.skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])):is(:hover, :focus) {
+  border-image-source: var(--skin-field-hover);
+}
+
+.skin-game textarea {
+  background: hsl(var(--input));
+  border: 1px solid #255378;
+  border-radius: 12px;
+}
+
+/* ── Tooltips ──
+   Radix puts a visually hidden role="tooltip" copy inside the visible content, which tells tooltips apart from popovers
+   and menus. */
+.skin-game [data-radix-popper-content-wrapper] > :has(> [role="tooltip"]) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-tooltip) var(--skin-tooltip-slice) fill / 14px 20px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  color: hsl(var(--skin-ink));
+  padding: 10px 20px;
+}
+
+/* ── Popovers and menus: plain panel in the game's palette (dropdown lists get the game's sprite with the Select) ── */
+.skin-game [data-radix-popper-content-wrapper] > :not(:has(> [role="tooltip"])) {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--ring) / 0.35);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
+  color: hsl(var(--popover-foreground));
+}
+
+/* ── Dropdowns ──
+   The game ships a dropdown: dropdown_frame (a 315x60 pill, slice 3/26), a round arrow button and dropdown_open (a flat
+   blue rounded list, slice 15). The Select trigger and the open list use them. Menus (role="menu") are lists too and
+   share the open-list frame. The trigger frame uses em for its caps (26/60 of the height, ~1.15em) so it follows the
+   font size; the arrow replaces Radix's chevron. */
+.skin-game button[role="combobox"] {
+  position: relative;
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-dropdown-frame) var(--skin-dropdown-frame-slice) fill / 2px 1.15em stretch;
+  border-radius: 999px;
+  color: hsl(var(--skin-ink));
+  padding-inline: 1.15em 2.6em;
+}
+
+.skin-game button[role="combobox"][data-placeholder] {
+  color: hsl(var(--skin-ink) / 0.6);
+}
+
+.skin-game button[role="combobox"] > svg {
+  display: none;
+}
+
+.skin-game button[role="combobox"]::after {
+  content: "";
+  position: absolute;
+  right: 0.2em;
+  top: 50%;
+  width: 1.7em;
+  height: 1.7em;
+  transform: translateY(-50%);
+  background: var(--skin-dropdown-arrow) center / contain no-repeat;
+  pointer-events: none;
+}
+
+.skin-game button[role="combobox"]:hover:not(:disabled)::after,
+.skin-game button[role="combobox"][data-state="open"]::after {
+  background-image: var(--skin-dropdown-arrow-hover);
+}
+
+.skin-game [data-radix-popper-content-wrapper] > div:is([role="listbox"], [role="menu"]) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-dropdown-open) var(--skin-dropdown-open-slice) fill / 10px stretch;
+  border-radius: 12px;
+  color: hsl(var(--skin-ink));
+  padding: 6px;
+}
+
+.skin-game :is([role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"])[data-highlighted] {
+  background: rgb(255 255 255 / 0.14);
+  color: hsl(var(--skin-ink));
+}
+
+/* The start screen title is `text-secondary`, which is a dark blue field colour in this palette. */
+.skin-game .text-secondary {
+  color: hsl(var(--primary));
+}

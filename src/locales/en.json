@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Interface language",
-      "hint": "Only affects the editor's own text. Quests, dialogs and other map content are not translated."
+      "label": "Interface language"
     }
   },
   "ui": {
@@ -846,6 +845,14 @@
       "px": "{{fontSize}}px",
       "3DButtons": "3D buttons",
       "raisedStyleWithShadowAnd": "Raised style with shadow and press effect",
+      "gameSkin": "Game skin",
+      "gameSkinDescription": "Draws the interface with the game's own graphics.",
+      "gameSkinExtract": "Extract from game",
+      "gameSkinReextract": "Extract again",
+      "gameSkinExtracting": "Extracting… {{done}}/{{total}}",
+      "gameSkinNoGame": "Game folder not found.",
+      "gameSkinFailed": "Extraction failed: {{message}}",
+      "gameSkinMissing": "Not found in this game version: {{count}} graphics.",
       "revertToDefaults": "Revert to defaults",
       "import": "Import",
       "export": "Export",

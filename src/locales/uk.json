@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Мова інтерфейсу",
-      "hint": "Змінює лише власні тексти редактора. Завдання, діалоги та інший вміст мапи не перекладаються."
+      "label": "Мова інтерфейсу"
     }
   },
   "ui": {
@@ -896,6 +895,14 @@
       "px": "{{fontSize}} пкс",
       "3DButtons": "Об'ємні кнопки",
       "raisedStyleWithShadowAnd": "Опуклий стиль із тінню й ефектом натискання",
+      "gameSkin": "Тема гри",
+      "gameSkinDescription": "Малює інтерфейс графікою самої гри.",
+      "gameSkinExtract": "Видобути з гри",
+      "gameSkinReextract": "Видобути знову",
+      "gameSkinExtracting": "Видобування… {{done}}/{{total}}",
+      "gameSkinNoGame": "Теку гри не знайдено.",
+      "gameSkinFailed": "Не вдалося видобути: {{message}}",
+      "gameSkinMissing": "Не знайдено в цій версії гри: {{count}} зображень.",
       "revertToDefaults": "Повернути стандартні",
       "import": "Імпорт",
       "export": "Експорт",

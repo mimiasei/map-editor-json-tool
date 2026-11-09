@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Язык интерфейса",
-      "hint": "Влияет только на текст самого редактора. Задания, диалоги и другое содержимое карты не переводятся."
+      "label": "Язык интерфейса"
     }
   },
   "ui": {
@@ -896,6 +895,14 @@
       "px": "{{fontSize}} пикс.",
       "3DButtons": "Объёмные кнопки",
       "raisedStyleWithShadowAnd": "Выпуклый стиль с тенью и эффектом нажатия",
+      "gameSkin": "Тема игры",
+      "gameSkinDescription": "Рисует интерфейс графикой самой игры.",
+      "gameSkinExtract": "Извлечь из игры",
+      "gameSkinReextract": "Извлечь заново",
+      "gameSkinExtracting": "Извлечение… {{done}}/{{total}}",
+      "gameSkinNoGame": "Папка игры не найдена.",
+      "gameSkinFailed": "Не удалось извлечь: {{message}}",
+      "gameSkinMissing": "Не найдено в этой версии игры: {{count}} изображений.",
       "revertToDefaults": "Вернуть значения по умолчанию",
       "import": "Импорт",
       "export": "Экспорт",

@@ -1,5 +1,6 @@
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useThemeSettingsStore } from '@/store/useThemeSettingsStore'
+import { loadUiSkin, skinCssVars, UI_SKIN_EXTRACTED_EVENT } from '@/lib/ui-skin'
 
 /**
  * Reads whether dark mode is currently active directly from the DOM class,
@@ -20,6 +21,57 @@ function useDarkMode(): boolean {
   }, [])
 
   return isDark
+}
+
+/**
+ * Puts the Game skin on <html> (class `skin-game` + the `--skin-*` sprite variables) while the setting is on and the
+ * sprites are extracted. Returns whether the skin is actually applied, so the theme colours can step aside.
+ */
+function useGameSkin(): boolean {
+  const wanted = useThemeSettingsStore((s) => s.gameSkin)
+  const [active, setActive] = useState(false)
+  const applied = useRef<string[]>([])
+  // Bumped when an extraction finishes, to re-read the manifest.
+  const [reloads, setReloads] = useState(0)
+
+  useEffect(() => {
+    const onExtracted = () => setReloads((n) => n + 1)
+    window.addEventListener(UI_SKIN_EXTRACTED_EVENT, onExtracted)
+    return () => window.removeEventListener(UI_SKIN_EXTRACTED_EVENT, onExtracted)
+  }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    const clear = () => {
+      for (const name of applied.current) root.style.removeProperty(name)
+      applied.current = []
+      root.classList.remove('skin-game')
+    }
+    if (!wanted) {
+      clear()
+      setActive(false)
+      return
+    }
+    let cancelled = false
+    void (async () => {
+      const vars = (await loadUiSkin()) ? await skinCssVars() : null
+      if (cancelled) return
+      clear()
+      if (!vars) {
+        setActive(false)
+        return
+      }
+      for (const [name, value] of Object.entries(vars)) root.style.setProperty(name, value)
+      applied.current = Object.keys(vars)
+      root.classList.add('skin-game')
+      setActive(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [wanted, reloads])
+
+  return active
 }
 
 // ─── CSS properties we write in light mode ────────────────────────────────
@@ -44,10 +96,21 @@ const CUSTOM_PROPS = [
  */
 export function useApplyThemeSettings() {
   const isDark = useDarkMode()
+  const skinActive = useGameSkin()
   const { themes, activeThemeId } = useThemeSettingsStore()
 
   useLayoutEffect(() => {
     const root = document.documentElement
+
+    if (skinActive) {
+      // The skin brings its own palette (index.css `.skin-game`), in light and dark alike, so the theme's colours must
+      // not sit on top of it as inline styles. The font size still follows the theme.
+      for (const prop of CUSTOM_PROPS) root.style.removeProperty(prop)
+      root.classList.remove('buttons-3d')
+      const skinned = themes.find((t) => t.id === activeThemeId) ?? themes[0]
+      if (skinned) root.style.setProperty('font-size', `${skinned.fontSize}px`)
+      return
+    }
 
     if (isDark) {
       // Remove every property this hook can set so inline styles don't bleed
@@ -80,7 +143,7 @@ export function useApplyThemeSettings() {
 
     // 3D button style — toggled via a class on <html>.
     root.classList.toggle('buttons-3d', use3dButtons)
-  }, [isDark, themes, activeThemeId])
+  }, [isDark, skinActive, themes, activeThemeId])
 }
 
 // ─── Hex → HSL string (shadcn format: "H S% L%") ─────────────────────────

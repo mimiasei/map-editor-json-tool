@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Oberflächensprache",
-      "hint": "Betrifft nur die Texte des Editors selbst. Aufgaben, Dialoge und andere Karteninhalte werden nicht übersetzt."
+      "label": "Oberflächensprache"
     }
   },
   "ui": {
@@ -838,6 +837,14 @@
       "px": "{{fontSize}} px",
       "3DButtons": "3D-Schaltflächen",
       "raisedStyleWithShadowAnd": "Erhabener Stil mit Schatten und Druckeffekt",
+      "gameSkin": "Spiel-Skin",
+      "gameSkinDescription": "Zeichnet die Oberfläche mit den Grafiken des Spiels.",
+      "gameSkinExtract": "Aus dem Spiel extrahieren",
+      "gameSkinReextract": "Erneut extrahieren",
+      "gameSkinExtracting": "Extrahiere… {{done}}/{{total}}",
+      "gameSkinNoGame": "Spielordner nicht gefunden.",
+      "gameSkinFailed": "Extraktion fehlgeschlagen: {{message}}",
+      "gameSkinMissing": "In dieser Spielversion nicht gefunden: {{count}} Grafiken.",
       "revertToDefaults": "Auf Standard zurücksetzen",
       "import": "Importieren",
       "export": "Exportieren",

@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Langue de l'interface",
-      "hint": "Ne concerne que le texte de l'éditeur lui-même. Les quêtes, dialogues et autres contenus de la carte ne sont pas traduits."
+      "label": "Langue de l'interface"
     }
   },
   "ui": {
@@ -867,6 +866,14 @@
       "px": "{{fontSize}} px",
       "3DButtons": "Boutons 3D",
       "raisedStyleWithShadowAnd": "Style en relief avec ombre et effet d'appui",
+      "gameSkin": "Habillage du jeu",
+      "gameSkinDescription": "Dessine l'interface avec les graphismes du jeu.",
+      "gameSkinExtract": "Extraire du jeu",
+      "gameSkinReextract": "Extraire à nouveau",
+      "gameSkinExtracting": "Extraction… {{done}}/{{total}}",
+      "gameSkinNoGame": "Dossier du jeu introuvable.",
+      "gameSkinFailed": "Échec de l'extraction : {{message}}",
+      "gameSkinMissing": "Introuvables dans cette version du jeu : {{count}} éléments graphiques.",
       "revertToDefaults": "Rétablir les valeurs par défaut",
       "import": "Importer",
       "export": "Exporter",

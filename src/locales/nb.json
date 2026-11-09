@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Grensesnittspråk",
-      "hint": "Påvirker bare redigerens egen tekst. Oppdrag, dialoger og annet kartinnhold oversettes ikke."
+      "label": "Grensesnittspråk"
     }
   },
   "ui": {
@@ -838,6 +837,14 @@
       "px": "{{fontSize}} px",
       "3DButtons": "3D-knapper",
       "raisedStyleWithShadowAnd": "Hevet stil med skygge og trykkeffekt",
+      "gameSkin": "Spillskin",
+      "gameSkinDescription": "Tegner grensesnittet med spillets egen grafikk.",
+      "gameSkinExtract": "Hent ut fra spillet",
+      "gameSkinReextract": "Hent ut på nytt",
+      "gameSkinExtracting": "Henter ut… {{done}}/{{total}}",
+      "gameSkinNoGame": "Fant ikke spillmappen.",
+      "gameSkinFailed": "Uthenting mislyktes: {{message}}",
+      "gameSkinMissing": "Ikke funnet i denne spillversjonen: {{count}} grafikker.",
       "revertToDefaults": "Tilbakestill til standard",
       "import": "Importer",
       "export": "Eksporter",
