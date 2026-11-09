@@ -1,0 +1,169 @@
+/* ─── Game skin ──────────────────────────────────────────────────────────────
+   Added to <html> by useApplyThemeSettings while the Game skin is on and its sprites are extracted (desktop only).
+   It replaces the theme palette in light and dark mode, so this file is imported after index.css (`.dark` is there).
+
+   Colours were sampled from the game's own UI sprites: navy panels (#151c2c), blue fields (#1b3451), gold trim
+   (#dbc999 / #c9a25a), cream text (#efe6cf). The text font is a matching sans: the game's own UI font was not found as
+   a Font asset in its data files.
+
+   The sprites are extracted per user (src/lib/ui-skin.ts) and reach the CSS as `--skin-<key>` (the url) and
+   `--skin-<key>-slice` (border-image-slice in image pixels, top right bottom left).
+
+   Every frame is drawn with `border-width: 0` and a `border-image-width` instead of a real border: the image paints over
+   the padding, so turning the skin on does not change any layout. Sizes are in em so frames follow the font size.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.skin-game {
+  --background: 222 35% 13%;
+  --foreground: 43 50% 87%;
+  --card: 221 35% 16%;
+  --card-foreground: 43 50% 87%;
+  --popover: 212 50% 21%;
+  --popover-foreground: 43 50% 87%;
+  --primary: 39 51% 57%;
+  --primary-foreground: 40 53% 7%;
+  --secondary: 212 50% 21%;
+  --secondary-foreground: 43 50% 87%;
+  --muted: 223 33% 16%;
+  --muted-foreground: 214 26% 65%;
+  --accent: 220 35% 22%;
+  --accent-foreground: 43 50% 87%;
+  --border: 223 25% 31%;
+  --input: 212 50% 21%;
+  --ring: 44 48% 73%;
+  --scrollbar-track: 224 43% 10%;
+  --scrollbar-thumb: 220 24% 38%;
+  --app-background: #0b1020;
+  --column-left: #121a2c;
+  --column-center: #151e33;
+  --column-right: #18223a;
+  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Dialogs ──
+   The frame sits in ::before behind the content (z-index -1 inside an isolated stacking context), so dialogs that set
+   their own padding keep their layout and the resize handles of DraggableDialogContent stay on top.
+   Popover content also has role="dialog", but it carries data-side. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) {
+  isolation: isolate;
+  background: transparent;
+  border-width: 0;
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 0.55);
+}
+
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border: 0 solid transparent;
+  border-image: var(--skin-dialog-frame) var(--skin-dialog-frame-slice) fill / 26px stretch;
+}
+
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
+  color: hsl(var(--ring));
+}
+
+/* ── Buttons ──
+   Bronze pill for outline / secondary / destructive, green for the default (primary) action. The pill art is a
+   three-part strip (rounded caps 133px wide in a 79px-high sprite), so the caps are ~1.68x the button height. Icon
+   buttons (data-size="icon") keep the plain palette. */
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 3.2em stretch;
+  border-radius: 999px;
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  padding-inline: 1.5em;
+}
+
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]):hover:not(:disabled) {
+  border-image-source: var(--skin-button-hover);
+}
+
+.skin-game button[data-variant="destructive"]:not([data-size="icon"]) {
+  color: #f2a58a;
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]) {
+  background:
+    var(--skin-button-green-left) left / auto 100% no-repeat,
+    var(--skin-button-green-right) right / auto 100% no-repeat,
+    var(--skin-button-green-center) center / 100% 100% no-repeat;
+  border-radius: 999px;
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  padding-inline: 1.4em;
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
+  background-image: var(--skin-button-green-left-hover), var(--skin-button-green-right-hover), var(--skin-button-green-center-hover);
+}
+
+/* ── Toggles and tabs ──
+   The game has no tab or toolbar-button art, so these use its thin gold-edged navy card (Card_Tultips). */
+.skin-game button[data-variant="ghost"]:hover:not(:disabled),
+.skin-game [role="tab"] {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-card-hover) var(--skin-card-hover-slice) fill / 4px stretch;
+  border-radius: 0;
+}
+
+.skin-game [role="tab"] {
+  border-image-source: var(--skin-card);
+}
+
+.skin-game button[aria-pressed="true"]:not(:disabled),
+.skin-game [role="tab"][aria-selected="true"] {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-card-pressed) var(--skin-card-pressed-slice) fill / 4px stretch;
+  border-radius: 0;
+}
+
+/* ── Text fields ──
+   KeyField is a pill with 32px caps in a 76px-high sprite: caps are ~0.42x the field height, about 1.1em here. A
+   pill's ring follows border-radius, so keep it round. Textareas are too tall for a pill and get plain CSS. */
+.skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-field) var(--skin-field-slice) fill / 0 1.1em stretch;
+  border-radius: 999px;
+  padding-inline: 1.1em;
+}
+
+.skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])):is(:hover, :focus) {
+  border-image-source: var(--skin-field-hover);
+}
+
+.skin-game textarea {
+  background: hsl(var(--input));
+  border: 1px solid #255378;
+  border-radius: 12px;
+}
+
+/* ── Tooltips ──
+   Radix puts a visually hidden role="tooltip" copy inside the visible content, which tells tooltips apart from popovers
+   and menus. */
+.skin-game [data-radix-popper-content-wrapper] > :has(> [role="tooltip"]) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-tooltip) var(--skin-tooltip-slice) fill / 14px 20px stretch;
+  border-radius: 0;
+  box-shadow: none;
+  color: hsl(var(--foreground));
+  padding: 10px 20px;
+}
+
+/* ── Popovers and menus: plain panel in the game's palette (dropdown lists get the game's sprite with the Select) ── */
+.skin-game [data-radix-popper-content-wrapper] > :not(:has(> [role="tooltip"])) {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--ring) / 0.35);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
+  color: hsl(var(--popover-foreground));
+}

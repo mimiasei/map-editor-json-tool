@@ -82,39 +82,6 @@
   }
 }
 
-/* ─── Game skin ──────────────────────────────────────────────────────────────
-   Added to <html> by useApplyThemeSettings while the Game skin is on and its sprites are extracted. It replaces the
-   theme palette in light and dark mode (so it sits after `.dark`). Colours were sampled from the game's own UI
-   sprites: navy panels (#151c2c), blue fields (#1b3451), gold trim (#dbc999 / #c9a25a), cream text (#efe6cf).
-   The text font is a matching sans: the game's own UI font was not found as a Font asset in its data files.
-   ─────────────────────────────────────────────────────────────────────────── */
-.skin-game {
-  --background: 222 35% 13%;
-  --foreground: 43 50% 87%;
-  --card: 221 35% 16%;
-  --card-foreground: 43 50% 87%;
-  --popover: 212 50% 21%;
-  --popover-foreground: 43 50% 87%;
-  --primary: 39 51% 57%;
-  --primary-foreground: 40 53% 7%;
-  --secondary: 212 50% 21%;
-  --secondary-foreground: 43 50% 87%;
-  --muted: 223 33% 16%;
-  --muted-foreground: 214 26% 65%;
-  --accent: 220 35% 22%;
-  --accent-foreground: 43 50% 87%;
-  --border: 223 25% 31%;
-  --input: 212 50% 21%;
-  --ring: 44 48% 73%;
-  --scrollbar-track: 224 43% 10%;
-  --scrollbar-thumb: 220 24% 38%;
-  --app-background: #0b1020;
-  --column-left: #121a2c;
-  --column-center: #151e33;
-  --column-right: #18223a;
-  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
-}
-
 @layer base {
   * {
     @apply border-border;
