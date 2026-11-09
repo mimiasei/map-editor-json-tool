@@ -43,8 +43,11 @@ export interface ThemeSettings {
 interface ThemeSettingsState {
   themes: ThemeSettings[]
   activeThemeId: string
+  /** The optional Game skin (desktop only, needs the extracted sprites). Global, not per theme: it brings its own palette. */
+  gameSkin: boolean
 
   setActiveTheme(id: string): void
+  setGameSkin(on: boolean): void
   updateTheme(id: string, patch: Partial<ThemeColors> & { fontSize?: number; name?: string; use3dButtons?: boolean }): void
   createTheme(name: string): ThemeSettings
   deleteTheme(id: string): void
@@ -70,6 +73,11 @@ export const useThemeSettingsStore = create<ThemeSettingsState>()(
     (set, get) => ({
       themes: [makeDefaultTheme(), ...PRESET_THEMES],
       activeThemeId: 'default-light',
+      gameSkin: false,
+
+      setGameSkin(on) {
+        set({ gameSkin: on })
+      },
 
       setActiveTheme(id) {
         if (get().themes.find((t) => t.id === id)) {

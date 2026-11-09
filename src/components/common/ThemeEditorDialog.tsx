@@ -32,6 +32,8 @@ import { UI_LANGUAGES, nativeLanguageLabel } from '@/lib/languages'
 import { isUiLocaleAvailable } from '@/lib/i18n'
 import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
+import { getGameDir } from '@/lib/game-dir'
+import { extractUiSkin, isUiSkinAvailable, loadUiSkin } from '@/lib/ui-skin'
 
 interface ThemeEditorDialogProps {
   open: boolean
@@ -138,10 +140,15 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     createTheme,
     deleteTheme,
     revertDefault,
+    gameSkin,
+    setGameSkin,
   } = useThemeSettingsStore()
 
   const [newThemeName, setNewThemeName] = useState('')
   const [showNewThemeInput, setShowNewThemeInput] = useState(false)
+  const [skinReady, setSkinReady] = useState(isUiSkinAvailable())
+  const [skinBusy, setSkinBusy] = useState<{ done: number; total: number } | null>(null)
+  const [skinMessage, setSkinMessage] = useState<string | null>(null)
 
   const activeTheme = themes.find((th) => th.id === activeThemeId) ?? themes[0]
   const isDesktop = isTauri()
@@ -161,6 +168,32 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     },
     [activeTheme.id, updateTheme],
   )
+
+  useEffect(() => {
+    if (open && isTauri()) void loadUiSkin().then(setSkinReady)
+  }, [open])
+
+  const handleExtractSkin = async () => {
+    setSkinMessage(null)
+    const gameDir = await getGameDir()
+    if (!gameDir) {
+      setSkinMessage(t('common.themeEditorDialog.gameSkinNoGame'))
+      return
+    }
+    setSkinBusy({ done: 0, total: 0 })
+    try {
+      const result = await extractUiSkin(gameDir, (p) => setSkinBusy({ done: p.done, total: p.total }))
+      setSkinReady(true)
+      setGameSkin(true)
+      if (result.missing.length > 0) {
+        setSkinMessage(t('common.themeEditorDialog.gameSkinMissing', { count: result.missing.length }))
+      }
+    } catch (e) {
+      setSkinMessage(t('common.themeEditorDialog.gameSkinFailed', { message: e instanceof Error ? e.message : String(e) }))
+    } finally {
+      setSkinBusy(null)
+    }
+  }
 
   const handleCreateTheme = () => {
     const name = newThemeName.trim() || 'Custom Theme'
@@ -337,6 +370,33 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
               onCheckedChange={(checked) => updateTheme(activeTheme.id, { use3dButtons: checked })}
             />
           </div>
+
+          {/* ── Game skin (desktop only: the sprites come from the game folder) ── */}
+          {isDesktop && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.gameSkin')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.gameSkinDescription')}</p>
+                  </div>
+                  <Switch checked={gameSkin && skinReady} disabled={!skinReady} onCheckedChange={setGameSkin} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" disabled={skinBusy !== null} onClick={handleExtractSkin}>
+                    {skinReady ? t('common.themeEditorDialog.gameSkinReextract') : t('common.themeEditorDialog.gameSkinExtract')}
+                  </Button>
+                  {skinBusy && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {t('common.themeEditorDialog.gameSkinExtracting', { done: skinBusy.done, total: skinBusy.total })}
+                    </span>
+                  )}
+                </div>
+                {skinMessage && <p className="text-xs text-muted-foreground">{skinMessage}</p>}
+              </div>
+            </>
+          )}
 
           <Separator />
 

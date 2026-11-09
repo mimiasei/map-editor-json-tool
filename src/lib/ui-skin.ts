@@ -30,6 +30,9 @@ export interface SkinProgress {
   current: string
 }
 
+/** Fired on `window` after a successful extraction, so an active skin re-reads the new sprites. */
+export const UI_SKIN_EXTRACTED_EVENT = 'oe:ui-skin-extracted'
+
 let skinDir: string | null = null
 let manifest: SkinManifest | null = null
 
@@ -79,6 +82,7 @@ export async function extractUiSkin(
       outputDir: (await resolveSkinDir()).replace(/\/$/, ''),
     })
     await loadUiSkin()
+    window.dispatchEvent(new Event(UI_SKIN_EXTRACTED_EVENT))
     return result
   } finally {
     unlisten()
