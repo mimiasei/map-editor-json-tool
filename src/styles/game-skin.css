@@ -215,3 +215,8 @@
   background: rgb(255 255 255 / 0.14);
   color: hsl(var(--foreground));
 }
+
+/* The start screen title is `text-secondary`, which is a dark blue field colour in this palette. */
+.skin-game .text-secondary {
+  color: hsl(var(--primary));
+}

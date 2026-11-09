@@ -10,6 +10,7 @@ Desktop release for macOS (Apple Silicon), Windows, and Linux.
 - **Validate dialog** can delete the object or what blocks it, one by one or all at once.
 - **Quests are now saved inside the .map**, so published maps actually run their quests in the game.
 - **Story Builder**: builds a whole story (quests, dialogs, counters, texts) from premade stories or your own idea, with an optional AI text writer and offline phrase banks.
+- **Game skin** (desktop build): Theme editor > Game skin dresses dialogs, buttons, text fields, dropdowns, menus and tooltips in the game's own interface graphics. The graphics are extracted from your game folder with one click and are not part of the app. The text uses a similar font, as the game's own was not found in its files.
 - **Game Database**: object and artifact descriptions now show their real numbers (e.g. "Gives the first visiting hero 6000-10000 XP"), objects and artifacts show the game's value, and creatures, artifacts and objects can be sorted by name or value.
 - **New interface languages**: French, German, Ukrainian, Russian, Norwegian and Polish (first drafts, not reviewed by native speakers), a new toolbar with a Map | Quests switch, and a new start screen.
 - Map Stats shows Random resources, Artifacts, Road Tiles and Neutral Zones; File > Open Recent; random cities can have an owner and faction; the eraser removes objects while you drag.
