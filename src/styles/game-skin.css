@@ -1,10 +1,14 @@
 /* ─── Game skin ──────────────────────────────────────────────────────────────
    Added to <html> by useApplyThemeSettings while the Game skin is on and its sprites are extracted (desktop only).
-   It replaces the theme palette in light and dark mode, so this file is imported after index.css (`.dark` is there).
+   It replaces the theme palette and follows the app's light/dark toggle (`.dark` on <html>), so this file is imported after
+   index.css (`.dark` is there).
 
-   Colours were sampled from the game's own UI sprites: navy panels (#151c2c), blue fields (#1b3451), gold trim
-   (#dbc999 / #c9a25a), cream text (#efe6cf). The text font is a matching sans: the game's own UI font was not found as
-   a Font asset in its data files.
+   What comes from the game's assets: the artwork (dialog frame, buttons, text fields, dropdown, tabs, tooltips), with the
+   colours baked into it. What is CSS here: everything else (page and panel backgrounds, text, borders, switches,
+   scrollbars). The dark palette was sampled from those sprites: navy panels (#151c2c), blue fields (#1b3451), gold trim
+   (#dbc999 / #c9a25a), cream text (#efe6cf). The light palette is parchment and navy, chosen by hand: the game has no light
+   UI. Controls drawn with sprites stay dark in both (their artwork is dark) and keep cream text (`--skin-ink`).
+   The text font is a matching sans: the game's own UI font was not found as a Font asset in its data files.
 
    The sprites are extracted per user (src/lib/ui-skin.ts) and reach the CSS as `--skin-<key>` (the url) and
    `--skin-<key>-slice` (border-image-slice in image pixels, top right bottom left).
@@ -14,6 +18,39 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 .skin-game {
+  --skin-ink: 43 50% 87%;
+  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* Light: parchment panels, navy text */
+.skin-game:not(.dark) {
+  --background: 44 37% 86%;
+  --foreground: 222 35% 13%;
+  --card: 44 49% 91%;
+  --card-foreground: 222 35% 13%;
+  --popover: 44 49% 91%;
+  --popover-foreground: 222 35% 13%;
+  --primary: 35 45% 33%;
+  --primary-foreground: 44 74% 94%;
+  --secondary: 215 23% 84%;
+  --secondary-foreground: 222 35% 13%;
+  --muted: 44 31% 81%;
+  --muted-foreground: 224 19% 38%;
+  --accent: 45 32% 78%;
+  --accent-foreground: 222 35% 13%;
+  --border: 43 21% 65%;
+  --input: 215 23% 84%;
+  --ring: 38 45% 37%;
+  --scrollbar-track: 44 31% 81%;
+  --scrollbar-thumb: 42 19% 58%;
+  --app-background: #8f8a78;
+  --column-left: #efe8d6;
+  --column-center: #e9e2cf;
+  --column-right: #e2d9c1;
+}
+
+/* Dark: navy panels, gold trim, cream text */
+.skin-game.dark {
   --background: 222 35% 13%;
   --foreground: 43 50% 87%;
   --card: 221 35% 16%;
@@ -37,7 +74,6 @@
   --column-left: #121a2c;
   --column-center: #151e33;
   --column-right: #18223a;
-  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
 }
 
 /* ── Dialogs ──
@@ -46,7 +82,7 @@
    Popover content also has role="dialog", but it carries data-side. */
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) {
   isolation: isolate;
-  background: transparent;
+  background: hsl(var(--background));
   border-width: 0;
   border-radius: 12px;
   box-shadow: 0 14px 40px rgb(0 0 0 / 0.55);
@@ -62,6 +98,12 @@
   border-image: var(--skin-dialog-frame) var(--skin-dialog-frame-slice) fill / 26px stretch;
 }
 
+/* The dialog frame's border area is a navy backdrop, which is a dark band on parchment. Light mode uses the game's thin
+   modal frame instead (a bronze double line with a transparent centre). */
+.skin-game:not(.dark) :is([role="dialog"], [role="alertdialog"]):not([data-side])::before {
+  border-image: var(--skin-modal-frame) var(--skin-modal-frame-slice) / 8px stretch;
+}
+
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
   color: hsl(var(--ring));
 }
@@ -75,7 +117,7 @@
   border: 0 solid transparent;
   border-image: var(--skin-button) var(--skin-button-slice) fill / 0 3.2em stretch;
   border-radius: 999px;
-  color: hsl(var(--foreground));
+  color: hsl(var(--skin-ink));
   font-weight: 600;
   padding-inline: 1.5em;
 }
@@ -94,7 +136,7 @@
     var(--skin-button-green-right) right / auto 100% no-repeat,
     var(--skin-button-green-center) center / 100% 100% no-repeat;
   border-radius: 999px;
-  color: hsl(var(--foreground));
+  color: hsl(var(--skin-ink));
   font-weight: 600;
   padding-inline: 1.4em;
 }
@@ -103,10 +145,11 @@
   background-image: var(--skin-button-green-left-hover), var(--skin-button-green-right-hover), var(--skin-button-green-center-hover);
 }
 
-/* ── Toggles and tabs ──
+/* ── Toggles and tabs ── (their card art is dark, so the text is cream in light mode too)
    The game has no tab or toolbar-button art, so these use its thin gold-edged navy card (Card_Tultips). */
 .skin-game button[data-variant="ghost"]:hover:not(:disabled),
 .skin-game [role="tab"] {
+  color: hsl(var(--skin-ink));
   background: transparent;
   border: 0 solid transparent;
   border-image: var(--skin-card-hover) var(--skin-card-hover-slice) fill / 4px stretch;
@@ -119,6 +162,7 @@
 
 .skin-game button[aria-pressed="true"]:not(:disabled),
 .skin-game [role="tab"][aria-selected="true"] {
+  color: hsl(var(--skin-ink));
   background: transparent;
   border: 0 solid transparent;
   border-image: var(--skin-card-pressed) var(--skin-card-pressed-slice) fill / 4px stretch;
@@ -133,7 +177,12 @@
   border: 0 solid transparent;
   border-image: var(--skin-field) var(--skin-field-slice) fill / 0 1.1em stretch;
   border-radius: 999px;
+  color: hsl(var(--skin-ink));
   padding-inline: 1.1em;
+}
+
+.skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type]))::placeholder {
+  color: hsl(var(--skin-ink) / 0.55);
 }
 
 .skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])):is(:hover, :focus) {
@@ -155,7 +204,7 @@
   border-image: var(--skin-tooltip) var(--skin-tooltip-slice) fill / 14px 20px stretch;
   border-radius: 0;
   box-shadow: none;
-  color: hsl(var(--foreground));
+  color: hsl(var(--skin-ink));
   padding: 10px 20px;
 }
 
@@ -179,7 +228,12 @@
   border: 0 solid transparent;
   border-image: var(--skin-dropdown-frame) var(--skin-dropdown-frame-slice) fill / 2px 1.15em stretch;
   border-radius: 999px;
+  color: hsl(var(--skin-ink));
   padding-inline: 1.15em 2.6em;
+}
+
+.skin-game button[role="combobox"][data-placeholder] {
+  color: hsl(var(--skin-ink) / 0.6);
 }
 
 .skin-game button[role="combobox"] > svg {
@@ -208,12 +262,13 @@
   border: 0 solid transparent;
   border-image: var(--skin-dropdown-open) var(--skin-dropdown-open-slice) fill / 10px stretch;
   border-radius: 12px;
+  color: hsl(var(--skin-ink));
   padding: 6px;
 }
 
 .skin-game :is([role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"])[data-highlighted] {
   background: rgb(255 255 255 / 0.14);
-  color: hsl(var(--foreground));
+  color: hsl(var(--skin-ink));
 }
 
 /* The start screen title is `text-secondary`, which is a dark blue field colour in this palette. */
