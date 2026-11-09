@@ -481,6 +481,62 @@ fn cancel_object_meshes() {
     }
 }
 
+// ─── Game skin sprites ───────────────────────────────────────────────────────
+
+/// Run the sidecar in `export-ui` mode (UI sprites + manifest.json for the Game skin). Progress lines are forwarded as
+/// `ui-skin-progress`; the returned value is the sidecar's `done` line (`saved`, `missing`).
+#[tauri::command]
+async fn export_ui_skin(
+    app: tauri::AppHandle,
+    game_dir: String,
+    output_dir: String,
+) -> Result<serde_json::Value, String> {
+    use tauri_plugin_shell::process::CommandEvent;
+    use tauri_plugin_shell::ShellExt;
+
+    let (mut rx, _child) = app
+        .shell()
+        .sidecar("extract_thumbnails")
+        .map_err(|e| format!("failed to find sidecar: {e}"))?
+        .args(["--mode", "export-ui", "--game-dir", &game_dir, "--output-dir", &output_dir])
+        .spawn()
+        .map_err(|e| format!("failed to spawn sidecar: {e}"))?;
+
+    let mut result: Option<serde_json::Value> = None;
+    while let Some(event) = rx.recv().await {
+        match event {
+            CommandEvent::Stdout(line) => {
+                let text = String::from_utf8_lossy(&line);
+                let Ok(val) = serde_json::from_str::<serde_json::Value>(text.trim()) else {
+                    continue;
+                };
+                match val.get("type").and_then(|t| t.as_str()) {
+                    Some("progress") => {
+                        app.emit("ui-skin-progress", &val).ok();
+                    }
+                    Some("done") => result = Some(val),
+                    Some("error") => {
+                        return Err(val["message"].as_str().unwrap_or("unknown error").to_string());
+                    }
+                    _ => {}
+                }
+            }
+            CommandEvent::Stderr(line) => {
+                log::warn!("sidecar stderr: {}", String::from_utf8_lossy(&line).trim());
+            }
+            CommandEvent::Error(e) => return Err(format!("sidecar error: {e}")),
+            CommandEvent::Terminated(status) => {
+                if status.code.is_some_and(|c| c != 0) {
+                    return Err(format!("sidecar exited with code {}", status.code.unwrap_or(-1)));
+                }
+                break;
+            }
+            _ => {}
+        }
+    }
+    result.ok_or_else(|| "sidecar exited without reporting a result".to_string())
+}
+
 // ─── App entry point ─────────────────────────────────────────────────────────
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -505,6 +561,7 @@ pub fn run() {
             extract_thumbnails,
             object_meshes,
             cancel_object_meshes,
+            export_ui_skin,
             detect_game_dir,
             text_writer_set_key,
             text_writer_has_key,

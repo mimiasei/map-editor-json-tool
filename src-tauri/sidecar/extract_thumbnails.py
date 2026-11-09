@@ -11,6 +11,8 @@ Usage:
     extract_thumbnails --mode list-objects --game-dir <dir>
     extract_thumbnails --mode export-meshes --game-dir <dir> --output-dir <dir> --sids-file <json list of sids>
         (meshes for the in-app object renderer, see mesh_export.py)
+    extract_thumbnails --mode export-ui --game-dir <dir> --output-dir <dir>
+        (UI sprites + manifest.json for the Game skin, see ui_export.py)
 
 Stdout protocol (one JSON object per line):
     {"type": "progress", "done": 12, "total": 500, "current": "icon_name"}
@@ -251,7 +253,7 @@ def main() -> None:
     parser.add_argument(
         "--mode",
         default="thumbnails",
-        choices=["thumbnails", "list-objects", "export-meshes"],
+        choices=["thumbnails", "list-objects", "export-meshes", "export-ui"],
     )
     parser.add_argument(
         "--sids-file", default="", help="JSON list of object sids (export-meshes)"
@@ -276,6 +278,16 @@ def main() -> None:
 
     game_dir = Path(args.game_dir)
     output_dir = Path(args.output_dir)
+
+    if args.mode == "export-ui":
+        try:
+            import ui_export
+
+            ui_export.export_ui(game_dir, output_dir, _emit)
+        except Exception as exc:
+            _emit({"type": "error", "message": f"{type(exc).__name__}: {exc}"})
+            sys.exit(1)
+        return
 
     if args.mode != "thumbnails":
         try:
