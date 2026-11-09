@@ -45,6 +45,7 @@ import type {
 import unitsData from '@/data/units.json'
 import { factionDisplayName, factionLabel, groupByFaction } from '@/lib/factions'
 import { useTranslation } from 'react-i18next'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 // ─── Faction display name normalizer ─────────────────────────────────────────
 // Kept as a thin re-export so existing call sites read unchanged; the table and
@@ -749,15 +750,14 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
               {sortable && (
                 <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border">
                   <span className="text-xs text-muted-foreground shrink-0">{t('catalog.gameDatabaseDialog.sortBy')}</span>
-                  <select
-                    className="h-7 min-w-0 flex-1 rounded-md border border-input bg-background px-1.5 text-xs"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  >
-                    <option value="name">{t('catalog.gameDatabaseDialog.sortName')}</option>
-                    <option value="valueHigh">{t('catalog.gameDatabaseDialog.sortValueHigh')}</option>
-                    <option value="valueLow">{t('catalog.gameDatabaseDialog.sortValueLow')}</option>
-                  </select>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                    <SelectTrigger className="h-7 min-w-0 flex-1 px-1.5 py-0 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">{t('catalog.gameDatabaseDialog.sortName')}</SelectItem>
+                      <SelectItem value="valueHigh">{t('catalog.gameDatabaseDialog.sortValueHigh')}</SelectItem>
+                      <SelectItem value="valueLow">{t('catalog.gameDatabaseDialog.sortValueLow')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 

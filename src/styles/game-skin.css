@@ -167,3 +167,51 @@
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
   color: hsl(var(--popover-foreground));
 }
+
+/* ── Dropdowns ──
+   The game ships a dropdown: dropdown_frame (a 315x60 pill, slice 3/26), a round arrow button and dropdown_open (a flat
+   blue rounded list, slice 15). The Select trigger and the open list use them. Menus (role="menu") are lists too and
+   share the open-list frame. The trigger frame uses em for its caps (26/60 of the height, ~1.15em) so it follows the
+   font size; the arrow replaces Radix's chevron. */
+.skin-game button[role="combobox"] {
+  position: relative;
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-dropdown-frame) var(--skin-dropdown-frame-slice) fill / 2px 1.15em stretch;
+  border-radius: 999px;
+  padding-inline: 1.15em 2.6em;
+}
+
+.skin-game button[role="combobox"] > svg {
+  display: none;
+}
+
+.skin-game button[role="combobox"]::after {
+  content: "";
+  position: absolute;
+  right: 0.2em;
+  top: 50%;
+  width: 1.7em;
+  height: 1.7em;
+  transform: translateY(-50%);
+  background: var(--skin-dropdown-arrow) center / contain no-repeat;
+  pointer-events: none;
+}
+
+.skin-game button[role="combobox"]:hover:not(:disabled)::after,
+.skin-game button[role="combobox"][data-state="open"]::after {
+  background-image: var(--skin-dropdown-arrow-hover);
+}
+
+.skin-game [data-radix-popper-content-wrapper] > div:is([role="listbox"], [role="menu"]) {
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-dropdown-open) var(--skin-dropdown-open-slice) fill / 10px stretch;
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.skin-game :is([role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"])[data-highlighted] {
+  background: rgb(255 255 255 / 0.14);
+  color: hsl(var(--foreground));
+}

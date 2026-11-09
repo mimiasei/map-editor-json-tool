@@ -59,6 +59,7 @@ import SlotPicker from './SlotPicker'
 import TextWriterSettingsDialog from './TextWriterSettingsDialog'
 import { useStoryTexts } from './useStoryTexts'
 import { useTranslation } from 'react-i18next'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface Props {
   open: boolean
@@ -451,18 +452,16 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 <Label htmlFor="story-language" className="text-xs">
                   {t('story.storyBuilderDialog.writeIn')}
                 </Label>
-                <select
-                  id="story-language"
-                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                  value={lang}
-                  onChange={(e) => setWritingLang(e.target.value)}
-                >
-                  {GAME_LANGUAGES.map((l) => (
-                    <option key={l.id} value={l.id} disabled={l.id !== 'english' && !ready}>
-                      {languageLabel(l.id)}
-                    </option>
-                  ))}
-                </select>
+                <Select value={lang} onValueChange={setWritingLang}>
+                  <SelectTrigger id="story-language" className="h-8 w-auto gap-2 px-2 py-0 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {GAME_LANGUAGES.map((l) => (
+                      <SelectItem key={l.id} value={l.id} disabled={l.id !== 'english' && !ready}>
+                        {languageLabel(l.id)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <span className="text-xs text-muted-foreground">
                   {lang === 'english' ? t('story.storyBuilderDialog.english') : `${languageLabel(lang)} + English`}
                 </span>
@@ -586,21 +585,23 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                       </div>
                     )}
                     {b.kind === 'choice' && (
-                      <select
-                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                      <Select
                         value={b.preset ?? 'mercy'}
-                        onChange={(e) =>
+                        onValueChange={(v) =>
                           setCustomBeats((beats) =>
-                            beats.map((x, idx) => (idx === i ? { ...x, preset: e.target.value as ChoicePreset } : x)),
+                            beats.map((x, idx) => (idx === i ? { ...x, preset: v as ChoicePreset } : x)),
                           )
                         }
                       >
-                        {CHOICE_PRESETS.map((p) => (
-                          <option key={p} value={p}>
-                            {presetLabel(p)}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="h-8 w-auto gap-2 px-2 py-0 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CHOICE_PRESETS.map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {presetLabel(p)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
                     <div className="flex items-center">
                       <Button type="button" variant="ghost" size="icon" className="h-8 w-8" disabled={i === 0} onClick={() => moveBeat(i, -1)}>
