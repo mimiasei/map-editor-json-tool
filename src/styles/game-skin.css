@@ -170,19 +170,25 @@
 }
 
 /* ── Text fields ──
-   KeyField is a pill with 32px caps in a 76px-high sprite: caps are ~0.42x the field height, about 1.1em here. A
-   pill's ring follows border-radius, so keep it round. Textareas are too tall for a pill and get plain CSS. */
+   KeyField is a pill with 32px caps in a 76px-high sprite: caps are ~0.42x the field height, about 0.85em here (fields are
+   24-32px high). The padding is left to the field's own classes: search fields put an icon on the left and rely on pl-7.
+   A pill's ring follows border-radius, so keep it round. Textareas are too tall for a pill and get plain CSS. */
 .skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])) {
   background: transparent;
   border: 0 solid transparent;
-  border-image: var(--skin-field) var(--skin-field-slice) fill / 0 1.1em stretch;
+  border-image: var(--skin-field) var(--skin-field-slice) fill / 0 0.85em stretch;
   border-radius: 999px;
   color: hsl(var(--skin-ink));
-  padding-inline: 1.1em;
 }
 
 .skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type]))::placeholder {
   color: hsl(var(--skin-ink) / 0.55);
+  font-size: 0.9em;
+}
+
+/* Search icons sit on top of the (dark) field; their muted colour is dark in light mode. */
+.skin-game svg.absolute.text-muted-foreground {
+  color: hsl(var(--skin-ink) / 0.7);
 }
 
 .skin-game input:is([type="text"], [type="number"], [type="search"], [type="password"], [type="email"], [type="url"], [type="tel"], :not([type])):is(:hover, :focus) {
