@@ -251,7 +251,6 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">{t('settings.language.hint')}</p>
           </div>
 
           <Separator />
@@ -379,7 +378,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.gameSkin')}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t('common.themeEditorDialog.gameSkinDescription')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{t('common.themeEditorDialog.gameSkinDescription')}</p>
                   </div>
                   <Switch checked={gameSkin && skinReady} disabled={!skinReady} onCheckedChange={setGameSkin} />
                 </div>

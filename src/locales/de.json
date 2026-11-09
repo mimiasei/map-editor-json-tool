@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Oberflächensprache",
-      "hint": "Betrifft nur die Texte des Editors selbst. Aufgaben, Dialoge und andere Karteninhalte werden nicht übersetzt."
+      "label": "Oberflächensprache"
     }
   },
   "ui": {
@@ -839,7 +838,7 @@
       "3DButtons": "3D-Schaltflächen",
       "raisedStyleWithShadowAnd": "Erhabener Stil mit Schatten und Druckeffekt",
       "gameSkin": "Spiel-Skin",
-      "gameSkinDescription": "Dialoge, Schaltflächen und Dropdown-Listen im Look der Spieloberfläche. Wird aus deinem Spielordner extrahiert; die App enthält die Grafiken nicht.",
+      "gameSkinDescription": "Zeichnet die Oberfläche mit den Grafiken des Spiels.",
       "gameSkinExtract": "Aus dem Spiel extrahieren",
       "gameSkinReextract": "Erneut extrahieren",
       "gameSkinExtracting": "Extrahiere… {{done}}/{{total}}",

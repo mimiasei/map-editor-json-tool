@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Langue de l'interface",
-      "hint": "Ne concerne que le texte de l'éditeur lui-même. Les quêtes, dialogues et autres contenus de la carte ne sont pas traduits."
+      "label": "Langue de l'interface"
     }
   },
   "ui": {
@@ -868,7 +867,7 @@
       "3DButtons": "Boutons 3D",
       "raisedStyleWithShadowAnd": "Style en relief avec ombre et effet d'appui",
       "gameSkin": "Habillage du jeu",
-      "gameSkinDescription": "Boîtes de dialogue, boutons et listes déroulantes dessinés avec les graphismes d'interface du jeu. Extraits de votre dossier de jeu ; l'application ne les contient pas.",
+      "gameSkinDescription": "Dessine l'interface avec les graphismes du jeu.",
       "gameSkinExtract": "Extraire du jeu",
       "gameSkinReextract": "Extraire à nouveau",
       "gameSkinExtracting": "Extraction… {{done}}/{{total}}",

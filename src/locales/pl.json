@@ -1,8 +1,7 @@
 {
   "settings": {
     "language": {
-      "label": "Język interfejsu",
-      "hint": "Dotyczy tylko tekstów samego edytora. Zadania, dialogi i inna zawartość mapy nie są tłumaczone."
+      "label": "Język interfejsu"
     }
   },
   "ui": {
@@ -897,7 +896,7 @@
       "3DButtons": "Przyciski 3D",
       "raisedStyleWithShadowAnd": "Wypukły styl z cieniem i efektem naciśnięcia",
       "gameSkin": "Motyw gry",
-      "gameSkinDescription": "Okna dialogowe, przyciski i listy rozwijane narysowane grafiką interfejsu samej gry. Wyodrębniane z folderu gry; aplikacja ich nie zawiera.",
+      "gameSkinDescription": "Rysuje interfejs grafiką samej gry.",
       "gameSkinExtract": "Wyodrębnij z gry",
       "gameSkinReextract": "Wyodrębnij ponownie",
       "gameSkinExtracting": "Wyodrębnianie… {{done}}/{{total}}",
