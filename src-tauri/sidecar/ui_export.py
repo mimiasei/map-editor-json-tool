@@ -1,7 +1,7 @@
 """Export the game's UI sprites for the optional Game skin (see src/lib/ui-skin.ts).
 
 Writes <out>/<key>.png for every entry of SPRITES plus <out>/manifest.json:
-    {"version": 1, "build": "<size>-<mtime>", "sprites": {key: {"w", "h", "border": [top, right, bottom, left]}}}
+    {"version": 2, "build": "<size>-<mtime>", "sprites": {key: {"w", "h", "border": [top, right, bottom, left]}}}
 The border is in the exported image's pixels, in CSS `border-image-slice` order. Unity's `Sprite.m_Border`
 is left/bottom/right/top, so it is reordered here and the frontend never has to know about Unity.
 
@@ -15,11 +15,11 @@ import json
 from pathlib import Path
 from typing import Callable
 
-# key -> (Unity sprite name, width, height, scale). `scale` shrinks sprites authored far larger than they are shown.
-SPRITES: dict[str, tuple[str, int, int, float]] = {
-    "dialog_frame": ("Frame_MapParameters", 546, 491, 1.0),
+# key -> (Unity sprite name, width, height, scale[, border]). `scale` shrinks sprites authored far larger than they are shown.
+# `border` (top, right, bottom, left, in the exported image's pixels) replaces the sprite's own when it has none (Dropdown_back)
+# or when the authored one is the wrong size for how the sprite is used (Window_ModalWindow).
+SPRITES: dict[str, tuple] = {
     "modal_frame": ("Window_ModalWindow_Frame_NoHighlight", 394, 394, 1.0),
-    "divider": ("Divider", 600, 20, 1.0),
     "button": ("buttom", 457, 79, 1.0),
     "button_hover": ("buttom_MouseOver", 457, 79, 1.0),
     "button_green_left": ("Button_Green_Left", 94, 80, 1.0),
@@ -30,20 +30,22 @@ SPRITES: dict[str, tuple[str, int, int, float]] = {
     "button_green_right_hover": ("Button_Green_Right_MouseOver", 94, 80, 1.0),
     "field": ("KeyField", 316, 76, 1.0),
     "field_hover": ("KeyField_MouseOver", 316, 76, 1.0),
-    "dropdown_frame": ("dropdown_frame", 315, 60, 1.0),
-    "dropdown_open": ("dropdown_open", 315, 266, 1.0),
-    "dropdown_arrow": ("Button_Dropdown_Down", 45, 45, 1.0),
-    "dropdown_arrow_hover": ("Button_Dropdown_Down_MouseOver", 45, 45, 1.0),
-    "card": ("Card_Tultips", 440, 60, 1.0),
     "card_hover": ("Card_Tultips_MouseOver_0", 440, 60, 1.0),
     "card_pressed": ("Card_Tultips_Pressed", 440, 60, 1.0),
     "tooltip": ("littlr_tooltip", 1024, 109, 0.5),
-    "bar": ("Frame_Backdrop_Strip", 875, 60, 1.0),
-    "scroll_track": ("scroll_background", 21, 340, 1.0),
-    "scroll_thumb": ("scroll", 21, 342, 1.0),
-    "slider_track": ("slider_empty_zone", 971, 33, 1.0),
-    "slider_fill": ("slider_full_zone", 971, 33, 1.0),
-    "tab": ("PlateTab_NotSelected", 551, 59, 1.0),
+    # Added after comparing with the game's own settings, new-game and random-map screens (Nov 2026).
+    "toggle_off": ("Checkbox_Off", 81, 64, 1.0),
+    "toggle_on": ("Checkbox_On", 81, 68, 1.0),
+    "dropdown_pill": ("Dropdown_Top", 256, 49, 1.0),
+    "dropdown_list": ("Dropdown_back", 256, 216, 1.0, (20, 20, 20, 20)),
+    "dropdown_chevron": ("Dropdown_arrow", 34, 21, 1.0),
+    "tab_glow": ("Glow_Tab_Company_Selected", 440, 64, 1.0),
+    "tab_marker": ("Tab_Underline_2", 57, 30, 1.0),
+    "window": ("Window_ModalWindow", 1720, 816, 0.25, (26, 26, 26, 26)),
+    "arrow_divider": ("Separators_Decor", 367, 17, 1.0),
+    "map_slider_track": ("TemplateSetUp_MapSize_Progressbar_Back", 24, 24, 1.0),
+    "map_slider_thumb": ("TemplateSetUp_MapSize_Progressbar_Holder_Hover", 30, 58, 1.0),
+    "background": ("background_menu", 3840, 2160, 0.5),
 }
 
 
@@ -72,7 +74,7 @@ def export_ui(game_dir: Path, out_dir: Path, emit: Callable[[dict], None]) -> No
     manifest: dict[str, dict] = {}
     missing: list[str] = []
     total = len(SPRITES)
-    for i, (key, (name, w, h, scale)) in enumerate(SPRITES.items()):
+    for i, (key, (name, w, h, scale, *override)) in enumerate(SPRITES.items()):
         found = sprites.get((name, w, h))
         if found is None:
             missing.append(key)
@@ -85,6 +87,8 @@ def export_ui(game_dir: Path, out_dir: Path, emit: Callable[[dict], None]) -> No
         if scale != 1.0:
             img = img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))))
             border = [v * scale for v in border]
+        if override:
+            border = list(override[0])
         img.save(out_dir / f"{key}.png")
         manifest[key] = {"w": img.width, "h": img.height, "border": [round(v, 2) for v in border]}
         emit({"type": "progress", "done": i + 1, "total": total, "current": key})
@@ -94,6 +98,6 @@ def export_ui(game_dir: Path, out_dir: Path, emit: Callable[[dict], None]) -> No
     st = ref.stat() if ref.exists() else None
     build = f"{st.st_size}-{int(st.st_mtime)}" if st else "unknown"
     (out_dir / "manifest.json").write_text(
-        json.dumps({"version": 1, "build": build, "sprites": manifest}, separators=(",", ":")), encoding="utf-8"
+        json.dumps({"version": 2, "build": build, "sprites": manifest}, separators=(",", ":")), encoding="utf-8"
     )
     emit({"type": "done", "saved": len(manifest), "missing": missing})

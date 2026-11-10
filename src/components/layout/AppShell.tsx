@@ -715,7 +715,7 @@ export default function AppShell() {
   void setSelection
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-[var(--app-background)] dark:bg-background">
+    <div data-app-root className="relative flex h-screen flex-col overflow-hidden bg-[var(--app-background)] dark:bg-background">
       <Toolbar
         onSearchOpen={() => setPaletteOpen(true)}
         onTimelineOpen={() => setTimelineOpen(true)}
