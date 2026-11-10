@@ -270,11 +270,11 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
               {t('tree.scriptTemplateDialog.back')}
             </Button>
           )}
-          <Button variant="ghost" onClick={() => handleClose(false)}>
+          <Button variant="ghost" data-skin-large onClick={() => handleClose(false)}>
             {t('shared.cancel')}
           </Button>
           {selectedTemplate && (
-            <Button onClick={handleGenerate} disabled={!previewResult}>
+            <Button data-skin-large onClick={handleGenerate} disabled={!previewResult}>
               {t('tree.scriptTemplateDialog.addToProject')}
             </Button>
           )}

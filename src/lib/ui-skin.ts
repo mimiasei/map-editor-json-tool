@@ -33,6 +33,9 @@ export interface SkinProgress {
 /** Fired on `window` after a successful extraction, so an active skin re-reads the new sprites. */
 export const UI_SKIN_EXTRACTED_EVENT = 'oe:ui-skin-extracted'
 
+/** Bumped when the sprite set changes, so an older extraction counts as "not extracted" and the user is asked to extract again. */
+const SKIN_VERSION = 3
+
 let skinDir: string | null = null
 let manifest: SkinManifest | null = null
 
@@ -49,8 +52,9 @@ export async function loadUiSkin(): Promise<boolean> {
   if (!isTauri()) return false
   try {
     const { readTextFile } = await import('@tauri-apps/plugin-fs')
-    manifest = JSON.parse(await readTextFile(`${await resolveSkinDir()}manifest.json`)) as SkinManifest
-    return true
+    const parsed = JSON.parse(await readTextFile(`${await resolveSkinDir()}manifest.json`)) as SkinManifest
+    manifest = parsed.version === SKIN_VERSION ? parsed : null
+    return manifest !== null
   } catch {
     manifest = null
     return false

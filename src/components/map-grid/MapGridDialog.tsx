@@ -3298,31 +3298,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // tile in its final colour (same reasoning as road/water below).
   }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
-  // ── Object-paint "pending" indicator canvas — same outline technique and
-  // rationale as the terrain-paint indicator above (issue #195 Phase 1): the
-  // real catalog icon for each staged stamp now renders via
-  // `stagedObjectPaintIcons` below, so this canvas only needs to mark which
-  // tiles are unsaved, not draw a flat placeholder tint over them.
-  const [paintObjectCanvasEl, setPaintObjectCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => {
-    if (!paintObjectCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const canvas = paintObjectCanvasEl
-    const SUBPX = 8
-    canvas.width = sizeX * SUBPX
-    canvas.height = sizeZ * SUBPX
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (paintObjectStaged.size === 0) return
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.9)'
-    ctx.lineWidth = 2
-    for (const node of paintObjectStaged.keys()) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      const screenRow = sizeZ - 1 - z
-      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
-    }
-  }, [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
+  // Object paint has no "pending" outline canvas (user-requested removal, as for Road below): the real catalog icon of each staged
+  // stamp renders via `stagedObjectPaintIcons`, and a thick green square on every tile's centre read as an artifact.
 
   // ── Level/Water "pending" indicator canvases (issue #193 Phase 2) — same
   // outline technique as the two above: the real color already renders via
@@ -4323,6 +4300,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return icons
   }, [showIcons, interactableStaged, sizeX, sizeZ])
+  // Resources painted with the Resource brush show while the button is still down, like every other brush.
+  const stagedResourceIcons = useMemo(() => {
+    if (!showIcons || resourceStaged.size === 0) return []
+    const icons: { key: string; left: number; top: number; sid: string }[] = []
+    for (const [node, sid] of resourceStaged) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      icons.push({ key: `resource${node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - z) * BASE_CELL_PX, sid })
+    }
+    return icons
+  }, [showIcons, resourceStaged, sizeX, sizeZ])
   const stagedSquadIcons = useMemo(() => {
     if (!showIcons || squadStaged.size === 0) return []
     const icons: { key: string; left: number; top: number; sid: string }[] = []
@@ -6073,7 +6061,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     owner badge, no multi-tile bounds): these are transient
                     previews of edits that don't exist as PlacedObject rows
                     yet, not committed data going through the same pipeline. */}
-                {[...stagedObjectPaintIcons, ...stagedObstacleIcons, ...stagedTreeIcons, ...stagedInteractableIcons, ...stagedSquadIcons, ...(stagedMoveIcon ? [stagedMoveIcon] : [])].map((icon) => {
+                {[...stagedObjectPaintIcons, ...stagedObstacleIcons, ...stagedTreeIcons, ...stagedInteractableIcons, ...stagedResourceIcons, ...stagedSquadIcons, ...(stagedMoveIcon ? [stagedMoveIcon] : [])].map((icon) => {
                   const visual = resolveGridCellVisual(
                     { key: icon.key, type: 0, id: -1, sid: icon.sid, x: 0, z: 0, node: 0 },
                     catalog,
@@ -6149,18 +6137,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     overlay above. */}
                 <canvas
                   ref={setPaintCanvasEl}
-                  className="absolute top-0 left-0 pointer-events-none"
-                  style={{
-                    width: sizeX * BASE_CELL_PX,
-                    height: sizeZ * BASE_CELL_PX,
-                    imageRendering: 'pixelated',
-                  }}
-                />
-
-                {/* Object-paint preview — staged (unsaved) object placements
-                    tinted green, same stacking as the other overlays above. */}
-                <canvas
-                  ref={setPaintObjectCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,

@@ -49,19 +49,20 @@ export default function StartScreen() {
   }, [desktop])
 
   return (
-    <div className="flex h-full items-start justify-center overflow-auto rounded-lg py-10" style={{ backgroundColor: background }}>
+    <div data-start-screen className="flex h-full items-start justify-center overflow-auto rounded-lg py-10" style={{ backgroundColor: background }}>
       <div className="w-full max-w-[864px] space-y-6 px-4">
         <div className="grid grid-cols-3 gap-3">
           <div className="flex aspect-square flex-col justify-between p-3">
             <div className="flex flex-1 flex-col justify-center">
-              <h1 className="text-sm font-medium text-foreground">{t('startScreen.title')}</h1>
+              <h1 className="text-[11px] font-medium text-foreground">{t('startScreen.title')}</h1>
               <div className="mt-3 flex flex-col gap-3 text-secondary dark:text-muted-foreground">
-                <p className="text-[2rem] font-bold leading-tight">
+                <p data-skin-display className="text-[2rem] font-bold leading-tight">
                   {/* Languages that put a \n in the text get a second, right-aligned line. */}
                   {t('startScreen.subtitle').split('\n').map((line, i) => (
                     <span key={i} className={i === 0 ? 'block' : 'block text-right'}>{line}</span>
                   ))}
                 </p>
+                
                 <p className="text-right text-[0.6875rem] text-foreground opacity-50">{t('startScreen.byAuthor', { author: AUTHOR })}</p>
                 <p className="text-sm font-medium text-foreground">{version ? `v${version}` : ''}</p>
               </div>

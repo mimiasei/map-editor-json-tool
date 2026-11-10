@@ -34,6 +34,7 @@ import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
 import { getGameDir } from '@/lib/game-dir'
 import { extractUiSkin, isUiSkinAvailable, loadUiSkin } from '@/lib/ui-skin'
+import { requestTheme } from '@/hooks/useTheme'
 
 interface ThemeEditorDialogProps {
   open: boolean
@@ -175,6 +176,12 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     if (open && isTauri()) void loadUiSkin().then(setSkinReady)
   }, [open])
 
+  // The skin starts in its dark version (the game's own look); the light/dark toggle can still be switched afterwards.
+  const turnGameSkin = (on: boolean) => {
+    setGameSkin(on)
+    if (on) requestTheme('dark')
+  }
+
   const handleExtractSkin = async () => {
     setSkinMessage(null)
     const gameDir = await getGameDir()
@@ -186,7 +193,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     try {
       const result = await extractUiSkin(gameDir, (p) => setSkinBusy({ done: p.done, total: p.total }))
       setSkinReady(true)
-      setGameSkin(true)
+      turnGameSkin(true)
       if (result.missing.length > 0) {
         setSkinMessage(t('common.themeEditorDialog.gameSkinMissing', { count: result.missing.length }))
       }
@@ -265,7 +272,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                     <p className="text-sm font-medium leading-none">{t('common.themeEditorDialog.gameSkin')}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">{t('common.themeEditorDialog.gameSkinDescription')}</p>
                   </div>
-                  <Switch checked={gameSkin && skinReady} disabled={!skinReady} onCheckedChange={setGameSkin} />
+                  <Switch checked={gameSkin && skinReady} disabled={!skinReady} onCheckedChange={turnGameSkin} />
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" className="h-7 text-xs" disabled={skinBusy !== null} onClick={handleExtractSkin}>

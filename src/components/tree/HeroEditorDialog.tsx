@@ -919,10 +919,10 @@ export default function HeroEditorDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button variant="ghost" data-skin-large onClick={() => onOpenChange(false)} disabled={saving}>
             {t('shared.cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={!canSave || saving}>
+          <Button data-skin-large onClick={handleSave} disabled={!canSave || saving}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
             {entity ? t('tree.heroEditorDialog.saveToMap') : t('shared.save')}
           </Button>

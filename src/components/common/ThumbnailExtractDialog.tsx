@@ -275,8 +275,8 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
         <DialogFooter>
           {(phase === 'idle' || phase === 'error') && (
             <>
-              <Button variant="ghost" onClick={handleClose}>{t('shared.cancel')}</Button>
-              <Button onClick={handleExtract} disabled={!gameDir.trim() || !catalog}>
+              <Button variant="ghost" data-skin-large onClick={handleClose}>{t('shared.cancel')}</Button>
+              <Button data-skin-large onClick={handleExtract} disabled={!gameDir.trim() || !catalog}>
                 {t('common.thumbnailExtractDialog.extract')}
               </Button>
             </>

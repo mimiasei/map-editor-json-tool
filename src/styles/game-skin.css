@@ -22,6 +22,24 @@
   font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
 }
 
+/* The game's own font (Montserrat, titles in Cinzel) is used where the app looks like the game's menus: the start screen, the
+   random-map pane and dialogs. The quest and Map Grid editors keep the plain UI font, which is denser. Cinzel has no Cyrillic,
+   so ru/uk titles fall back to Montserrat; the start screen's big name uses Cinzel Decorative. */
+.skin-game :is([data-start-screen], [data-skin-font="montserrat"], [role="dialog"]:not([data-side]), [role="alertdialog"]) {
+  font-family: "Montserrat Variable", "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+
+.skin-game [data-skin-title],
+.skin-game :is([data-start-screen], [data-skin-font="montserrat"], [role="dialog"]:not([data-side]), [role="alertdialog"]) :is(h1, h2),
+.skin-game :is([role="dialog"]:not([data-side]), [role="alertdialog"]):is(h1, h2) {
+  font-family: "Cinzel", "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+.skin-game [data-skin-display] {
+  font-family: "Cinzel Decorative", "Cinzel", "Montserrat Variable", system-ui, sans-serif;
+  text-shadow: 0 4px 4px rgb(0 0 0 / 0.95);
+}
+
 /* Light: parchment panels, navy text */
 .skin-game:not(.dark) {
   --background: 44 37% 86%;
@@ -51,9 +69,9 @@
 
 /* Dark: navy panels, gold trim, cream text */
 .skin-game.dark {
-  --background: 222 35% 13%;
+  --background: 216 36% 13%;
   --foreground: 43 50% 87%;
-  --card: 221 35% 16%;
+  --card: 217 33% 16%;
   --card-foreground: 43 50% 87%;
   --popover: 212 50% 21%;
   --popover-foreground: 43 50% 87%;
@@ -69,7 +87,7 @@
   --input: 212 50% 21%;
   --ring: 44 48% 73%;
   --scrollbar-track: 224 43% 10%;
-  --scrollbar-thumb: 220 24% 38%;
+  --scrollbar-thumb: 219 65% 46%;
   --app-background: #0b1020;
   --column-left: #121a2c;
   --column-center: #151e33;
@@ -95,7 +113,7 @@
   z-index: -1;
   pointer-events: none;
   border: 0 solid transparent;
-  border-image: var(--skin-dialog-frame) var(--skin-dialog-frame-slice) fill / 26px stretch;
+  border-image: var(--skin-window) var(--skin-window-slice) fill / 26px stretch;
 }
 
 /* The dialog frame's border area is a navy backdrop, which is a dark band on parchment. Light mode uses the game's thin
@@ -104,51 +122,96 @@
   border-image: var(--skin-modal-frame) var(--skin-modal-frame-slice) / 8px stretch;
 }
 
+/* Dialogs that set p-0 (a header, body and footer that run edge to edge) would otherwise touch the frame. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]).p-0 {
+  padding: 16px;
+}
+
+/* The dialog close X: the game's is a heavy cross. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) > button:has(> span.sr-only) > svg {
+  transform: scale(1.1);
+}
+
+/* The icon sets stroke-width on its <path>, so the svg's own would not win. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) > button:has(> span.sr-only) > svg path {
+  stroke-width: 3.5;
+}
+
+/* Dialogs on the default p-6 padding (24px) sit on the frame's ornamented edge, so they get more room too. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]).p-6 {
+  padding: 2.25rem;
+}
+
+/* A few dialogs ask for bigger buttons than the compact default (data-skin-large), e.g. Create New Map. */
+.skin-game button[data-skin-large][data-skin-large] {
+  min-height: 2.25rem;
+  min-width: 6.3rem;
+  padding-inline: 2.2em;
+  font-size: 0.9rem;
+}
+
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
   color: hsl(var(--ring));
+  letter-spacing: 0.02em;
+}
+
+.skin-game.dark :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
+  color: hsl(var(--skin-ink));
+}
+
+/* The start screen shows the starfield itself instead of a flat navy (its cells stay solid). */
+.skin-game.dark main:has([data-start-screen]),
+.skin-game.dark [data-start-screen] {
+  background: transparent !important;
+}
+
+/* The game's menus sit on a starfield; panels stay opaque navy over it. Light mode keeps its parchment. */
+.skin-game.dark [data-app-root] {
+  background: linear-gradient(rgb(30 52 120 / 0.28), rgb(30 52 120 / 0.28)), var(--skin-background) center / cover no-repeat;
 }
 
 /* ── Buttons ──
-   Bronze pill for outline / secondary / destructive, green for the default (primary) action. The pill art is a
-   three-part strip (rounded caps 133px wide in a 79px-high sprite), so the caps are ~1.68x the button height. Icon
-   buttons (data-size="icon") keep the plain palette. */
-.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]) {
+   The game's Cancel / Continue pills: bronze for outline / secondary / destructive (and the ghost Cancel of dialogs that ask
+   for large buttons, data-skin-large), green for the default (primary) action. Each is one 3-slice sprite whose rounded
+   ends are 45 of its 79px height, so the ends are 0.57x the button height (about 1.4em on the usual 32px button). The hover
+   sprites are lighter in the middle, as in the game. Icon buttons (data-size="icon") keep the plain palette. */
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="default"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]) {
   background: transparent;
-  border: 0 solid transparent;
-  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 3.2em stretch;
+  border-width: 0; /* not the border shorthand: it would reset the border-image the rules below set at lower specificity */
   border-radius: 999px;
   color: hsl(var(--skin-ink));
   font-weight: 600;
-  padding-inline: 1.5em;
+  letter-spacing: 0.04em;
+  padding-inline: 1.8em;
+  text-transform: uppercase;
 }
 
-.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]):hover:not(:disabled) {
+/* The border-image is set per colour, not in the shared rule above: that rule's :is() takes the specificity of its most specific
+   member (the large ghost button), which would otherwise beat the green rule and leave the primary button bronze. */
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]) {
+  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 1.4em stretch;
+}
+
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]):hover:not(:disabled) {
   border-image-source: var(--skin-button-hover);
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]) {
+  border-image: var(--skin-button-green) var(--skin-button-green-slice) fill / 0 1.4em stretch;
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
+  border-image-source: var(--skin-button-green-hover);
 }
 
 .skin-game button[data-variant="destructive"]:not([data-size="icon"]) {
   color: #f2a58a;
 }
 
-.skin-game button[data-variant="default"]:not([data-size="icon"]) {
-  background:
-    var(--skin-button-green-left) left / auto 100% no-repeat,
-    var(--skin-button-green-right) right / auto 100% no-repeat,
-    var(--skin-button-green-center) center / 100% 100% no-repeat;
-  border-radius: 999px;
-  color: hsl(var(--skin-ink));
-  font-weight: 600;
-  padding-inline: 1.4em;
-}
-
-.skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
-  background-image: var(--skin-button-green-left-hover), var(--skin-button-green-right-hover), var(--skin-button-green-center-hover);
-}
-
 /* ── Toggles and tabs ── (their card art is dark, so the text is cream in light mode too)
-   The game has no tab or toolbar-button art, so these use its thin gold-edged navy card (Card_Tultips). */
-.skin-game button[data-variant="ghost"]:hover:not(:disabled),
-.skin-game [role="tab"] {
+   Toolbar buttons have no art of their own in the game, so hover and pressed use its thin gold-edged navy card
+   (Card_Tultips). Tabs follow the game's tab strip: plain text, with a blue glow under the selected one and a marker. */
+.skin-game button[data-variant="ghost"]:not([data-skin-large]):hover:not(:disabled) {
   color: hsl(var(--skin-ink));
   background: transparent;
   border: 0 solid transparent;
@@ -156,17 +219,99 @@
   border-radius: 0;
 }
 
-.skin-game [role="tab"] {
-  border-image-source: var(--skin-card);
-}
-
-.skin-game button[aria-pressed="true"]:not(:disabled),
-.skin-game [role="tab"][aria-selected="true"] {
+.skin-game button[aria-pressed="true"]:not([data-variant="default"], [data-skin-large]):not(:disabled) {
   color: hsl(var(--skin-ink));
   background: transparent;
   border: 0 solid transparent;
   border-image: var(--skin-card-pressed) var(--skin-card-pressed-slice) fill / 4px stretch;
   border-radius: 0;
+}
+
+.skin-game [role="tab"] {
+  position: relative;
+  color: hsl(var(--skin-ink));
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.skin-game [role="tab"][aria-selected="true"] {
+  background: var(--skin-tab-glow) center bottom / 100% 100% no-repeat;
+}
+
+.skin-game [role="tab"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 1.6em;
+  height: 0.8em;
+  transform: translateX(-50%);
+  background: var(--skin-tab-marker) center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* ── Switches ── the game's diamond toggle replaces the pill and its thumb. */
+.skin-game button[role="switch"] {
+  background: var(--skin-toggle-off) center / contain no-repeat;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: scale(1.35);
+}
+
+.skin-game button[role="switch"][data-state="checked"] {
+  background-image: var(--skin-toggle-on);
+  transform: translateX(7.5px) scale(1.5);
+}
+
+.skin-game button[role="switch"] > span {
+  display: none;
+}
+
+/* ── Sliders ── the map-size slider of the game's random-map setup: a dark rail, a gold fill and a gold handle. */
+.skin-game [data-skin="slider-track"] {
+  height: 10px;
+  background: transparent;
+  border: 0 solid transparent;
+  border-image: var(--skin-map-slider-track) var(--skin-map-slider-track-slice) fill / 0 5px stretch;
+  border-radius: 0;
+}
+
+.skin-game [data-skin="slider-range"] {
+  background: hsl(var(--primary));
+}
+
+.skin-game [data-skin="slider-thumb"] {
+  width: 12px;
+  height: 26px;
+  border: 0;
+  border-radius: 0;
+  background: var(--skin-map-slider-thumb) center / contain no-repeat;
+  box-shadow: none;
+}
+
+/* ── Separators ── the game's thin line with arrow ends. Drawn from a pseudo-element so the 1px layout box is unchanged. */
+.skin-game [data-orientation="horizontal"].bg-border {
+  position: relative;
+  overflow: visible;
+  background: transparent;
+}
+
+.skin-game [data-orientation="horizontal"].bg-border::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 17px;
+  transform: translateY(-50%);
+  border: 0 solid transparent;
+  border-image: var(--skin-arrow-divider) var(--skin-arrow-divider-slice) fill / 0 22px stretch;
+  pointer-events: none;
 }
 
 /* ── Text fields ──
@@ -224,18 +369,17 @@
 }
 
 /* ── Dropdowns ──
-   The game ships a dropdown: dropdown_frame (a 315x60 pill, slice 3/26), a round arrow button and dropdown_open (a flat
-   blue rounded list, slice 15). The Select trigger and the open list use them. Menus (role="menu") are lists too and
-   share the open-list frame. The trigger frame uses em for its caps (26/60 of the height, ~1.15em) so it follows the
-   font size; the arrow replaces Radix's chevron. */
+   The game's settings and random-map screens use a light-blue pill (Dropdown_Top, caps 24 of 49px) with a white double
+   chevron, and a rounded teal-blue list (Dropdown_back) that opens under it. Menus (role="menu") are lists too and
+   share the list frame. The caps are em so the frame follows the font size; the chevron replaces the one from Radix. */
 .skin-game button[role="combobox"] {
   position: relative;
   background: transparent;
   border: 0 solid transparent;
-  border-image: var(--skin-dropdown-frame) var(--skin-dropdown-frame-slice) fill / 2px 1.15em stretch;
+  border-image: var(--skin-dropdown-pill) var(--skin-dropdown-pill-slice) fill / 0 1.1em stretch;
   border-radius: 999px;
   color: hsl(var(--skin-ink));
-  padding-inline: 1.15em 2.6em;
+  padding-inline: 1.15em 2.4em;
 }
 
 .skin-game button[role="combobox"][data-placeholder] {
@@ -249,24 +393,19 @@
 .skin-game button[role="combobox"]::after {
   content: "";
   position: absolute;
-  right: 0.2em;
+  right: 0.9em;
   top: 50%;
-  width: 1.7em;
-  height: 1.7em;
+  width: 1em;
+  height: 0.65em;
   transform: translateY(-50%);
-  background: var(--skin-dropdown-arrow) center / contain no-repeat;
+  background: var(--skin-dropdown-chevron) center / contain no-repeat;
   pointer-events: none;
-}
-
-.skin-game button[role="combobox"]:hover:not(:disabled)::after,
-.skin-game button[role="combobox"][data-state="open"]::after {
-  background-image: var(--skin-dropdown-arrow-hover);
 }
 
 .skin-game [data-radix-popper-content-wrapper] > div:is([role="listbox"], [role="menu"]) {
   background: transparent;
   border: 0 solid transparent;
-  border-image: var(--skin-dropdown-open) var(--skin-dropdown-open-slice) fill / 10px stretch;
+  border-image: var(--skin-dropdown-list) var(--skin-dropdown-list-slice) fill / 14px stretch;
   border-radius: 12px;
   color: hsl(var(--skin-ink));
   padding: 6px;

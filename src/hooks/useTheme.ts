@@ -1,9 +1,15 @@
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 
 export type Theme = 'light' | 'dark'
 
 const STORAGE_KEY = 'oe-theme'
 const DEFAULT_THEME: Theme = 'light'
+const SET_THEME_EVENT = 'oe:set-theme'
+
+/** Switches the light/dark mode from anywhere (each useTheme call keeps its own state, so the toolbar toggle would not notice). */
+export function requestTheme(theme: Theme) {
+  window.dispatchEvent(new CustomEvent<Theme>(SET_THEME_EVENT, { detail: theme }))
+}
 
 function getStoredTheme(): Theme {
   try {
@@ -38,6 +44,12 @@ export function useTheme() {
       // ignore — localStorage unavailable
     }
   }, [theme])
+
+  useEffect(() => {
+    const onSet = (e: Event) => setThemeState((e as CustomEvent<Theme>).detail)
+    window.addEventListener(SET_THEME_EVENT, onSet)
+    return () => window.removeEventListener(SET_THEME_EVENT, onSet)
+  }, [])
 
   const setTheme = (t: Theme) => setThemeState(t)
   const toggleTheme = () => setThemeState(prev => (prev === 'dark' ? 'light' : 'dark'))

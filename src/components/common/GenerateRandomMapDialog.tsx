@@ -682,7 +682,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         window and needs no resize/drag chrome of its own. AppShell only
         mounts this component while `open` is true, so the `open`-gated
         state/effects throughout this file still behave correctly. */}
-    <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
+    <div data-skin-font="montserrat" className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
         <div className="relative flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0 bg-[var(--column-left)] dark:bg-card">
           <Button
             variant="ghost"
@@ -694,7 +694,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
             <X className="h-4 w-4" />
           </Button>
             <div className="flex gap-1.5">
-                <span className="text-sm font-semibold">{t('common.generateRandomMapDialog.generateRandomMap')}</span>
+                <span data-skin-title className="text-sm font-semibold">{t('common.generateRandomMapDialog.generateRandomMap')}</span>
                 <FieldInfo text={t('common.generateRandomMapDialog.oneZonePerPlayerPlus')} />
             </div>
         </div>
@@ -1372,10 +1372,10 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                 </Button>
             </div>
           <div className="flex-1" />
-              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
+              <Button variant="ghost" data-skin-large size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
                 {t('shared.cancel')}
               </Button>
-              <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
+              <Button data-skin-large size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
                 {footerLabel}
               </Button>
             </>

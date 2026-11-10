@@ -133,10 +133,10 @@ export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" data-skin-large onClick={() => onOpenChange(false)}>
             {t('shared.cancel')}
           </Button>
-          <Button
+          <Button data-skin-large
             onClick={handleLoad}
             disabled={!selectedTemplate || loading}
           >
