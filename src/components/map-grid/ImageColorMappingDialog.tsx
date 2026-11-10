@@ -463,8 +463,8 @@ export default function ImageColorMappingDialog({ open, onOpenChange, image, siz
                   <span>{Math.round(applyProgress * 100)}%</span>
                 </div>
               )}
-              <Button variant="ghost" disabled={applying} onClick={() => onOpenChange(false)}>{t('shared.cancel')}</Button>
-              <Button disabled={!canApply || applying} onClick={() => { void handleApply() }}>
+              <Button variant="ghost" data-skin-large disabled={applying} onClick={() => onOpenChange(false)}>{t('shared.cancel')}</Button>
+              <Button data-skin-large disabled={!canApply || applying} onClick={() => { void handleApply() }}>
                 {t('mapGrid.imageColorMappingDialog.paintMappedColors')}
               </Button>
             </div>

@@ -129,10 +129,10 @@
 
 /* A few dialogs ask for bigger buttons than the compact default (data-skin-large), e.g. Create New Map. */
 .skin-game button[data-skin-large][data-skin-large] {
-  min-height: 2.5rem;
-  min-width: 7rem;
+  min-height: 2.25rem;
+  min-width: 6.3rem;
   padding-inline: 2.2em;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
@@ -250,6 +250,7 @@
 
 .skin-game button[role="switch"][data-state="checked"] {
   background-image: var(--skin-toggle-on);
+  transform: translateX(7.5px) scale(1.5);
 }
 
 .skin-game button[role="switch"] > span {

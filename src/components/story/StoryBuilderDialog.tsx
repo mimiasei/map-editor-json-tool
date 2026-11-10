@@ -792,7 +792,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
               </Button>
             )}
             {step !== 'done' && (
-              <Button variant="ghost" onClick={closeAndReset}>
+              <Button variant="ghost" data-skin-large onClick={closeAndReset}>
                 {hasDraft ? t('story.storyBuilderDialog.discardDraft') : t('shared.cancel')}
               </Button>
             )}

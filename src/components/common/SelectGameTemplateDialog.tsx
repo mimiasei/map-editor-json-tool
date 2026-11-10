@@ -123,7 +123,7 @@ export default function SelectGameTemplateDialog({ open, onOpenChange, onSelect 
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
           <div className="flex-1" />
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" data-skin-large size="sm" onClick={() => onOpenChange(false)}>
             {t('shared.cancel')}
           </Button>
         </div>

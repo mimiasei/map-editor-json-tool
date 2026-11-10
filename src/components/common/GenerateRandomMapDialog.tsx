@@ -1372,10 +1372,10 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                 </Button>
             </div>
           <div className="flex-1" />
-              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
+              <Button variant="ghost" data-skin-large size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
                 {t('shared.cancel')}
               </Button>
-              <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
+              <Button data-skin-large size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
                 {footerLabel}
               </Button>
             </>

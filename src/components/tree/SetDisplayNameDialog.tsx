@@ -458,10 +458,10 @@ export default function SetDisplayNameDialog({
               {t('tree.setDisplayNameDialog.revertTo', { name: heroDisplayName(existingCustomHero.sourceHeroSid) })}
             </Button>
           )}
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>
+          <Button variant="ghost" data-skin-large onClick={() => onOpenChange(false)} disabled={busy}>
             {t('shared.cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={!canSave || busy}>
+          <Button data-skin-large onClick={handleSave} disabled={!canSave || busy}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
             {t('shared.saveToMap')}
           </Button>

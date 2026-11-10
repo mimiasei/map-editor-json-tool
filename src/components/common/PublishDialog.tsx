@@ -298,11 +298,11 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
 
         <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
           <div className="flex-1" />
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" data-skin-large size="sm" onClick={() => onOpenChange(false)}>
             {phase === 'done' ? t('ui.close') : t('shared.cancel')}
           </Button>
           {phase !== 'done' && (
-            <Button
+            <Button data-skin-large
               size="sm"
               className="gap-1.5"
               disabled={!ready || blocked || phase === 'working'}

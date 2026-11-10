@@ -488,8 +488,8 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
           <div className="flex gap-2 sm:ml-auto">
             {(phase === 'idle' || phase === 'error') && (
               <>
-                <Button variant="ghost" onClick={handleClose}>{t('shared.cancel')}</Button>
-                <Button onClick={handleImport} disabled={!catalog}>
+                <Button variant="ghost" data-skin-large onClick={handleClose}>{t('shared.cancel')}</Button>
+                <Button data-skin-large onClick={handleImport} disabled={!catalog}>
                   {t('common.importH3mDialog.chooseFileImport')}
                 </Button>
               </>
