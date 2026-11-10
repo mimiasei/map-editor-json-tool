@@ -24,8 +24,8 @@ export function isGroupActive(group: FilterGroup): boolean {
 }
 
 /**
- * Does this group admit `key`? `showAll` short-circuits, so the per-key switches keep
- * their last state while disabled and come back when Show all is turned off.
+ * Does this group admit `key`? `showAll` is kept equal to "every switch is on" (see FilterRows and
+ * mergeFilterGroup), so it only short-circuits the common case.
  */
 export function groupAdmits(group: FilterGroup, key: string): boolean {
   if (group.showAll) return true
@@ -41,10 +41,9 @@ export function mergeFilterGroup(
   saved: Partial<FilterGroup> | undefined,
 ): FilterGroup {
   if (!saved) return defaults
-  return {
-    showAll: saved.showAll ?? defaults.showAll,
-    enabled: { ...defaults.enabled, ...(saved.enabled ?? {}) },
-  }
+  const enabled = { ...defaults.enabled, ...(saved.enabled ?? {}) }
+  // Show all used to hide the other switches; it is now just their master switch, so derive it from them.
+  return { showAll: Object.values(enabled).every(Boolean), enabled }
 }
 
 interface Props {
@@ -57,9 +56,17 @@ interface Props {
 
 export default function FilterRows({ label, group, keys, labelFor, onChange }: Props) {
   const { t } = useTranslation()
-  const toggleShowAll = () => onChange({ ...group, showAll: !group.showAll })
-  const toggleKey = (k: string) =>
-    onChange({ ...group, enabled: { ...group.enabled, [k]: !group.enabled[k] } })
+  const isOn = (enabled: Record<string, boolean>, k: string) => enabled[k] ?? true
+  const allOn = keys.every((k) => isOn(group.enabled, k))
+  // Show all switches every key on or off at once; `showAll` stays true exactly when every key is on.
+  const toggleShowAll = () => {
+    const next = !allOn
+    onChange({ showAll: next, enabled: { ...group.enabled, ...Object.fromEntries(keys.map((k) => [k, next])) } })
+  }
+  const toggleKey = (k: string) => {
+    const enabled = { ...group.enabled, [k]: !isOn(group.enabled, k) }
+    onChange({ showAll: keys.every((key) => isOn(enabled, key)), enabled })
+  }
 
   return (
     <div className="space-y-1.5">
@@ -68,19 +75,12 @@ export default function FilterRows({ label, group, keys, labelFor, onChange }: P
       </p>
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs">{t('catalog.filterRows.showAll')}</span>
-        <Switch checked={group.showAll} onCheckedChange={toggleShowAll} />
+        <Switch checked={allOn} onCheckedChange={toggleShowAll} />
       </div>
       {keys.map((k) => (
-        <div
-          key={k}
-          className={`flex items-center justify-between gap-2 transition-opacity ${group.showAll ? 'opacity-40' : ''}`}
-        >
+        <div key={k} className="flex items-center justify-between gap-2">
           <span className="text-xs">{labelFor(k)}</span>
-          <Switch
-            checked={group.enabled[k] ?? true}
-            onCheckedChange={() => toggleKey(k)}
-            disabled={group.showAll}
-          />
+          <Switch checked={isOn(group.enabled, k)} onCheckedChange={() => toggleKey(k)} />
         </div>
       ))}
     </div>

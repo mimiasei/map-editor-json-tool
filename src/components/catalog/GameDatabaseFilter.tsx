@@ -27,6 +27,7 @@ export interface GameDatabaseFilterState {
   rarities:      FilterGroup
   schools:       FilterGroup
   mapCategories: FilterGroup
+  mapBiomes:     FilterGroup
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -40,8 +41,22 @@ const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
 // 'artifacts' deliberately excluded — those entries are excluded from the
 // mapObjects tab entirely (see GameDatabaseDialog.tsx), shown under the
 // Artifacts tab instead. Otherwise the full CatalogMapObject['category'] set.
-const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'test', 'blocks']
-type MapCategoryKey = 'interactables' | 'resources' | 'environments' | 'spawns' | 'animals' | 'fxs' | 'test' | 'blocks'
+// The CatalogMapObject['category'] set, with the debug `test` and `blocks` merged into 'miscellaneous'.
+// 'campaign' and 'custom' are not categories: they hide objects whose sid has that word (campaign_x, x_custom), whatever their category.
+const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'miscellaneous', 'campaign', 'custom']
+type MapCategoryKey = 'interactables' | 'resources' | 'environments' | 'spawns' | 'animals' | 'fxs' | 'miscellaneous' | 'campaign' | 'custom'
+// The values of CatalogMapObject.biome (see its doc), plus objects that carry none.
+const MAP_BIOMES = ['Grass', 'Desert', 'Deathland', 'Snow', 'Autumn', 'Lava', 'Dirt', 'none']
+
+/** The filter key of a map object's category: test and blocks share 'miscellaneous'. */
+export function mapCategoryKey(category: string): string {
+  return category === 'test' || category === 'blocks' ? 'miscellaneous' : category
+}
+
+/** Does the sid contain `word` as a whole `_`-separated word (campaign_x, x_campaign)? */
+export function sidHasWord(sid: string, word: 'campaign' | 'custom'): boolean {
+  return sid.split('_').includes(word)
+}
 
 export const DEFAULT_FILTER: GameDatabaseFilterState = {
   factions:      makeFilterGroup(FACTIONS),
@@ -50,6 +65,7 @@ export const DEFAULT_FILTER: GameDatabaseFilterState = {
   rarities:      makeFilterGroup([]),
   schools:       makeFilterGroup(SCHOOLS),
   mapCategories: makeFilterGroup(MAP_CATEGORIES),
+  mapBiomes:     makeFilterGroup(MAP_BIOMES),
 }
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
@@ -59,6 +75,11 @@ export function loadSavedFilter(): GameDatabaseFilterState {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameDatabaseFilterState>
+      // test and blocks became one 'miscellaneous' switch: off if either was off.
+      const saved = parsed.mapCategories?.enabled
+      if (saved && ('test' in saved || 'blocks' in saved) && !('miscellaneous' in saved)) {
+        saved.miscellaneous = saved.test !== false && saved.blocks !== false
+      }
       return {
         factions:      mergeFilterGroup(DEFAULT_FILTER.factions,      parsed.factions),
         tiers:         mergeFilterGroup(DEFAULT_FILTER.tiers,         parsed.tiers),
@@ -66,6 +87,7 @@ export function loadSavedFilter(): GameDatabaseFilterState {
         rarities:      mergeFilterGroup(DEFAULT_FILTER.rarities,      parsed.rarities),
         schools:       mergeFilterGroup(DEFAULT_FILTER.schools,       parsed.schools),
         mapCategories: mergeFilterGroup(DEFAULT_FILTER.mapCategories, parsed.mapCategories),
+        mapBiomes:     mergeFilterGroup(DEFAULT_FILTER.mapBiomes,     parsed.mapBiomes),
       }
     }
   } catch { /* ignore */ }
@@ -87,7 +109,7 @@ export function isFilterActive(state: GameDatabaseFilterState, tab: TabId): bool
   if (tab === 'creatures')   return check(state.factions) || check(state.tiers)
   if (tab === 'artifacts')   return check(state.slots) || check(state.rarities)
   if (tab === 'spells')      return check(state.schools)
-  if (tab === 'mapObjects')  return check(state.mapCategories)
+  if (tab === 'mapObjects')  return check(state.mapCategories) || check(state.mapBiomes)
   return false
 }
 
@@ -214,13 +236,22 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
 
         {/* ── Map Objects ── */}
         {activeTab === 'mapObjects' && (
-          <FilterRows
-            label={t('catalog.gameDatabaseFilter.category')}
-            group={value.mapCategories}
-            keys={MAP_CATEGORIES}
-            labelFor={(k) => t(`catalog.mapCategories.${k as MapCategoryKey}`)}
-            onChange={update('mapCategories')}
-          />
+          <>
+            <FilterRows
+              label={t('catalog.gameDatabaseFilter.category')}
+              group={value.mapCategories}
+              keys={MAP_CATEGORIES}
+              labelFor={(k) => t(`catalog.mapCategories.${k as MapCategoryKey}`)}
+              onChange={update('mapCategories')}
+            />
+            <FilterRows
+              label={t('catalog.gameDatabaseFilter.biome')}
+              group={value.mapBiomes}
+              keys={MAP_BIOMES}
+              labelFor={(k) => (k === 'none' ? t('catalog.gameDatabaseFilter.noBiome') : k)}
+              onChange={update('mapBiomes')}
+            />
+          </>
         )}
 
         <div className="pt-1 border-t border-border">

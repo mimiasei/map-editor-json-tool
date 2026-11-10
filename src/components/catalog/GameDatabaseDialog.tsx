@@ -33,6 +33,9 @@ import { Copy, Check, Filter, Sparkles } from '@/components/ui/icons'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
+  DEFAULT_FILTER,
+  mapCategoryKey,
+  sidHasWord,
 } from './GameDatabaseFilter'
 import type {
   CatalogHero,
@@ -461,6 +464,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
     setSelectedId(focusRequest.id)
     setSearch('')
     setOnlyUsed(false)
+    setFilterState(DEFAULT_FILTER) // the focused item must not be hidden by a saved filter
     // Only re-run on a genuinely new request (requestId), not on every
     // render — focusRequest is a fresh object each time by design.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -608,9 +612,13 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         const school = (item as CatalogItem & { school?: string }).school ?? ''
         if (fs.schools.enabled[school] === false) return false
       }
-      if (activeTab === 'mapObjects' && !fs.mapCategories.showAll) {
-        const cat = (item as CatalogItem & { category?: string }).category ?? ''
-        if (fs.mapCategories.enabled[cat] === false) return false
+      if (activeTab === 'mapObjects') {
+        const { category, biome } = item as CatalogItem & { category?: string; biome?: string }
+        const cats = fs.mapCategories.enabled
+        if (cats[mapCategoryKey(category ?? '')] === false) return false
+        if (cats.campaign === false && sidHasWord(item.id, 'campaign')) return false
+        if (cats.custom === false && sidHasWord(item.id, 'custom')) return false
+        if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }
 
       return true
