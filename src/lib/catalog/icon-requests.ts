@@ -3,6 +3,7 @@
 // (ThumbnailExtractDialog), which previously built this list twice and could drift.
 
 import type { GameCatalog } from '@/lib/catalog/types'
+import { hasObjectRender } from '@/lib/object-render/render-index'
 
 export interface IconRequests {
   /** Matched against Texture2D names as-is. */
@@ -137,8 +138,10 @@ export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
     // coverage (issue #122 Phase 0) and meant environments/spawns/animals/
     // fxs/artifacts/blocks/test never had their PNGs requested at all,
     // regardless of how well the catalog itself resolved them.
+    // Objects with a render never show their icon (every list falls back to it only when there is no render), so only the
+    // unrendered ones are extracted.
     for (const o of catalog.mapObjects) {
-      if (o.icon) mapObjectIcons.push(o.icon)
+      if (o.icon && !hasObjectRender(o.id)) mapObjectIcons.push(o.icon)
     }
   }
 
