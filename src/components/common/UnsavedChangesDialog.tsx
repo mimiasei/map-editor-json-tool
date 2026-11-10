@@ -29,10 +29,10 @@ export default function UnsavedChangesDialog({ open, onSave, onDiscard, onCancel
         <p className="text-sm text-muted-foreground">
           {t('common.unsavedChangesDialog.youHaveUnsavedChangesSave')}
         </p>
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="ghost" data-skin-large size="sm" onClick={onCancel}>{t('shared.cancel')}</Button>
-          <Button variant="destructive" data-skin-large size="sm" onClick={onDiscard}>{t('common.unsavedChangesDialog.dontSave')}</Button>
-          <Button data-skin-large size="sm" onClick={onSave}>{t('shared.save')}</Button>
+        <DialogFooter className="gap-2 sm:grid sm:grid-cols-3 sm:space-x-0 sm:gap-2">
+          <Button variant="ghost" data-skin-large size="sm" className="sm:justify-self-start" onClick={onCancel}>{t('shared.cancel')}</Button>
+          <Button variant="destructive" data-skin-large size="sm" className="sm:justify-self-center" onClick={onDiscard}>{t('common.unsavedChangesDialog.dontSave')}</Button>
+          <Button data-skin-large size="sm" className="sm:justify-self-end" onClick={onSave}>{t('shared.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
