@@ -104,6 +104,19 @@
   border-image: var(--skin-modal-frame) var(--skin-modal-frame-slice) / 8px stretch;
 }
 
+/* Dialogs that set p-0 (a header, body and footer that run edge to edge) would otherwise touch the frame. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]).p-0 {
+  padding: 16px;
+}
+
+/* A few dialogs ask for bigger buttons than the compact default (data-skin-large), e.g. Create New Map. */
+.skin-game button[data-skin-large][data-skin-large] {
+  min-height: 2.5rem;
+  min-width: 7rem;
+  padding-inline: 2.2em;
+  font-size: 1rem;
+}
+
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
   color: hsl(var(--ring));
   letter-spacing: 0.02em;
@@ -111,6 +124,12 @@
 
 .skin-game.dark :is([role="dialog"], [role="alertdialog"]):not([data-side]) h2 {
   color: hsl(var(--skin-ink));
+}
+
+/* The start screen shows the starfield itself instead of a flat navy (its cells stay solid). */
+.skin-game.dark main:has([data-start-screen]),
+.skin-game.dark [data-start-screen] {
+  background: transparent !important;
 }
 
 /* The game's menus sit on a starfield; panels stay opaque navy over it. Light mode keeps its parchment. */

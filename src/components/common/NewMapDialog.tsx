@@ -133,10 +133,10 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
           <div className="flex-1" />
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={creating}>
+          <Button variant="ghost" size="sm" data-skin-large onClick={() => onOpenChange(false)} disabled={creating}>
             {t('shared.cancel')}
           </Button>
-          <Button size="sm" onClick={handleCreate} disabled={creating || !mapName.trim()}>
+          <Button size="sm" data-skin-large onClick={handleCreate} disabled={creating || !mapName.trim()}>
             {creating ? t('common.newMapDialog.creating') : t('shared.create')}
           </Button>
         </div>
