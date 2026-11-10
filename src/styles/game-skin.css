@@ -143,7 +143,19 @@
 
 /* The game's menus sit on a starfield; panels stay opaque navy over it. Light mode keeps its parchment. */
 .skin-game.dark [data-app-root] {
+  isolation: isolate;
+}
+
+/* The image sits in a pseudo-element so it can be blurred without blurring the app (inset overshoots the edges, which blur
+   would otherwise fade to transparent). */
+.skin-game.dark [data-app-root]::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  z-index: -1;
   background: linear-gradient(rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.15)), linear-gradient(rgb(30 52 120 / 0.28), rgb(30 52 120 / 0.28)), var(--skin-background) center / cover no-repeat;
+  filter: blur(1.25px);
+  pointer-events: none;
 }
 
 /* ── Buttons ──
