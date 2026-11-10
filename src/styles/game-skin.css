@@ -19,7 +19,16 @@
 
 .skin-game {
   --skin-ink: 43 50% 87%;
-  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+  font-family: "Montserrat Variable", "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* Titles use Cinzel (it has no Cyrillic, so ru/uk titles fall back to Montserrat); the start screen's big name uses Cinzel Decorative. */
+.skin-game :is(h1, h2) {
+  font-family: "Cinzel", "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+.skin-game [data-skin-display] {
+  font-family: "Cinzel Decorative", "Cinzel", "Montserrat Variable", system-ui, sans-serif;
 }
 
 /* Light: parchment panels, navy text */
@@ -138,40 +147,37 @@
 }
 
 /* ── Buttons ──
-   Bronze pill for outline / secondary / destructive, green for the default (primary) action. The pill art is a
-   three-part strip (rounded caps 133px wide in a 79px-high sprite), so the caps are ~1.68x the button height. Icon
-   buttons (data-size="icon") keep the plain palette. */
-.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]) {
+   The game's Cancel / Continue pills: bronze for outline / secondary / destructive (and the ghost Cancel of dialogs that ask
+   for large buttons, data-skin-large), green for the default (primary) action. Each is one 3-slice sprite whose rounded
+   ends are 45 of its 79px height, so the ends are 0.57x the button height (about 1.4em on the usual 32px button). The hover
+   sprites are lighter in the middle, as in the game. Icon buttons (data-size="icon") keep the plain palette. */
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="default"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]) {
   background: transparent;
   border: 0 solid transparent;
-  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 3.2em stretch;
+  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 1.4em stretch;
   border-radius: 999px;
   color: hsl(var(--skin-ink));
   font-weight: 600;
-  padding-inline: 1.5em;
+  letter-spacing: 0.04em;
+  padding-inline: 1.8em;
+  text-transform: uppercase;
 }
 
-.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]):not([data-size="icon"]):hover:not(:disabled) {
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]):hover:not(:disabled) {
   border-image-source: var(--skin-button-hover);
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]) {
+  border-image-source: var(--skin-button-green);
+  border-image-slice: var(--skin-button-green-slice) fill;
+}
+
+.skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
+  border-image-source: var(--skin-button-green-hover);
 }
 
 .skin-game button[data-variant="destructive"]:not([data-size="icon"]) {
   color: #f2a58a;
-}
-
-.skin-game button[data-variant="default"]:not([data-size="icon"]) {
-  background:
-    var(--skin-button-green-left) left / auto 100% no-repeat,
-    var(--skin-button-green-right) right / auto 100% no-repeat,
-    var(--skin-button-green-center) center / 100% 100% no-repeat;
-  border-radius: 999px;
-  color: hsl(var(--skin-ink));
-  font-weight: 600;
-  padding-inline: 1.4em;
-}
-
-.skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
-  background-image: var(--skin-button-green-left-hover), var(--skin-button-green-right-hover), var(--skin-button-green-center-hover);
 }
 
 /* ── Toggles and tabs ── (their card art is dark, so the text is cream in light mode too)

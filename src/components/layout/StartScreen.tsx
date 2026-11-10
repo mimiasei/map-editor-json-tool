@@ -56,7 +56,7 @@ export default function StartScreen() {
             <div className="flex flex-1 flex-col justify-center">
               <h1 className="text-sm font-medium text-foreground">{t('startScreen.title')}</h1>
               <div className="mt-3 flex flex-col gap-3 text-secondary dark:text-muted-foreground">
-                <p className="text-[2rem] font-bold leading-tight">
+                <p data-skin-display className="text-[2rem] font-bold leading-tight">
                   {/* Languages that put a \n in the text get a second, right-aligned line. */}
                   {t('startScreen.subtitle').split('\n').map((line, i) => (
                     <span key={i} className={i === 0 ? 'block' : 'block text-right'}>{line}</span>
