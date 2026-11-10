@@ -53,9 +53,9 @@ export function mapCategoryKey(category: string): string {
   return category === 'test' || category === 'blocks' ? 'miscellaneous' : category
 }
 
-/** Does the sid contain `word` as a whole `_`-separated word (campaign_x, x_campaign)? */
+/** Does the sid contain `word` anywhere (campaign_x, x_campaign, customfoo)? Matched on the sid, not the display name. */
 export function sidHasWord(sid: string, word: 'campaign' | 'custom'): boolean {
-  return sid.split('_').includes(word)
+  return sid.toLowerCase().includes(word)
 }
 
 export const DEFAULT_FILTER: GameDatabaseFilterState = {
