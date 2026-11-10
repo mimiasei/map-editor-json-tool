@@ -127,6 +127,16 @@
   padding: 16px;
 }
 
+/* The dialog close X: the game's is a heavy cross. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) > button:has(> span.sr-only) > svg {
+  transform: scale(1.1);
+}
+
+/* The icon sets stroke-width on its <path>, so the svg's own would not win. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) > button:has(> span.sr-only) > svg path {
+  stroke-width: 3.5;
+}
+
 /* Dialogs on the default p-6 padding (24px) sit on the frame's ornamented edge, so they get more room too. */
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]).p-6 {
   padding: 2.25rem;
