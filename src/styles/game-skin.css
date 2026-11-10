@@ -127,6 +127,11 @@
   padding: 16px;
 }
 
+/* Dialogs on the default p-6 padding (24px) sit on the frame's ornamented edge, so they get more room too. */
+.skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]).p-6 {
+  padding: 2.25rem;
+}
+
 /* A few dialogs ask for bigger buttons than the compact default (data-skin-large), e.g. Create New Map. */
 .skin-game button[data-skin-large][data-skin-large] {
   min-height: 2.25rem;
