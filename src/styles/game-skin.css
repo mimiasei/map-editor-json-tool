@@ -19,17 +19,25 @@
 
 .skin-game {
   --skin-ink: 43 50% 87%;
+  font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* The game's own font (Montserrat, titles in Cinzel) is used where the app looks like the game's menus: the start screen, the
+   random-map pane and dialogs. The quest and Map Grid editors keep the plain UI font, which is denser. Cinzel has no Cyrillic,
+   so ru/uk titles fall back to Montserrat; the start screen's big name uses Cinzel Decorative. */
+.skin-game :is([data-start-screen], [data-skin-font="montserrat"], [role="dialog"]:not([data-side]), [role="alertdialog"]) {
   font-family: "Montserrat Variable", "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
 }
 
-/* Titles use Cinzel (it has no Cyrillic, so ru/uk titles fall back to Montserrat); the start screen's big name uses Cinzel Decorative. */
-.skin-game :is(h1, h2) {
+.skin-game [data-skin-title],
+.skin-game :is([data-start-screen], [data-skin-font="montserrat"], [role="dialog"]:not([data-side]), [role="alertdialog"]) :is(h1, h2),
+.skin-game :is([role="dialog"]:not([data-side]), [role="alertdialog"]):is(h1, h2) {
   font-family: "Cinzel", "Montserrat Variable", "Segoe UI", system-ui, sans-serif;
 }
 
 .skin-game [data-skin-display] {
   font-family: "Cinzel Decorative", "Cinzel", "Montserrat Variable", system-ui, sans-serif;
-  text-shadow: 0 2px 3px rgb(0 0 0 / 0.85);
+  text-shadow: 0 4px 4px rgb(0 0 0 / 0.95);
 }
 
 /* Light: parchment panels, navy text */
@@ -154,8 +162,7 @@
    sprites are lighter in the middle, as in the game. Icon buttons (data-size="icon") keep the plain palette. */
 .skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="default"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]) {
   background: transparent;
-  border: 0 solid transparent;
-  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 1.4em stretch;
+  border-width: 0; /* not the border shorthand: it would reset the border-image the rules below set at lower specificity */
   border-radius: 999px;
   color: hsl(var(--skin-ink));
   font-weight: 600;
@@ -164,13 +171,18 @@
   text-transform: uppercase;
 }
 
+/* The border-image is set per colour, not in the shared rule above: that rule's :is() takes the specificity of its most specific
+   member (the large ghost button), which would otherwise beat the green rule and leave the primary button bronze. */
+.skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]) {
+  border-image: var(--skin-button) var(--skin-button-slice) fill / 0 1.4em stretch;
+}
+
 .skin-game button:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"], [data-variant="ghost"][data-skin-large]):not([data-size="icon"]):hover:not(:disabled) {
   border-image-source: var(--skin-button-hover);
 }
 
 .skin-game button[data-variant="default"]:not([data-size="icon"]) {
-  border-image-source: var(--skin-button-green);
-  border-image-slice: var(--skin-button-green-slice) fill;
+  border-image: var(--skin-button-green) var(--skin-button-green-slice) fill / 0 1.4em stretch;
 }
 
 .skin-game button[data-variant="default"]:not([data-size="icon"]):hover:not(:disabled) {
@@ -184,7 +196,7 @@
 /* ── Toggles and tabs ── (their card art is dark, so the text is cream in light mode too)
    Toolbar buttons have no art of their own in the game, so hover and pressed use its thin gold-edged navy card
    (Card_Tultips). Tabs follow the game's tab strip: plain text, with a blue glow under the selected one and a marker. */
-.skin-game button[data-variant="ghost"]:hover:not(:disabled) {
+.skin-game button[data-variant="ghost"]:not([data-skin-large]):hover:not(:disabled) {
   color: hsl(var(--skin-ink));
   background: transparent;
   border: 0 solid transparent;
@@ -192,7 +204,7 @@
   border-radius: 0;
 }
 
-.skin-game button[aria-pressed="true"]:not(:disabled) {
+.skin-game button[aria-pressed="true"]:not([data-variant="default"], [data-skin-large]):not(:disabled) {
   color: hsl(var(--skin-ink));
   background: transparent;
   border: 0 solid transparent;
