@@ -2651,7 +2651,9 @@
     },
     "gameDatabaseFilter": {
       "filterItems": "Filtrer gjenstander",
-      "category": "Kategori"
+      "category": "Kategori",
+      "biome": "Biom",
+      "noBiome": "Ingen"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Søk etter navn, SID eller ikon…",
@@ -2680,6 +2682,9 @@
       "fxs": "FX",
       "test": "Test (feilsøkingsobjekter)",
       "blocks": "Blokker",
+      "miscellaneous": "Diverse",
+      "campaign": "Kampanje",
+      "custom": "Egendefinert",
       "artifacts": "Artefakt-oppsamlinger"
     },
     "coreZipNotFound": "Core.zip ble ikke funnet. Last den inn manuelt via Spilldata → Last inn Core.zip."

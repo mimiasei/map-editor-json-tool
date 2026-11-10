@@ -2736,7 +2736,9 @@
     },
     "gameDatabaseFilter": {
       "filterItems": "Фильтр предметов",
-      "category": "Категория"
+      "category": "Категория",
+      "biome": "Биом",
+      "noBiome": "Нет"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Поиск по имени, SID или значку…",
@@ -2765,6 +2767,9 @@
       "fxs": "Эффекты",
       "test": "Тест (отладочные объекты)",
       "blocks": "Блоки",
+      "miscellaneous": "Разное",
+      "campaign": "Кампания",
+      "custom": "Пользовательские",
       "artifacts": "Подбираемые артефакты"
     },
     "coreZipNotFound": "Core.zip не найден. Загрузите его вручную через «Данные игры → Загрузить Core.zip»."

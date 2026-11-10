@@ -2736,7 +2736,9 @@
     },
     "gameDatabaseFilter": {
       "filterItems": "Filtruj elementy",
-      "category": "Kategoria"
+      "category": "Kategoria",
+      "biome": "Biom",
+      "noBiome": "Brak"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Szukaj nazwy, SID-u lub ikony…",
@@ -2765,6 +2767,9 @@
       "fxs": "Efekty",
       "test": "Testowe (obiekty debugowania)",
       "blocks": "Blokady",
+      "miscellaneous": "Różne",
+      "campaign": "Kampania",
+      "custom": "Własne",
       "artifacts": "Artefakty do podniesienia"
     },
     "coreZipNotFound": "Nie znaleziono Core.zip. Wczytaj go ręcznie przez Dane gry → Wczytaj Core.zip."

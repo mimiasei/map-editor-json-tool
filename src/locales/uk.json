@@ -2736,7 +2736,9 @@
     },
     "gameDatabaseFilter": {
       "filterItems": "Фільтр елементів",
-      "category": "Категорія"
+      "category": "Категорія",
+      "biome": "Біом",
+      "noBiome": "Немає"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Шукати за назвою, SID або значком…",
@@ -2765,6 +2767,9 @@
       "fxs": "Ефекти",
       "test": "Тест (налагоджувальні об'єкти)",
       "blocks": "Блоки",
+      "miscellaneous": "Різне",
+      "campaign": "Кампанія",
+      "custom": "Користувацькі",
       "artifacts": "Підбирання артефактів"
     },
     "coreZipNotFound": "Core.zip не знайдено. Завантажте його вручну через «Дані гри» → «Завантажити Core.zip»."

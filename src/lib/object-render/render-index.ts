@@ -57,14 +57,31 @@ export function objectRender(sid: string | undefined): ObjectRender | null {
   if (!sid || !baseDir) return null
   const index = useObjectRenderStore.getState().index
   if (!index) return null
-  const id = index.aliases[sid] ?? sid
-  const entry = index.objects[id]
-  if (!entry) return null
-  return { ...entry, src: convertFileSrc(`${baseDir}renders/${id}.png`) }
+  const id = renderId(index, sid)
+  if (!id) return null
+  return { ...index.objects[id], src: convertFileSrc(`${baseDir}renders/${id}.png`) }
+}
+
+/**
+ * The key of the render that stands for `sid`: its own (or its alias), else that of the plain object it is a variant of.
+ * `custom_<x>`, `campaign_<x>`, `<x>_custom` and `<x>_campaign` are the same object as `<x>` (scripting and story copies),
+ * so they share its render. Matched on the sid, never the display name, which sometimes differs.
+ */
+function renderId(index: RenderIndex, sid: string): string | null {
+  const direct = index.aliases[sid] ?? sid
+  if (direct in index.objects) return direct
+  let base = sid
+  for (;;) {
+    const next = base.replace(/^(custom|campaign)_/, '').replace(/_(custom|campaign)$/, '')
+    if (next === base || !next) return null
+    base = next
+    const id = index.aliases[base] ?? base
+    if (id in index.objects) return id
+  }
 }
 
 export function hasObjectRender(sid: string | undefined): boolean {
   if (!sid) return false
   const index = useObjectRenderStore.getState().index
-  return !!index && (index.aliases[sid] ?? sid) in index.objects
+  return !!index && renderId(index, sid) !== null
 }

@@ -2651,7 +2651,9 @@
     },
     "gameDatabaseFilter": {
       "filterItems": "Einträge filtern",
-      "category": "Kategorie"
+      "category": "Kategorie",
+      "biome": "Biom",
+      "noBiome": "Keines"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Name, SID oder Symbol suchen…",
@@ -2680,6 +2682,9 @@
       "fxs": "FX",
       "test": "Test (Debug-Objekte)",
       "blocks": "Blöcke",
+      "miscellaneous": "Sonstiges",
+      "campaign": "Kampagne",
+      "custom": "Benutzerdefiniert",
       "artifacts": "Artefakt-Aufnahmen"
     },
     "coreZipNotFound": "Core.zip nicht gefunden. Laden Sie es manuell über Spieldaten → Core.zip laden."

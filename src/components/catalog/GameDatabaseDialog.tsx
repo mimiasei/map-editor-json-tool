@@ -13,7 +13,9 @@ import {
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
-import { CatalogIcon, PortraitThumb, CreatureStatsSection } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
+import { objectRender } from '@/lib/object-render/render-index'
+import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import {
   STATIC_HEROES,
   STATIC_CREATURES,
@@ -31,6 +33,9 @@ import { Copy, Check, Filter, Sparkles } from '@/components/ui/icons'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
+  DEFAULT_FILTER,
+  mapCategoryKey,
+  sidHasWord,
 } from './GameDatabaseFilter'
 import type {
   CatalogHero,
@@ -127,8 +132,10 @@ function DetailPane({
   heroPlacements,
   creaturePlacements,
   artifactPlacements,
+  isMapObject,
 }: {
   item: CatalogItem & Record<string, unknown>
+  isMapObject: boolean
   mapCount: number
   scriptCount: number
   mapEntities: { sid: string; type: string; x?: number; z?: number }[]
@@ -137,6 +144,7 @@ function DetailPane({
   artifactPlacements: { sid: string; x: number; z: number }[]
 }) {
   const { t } = useTranslation()
+  useObjectRenderStore((s) => s.index) // redraw when a render job adds images
   const instancesOfType = mapEntities.filter((e) => e.type === item.id)
   const heroCoords = heroPlacements.filter((h) => h.heroSid === item.id)
   const creatureCoords = creaturePlacements.filter((c) => c.unitSid === item.id)
@@ -153,6 +161,7 @@ function DetailPane({
           name={item.name}
           size={40}
           previewSize={192}
+          resolve={isMapObject ? (icon) => objectRender(item.id)?.src ?? thumbnailPath(icon) : undefined}
         />
         <div>
           <p className="font-semibold leading-tight">{item.name}</p>
@@ -361,6 +370,7 @@ function DetailPane({
 export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }: Props) {
   const { t, i18n } = useTranslation()
   const rawCatalog = useCatalogStore((s) => s.catalog)
+  useObjectRenderStore((s) => s.index) // redraw when a render job adds images
   const catalogChanges = useCatalogStore((s) => s.catalogChanges)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
   const heroPlacements = useMapContextStore((s) => s.context?.heroPlacements) ?? []
@@ -454,6 +464,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
     setSelectedId(focusRequest.id)
     setSearch('')
     setOnlyUsed(false)
+    setFilterState(DEFAULT_FILTER) // the focused item must not be hidden by a saved filter
     // Only re-run on a genuinely new request (requestId), not on every
     // render — focusRequest is a fresh object each time by design.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -601,9 +612,12 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         const school = (item as CatalogItem & { school?: string }).school ?? ''
         if (fs.schools.enabled[school] === false) return false
       }
-      if (activeTab === 'mapObjects' && !fs.mapCategories.showAll) {
-        const cat = (item as CatalogItem & { category?: string }).category ?? ''
-        if (fs.mapCategories.enabled[cat] === false) return false
+      if (activeTab === 'mapObjects') {
+        const { category, biome } = item as CatalogItem & { category?: string; biome?: string }
+        // Campaign and custom objects belong to their own switch, not to their category's.
+        const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : mapCategoryKey(category ?? '')
+        if (fs.mapCategories.enabled[key] === false) return false
+        if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }
 
       return true
@@ -645,7 +659,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
           selectedId === item.id ? 'bg-accent' : ''
         }`}
       >
-        <CatalogIcon iconId={item.icon} name={item.name} size={20} className="shrink-0" />
+        <CatalogIcon iconId={item.icon} name={item.name} size={20} className="shrink-0" src={activeTab === 'mapObjects' ? (objectRender(item.id)?.src ?? undefined) : undefined} />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate leading-tight">{item.name}</p>
           <p className="text-[10px] text-muted-foreground truncate font-mono">{item.id}</p>
@@ -814,6 +828,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
                   heroPlacements={heroPlacements}
                   creaturePlacements={creaturePlacements}
                   artifactPlacements={artifactPlacements}
+                  isMapObject={activeTab === 'mapObjects'}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">

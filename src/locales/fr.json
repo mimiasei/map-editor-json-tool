@@ -2693,7 +2693,9 @@
     },
     "gameDatabaseFilter": {
       "filterItems": "Filtrer les éléments",
-      "category": "Catégorie"
+      "category": "Catégorie",
+      "biome": "Biome",
+      "noBiome": "Aucun"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Rechercher par nom, SID ou icône…",
@@ -2722,6 +2724,9 @@
       "fxs": "Effets spéciaux",
       "test": "Test (objets de débogage)",
       "blocks": "Blocs",
+      "miscellaneous": "Divers",
+      "campaign": "Campagne",
+      "custom": "Personnalisé",
       "artifacts": "Artefacts à ramasser"
     },
     "coreZipNotFound": "Core.zip introuvable. Chargez-le manuellement via Données du jeu → Charger Core.zip."

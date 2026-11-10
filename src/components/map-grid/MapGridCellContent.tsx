@@ -10,6 +10,7 @@
 
 import { localName, localNameById } from '@/lib/catalog/local-name'
 import { useEffect, useState } from 'react'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
@@ -262,6 +263,7 @@ export default function MapGridCellContent({
   onMoveInStack,
 }: MapGridCellContentProps) {
   const { t } = useTranslation()
+  const openDatabaseItem = useViewBridgeStore((s) => s.openDatabaseItem)
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
   // Hero-spawner only, local-only (never written) — just narrows the hero
@@ -350,6 +352,7 @@ export default function MapGridCellContent({
             <div key={item.key} className={cn('flex items-center border-b border-border/50 transition-colors', isSelected ? 'bg-accent' : 'hover:bg-accent/50')}>
             <button
               onClick={() => setSelectedKey(item.key)}
+              onDoubleClick={item.type === 0 && catalog?.mapObjects.some((o) => o.id === item.sid) ? () => openDatabaseItem('mapObjects', item.sid) : undefined}
               className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 text-left"
             >
               {(() => {
