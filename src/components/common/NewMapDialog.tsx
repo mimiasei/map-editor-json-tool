@@ -85,7 +85,7 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={340} minWidth={360} minHeight={300} storageKey="new-map">
+      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={441} defaultHeight={357} minWidth={360} minHeight={300} storageKey="new-map">
         <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
           <DialogTitle className="text-sm font-semibold">{t('common.newMapDialog.createNewMap')}</DialogTitle>
         </DraggableDialogDragHandle>
