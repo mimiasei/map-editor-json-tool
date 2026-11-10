@@ -42,7 +42,8 @@ const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
 // mapObjects tab entirely (see GameDatabaseDialog.tsx), shown under the
 // Artifacts tab instead. Otherwise the full CatalogMapObject['category'] set.
 // The CatalogMapObject['category'] set, with the debug `test` and `blocks` merged into 'miscellaneous'.
-// 'campaign' and 'custom' are not categories: they hide objects whose sid has that word (campaign_x, x_custom), whatever their category.
+// 'campaign' and 'custom' are not categories: an object whose sid contains that word (campaign_x, x_custom) is governed by that switch alone,
+// whatever its category ('campaign' wins when both words occur).
 const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'miscellaneous', 'campaign', 'custom']
 type MapCategoryKey = 'interactables' | 'resources' | 'environments' | 'spawns' | 'animals' | 'fxs' | 'miscellaneous' | 'campaign' | 'custom'
 // The values of CatalogMapObject.biome (see its doc), plus objects that carry none.

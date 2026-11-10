@@ -614,10 +614,9 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       }
       if (activeTab === 'mapObjects') {
         const { category, biome } = item as CatalogItem & { category?: string; biome?: string }
-        const cats = fs.mapCategories.enabled
-        if (cats[mapCategoryKey(category ?? '')] === false) return false
-        if (cats.campaign === false && sidHasWord(item.id, 'campaign')) return false
-        if (cats.custom === false && sidHasWord(item.id, 'custom')) return false
+        // Campaign and custom objects belong to their own switch, not to their category's.
+        const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : mapCategoryKey(category ?? '')
+        if (fs.mapCategories.enabled[key] === false) return false
         if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }
 
