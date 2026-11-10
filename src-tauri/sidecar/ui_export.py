@@ -1,7 +1,7 @@
 """Export the game's UI sprites for the optional Game skin (see src/lib/ui-skin.ts).
 
 Writes <out>/<key>.png for every entry of SPRITES plus <out>/manifest.json:
-    {"version": 2, "build": "<size>-<mtime>", "sprites": {key: {"w", "h", "border": [top, right, bottom, left]}}}
+    {"version": 3, "build": "<size>-<mtime>", "sprites": {key: {"w", "h", "border": [top, right, bottom, left]}}}
 The border is in the exported image's pixels, in CSS `border-image-slice` order. Unity's `Sprite.m_Border`
 is left/bottom/right/top, so it is reordered here and the frontend never has to know about Unity.
 
@@ -20,14 +20,12 @@ from typing import Callable
 # or when the authored one is the wrong size for how the sprite is used (Window_ModalWindow).
 SPRITES: dict[str, tuple] = {
     "modal_frame": ("Window_ModalWindow_Frame_NoHighlight", 394, 394, 1.0),
-    "button": ("buttom", 457, 79, 1.0),
-    "button_hover": ("buttom_MouseOver", 457, 79, 1.0),
-    "button_green_left": ("Button_Green_Left", 94, 80, 1.0),
-    "button_green_left_hover": ("Button_Green_Left_MouseOver", 94, 80, 1.0),
-    "button_green_center": ("Button_Green_Center", 276, 80, 1.0),
-    "button_green_center_hover": ("Button_Green_Center_MouseOver", 276, 80, 1.0),
-    "button_green_right": ("Button_Green_Right", 94, 80, 1.0),
-    "button_green_right_hover": ("Button_Green_Right_MouseOver", 94, 80, 1.0),
+    # The game's pill buttons (Cancel / Continue): one 3-slice sprite each. The bronze ones carry a border of 133, which is wider
+    # than their rounded ends (45 of 79 px, like the green ones), so it is overridden.
+    "button": ("buttom", 457, 79, 1.0, (0, 45, 0, 45)),
+    "button_hover": ("buttom_MouseOver", 457, 79, 1.0, (0, 45, 0, 45)),
+    "button_green": ("buttom_green", 460, 79, 1.0),
+    "button_green_hover": ("buttom_green_MouseOver", 460, 79, 1.0),
     "field": ("KeyField", 316, 76, 1.0),
     "field_hover": ("KeyField_MouseOver", 316, 76, 1.0),
     "card_hover": ("Card_Tultips_MouseOver_0", 440, 60, 1.0),
@@ -98,6 +96,6 @@ def export_ui(game_dir: Path, out_dir: Path, emit: Callable[[dict], None]) -> No
     st = ref.stat() if ref.exists() else None
     build = f"{st.st_size}-{int(st.st_mtime)}" if st else "unknown"
     (out_dir / "manifest.json").write_text(
-        json.dumps({"version": 2, "build": build, "sprites": manifest}, separators=(",", ":")), encoding="utf-8"
+        json.dumps({"version": 3, "build": build, "sprites": manifest}, separators=(",", ":")), encoding="utf-8"
     )
     emit({"type": "done", "saved": len(manifest), "missing": missing})
