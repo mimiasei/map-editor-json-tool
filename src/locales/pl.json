@@ -1544,6 +1544,7 @@
       "zoomTo100": "Przybliż do 100%",
       "fitToWindow": "Dopasuj do okna",
       "toggleBlockedTileOverlay": "Przełącz nakładkę zablokowanych pól",
+      "blockedOverlayFiltered": "Nakładka zablokowanych pól (filtrowana: obiekty ukryte przez filtry tu nie blokują)",
       "freehandBrushDragToPaint": "Pędzel odręczny — przeciągnij, aby malować",
       "brush": "Pędzel",
       "bucketFillClickToFill": "Wiadro — kliknij, aby wypełnić ciągły region tego samego biomu",

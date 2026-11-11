@@ -1488,6 +1488,7 @@
       "zoomTo100": "Zoom to 100%",
       "fitToWindow": "Fit to window",
       "toggleBlockedTileOverlay": "Toggle blocked-tile overlay",
+      "blockedOverlayFiltered": "Blocked-tile overlay (filtered: objects hidden by the filters do not block here)",
       "freehandBrushDragToPaint": "Freehand brush — drag to paint",
       "brush": "Brush",
       "bucketFillClickToFill": "Bucket fill — click to fill the contiguous same-biome region",

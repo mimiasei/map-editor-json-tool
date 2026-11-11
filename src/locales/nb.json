@@ -1480,6 +1480,7 @@
       "zoomTo100": "Zoom til 100 %",
       "fitToWindow": "Tilpass til vindu",
       "toggleBlockedTileOverlay": "Slå av/på overlegg for blokkerte ruter",
+      "blockedOverlayFiltered": "Overlegg for blokkerte ruter (filtrert: objekter skjult av filtrene blokkerer ikke her)",
       "freehandBrushDragToPaint": "Frihåndspensel — dra for å male",
       "brush": "Pensel",
       "bucketFillClickToFill": "Malebøtte — klikk for å fylle det sammenhengende området med samme biom",

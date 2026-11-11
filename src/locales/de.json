@@ -1480,6 +1480,7 @@
       "zoomTo100": "Auf 100 % zoomen",
       "fitToWindow": "An Fenster anpassen",
       "toggleBlockedTileOverlay": "Überlagerung blockierter Kacheln umschalten",
+      "blockedOverlayFiltered": "Blockierte-Felder-Overlay (gefiltert: durch die Filter ausgeblendete Objekte blockieren hier nicht)",
       "freehandBrushDragToPaint": "Freihandpinsel — zum Malen ziehen",
       "brush": "Pinsel",
       "bucketFillClickToFill": "Füllen — klicken, um die zusammenhängende Region desselben Bioms zu füllen",

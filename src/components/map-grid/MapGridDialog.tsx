@@ -609,8 +609,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Whether one object is drawn under the current filters. Each object on a stacked tile is judged on its own, so hiding the trees
   // shows the mine under one instead of an empty tile.
-  const isShown = useCallback((item: PlacedObject): boolean => {
-    if (erasedKeys.has(item.key)) return false
+  const passesFilters = useCallback((item: PlacedObject): boolean => {
     const group = groupOf(item, catalog)
     if (!group || !filter[group]) return false
     if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
@@ -620,7 +619,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
     }
     return true
-  }, [catalog, filter, interactableSubFilter, spawnerSubFilter, decorationSubFilter, erasedKeys])
+  }, [catalog, filter, interactableSubFilter, spawnerSubFilter, decorationSubFilter])
+  const isShown = useCallback((item: PlacedObject) => !erasedKeys.has(item.key) && passesFilters(item), [passesFilters, erasedKeys])
 
   const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
@@ -652,14 +652,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return { primaryByNode: map, underlayByNode: underlay, stackByNode: stacks, pickByKey: byKey }
   }, [tileIndex, catalog, isShown, manualStacks, entitySidsOnly, settings.iconImagesEnabled, renderIndex])
 
-  // Blocked-tile ("passability") overlay — object footprints + elevation
-  // walls + water (src/lib/map-grid/passability.ts). Independent of
-  // filter/entitySidsOnly/interactableSubFilter (unlike primaryByNode above)
-  // since blocking isn't about what's *shown*, it's about what's real on the
-  // map regardless of the current view filters.
+  // Blocked-tile ("passability") overlay — object footprints + elevation walls + water (src/lib/map-grid/passability.ts).
+  // The footprints follow the filter pills (and "Entity SIDs only"), so hidden objects stop blocking in the overlay; elevation and
+  // water always count. `blockedFiltered` tells the toolbar button to warn that the overlay is no longer the real passability.
+  // Objects being erased are not excluded here, so a stroke does not rebuild the set.
+  const { objectsForBlocked, blockedFiltered } = useMemo(() => {
+    const kept = placedObjects.filter((o) => o.type !== 0 || (passesFilters(o) && (!entitySidsOnly || !!o.entitySid?.trim())))
+    return { objectsForBlocked: kept, blockedFiltered: kept.length < placedObjects.length }
+  }, [placedObjects, passesFilters, entitySidsOnly])
   const blockedTileSet = useMemo(
-    () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap }, catalog),
-    [sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap, catalog],
+    () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects: objectsForBlocked, levelsMap, climbsMap, waterMap }, catalog),
+    [sizeX, sizeZ, objectsForBlocked, levelsMap, climbsMap, waterMap, catalog],
   )
 
   const entranceTileSet = useMemo(
@@ -4634,8 +4637,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 onClick={fitToViewport} />
               <ToolButton
                 active={settings.showBlockedTiles}
-                icon={<Ban />}
-                label={t('mapGrid.mapGridDialog.toggleBlockedTileOverlay')}
+                icon={(
+                  <span className="relative inline-flex">
+                    <Ban />
+                    {blockedFiltered && settings.showBlockedTiles && <span className="absolute -right-1.5 -top-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                  </span>
+                )}
+                label={blockedFiltered && settings.showBlockedTiles ? t('mapGrid.mapGridDialog.blockedOverlayFiltered') : t('mapGrid.mapGridDialog.toggleBlockedTileOverlay')}
                 onClick={() => updateSettings({ ...settings, showBlockedTiles: !settings.showBlockedTiles })}
               />
               <ToolButton

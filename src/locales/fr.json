@@ -1512,6 +1512,7 @@
       "zoomTo100": "Zoom à 100 %",
       "fitToWindow": "Ajuster à la fenêtre",
       "toggleBlockedTileOverlay": "Activer/désactiver la superposition des cases bloquées",
+      "blockedOverlayFiltered": "Superposition des cases bloquées (filtrée : les objets masqués par les filtres ne bloquent pas ici)",
       "freehandBrushDragToPaint": "Pinceau à main levée : glissez pour peindre",
       "brush": "Pinceau",
       "bucketFillClickToFill": "Seau de peinture : cliquez pour remplir la région contiguë du même biome",
