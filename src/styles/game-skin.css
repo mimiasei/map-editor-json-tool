@@ -435,6 +435,11 @@
 .skin-game button[data-start-cell] {
   position: relative;
   border-radius: 4px;
+  background-color: hsl(216 36% 13%); /* resting fill */
+}
+
+.skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"]) {
+  background-color: hsl(220 35% 22% / 0.5); /* hover / open fill */
 }
 
 .skin-game button[data-start-cell]::before {
@@ -444,9 +449,9 @@
   border: 0 solid transparent;
   border-image: var(--skin-frame) var(--skin-frame-slice) / 22px stretch;
   pointer-events: none;
-  transition: opacity 150ms;
+  transition: opacity 200ms;
 }
 
 .skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"])::before {
-  opacity: 0.3;
+  opacity: 0.1;
 }
