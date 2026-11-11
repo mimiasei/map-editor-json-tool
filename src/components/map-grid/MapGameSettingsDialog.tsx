@@ -72,8 +72,8 @@ export default function MapGameSettingsDialog() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" title={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag>
-          <Settings2 className="h-3.5 w-3.5" />
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" title={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag>
+          <Settings2 className="h-[15px] w-[15px]" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto" data-nodrag>

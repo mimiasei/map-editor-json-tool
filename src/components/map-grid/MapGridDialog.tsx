@@ -3340,20 +3340,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const effectiveCellPx = BASE_CELL_PX * transform.scale
   const showIcons = effectiveCellPx >= iconLodPx
 
-  // "Cell border thickness" was previously a CSS border drawn on the icon
-  // cell — but the icon <img> itself was always a fixed 24px regardless of
-  // cell size, so what actually reads as a colored border around each icon
-  // (the always-on canvas swatch behind it, in the tile's category color,
-  // showing through the gap) was never controlled by that setting at all.
-  // Fixed by sizing the icon itself relative to the current on-screen cell
-  // size instead: 0 thickness now genuinely means "icon fills the entire
-  // tile," and shrinking it by `cellBorderThickness` screen pixels per side
-  // reveals exactly that much of the swatch color as a frame. Divided by
-  // transform.scale because this size is itself a child of the pan/zoom
-  // CSS transform — expressing it in these pre-scale units is what keeps
-  // the frame a constant physical size on screen at any zoom level, same
-  // as the grid-line/map-edge overlays below.
-  const iconSize = Math.max(4, BASE_CELL_PX - (2 * settings.cellBorderThickness) / transform.scale)
+  const iconSize = BASE_CELL_PX
 
   // No margin beyond the screen edge: every extra mounted icon makes panning at far zoom-out (ultra) visibly choppier, and the edge shows no gaps.
   const visibleRange = useMemo(
@@ -4597,19 +4584,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             )}
             <div className="flex-1" />
             <div className="relative w-64 shrink-0" data-nodrag>
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-[15px] w-[15px] text-muted-foreground pointer-events-none" />
               <Input
                 ref={searchInputRef}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('mapGrid.mapGridDialog.searchSidEntitySIDName')}
-                className="h-6 pl-7 pr-6 text-xs"
+                className="h-9 pl-8 pr-8 text-xs"
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 h-9 w-9"
                   title={t('mapGrid.mapGridDialog.clearSearch')}
                   type="button"
                   // Clears on press, not on release: after selecting an object on the grid the release was lost.
@@ -4629,41 +4616,50 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             <Button
               variant={spawnerSelectorOpen ? 'secondary' : 'ghost'}
               size="icon"
-              className="h-6 w-6 shrink-0"
+              className="h-9 w-9 shrink-0"
               title={t('mapGrid.mapGridDialog.playerSpawners')}
               data-nodrag
               onClick={() => { setObjectBrowserOpen(false); setSpawnerSelectorOpen((prev) => !prev) }}
             >
-              <Users className="h-3.5 w-3.5" />
+              <Users className="h-[15px] w-[15px]" />
             </Button>
             <div className="flex items-center gap-1 shrink-0" data-nodrag>
               <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
                 {Math.round(transform.scale * 100)}%
               </span>
-              <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.mapGridDialog.zoomOut')}
+              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.zoomOut')}
                 onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 0.8)}>
-                <ZoomOut className="h-3.5 w-3.5" />
+                <ZoomOut className="h-[15px] w-[15px]" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.mapGridDialog.zoomIn')}
+              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.zoomIn')}
                 onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 1.25)}>
-                <ZoomIn className="h-3.5 w-3.5" />
+                <ZoomIn className="h-[15px] w-[15px]" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.mapGridDialog.zoomTo100')}
+              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.zoomTo100')}
                 onClick={zoomTo100}>
-                <Percent className="h-3.5 w-3.5" />
+                <Percent className="h-[15px] w-[15px]" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.mapGridDialog.fitToWindow')}
+              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.fitToWindow')}
                 onClick={fitToViewport}>
-                <Maximize2 className="h-3.5 w-3.5" />
+                <Maximize2 className="h-[15px] w-[15px]" />
               </Button>
               <Button
                 variant={settings.showBlockedTiles ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-6 w-6"
+                className="h-9 w-9"
                 title={t('mapGrid.mapGridDialog.toggleBlockedTileOverlay')}
                 onClick={() => updateSettings({ ...settings, showBlockedTiles: !settings.showBlockedTiles })}
               >
-                <Ban className="h-3.5 w-3.5" />
+                <Ban className="h-[15px] w-[15px]" />
+              </Button>
+              <Button
+                variant={settings.showPlayerAreas ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-9 w-9"
+                title={t('mapGrid.mapGridSettingsDialog.playerAreasFill')}
+                onClick={() => updateSettings({ ...settings, showPlayerAreas: !settings.showPlayerAreas })}
+              >
+                <LandPlot className="h-[15px] w-[15px]" />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
               <MapGridSettingsDialog
@@ -5910,7 +5906,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   const isSingleCell = entry.width === BASE_CELL_PX && entry.height === BASE_CELL_PX
                   const thisIconSize = isSingleCell
                     ? iconSize
-                    : Math.max(4, Math.min(entry.width, entry.height) - (2 * settings.cellBorderThickness) / transform.scale)
+                    : Math.max(4, Math.min(entry.width, entry.height))
                   // A hardcoded cursor-pointer here used to win over the
                   // viewport's own mode-aware cursor (move/crosshair)
                   // whenever the pointer sat directly over an icon, since a

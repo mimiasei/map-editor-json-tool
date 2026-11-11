@@ -3,10 +3,7 @@
 // one toolbar control each. Persisted as one object rather than one
 // localStorage key per setting.
 //
-// issue #127: the "grid line thickness" slider from #125 was a misreading —
-// the user actually wanted a slider for the thick, category-colored border
-// around each occupied cell (new: cellBorderThickness), and the 1px lines
-// *between* every cell to just be a plain on/off switch (showGridLines).
+// The 1px lines between every cell are a plain on/off switch (showGridLines).
 
 import { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -48,14 +45,6 @@ export interface MapGridSettings {
   drawQualityCustom: DrawQuality
   /** 1px lines between every cell, on/off — always the same fixed thickness. */
   showGridLines: boolean
-  /** 0 = off (icon fills the whole tile); otherwise the number of screen
-   *  pixels the icon is inset by on each side, revealing that much of the
-   *  always-on canvas swatch underneath — which is already drawn in the
-   *  tile's category color, so shrinking the icon is what creates a
-   *  colored "border" effect, not an actual CSS border (a previous version
-   *  of this drew one directly, but it never controlled what actually
-   *  reads as a border — the icon's own fixed size did). */
-  cellBorderThickness: number
     /** Turns on/off the tile row and column number next to the map itself */
   showGridNumbers: boolean
     /** Turns on/off the tile hover border */
@@ -128,7 +117,6 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   drawQuality: 'high',
   drawQualityCustom: DRAW_QUALITY_PRESETS.high,
   showGridLines: false,
-  cellBorderThickness: 0,
   showGridNumbers: false,
   showGridHover: true,
   showBlockedTiles: false,
@@ -224,8 +212,8 @@ export default function MapGridSettingsDialog({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" title={t('mapGrid.mapGridSettingsDialog.mapGridSettings')}>
-          <Settings className="h-3.5 w-3.5" />
+        <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridSettingsDialog.mapGridSettings')}>
+          <Settings className="h-[15px] w-[15px]" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -431,15 +419,6 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-player-areas" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.playerAreasFill')}</Label>
-          <Switch
-              id="grid-show-player-areas"
-              checked={settings.showPlayerAreas}
-              onCheckedChange={(v) => update({ showPlayerAreas: v })}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
           <Label htmlFor="grid-line-feature-textures" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.texturedRoadsAndRivers')}</Label>
           <Switch
               id="grid-line-feature-textures"
@@ -467,20 +446,6 @@ export default function MapGridSettingsDialog({
             />
           </div>
         )}
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">{t('mapGrid.mapGridSettingsDialog.cellBorderThickness')}</Label>
-            <span className="text-xs text-muted-foreground">
-              {settings.cellBorderThickness === 0 ? t('mapGrid.mapGridSettingsDialog.off') : `${settings.cellBorderThickness}px`}
-            </span>
-          </div>
-          <Slider
-            min={0} max={4} step={1}
-            value={[settings.cellBorderThickness]}
-            onValueChange={([v]) => update({ cellBorderThickness: v })}
-          />
-        </div>
 
         <div className="flex items-center justify-between">
           <Label htmlFor="grid-confirm-delete" className="text-xs cursor-pointer">{t('mapGrid.mapGridSettingsDialog.confirmBeforeDeleting')}</Label>
