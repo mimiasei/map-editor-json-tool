@@ -3224,6 +3224,40 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // canvas is placed after the icon layer in the JSX instead, so it paints
   // over icons too. Same 1-unit-per-tile pixelated technique, same cheap
   // cost class as every other canvas layer here.
+  // Staged (not yet committed) objects of the brushes, as flat group-coloured blocks for when the grid is zoomed out too far for their icons
+  // (stagedXxxIcons below only draw once icons are visible). A separate small canvas, so a stroke does not repaint the terrain canvas.
+  const stagedSwatches = useMemo(() => {
+    const out = new Map<number, string>()
+    if (iconsVisibleForSwatch) return out
+    const add = (node: number, sid: string, type: 0 | 2 = 0) => {
+      const group = groupOf({ key: '', type, id: -1, sid, x: 0, z: 0, node }, catalog)
+      if (group) out.set(node, GROUP_COLORS[group])
+    }
+    for (const [node, sid] of paintObjectStaged) add(node, sid)
+    for (const { node, sid } of obstacleStaged) add(node, sid)
+    for (const { node, sid } of treeStaged) add(node, sid)
+    for (const [node, sid] of interactableStaged) add(node, sid)
+    for (const [node, sid] of resourceStaged) add(node, sid)
+    for (const node of squadStaged.keys()) {
+      add(node, 'random-squad', 2)
+      if (squadPlaceResourceAbove && node + sizeX < sizeX * sizeZ) add(node + sizeX, 'random-res')
+    }
+    return out
+  }, [iconsVisibleForSwatch, catalog, paintObjectStaged, obstacleStaged, treeStaged, interactableStaged, resourceStaged, squadStaged, squadPlaceResourceAbove, sizeX, sizeZ])
+  const [stagedSwatchCanvasEl, setStagedSwatchCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!stagedSwatchCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = stagedSwatchCanvasEl
+    canvas.width = sizeX
+    canvas.height = sizeZ
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, sizeX, sizeZ)
+    for (const [node, color] of stagedSwatches) {
+      ctx.fillStyle = color
+      ctx.fillRect(node % sizeX, sizeZ - 1 - Math.floor(node / sizeX), 1, 1)
+    }
+  }, [stagedSwatchCanvasEl, stagedSwatches, sizeX, sizeZ])
   const [blockedCanvasEl, setBlockedCanvasEl] = useState<HTMLCanvasElement | null>(null)
   useEffect(() => {
     if (!blockedCanvasEl || sizeX <= 0 || sizeZ <= 0) return
@@ -6046,6 +6080,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </div>
                   )
                 })}
+
+                <canvas
+                  ref={setStagedSwatchCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
 
                 {/* Ramp/slope direction arrows — purely visual, non-
                     interactive, so a hero-visible ramp tile is legible at a
