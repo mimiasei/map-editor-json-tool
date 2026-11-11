@@ -2044,7 +2044,7 @@
     "scenarioTree": {
       "copyToClipboard": "Копировать в буфер обмена",
       "duplicate": "Дублировать",
-      "mapName": "Название карты…",
+      "mapName": "Префикс проекта…",
       "main": "основная",
       "addTrigger": "Добавить триггер",
       "pasteTheCopiedTrigger": "Вставить скопированный триггер",
@@ -2062,7 +2062,7 @@
       "entitySIDs": "SID сущностей",
       "loadAMapFileTo": "Загрузите файл .map, чтобы увидеть именованные сущности.",
       "noNamedEntitiesFoundIn": "В этой карте именованных сущностей не найдено.",
-      "mapSettings": "Настройки карты",
+      "mapSettings": "Префикс проекта",
       "subQuestRow": "подзад.: {{sid}}",
       "unnamed": "(без имени)",
       "addTitle": "Добавить: {{label}}",

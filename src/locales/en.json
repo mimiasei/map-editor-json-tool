@@ -1986,7 +1986,7 @@
     "scenarioTree": {
       "copyToClipboard": "Copy to clipboard",
       "duplicate": "Duplicate",
-      "mapName": "Map name…",
+      "mapName": "Project prefix…",
       "main": "main",
       "addTrigger": "Add Trigger",
       "pasteTheCopiedTrigger": "Paste the copied trigger",
@@ -2004,7 +2004,7 @@
       "entitySIDs": "Entity SIDs",
       "loadAMapFileTo": "Load a .map file to see named entities.",
       "noNamedEntitiesFoundIn": "No named entities found in this map.",
-      "mapSettings": "Map Settings",
+      "mapSettings": "Project prefix",
       "subQuestRow": "sq: {{sid}}",
       "unnamed": "(unnamed)",
       "addTitle": "Add {{label}}",

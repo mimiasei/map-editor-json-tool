@@ -1978,7 +1978,7 @@
     "scenarioTree": {
       "copyToClipboard": "Kopier til utklippstavlen",
       "duplicate": "Dupliser",
-      "mapName": "Kartnavn…",
+      "mapName": "Prosjektprefiks…",
       "main": "hoved",
       "addTrigger": "Legg til utløser",
       "pasteTheCopiedTrigger": "Lim inn den kopierte utløseren",
@@ -1996,7 +1996,7 @@
       "entitySIDs": "Entitets-SID-er",
       "loadAMapFileTo": "Last inn en .map-fil for å se navngitte entiteter.",
       "noNamedEntitiesFoundIn": "Ingen navngitte entiteter funnet i dette kartet.",
-      "mapSettings": "Kartinnstillinger",
+      "mapSettings": "Prosjektprefiks",
       "subQuestRow": "uo: {{sid}}",
       "unnamed": "(uten navn)",
       "addTitle": "Legg til {{label}}",

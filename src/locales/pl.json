@@ -2044,7 +2044,7 @@
     "scenarioTree": {
       "copyToClipboard": "Kopiuj do schowka",
       "duplicate": "Duplikuj",
-      "mapName": "Nazwa mapy…",
+      "mapName": "Prefiks projektu…",
       "main": "główne",
       "addTrigger": "Dodaj wyzwalacz",
       "pasteTheCopiedTrigger": "Wklej skopiowany wyzwalacz",
@@ -2062,7 +2062,7 @@
       "entitySIDs": "SID-y encji",
       "loadAMapFileTo": "Załaduj plik .map, aby zobaczyć nazwane encje.",
       "noNamedEntitiesFoundIn": "Na tej mapie nie znaleziono nazwanych encji.",
-      "mapSettings": "Ustawienia mapy",
+      "mapSettings": "Prefiks projektu",
       "subQuestRow": "pz: {{sid}}",
       "unnamed": "(bez nazwy)",
       "addTitle": "Dodaj: {{label}}",

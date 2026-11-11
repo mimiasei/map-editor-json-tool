@@ -2011,7 +2011,7 @@
     "scenarioTree": {
       "copyToClipboard": "Copier dans le presse-papiers",
       "duplicate": "Dupliquer",
-      "mapName": "Nom de la carte…",
+      "mapName": "Préfixe du projet…",
       "main": "principale",
       "addTrigger": "Ajouter un déclencheur",
       "pasteTheCopiedTrigger": "Coller le déclencheur copié",
@@ -2029,7 +2029,7 @@
       "entitySIDs": "SID d'entités",
       "loadAMapFileTo": "Chargez un fichier .map pour voir les entités nommées.",
       "noNamedEntitiesFoundIn": "Aucune entité nommée trouvée dans cette carte.",
-      "mapSettings": "Paramètres de la carte",
+      "mapSettings": "Préfixe du projet",
       "subQuestRow": "sq : {{sid}}",
       "unnamed": "(sans nom)",
       "addTitle": "Ajouter : {{label}}",

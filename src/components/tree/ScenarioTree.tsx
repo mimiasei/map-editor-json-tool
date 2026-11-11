@@ -1,5 +1,7 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { readMapSettings } from '@/lib/map-write'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { DEBUG } from '@/lib/debug'
@@ -390,6 +392,27 @@ export default function ScenarioTree() {
       console.log('[ScenarioTree] entities from store:', entities)
     }
   }, [entities])
+
+  // The project prefix (the scenario's `mapName`: publish zip name and sid prefix) starts as the map's title from Map settings, else the saved
+  // file's name, else mymap_yyyy_mm_dd. It keeps following those until the user types their own.
+  const mapTitle = useMapDocumentStore((s) => (s.container ? readMapSettings(s.container.chunks[0], s.container.chunks[1]).title : ''))
+  const currentFileName = useScenarioStore((s) => s.currentFileName)
+  const suggestedPrefix = useMemo(() => {
+    const title = mapTitle?.trim()
+    if (title) return title
+    const file = currentFileName?.replace(/.[^.]+$/, '').trim()
+    if (file) return file
+    const d = new Date()
+    return `mymap_${d.getFullYear()}_${String(d.getMonth() + 1).padStart(2, '0')}_${String(d.getDate()).padStart(2, '0')}`
+  }, [mapTitle, currentFileName])
+  const autoPrefixRef = useRef('')
+  useEffect(() => {
+    if (mapName !== '' && mapName !== autoPrefixRef.current) return
+    if (mapName === suggestedPrefix) return
+    autoPrefixRef.current = suggestedPrefix
+    // Not setMapName: filling in the suggestion is not a user edit and must not mark the project dirty.
+    useScenarioStore.setState({ mapName: suggestedPrefix })
+  }, [mapName, suggestedPrefix])
 
   const [openSections, setOpenSections] = useState({
     mapSettings: true,
