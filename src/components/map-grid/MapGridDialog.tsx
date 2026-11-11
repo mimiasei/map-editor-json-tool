@@ -994,7 +994,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setObstacleBrushActive(false)
     obstacleDragRef.current = null
     obstacleDecidedRef.current.clear()
-    setObstacleStaged([])
+    setObstacleStaged((prev) => (prev.length ? [] : prev))
   }
 
   // ── Trees brush — see treesActive's own doc comment above. Same
@@ -1040,7 +1040,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setTreesActive(false)
     treeDragRef.current = null
     treeDecidedRef.current.clear()
-    setTreeStaged([])
+    setTreeStaged((prev) => (prev.length ? [] : prev))
   }
 
   // ── Eraser (issue #195 follow-up) — deletes non-terrain content (objects/
@@ -1061,7 +1061,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const clipboard = useMapGridStore((s) => s.clipboard)
   const setClipboard = useMapGridStore((s) => s.setClipboard)
   const eraserDragRef = useRef<Set<number> | null>(null)
-  const stopEraser = () => { setEraserActive(false); setErasedKeys(new Set()) }
+  const stopEraser = () => { setEraserActive(false); setErasedKeys((prev) => (prev.size ? new Set() : prev)) }
   // The tile index registers an object on every footprint cell, the same overlap rule commitEraserStroke deletes by.
   const hideErasedAt = useCallback((tiles: number[]) => {
     setErasedKeys((prev) => {
@@ -1153,7 +1153,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const stopPainting = () => {
     setPaintBiome(null)
-    setPaintStaged(new Map())
+    setPaintStaged((prev) => (prev.size ? new Map() : prev))
   }
   // Accumulates the in-progress stroke locally (for live preview) — see
   // commitPaintStroke below (called from onPointerUp) for where this
@@ -1236,7 +1236,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // ── Player Areas paint tool ──────────────────────────────────────────────
   const stopZonePainting = () => {
     setPaintZone(null)
-    setPaintZoneStaged(new Map())
+    setPaintZoneStaged((prev) => (prev.size ? new Map() : prev))
   }
   const stageZoneNode = useCallback((node: number, zoneId: number) => {
     const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
@@ -1419,7 +1419,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
-    setPaintLevelStaged(new Map())
+    setPaintLevelStaged((prev) => (prev.size ? new Map() : prev))
   }
   // Accumulates the in-progress stroke locally (for live preview) — see
   // commitLevelStroke below (called from onPointerUp) for where this
@@ -1466,7 +1466,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // doc comment in map-write.ts).
   const stopRoadPainting = () => {
     setRoadBrush(null)
-    setPaintRoadStaged(new Map())
+    setPaintRoadStaged((prev) => (prev.size ? new Map() : prev))
   }
   // Accumulates the in-progress stroke locally (for live preview) — see
   // commitRoadStroke below (called from onPointerUp) for where this
@@ -1506,7 +1506,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const rampPaintingRef = useRef(false)
   const stopRampPainting = () => {
     setRampActive(false)
-    setPaintRampStaged(new Set())
+    setPaintRampStaged((prev) => (prev.size ? new Set() : prev))
   }
   // isValidRampNode declared earlier (near applyRectangleFill).
   // Deliberately NOT scaled by brushRadius/brushDisperse (user-requested —
@@ -1559,7 +1559,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [interactableStaged, applyEdit])
   const stopInteractablePainting = () => {
     setInteractableActive(false)
-    setInteractableStaged(new Map())
+    setInteractableStaged((prev) => (prev.size ? new Map() : prev))
   }
 
   // ── Encounter (issue #203) — squadActive/squadDifficulties/squadBiomePurity/
@@ -1602,7 +1602,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [squadStaged, squadPlaceResourceAbove, sizeX, sizeZ, applyEdit])
   const stopSquadPainting = () => {
     setSquadActive(false)
-    setSquadStaged(new Map())
+    setSquadStaged((prev) => (prev.size ? new Map() : prev))
   }
 
     // ── Resource — scaled by brushRadius/brushDisperse same as
@@ -1640,7 +1640,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         setResourceStaged(new Map())
         applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'place resources')
     }, [resourceStaged, resourceGuardBelow, sizeX, applyEdit, tilesMap, squadBiomePurity, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights])
-    const stopResourcePainting = () => { setResourceActive(false); setResourceStaged(new Map()) }
+    const stopResourcePainting = () => { setResourceActive(false); setResourceStaged((prev) => (prev.size ? new Map() : prev)) }
 
   // ── River (issue: roads/rivers investigation) — a single-mode tool (no
   // material choice — rivers.json only ever defines one real type) that
@@ -1668,7 +1668,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stopRiverPainting = () => {
     setRiverActive(false)
     riverDragRef.current = null
-    setRiverStaged(new Set())
+    setRiverStaged((prev) => (prev.size ? new Set() : prev))
   }
   const commitRiverStroke = useCallback((orderedNodes: number[]) => {
     const newNodes = orderedNodes.filter((n) => !riverNodes.has(n))
@@ -3969,7 +3969,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const spawnerPlacing = placingSid === 'city-spawner' || placingSid === 'hero-spawner'
   const stopPlacing = () => {
     setPlacingSid(null)
-    setPaintObjectStaged(new Map())
+    setPaintObjectStaged((prev) => (prev.size ? new Map() : prev))
   }
   // Two-stage version for Escape/the "Placing…" button's own click — a
   // switch to a different mode (Paint terrain, place a creature, etc.) still
