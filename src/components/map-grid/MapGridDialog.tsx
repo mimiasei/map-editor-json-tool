@@ -4743,14 +4743,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Popover>
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.freehandBrushDragToPaint')}
                       onClick={() => setTerrainBucketMode(false)}
                     >
                       {t('mapGrid.mapGridDialog.brush')}
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.bucketFillClickToFill')}
                       onClick={() => setTerrainBucketMode(true)}
                     >
@@ -4779,14 +4779,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <ToolButton active icon={<Box className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.placingDragToPaint')} title={t('mapGrid.mapGridDialog.clickToPlaceOneDrag')} onClick={stopPlacingOrClearStaged} />
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${!objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${!objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.freehandBrushDragToPaint')}
                       onClick={() => setObjectsBucketMode(false)}
                     >
                       {t('mapGrid.mapGridDialog.brush')}
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.bucketFillClickToStamp')}
                       onClick={() => setObjectsBucketMode(true)}
                     >
@@ -4822,14 +4822,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <ToolButton active icon={spawnerKind === 'city' ? <Castle className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.spawnerActive')} title={t('mapGrid.mapGridDialog.clickATileToPlace2')} onClick={stopPlacingOrClearStaged} />
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'city' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'city' ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.citySpawner')}
                       onClick={() => { setSpawnerKind('city'); setPlacingSid('city-spawner') }}
                     >
                       {t('shared.city')}
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'hero' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'hero' ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.heroSpawner')}
                       onClick={() => { setSpawnerKind('hero'); setPlacingSid('hero-spawner') }}
                     >
@@ -4930,7 +4930,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <button
                         key={lvl}
                         className={`h-6 px-2 text-xs transition-colors ${
-                          levelBrush === lvl ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                          levelBrush === lvl ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'
                         }`}
                         onClick={() => setLevelBrush(lvl)}
                       >
@@ -4940,14 +4940,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </div>
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${!levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${!levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.freehandBrushDragToPaint')}
                       onClick={() => setLevelBucketMode(false)}
                     >
                       {t('mapGrid.mapGridDialog.brush')}
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.bucketFillClickToFill')}
                       onClick={() => setLevelBucketMode(true)}
                     >
@@ -5065,7 +5065,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <button
                         key={r}
                         className={`h-6 px-2 text-xs transition-colors ${
-                          roadBrush === r ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                          roadBrush === r ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'
                         }`}
                         onClick={() => setRoadBrush(r)}
                       >
@@ -5107,14 +5107,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <ToolButton active icon={<Mountain className="h-3.5 w-3.5" />} label={t('common.templateDetailsDialog.obstacles')} />
                       <div className="flex items-center rounded border border-border overflow-hidden">
                         <button
-                          className={`h-6 px-2 text-xs transition-colors ${!obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          className={`h-6 px-2 text-xs transition-colors ${!obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                           title={t('mapGrid.mapGridDialog.freehandBrushDragToScatter')}
                           onClick={() => setObstacleBucketMode(false)}
                         >
                           {t('mapGrid.mapGridDialog.brush')}
                         </button>
                         <button
-                          className={`h-6 px-2 text-xs transition-colors ${obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          className={`h-6 px-2 text-xs transition-colors ${obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                           title={t('mapGrid.mapGridDialog.bucketFillClickToScatter')}
                           onClick={() => setObstacleBucketMode(true)}
                         >
@@ -5150,14 +5150,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <ToolButton active icon={treeKind === 'flowers' ? <Flower2 className="h-3.5 w-3.5" /> : <Trees className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.trees')} />
                       <div className="flex items-center rounded border border-border overflow-hidden">
                         <button
-                          className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                           title={t('mapGrid.mapGridDialog.freehandBrushDragToScatter')}
                           onClick={() => setTreeBucketMode(false)}
                         >
                           {t('mapGrid.mapGridDialog.brush')}
                         </button>
                         <button
-                          className={`h-6 px-2 text-xs transition-colors ${treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          className={`h-6 px-2 text-xs transition-colors ${treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                           title={t('mapGrid.mapGridDialog.bucketFillClickToScatter')}
                           onClick={() => setTreeBucketMode(true)}
                         >
@@ -5267,14 +5267,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Popover>
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${!zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${!zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.freehandBrushDragToPaint')}
                       onClick={() => setZoneBucketMode(false)}
                     >
                       {t('mapGrid.mapGridDialog.brush')}
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 text-xs transition-colors ${zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.bucketFillClickToFill2')}
                       onClick={() => setZoneBucketMode(true)}
                     >
@@ -5438,14 +5438,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">{t('mapGrid.mapGridDialog.mode')}</span>
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.dragToPaintTileBy')}
                       onClick={() => setInteractionMode('freehand')}
                     >
                       <Freehand className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
                       title={t('mapGrid.mapGridDialog.dragARectangleShiftSquare')}
                       onClick={() => setInteractionMode('rectangle')}
                     >
