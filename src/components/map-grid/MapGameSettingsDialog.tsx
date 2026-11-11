@@ -21,7 +21,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Settings2 } from '@/components/ui/icons'
+import { Map as MapIcon } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { readMapSettings, type MapSettingsPatch } from '@/lib/map-write'
 import { useTranslation } from 'react-i18next'
@@ -73,7 +73,7 @@ export default function MapGameSettingsDialog() {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" title={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag>
-          <Settings2 className="h-[15px] w-[15px]" />
+          <MapIcon className="h-[15px] w-[15px]" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto" data-nodrag>

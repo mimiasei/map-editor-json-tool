@@ -179,6 +179,8 @@ import { useTranslation, Trans } from 'react-i18next'
 
 // Height of the Paint tools row and the Browse pills row, so switching mode doesn't move the grid. min-h, because the pills wrap.
 const TOOLBAR_ROW_H = 'min-h-9'
+// A selected header toggle gets the same enlarged icon the paint tools show on hover, with a heavier stroke.
+const SELECTED_ICON = '[&_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg_*]:[stroke-width:2.5]'
 
 const BASE_CELL_PX = 32
 const ZOOM_SETTLE_MS = 1000
@@ -4616,7 +4618,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             <Button
               variant={spawnerSelectorOpen ? 'secondary' : 'ghost'}
               size="icon"
-              className="h-9 w-9 shrink-0"
+              className={`h-9 w-9 shrink-0 ${spawnerSelectorOpen ? SELECTED_ICON : ''}`}
               title={t('mapGrid.mapGridDialog.playerSpawners')}
               data-nodrag
               onClick={() => { setObjectBrowserOpen(false); setSpawnerSelectorOpen((prev) => !prev) }}
@@ -4646,7 +4648,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               <Button
                 variant={settings.showBlockedTiles ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-9 w-9"
+                className={`h-9 w-9 ${settings.showBlockedTiles ? SELECTED_ICON : ''}`}
                 title={t('mapGrid.mapGridDialog.toggleBlockedTileOverlay')}
                 onClick={() => updateSettings({ ...settings, showBlockedTiles: !settings.showBlockedTiles })}
               >
@@ -4655,7 +4657,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               <Button
                 variant={settings.showPlayerAreas ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-9 w-9"
+                className={`h-9 w-9 ${settings.showPlayerAreas ? SELECTED_ICON : ''}`}
                 title={t('mapGrid.mapGridSettingsDialog.playerAreasFill')}
                 onClick={() => updateSettings({ ...settings, showPlayerAreas: !settings.showPlayerAreas })}
               >
