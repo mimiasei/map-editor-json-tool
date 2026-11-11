@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
+import ToolButton from '@/components/map-grid/ToolButton'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -72,9 +72,7 @@ export default function MapGameSettingsDialog() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" title={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag>
-          <MapIcon className="h-[15px] w-[15px]" />
-        </Button>
+        <ToolButton icon={<MapIcon />} label={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto" data-nodrag>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</p>

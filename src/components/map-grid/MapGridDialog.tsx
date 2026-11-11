@@ -179,8 +179,6 @@ import { useTranslation, Trans } from 'react-i18next'
 
 // Height of the Paint tools row and the Browse pills row, so switching mode doesn't move the grid. min-h, because the pills wrap.
 const TOOLBAR_ROW_H = 'min-h-9'
-// A selected header toggle gets the same enlarged icon the paint tools show on hover, with a heavier stroke.
-const SELECTED_ICON = '[&_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg_*]:[stroke-width:2.5]'
 
 const BASE_CELL_PX = 32
 const ZOOM_SETTLE_MS = 1000
@@ -4615,54 +4613,37 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
             </div>
             <MapGameSettingsDialog />
-            <Button
-              variant={spawnerSelectorOpen ? 'secondary' : 'ghost'}
-              size="icon"
-              className={`h-9 w-9 shrink-0 ${spawnerSelectorOpen ? SELECTED_ICON : ''}`}
-              title={t('mapGrid.mapGridDialog.playerSpawners')}
+            <ToolButton
+              active={spawnerSelectorOpen}
+              icon={<Users />}
+              label={t('mapGrid.mapGridDialog.playerSpawners')}
               data-nodrag
               onClick={() => { setObjectBrowserOpen(false); setSpawnerSelectorOpen((prev) => !prev) }}
-            >
-              <Users className="h-[15px] w-[15px]" />
-            </Button>
+            />
             <div className="flex items-center gap-1 shrink-0" data-nodrag>
               <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
                 {Math.round(transform.scale * 100)}%
               </span>
-              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.zoomOut')}
-                onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 0.8)}>
-                <ZoomOut className="h-[15px] w-[15px]" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.zoomIn')}
-                onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 1.25)}>
-                <ZoomIn className="h-[15px] w-[15px]" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.zoomTo100')}
-                onClick={zoomTo100}>
-                <Percent className="h-[15px] w-[15px]" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridDialog.fitToWindow')}
-                onClick={fitToViewport}>
-                <Maximize2 className="h-[15px] w-[15px]" />
-              </Button>
-              <Button
-                variant={settings.showBlockedTiles ? 'secondary' : 'ghost'}
-                size="icon"
-                className={`h-9 w-9 ${settings.showBlockedTiles ? SELECTED_ICON : ''}`}
-                title={t('mapGrid.mapGridDialog.toggleBlockedTileOverlay')}
+              <ToolButton icon={<ZoomOut />} label={t('mapGrid.mapGridDialog.zoomOut')}
+                onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 0.8)} />
+              <ToolButton icon={<ZoomIn />} label={t('mapGrid.mapGridDialog.zoomIn')}
+                onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 1.25)} />
+              <ToolButton icon={<Percent />} label={t('mapGrid.mapGridDialog.zoomTo100')}
+                onClick={zoomTo100} />
+              <ToolButton icon={<Maximize2 />} label={t('mapGrid.mapGridDialog.fitToWindow')}
+                onClick={fitToViewport} />
+              <ToolButton
+                active={settings.showBlockedTiles}
+                icon={<Ban />}
+                label={t('mapGrid.mapGridDialog.toggleBlockedTileOverlay')}
                 onClick={() => updateSettings({ ...settings, showBlockedTiles: !settings.showBlockedTiles })}
-              >
-                <Ban className="h-[15px] w-[15px]" />
-              </Button>
-              <Button
-                variant={settings.showPlayerAreas ? 'secondary' : 'ghost'}
-                size="icon"
-                className={`h-9 w-9 ${settings.showPlayerAreas ? SELECTED_ICON : ''}`}
-                title={t('mapGrid.mapGridSettingsDialog.playerAreasFill')}
+              />
+              <ToolButton
+                active={settings.showPlayerAreas}
+                icon={<LandPlot />}
+                label={t('mapGrid.mapGridSettingsDialog.playerAreasFill')}
                 onClick={() => updateSettings({ ...settings, showPlayerAreas: !settings.showPlayerAreas })}
-              >
-                <LandPlot className="h-[15px] w-[15px]" />
-              </Button>
+              />
               <div className="w-px h-4 bg-border mx-1" />
               <MapGridSettingsDialog
                 settings={settings}
@@ -4864,10 +4845,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   most interactables have no biome association at all. */}
               {interactableActive ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Landmark className="h-3.5 w-3.5" />
-                    {t('mapGrid.mapGridDialog.drawing')}
-                  </Button>
+                  <ToolButton active icon={<Landmark className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.landmark')} />
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting} title={t('mapGrid.mapGridDialog.stopEsc')}>
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
@@ -4889,10 +4867,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   biome-mix slider drives propRandomSquads.fraction here. */}
               {squadActive ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Swords className="h-3.5 w-3.5" />
-                    {t('mapGrid.mapGridDialog.drawing')}
-                  </Button>
+                  <ToolButton active icon={<Swords className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.encounter')} />
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopSquadPainting} title={t('mapGrid.mapGridDialog.stopEsc')}>
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
@@ -4907,9 +4882,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
               {resourceActive ? (
                 <div className="flex items-center gap-1">
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                        <Gem className="h-3.5 w-3.5" /> {t('mapGrid.mapGridDialog.drawing')}
-                    </Button>
+                    <ToolButton active icon={<Gem className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.resource')} />
                     <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopResourcePainting} title={t('mapGrid.mapGridDialog.stopEsc')}><Cancel className="h-3.5 w-3.5" /></Button>
                 </div>
               ) : (
@@ -4979,10 +4952,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   already uses, now fed this tool's live-staged data too. */}
               {rampActive ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <TrendingUpDown className="h-3.5 w-3.5" />
-                    {t('mapGrid.mapGridDialog.drawing')}
-                  </Button>
+                  <ToolButton active icon={<TrendingUpDown className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.ramp')} />
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting} title={t('mapGrid.mapGridDialog.stopEsc')}>
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
@@ -5041,10 +5011,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   real map data. */}
               {riverActive ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Waves className="h-3.5 w-3.5" />
-                    {t('mapGrid.mapGridDialog.drawing')}
-                  </Button>
+                  <ToolButton active icon={<Waves className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.river')} />
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting} title={t('mapGrid.mapGridDialog.stopEsc')}>
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
@@ -5109,10 +5076,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       nothing to Cancel mid-drag, only Stop to exit the tool). */}
                   {obstacleBrushActive ? (
                     <div className="flex items-center gap-1">
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                        <Mountain className="h-3.5 w-3.5" />
-                        {t('mapGrid.mapGridDialog.drawing')}
-                      </Button>
+                      <ToolButton active icon={<Mountain className="h-3.5 w-3.5" />} label={t('common.templateDetailsDialog.obstacles')} />
                       <div className="flex items-center rounded border border-border overflow-hidden">
                         <button
                           className={`h-6 px-2 text-xs transition-colors ${!obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
@@ -5155,10 +5119,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       sampling/apply-immediately behavior. */}
                   {treesActive ? (
                     <div className="flex items-center gap-1">
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                        {treeKind === 'flowers' ? <Flower2 className="h-3.5 w-3.5" /> : <Trees className="h-3.5 w-3.5" />}
-                        {t('mapGrid.mapGridDialog.drawingActive')}
-                      </Button>
+                      <ToolButton active icon={treeKind === 'flowers' ? <Flower2 className="h-3.5 w-3.5" /> : <Trees className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.trees')} />
                       <div className="flex items-center rounded border border-border overflow-hidden">
                         <button
                           className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}

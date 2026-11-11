@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import ToolButton from '@/components/map-grid/ToolButton'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
@@ -212,9 +213,7 @@ export default function MapGridSettingsDialog({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9" title={t('mapGrid.mapGridSettingsDialog.mapGridSettings')}>
-          <Settings className="h-[15px] w-[15px]" />
-        </Button>
+        <ToolButton icon={<Settings />} label={t('mapGrid.mapGridSettingsDialog.mapGridSettings')} />
       </PopoverTrigger>
       <PopoverContent
         align="end"

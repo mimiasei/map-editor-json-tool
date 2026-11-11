@@ -1,7 +1,7 @@
 // ─── Map Grid — icon-only tool button with a styled tooltip ────────────────
 // issue #203: the Paint toolbar grew to 13 tools and ran out of horizontal room, so idle tools show only their icon.
 // The tool name appears as a tooltip above the icon on hover; the native `title` is kept as well (longer hover, full
-// description). Only used for a tool's IDLE state — the "Drawing…"/"Stop (Esc)" active state has its own rendering.
+// description). An active tool keeps this button with an enlarged, heavier icon (`active`); its Stop / Cancel button sits beside it.
 
 import { forwardRef } from 'react'
 import type { ReactNode, ButtonHTMLAttributes } from 'react'
@@ -38,7 +38,7 @@ const ToolButton = forwardRef<HTMLButtonElement, Props>(function ToolButton({ ic
           title={title}
           data-hotkey-tool={hotkeyId}
           {...rest}
-          className={`flex items-center h-9 ${BUTTON_PADDING_X} ${ICON_SIZE} rounded-xl px-1.0 py-2.0 hover:bg-secondary [&:hover_svg_*]:[stroke-width:1.5] [&_svg_*]:transition-[stroke-width] [&_svg_*]:duration-125 [&:hover_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg]:duration-125 text-xs font-medium text-muted-foreground transition-colors duration-125 hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40 ${active ? 'bg-secondary text-foreground' : ''}`}
+          className={`flex items-center h-9 ${BUTTON_PADDING_X} ${ICON_SIZE} rounded-xl px-1.0 py-2.0 hover:bg-secondary [&:hover_svg_*]:[stroke-width:1.5] [&_svg_*]:transition-[stroke-width] [&_svg_*]:duration-125 [&:hover_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg]:duration-125 text-xs font-medium text-muted-foreground transition-colors duration-125 hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40 ${active ? 'text-accent-foreground [&_svg]:scale-[1.75] [&_svg_*]:![stroke-width:2]' : ''}`}
         >
           {icon}
         </button>
