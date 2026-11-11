@@ -34,7 +34,6 @@ import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
 import { getGameDir } from '@/lib/game-dir'
 import { extractUiSkin, isUiSkinAvailable, loadUiSkin } from '@/lib/ui-skin'
-import { requestTheme } from '@/hooks/useTheme'
 
 interface ThemeEditorDialogProps {
   open: boolean
@@ -176,11 +175,8 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     if (open && isTauri()) void loadUiSkin().then(setSkinReady)
   }, [open])
 
-  // The skin starts in its dark version (the game's own look); the light/dark toggle can still be switched afterwards.
-  const turnGameSkin = (on: boolean) => {
-    setGameSkin(on)
-    if (on) requestTheme('dark')
-  }
+  // The skin forces dark mode and hides the light/dark toggle (useTheme).
+  const turnGameSkin = (on: boolean) => setGameSkin(on)
 
   const handleExtractSkin = async () => {
     setSkinMessage(null)
@@ -240,7 +236,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className={skinOn ? "max-w-md" : "max-w-3xl"}>
         <DialogHeader>
           <DialogTitle>{t('common.themeEditorDialog.themeEditor')}</DialogTitle>
         </DialogHeader>
@@ -358,7 +354,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
               {/* ── Color pickers ── */}
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground uppercase tracking-wide">{t('common.themeEditorDialog.colors')}</Label>
-                <div className="space-y-3 pt-1">
+                <div className="grid grid-cols-1 gap-x-8 gap-y-3 pt-1 sm:grid-cols-2">
                   {COLOR_FIELDS.map((key) => (
                     <ColorRow
                       key={key}

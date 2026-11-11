@@ -132,6 +132,15 @@
   transform: scale(1.1);
 }
 
+/* Popovers with their own close X (Map settings) get the same heavy cross. */
+.skin-game [data-skin-close] > svg {
+  transform: scale(1.1);
+}
+
+.skin-game [data-skin-close] > svg path {
+  stroke-width: 3.5;
+}
+
 /* The icon sets stroke-width on its <path>, so the svg's own would not win. */
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) > button:has(> span.sr-only) > svg path {
   stroke-width: 3.5;
@@ -419,4 +428,29 @@
 /* The start screen title is `text-secondary`, which is a dark blue field colour in this palette. */
 .skin-game .text-secondary {
   color: hsl(var(--primary));
+}
+
+/* The five big start-screen buttons get the game's metallic ornamented frame (Frame_MapParameters) together with its fill, on one
+   pseudo-element: the sprite's centre is a flat #151c2c, and a single layer fades evenly on hover and when pressed (a separate button
+   background under the frame stacked with it and left a darker ring). The layer sits behind the cell's icon and label. */
+.skin-game button[data-start-cell] {
+  position: relative;
+  isolation: isolate;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.skin-game button[data-start-cell]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 0 solid transparent;
+  border-image: var(--skin-frame) var(--skin-frame-slice) fill / 22px stretch;
+  pointer-events: none;
+  transition: opacity 200ms;
+}
+
+.skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"])::before {
+  opacity: 0.5;
 }

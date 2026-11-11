@@ -15,13 +15,13 @@
 // separate "Save" button.
 
 import { useEffect, useState } from 'react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import ToolButton from '@/components/map-grid/ToolButton'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Settings2 } from '@/components/ui/icons'
+import { Map as MapIcon, X } from '@/components/ui/icons'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { readMapSettings, type MapSettingsPatch } from '@/lib/map-write'
 import { useTranslation } from 'react-i18next'
@@ -72,12 +72,16 @@ export default function MapGameSettingsDialog() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" title={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag>
-          <Settings2 className="h-3.5 w-3.5" />
-        </Button>
+        <ToolButton icon={<MapIcon />} label={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto" data-nodrag>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</p>
+      <PopoverContent align="end" className="w-[21.5rem] space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto overflow-x-hidden" data-nodrag>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</p>
+          <PopoverClose data-skin-close className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+            <X className="h-4 w-4" />
+            <span className="sr-only">{t('ui.close')}</span>
+          </PopoverClose>
+        </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="map-settings-title" className="text-xs">{t('mapGrid.mapGameSettingsDialog.title')}</Label>
@@ -103,7 +107,7 @@ export default function MapGameSettingsDialog() {
 
         <div className="border-t border-border pt-3 space-y-3">
           {BOOLEAN_FIELDS.map((key) => (
-            <div key={key} className="flex items-center justify-between gap-3">
+            <div key={key} className="flex items-center justify-between gap-3 pr-3">
               <div className="min-w-0">
                 <Label htmlFor={`map-settings-${key}`} className="text-xs cursor-pointer">{t(`mapGrid.mapGameSettingsDialog.fields.${key}.label`)}</Label>
                 {key === 'isTournamentRules' && <p className="text-[11px] text-muted-foreground">{t('mapGrid.mapGameSettingsDialog.fields.isTournamentRules.hint')}</p>}

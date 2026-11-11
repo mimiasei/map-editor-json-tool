@@ -4,12 +4,6 @@ export type Theme = 'light' | 'dark'
 
 const STORAGE_KEY = 'oe-theme'
 const DEFAULT_THEME: Theme = 'light'
-const SET_THEME_EVENT = 'oe:set-theme'
-
-/** Switches the light/dark mode from anywhere (each useTheme call keeps its own state, so the toolbar toggle would not notice). */
-export function requestTheme(theme: Theme) {
-  window.dispatchEvent(new CustomEvent<Theme>(SET_THEME_EVENT, { detail: theme }))
-}
 
 function getStoredTheme(): Theme {
   try {
@@ -31,28 +25,41 @@ function applyTheme(theme: Theme) {
   }
 }
 
+/** Whether the Game skin is applied (useApplyThemeSettings puts `skin-game` on <html>). */
+function useSkinActive(): boolean {
+  const [active, setActive] = useState(() => typeof document !== 'undefined' && document.documentElement.classList.contains('skin-game'))
+  useEffect(() => {
+    const check = () => setActive(document.documentElement.classList.contains('skin-game'))
+    check()
+    const observer = new MutationObserver(check)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+  return active
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(getStoredTheme)
+  const [stored, setThemeState] = useState<Theme>(getStoredTheme)
+  // The Game skin is dark only (the game's own look): the stored preference is kept and returns when the skin goes off.
+  const skinLocked = useSkinActive()
+  const theme: Theme = skinLocked ? 'dark' : stored
 
   // useLayoutEffect applies the class before paint, preventing a flash of the
-  // wrong theme. It also persists the preference to localStorage.
+  // wrong theme.
   useLayoutEffect(() => {
     applyTheme(theme)
-    try {
-      localStorage.setItem(STORAGE_KEY, theme)
-    } catch {
-      // ignore — localStorage unavailable
-    }
   }, [theme])
 
   useEffect(() => {
-    const onSet = (e: Event) => setThemeState((e as CustomEvent<Theme>).detail)
-    window.addEventListener(SET_THEME_EVENT, onSet)
-    return () => window.removeEventListener(SET_THEME_EVENT, onSet)
-  }, [])
+    try {
+      localStorage.setItem(STORAGE_KEY, stored)
+    } catch {
+      // ignore — localStorage unavailable
+    }
+  }, [stored])
 
   const setTheme = (t: Theme) => setThemeState(t)
   const toggleTheme = () => setThemeState(prev => (prev === 'dark' ? 'light' : 'dark'))
 
-  return { theme, setTheme, toggleTheme }
+  return { theme, setTheme, toggleTheme, skinLocked }
 }
