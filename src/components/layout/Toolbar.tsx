@@ -1103,7 +1103,6 @@ export default function Toolbar({
           <ToolButton
             icon={theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
             label={theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
-            aria-pressed={theme === 'dark'}
             onClick={toggleTheme}
           />
           <ToolButton icon={<Palette className="h-3.5 w-3.5" />} label={t('layout.toolbar.themeEditor')} onClick={() => setThemeEditorOpen(true)} />
