@@ -34,7 +34,6 @@ import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
 import { getGameDir } from '@/lib/game-dir'
 import { extractUiSkin, isUiSkinAvailable, loadUiSkin } from '@/lib/ui-skin'
-import { requestTheme } from '@/hooks/useTheme'
 
 interface ThemeEditorDialogProps {
   open: boolean
@@ -176,11 +175,8 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
     if (open && isTauri()) void loadUiSkin().then(setSkinReady)
   }, [open])
 
-  // The skin starts in its dark version (the game's own look); the light/dark toggle can still be switched afterwards.
-  const turnGameSkin = (on: boolean) => {
-    setGameSkin(on)
-    if (on) requestTheme('dark')
-  }
+  // The skin forces dark mode and hides the light/dark toggle (useTheme).
+  const turnGameSkin = (on: boolean) => setGameSkin(on)
 
   const handleExtractSkin = async () => {
     setSkinMessage(null)

@@ -306,7 +306,7 @@ export default function Toolbar({
     }
   }
 
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme, skinLocked } = useTheme()
 
   // useGuideStore still needed for templateAnnotations hydration on import
 
@@ -1100,11 +1100,13 @@ export default function Toolbar({
               <ToolButton icon={<Braces className="h-3.5 w-3.5" />} label={t('layout.toolbar.toggleJSONPreview')} active={panels.preview} onClick={() => togglePanel('preview')} />
             </>
           )}
-          <ToolButton
-            icon={theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-            label={theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
-            onClick={toggleTheme}
-          />
+          {!skinLocked && (
+            <ToolButton
+              icon={theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+              label={theme === 'dark' ? t('layout.toolbar.switchToLightTheme') : t('layout.toolbar.switchToDarkTheme')}
+              onClick={toggleTheme}
+            />
+          )}
           <ToolButton icon={<Palette className="h-3.5 w-3.5" />} label={t('layout.toolbar.themeEditor')} onClick={() => setThemeEditorOpen(true)} />
         </div>
       </header>
