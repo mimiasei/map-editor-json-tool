@@ -430,28 +430,27 @@
   color: hsl(var(--primary));
 }
 
-/* The five big start-screen buttons get the game's metallic ornamented frame (Frame_MapParameters). It sits on a pseudo-element, so
-   it fades on hover and when pressed like the cell's own background does (hover:bg-accent/50); the cell keeps its fill. */
+/* The five big start-screen buttons get the game's metallic ornamented frame (Frame_MapParameters) together with its fill, on one
+   pseudo-element: the sprite's centre is a flat #151c2c, and a single layer fades evenly on hover and when pressed (a separate button
+   background under the frame stacked with it and left a darker ring). The layer sits behind the cell's icon and label. */
 .skin-game button[data-start-cell] {
   position: relative;
+  isolation: isolate;
   border-radius: 4px;
-  background-color: hsl(216 36% 13%); /* resting fill */
-}
-
-.skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"]) {
-  background-color: hsl(220 35% 22% / 0.5); /* hover / open fill */
+  background: transparent;
 }
 
 .skin-game button[data-start-cell]::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -1;
   border: 0 solid transparent;
-  border-image: var(--skin-frame) var(--skin-frame-slice) / 22px stretch;
+  border-image: var(--skin-frame) var(--skin-frame-slice) fill / 22px stretch;
   pointer-events: none;
   transition: opacity 200ms;
 }
 
 .skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"])::before {
-  opacity: 0.1;
+  opacity: 0.5;
 }
