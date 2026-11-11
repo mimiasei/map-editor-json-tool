@@ -4479,7 +4479,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // following set, not a per-map-tile render — doesn't reintroduce the
   // one-DOM-node-per-map-tile pattern this codebase avoids. Ramp/Road stay
   // deliberately excluded — always single-tile, no brush shape to preview.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive)
+  // Each tool keeps its own Brush/Bucket flag, and switching tools does not reset it. Only the active tool's flag counts, or a bucket left on
+  // by another tool hid Size and Disperse for brush tools that have no Brush/Bucket switch to turn it off again.
+  const activeToolIsBucket =
+    (paintBiome !== null && terrainBucketMode) ||
+    (levelBrush !== null && levelBucketMode) ||
+    (obstacleBrushActive && obstacleBucketMode) ||
+    (treesActive && treeBucketMode) ||
+    (paintZone !== null && zoneBucketMode) ||
+    (placingSid !== null && !isSingleTileSid(placingSid) && objectsBucketMode)
+
+  const brushToolActive = interactionMode === 'freehand' && !activeToolIsBucket && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
@@ -5462,7 +5472,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   already select their own explicit region, so radius has
                   nothing to modify for either. Ramp/Road are deliberately
                   excluded too — always single-tile, no brush to size. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
+              {interactionMode === 'freehand' && !activeToolIsBucket && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">{t('mapGrid.mapGridDialog.size')}</span>
                   <span className="text-xs tabular-nums w-5 text-center">{brushRadius}</span>
