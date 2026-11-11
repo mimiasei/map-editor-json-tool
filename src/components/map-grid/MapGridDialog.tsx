@@ -653,7 +653,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [tileIndex, catalog, isShown, manualStacks, entitySidsOnly, settings.iconImagesEnabled, renderIndex])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation walls + water (src/lib/map-grid/passability.ts).
-  // The footprints follow the filter pills (and "Entity SIDs only"), so hidden objects stop blocking in the overlay; elevation and
+  // The footprints and the green entrance tiles follow the filter pills (and "Entity SIDs only"), so hidden objects stop blocking in the overlay; elevation and
   // water always count. `blockedFiltered` tells the toolbar button to warn that the overlay is no longer the real passability.
   // Objects being erased are not excluded here, so a stroke does not rebuild the set.
   const { objectsForBlocked, blockedFiltered } = useMemo(() => {
@@ -666,8 +666,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   )
 
   const entranceTileSet = useMemo(
-    () => buildEntranceTileSet({ sizeX, sizeZ, placedObjects }, catalog),
-    [sizeX, sizeZ, placedObjects, catalog],
+    () => buildEntranceTileSet({ sizeX, sizeZ, placedObjects: objectsForBlocked }, catalog),
+    [sizeX, sizeZ, objectsForBlocked, catalog],
   )
 
   // Player Areas — every distinct zone id currently painted, for the zone
