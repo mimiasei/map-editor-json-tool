@@ -74,7 +74,7 @@ export default function MapGameSettingsDialog() {
       <PopoverTrigger asChild>
         <ToolButton icon={<MapIcon />} label={t('mapGrid.mapGameSettingsDialog.mapSettings')} data-nodrag />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[21.5rem] space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto" data-nodrag>
+      <PopoverContent align="end" className="w-[21.5rem] space-y-4 max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto overflow-x-hidden" data-nodrag>
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</p>
           <PopoverClose data-skin-close className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
@@ -107,7 +107,7 @@ export default function MapGameSettingsDialog() {
 
         <div className="border-t border-border pt-3 space-y-3">
           {BOOLEAN_FIELDS.map((key) => (
-            <div key={key} className="flex items-center justify-between gap-3">
+            <div key={key} className="flex items-center justify-between gap-3 pr-3">
               <div className="min-w-0">
                 <Label htmlFor={`map-settings-${key}`} className="text-xs cursor-pointer">{t(`mapGrid.mapGameSettingsDialog.fields.${key}.label`)}</Label>
                 {key === 'isTournamentRules' && <p className="text-[11px] text-muted-foreground">{t('mapGrid.mapGameSettingsDialog.fields.isTournamentRules.hint')}</p>}
