@@ -4086,8 +4086,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (result) setCopyNote(t('mapGrid.mapGridDialog.copy.pasted', { placed: result.placed, blocked: result.blocked, skipped: result.propsSkipped }))
   }
 
-  // Every other tool off: the start of Select and of pasting a library prefab.
-  const stopAllTools = () => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
+  // Every other tool off, so only one is ever active: the start of every tool, of Select and of pasting a library prefab.
+  const stopAllTools = () => { stopPlacing(); stopPlacingCreature(); setObjectBrowserOpen(false); setSpawnerSelectorOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
 
   const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
 
@@ -4726,17 +4726,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Paintbrush className="h-3.5 w-3.5" />}
                   hotkeyId="toolTerrain" label={t('mapGrid.mapGridDialog.terrain')}
                   title={t('mapGrid.mapGridDialog.paintTerrain')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
+                  onClick={() => { stopAllTools(); setPaintBiome(1) }}
                 />
               )}
               
 
               {placingSid && !isSingleTileSid(placingSid) ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title={t('mapGrid.mapGridDialog.clickToPlaceOneDrag')}>
-                    <Box className="h-3.5 w-3.5" />
-                    {t('mapGrid.mapGridDialog.placingDragToPaint')}
-                  </Button>
+                  <ToolButton active icon={<Box className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.placingDragToPaint')} title={t('mapGrid.mapGridDialog.clickToPlaceOneDrag')} onClick={stopPlacingOrClearStaged} />
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
                       className={`h-6 px-2 text-xs transition-colors ${!objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
@@ -4758,37 +4755,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   )}
                 </div>
               ) : placingCreatureId ? (
-                <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title={t('mapGrid.mapGridDialog.clickATileToPlace')}>
-                  <Plus className="h-3.5 w-3.5" />
-                  {t('mapGrid.mapGridDialog.placingUnit')}
-                </Button>
+                <ToolButton active icon={<Plus className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.placingUnit')} title={t('mapGrid.mapGridDialog.clickATileToPlace')} onClick={stopPlacingCreature} />
               ) : objectBrowserOpen ? (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  active
+                  icon={<Box className="h-3.5 w-3.5" />}
+                  label={t('shared.objects')}
                   title={t('mapGrid.mapGridDialog.placeANewObject')}
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
-                >
-                  <Box className="h-3.5 w-3.5" />
-                  {t('shared.objects')}
-                </Button>
+                  onClick={() => stopAllTools()}
+                />
               ) : (
                 <ToolButton
                   icon={<Box className="h-3.5 w-3.5" />}
                   hotkeyId="toolObjects" label={t('shared.objects')}
                   title={t('mapGrid.mapGridDialog.placeANewObject')}
-                  onClick={() => { if (isSingleTileSid(placingSid)) stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopAllTools(); setObjectBrowserOpen(true) }}
                 />
               )}
               {/* City/Hero spawner tool — own icon next to Objects. Armed, it shows a
                   City/Hero toggle; placement reuses the placingSid flow (single tile). */}
               {spawnerPlacing ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title={t('mapGrid.mapGridDialog.clickATileToPlace2')}>
-                    {spawnerKind === 'city' ? <Castle className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />}
-                    {t('mapGrid.mapGridDialog.spawnerActive')}
-                  </Button>
+                  <ToolButton active icon={spawnerKind === 'city' ? <Castle className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.spawnerActive')} title={t('mapGrid.mapGridDialog.clickATileToPlace2')} onClick={stopPlacingOrClearStaged} />
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
                       className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'city' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
@@ -4814,7 +4802,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Castle className="h-3.5 w-3.5" />}
                   hotkeyId="toolSpawner" label={t('shared.spawner')}
                   title={t('mapGrid.mapGridDialog.placeACityOrHero')}
-                  onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid(spawnerKind === 'city' ? 'city-spawner' : 'hero-spawner') }}
+                  onClick={() => { stopAllTools(); setPlacingSid(spawnerKind === 'city' ? 'city-spawner' : 'hero-spawner') }}
                 />
               )}
               {/* Hero — a free-standing random hero that belongs to a player
@@ -4822,17 +4810,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   player). One per click: no brush, rectangle or bucket. */}
               {placingSid === 'random-hero' ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title={t('mapGrid.mapGridDialog.clickATileToPlace3')}>
-                    <UserRound className="h-3.5 w-3.5" />
-                    {t('common.statsDialog.hero')}
-                  </Button>
+                  <ToolButton active icon={<UserRound className="h-3.5 w-3.5" />} label={t('common.statsDialog.hero')} title={t('mapGrid.mapGridDialog.clickATileToPlace3')} onClick={stopPlacingOrClearStaged} />
                 </div>
               ) : (
                 <ToolButton
                   icon={<UserRound className="h-3.5 w-3.5" />}
                   hotkeyId="toolHero" label={t('common.statsDialog.hero')}
                   title={t('mapGrid.mapGridDialog.placeAHeroThatBelongs')}
-                  onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid('random-hero') }}
+                  onClick={() => { stopAllTools(); setPlacingSid('random-hero') }}
                 />
               )}
               
@@ -4855,7 +4840,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Landmark className="h-3.5 w-3.5" />}
                   hotkeyId="toolLandmark" label={t('mapGrid.mapGridDialog.landmark')}
                   title={t('mapGrid.mapGridDialog.landmarkDragToPlaceRandom')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); stopZonePainting(); setInteractableActive(true) }}
+                  onClick={() => { stopAllTools(); setInteractableActive(true) }}
                 />
               )}
               
@@ -4877,7 +4862,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Swords className="h-3.5 w-3.5" />}
                   hotkeyId="toolEncounter" label={t('mapGrid.mapGridDialog.encounter')}
                   title={t('mapGrid.mapGridDialog.encounterDragToPlaceRandom')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSquadActive(true) }}
+                  onClick={() => { stopAllTools(); setSquadActive(true) }}
                 />
               )}
               {resourceActive ? (
@@ -4887,7 +4872,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 </div>
               ) : (
                 <ToolButton icon={<Gem className="h-3.5 w-3.5" />} hotkeyId="toolResource" label={t('mapGrid.mapGridDialog.resource')} title={t('mapGrid.mapGridDialog.resourceDragToScatterResource')}
-                            onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setResourceActive(true) }} />
+                            onClick={() => { stopAllTools(); setResourceActive(true) }} />
               )}
            
               
@@ -4938,7 +4923,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Layers className="h-3.5 w-3.5" />}
                   hotkeyId="toolLevel" label={t('mapGrid.mapGridDialog.level')}
                   title={t('mapGrid.mapGridDialog.paintElevationLevel')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
+                  onClick={() => { stopAllTools(); setLevelBrush(0) }}
                 />
               )}
               
@@ -4962,7 +4947,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<TrendingUpDown className="h-3.5 w-3.5" />}
                   hotkeyId="toolRamp" label={t('mapGrid.mapGridDialog.ramp')}
                   title={t('mapGrid.mapGridDialog.rampDragOntoTheLower')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRampActive(true) }}
+                  onClick={() => { stopAllTools(); setRampActive(true) }}
                 />
               )}
               
@@ -5000,7 +4985,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Droplets className="h-3.5 w-3.5" />}
                   hotkeyId="toolWater" label={t('common.generateRandomMapDialog.water')}
                   title={t('mapGrid.mapGridDialog.floodFillWaterClickA')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); setWaterBrush(1) }}
+                  onClick={() => { stopAllTools(); setWaterBrush(1) }}
                 />
               )}
               
@@ -5021,7 +5006,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Waves className="h-3.5 w-3.5" />}
                   hotkeyId="toolRiver" label={t('mapGrid.mapGridDialog.river')}
                   title={t('mapGrid.mapGridDialog.drawARiverDragTo')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
+                  onClick={() => { stopAllTools(); setRiverActive(true) }}
                 />
               )}
               
@@ -5061,7 +5046,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Milestone className="h-3.5 w-3.5" />}
                   hotkeyId="toolRoad" label={t('mapGrid.mapGridDialog.road')}
                   title={t('mapGrid.mapGridDialog.paintARoadDirtOr')}
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); setRoadBrush(1) }}
+                  onClick={() => { stopAllTools(); setRoadBrush(1) }}
                 />
               )}
               {fuzzyObstaclePools && (
@@ -5103,7 +5088,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       hotkeyId="toolObstacles" label={t('common.templateDetailsDialog.obstacles')}
                       title={t('mapGrid.mapGridDialog.fuzzyObstacleBrushDragTo')}
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
+                        stopAllTools()
                         setObstacleBrushActive(true)
                       }}
                     />
@@ -5146,7 +5131,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       hotkeyId="toolTrees" label={t('mapGrid.mapGridDialog.trees')}
                       title={t('mapGrid.mapGridDialog.treeBrushDragToScatter')}
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        stopAllTools()
                         setTreeKind('trees')
                         setTreesActive(true)
                       }}
@@ -5158,7 +5143,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       hotkeyId="toolWalkables" label={t('mapGrid.mapGridDialog.walkables')}
                       title={t('mapGrid.mapGridDialog.walkablesBrushDragToScatter')}
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        stopAllTools()
                         setTreeKind('flowers')
                         setTreesActive(true)
                       }}
@@ -5172,10 +5157,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {/* Zones (issue #193 Phase 3) — thin wrapper on the
                       already-fully-built addMarker write path. */}
                   {placingZoneSid ? (
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title={t('mapGrid.mapGridDialog.clickATileToPlace')}>
-                      <SquareDashed className="h-3.5 w-3.5" />
-                      {t('mapGrid.mapGridDialog.placingZone', { zone: placingZoneSid })}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <ToolButton active icon={<SquareDashed className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.zones')} title={t('mapGrid.mapGridDialog.clickATileToPlace')} onClick={stopPlacingZone} />
+                      <span className="text-xs text-muted-foreground">{placingZoneSid}</span>
+                    </div>
                   ) : (
                     <Popover>
                       <PopoverTrigger asChild>
@@ -5187,7 +5172,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             key={z.id}
                             className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
                             onClick={() => {
-                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                              stopAllTools()
                               setPlacingZoneSid(z.id)
                             }}
                           >
@@ -5262,7 +5247,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 </div>
               ) : (
                 <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} hotkeyId="toolPlayerAreas" label={t('mapGrid.mapGridDialog.playerAreas')} title={t('mapGrid.mapGridDialog.playerAreasPaintColorCoded')}
-                            onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
+                            onClick={() => { stopAllTools(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
               )}
               
               {/* Eraser (issue #195 follow-up) — deletes non-terrain
@@ -5272,10 +5257,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   see commitEraserStroke's own doc comment. */}
               {eraserActive ? (
                 <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Eraser className="h-3.5 w-3.5" />
-                    {t('mapGrid.mapGridDialog.erasing')}
-                  </Button>
+                  <ToolButton active icon={<Eraser className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.eraser')} />
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopEraser} title={t('mapGrid.mapGridDialog.stopEsc')}>
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
@@ -5286,7 +5268,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   hotkeyId="toolEraser" label={t('mapGrid.mapGridDialog.eraser')}
                   title={t('mapGrid.mapGridDialog.eraserDragToDeleteObjects')}
                   onClick={() => {
-                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
+                    stopAllTools()
                     setEraserActive(true)
                   }}
                 />
@@ -5360,7 +5342,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   label={t('mapGrid.mapGridDialog.clearAll')}
                   title={t('mapGrid.mapGridDialog.deleteEveryObjectSquadZone')}
                   onClick={() => {
-                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                    stopAllTools()
                     setClearAllConfirming(true)
                   }}
                 />
@@ -5370,7 +5352,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 label={t('mapGrid.mapGridDialog.imageMap')}
                 title={t('mapGrid.mapGridDialog.loadAnImageAndMap')}
                 onClick={() => {
-                  stopPlacing(); setObjectBrowserOpen(false); stopPainting(); setPaintBiome(null); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                  stopAllTools()
                   void handleLoadImageMapping()
                 }}
               />

@@ -38,7 +38,7 @@ const ToolButton = forwardRef<HTMLButtonElement, Props>(function ToolButton({ ic
           title={title}
           data-hotkey-tool={hotkeyId}
           {...rest}
-          className={`flex items-center h-9 ${BUTTON_PADDING_X} ${ICON_SIZE} rounded-xl px-1.0 py-2.0 hover:bg-secondary [&:hover_svg_*]:[stroke-width:1.5] [&_svg_*]:transition-[stroke-width] [&_svg_*]:duration-125 [&:hover_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg]:duration-125 text-xs font-medium text-muted-foreground transition-colors duration-125 hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40 ${active ? 'text-accent-foreground [&_svg]:scale-[1.75] [&_svg_*]:![stroke-width:2]' : ''}`}
+          className={`flex items-center h-9 ${BUTTON_PADDING_X} ${ICON_SIZE} rounded-xl px-1.0 py-2.0 hover:bg-secondary [&:hover_svg_*]:[stroke-width:1.5] [&_svg_*]:transition-[stroke-width] [&_svg_*]:duration-125 [&:hover_svg]:scale-[1.75] [&_svg]:transition-transform [&_svg]:duration-125 text-xs font-medium text-muted-foreground transition-colors duration-125 hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40 ${active ? '!text-accent-foreground [&_svg]:scale-[1.75] [&_svg_*]:![stroke-width:2]' : ''}`}
         >
           {icon}
         </button>
