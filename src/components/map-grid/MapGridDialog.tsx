@@ -779,6 +779,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // and the paint-preview canvas effect below, which both reference it) to
   // avoid a temporal-dead-zone reference.
   const [paintBiome, setPaintBiome] = useState<BiomeId | null>(null)
+  const [biomePickerOpen, setBiomePickerOpen] = useState(false)
   // Terrain bucket-fill (issue #193 Phase 3) — an alternate click-to-flood-
   // fill interaction for the same Terrain tool, reusing floodFillRegion the
   // same way Water does. Freehand (drag-stroke) stays the default, matching
@@ -4679,7 +4680,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
               {paintBiome !== null ? (
                 <div className="flex items-center gap-1">
-                  <Popover>
+                  <Popover open={biomePickerOpen} onOpenChange={setBiomePickerOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
                         <span
@@ -4695,7 +4696,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <button
                           key={b}
                           className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                          onClick={() => setPaintBiome(b)}
+                          onClick={() => { setPaintBiome(b); setBiomePickerOpen(false) }}
                         >
                           <span
                             className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
