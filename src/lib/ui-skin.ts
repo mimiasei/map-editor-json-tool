@@ -34,7 +34,7 @@ export interface SkinProgress {
 export const UI_SKIN_EXTRACTED_EVENT = 'oe:ui-skin-extracted'
 
 /** Bumped when the sprite set changes, so an older extraction counts as "not extracted" and the user is asked to extract again. */
-const SKIN_VERSION = 3
+const SKIN_VERSION = 4
 
 let skinDir: string | null = null
 let manifest: SkinManifest | null = null

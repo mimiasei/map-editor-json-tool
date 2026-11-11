@@ -430,10 +430,23 @@
   color: hsl(var(--primary));
 }
 
-/* The five big start-screen buttons get the game's ornamented window edge (no fill: the cell keeps its own background).
-   Doubled attribute for the specificity to beat the pressed-button card art of the Recent cell. */
-.skin-game button[data-start-cell][data-start-cell] {
-  border: 0 solid transparent;
-  border-image: var(--skin-window) var(--skin-window-slice) / 26px stretch;
+/* The five big start-screen buttons get the game's metallic ornamented frame (Frame_MapParameters). It sits on a pseudo-element, so
+   it fades on hover and when pressed like the cell's own background does (hover:bg-accent/50); the cell keeps its fill. */
+.skin-game button[data-start-cell] {
+  position: relative;
   border-radius: 4px;
+}
+
+.skin-game button[data-start-cell]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 0 solid transparent;
+  border-image: var(--skin-frame) var(--skin-frame-slice) / 22px stretch;
+  pointer-events: none;
+  transition: opacity 150ms;
+}
+
+.skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"])::before {
+  opacity: 0.5;
 }

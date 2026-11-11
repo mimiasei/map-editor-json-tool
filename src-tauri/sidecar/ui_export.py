@@ -1,7 +1,7 @@
 """Export the game's UI sprites for the optional Game skin (see src/lib/ui-skin.ts).
 
 Writes <out>/<key>.png for every entry of SPRITES plus <out>/manifest.json:
-    {"version": 3, "build": "<size>-<mtime>", "sprites": {key: {"w", "h", "border": [top, right, bottom, left]}}}
+    {"version": 4, "build": "<size>-<mtime>", "sprites": {key: {"w", "h", "border": [top, right, bottom, left]}}}
 The border is in the exported image's pixels, in CSS `border-image-slice` order. Unity's `Sprite.m_Border`
 is left/bottom/right/top, so it is reordered here and the frontend never has to know about Unity.
 
@@ -44,6 +44,8 @@ SPRITES: dict[str, tuple] = {
     "map_slider_track": ("TemplateSetUp_MapSize_Progressbar_Back", 24, 24, 1.0),
     "map_slider_thumb": ("TemplateSetUp_MapSize_Progressbar_Holder_Hover", 30, 58, 1.0),
     "background": ("background_menu", 3840, 2160, 0.5),
+    # The metallic frame with corner ornaments of the random-map screen (the 546x491 variant); the start-screen buttons use it.
+    "frame": ("Frame_MapParameters", 546, 491, 0.5),
 }
 
 
@@ -96,6 +98,6 @@ def export_ui(game_dir: Path, out_dir: Path, emit: Callable[[dict], None]) -> No
     st = ref.stat() if ref.exists() else None
     build = f"{st.st_size}-{int(st.st_mtime)}" if st else "unknown"
     (out_dir / "manifest.json").write_text(
-        json.dumps({"version": 3, "build": build, "sprites": manifest}, separators=(",", ":")), encoding="utf-8"
+        json.dumps({"version": 4, "build": build, "sprites": manifest}, separators=(",", ":")), encoding="utf-8"
     )
     emit({"type": "done", "saved": len(manifest), "missing": missing})
