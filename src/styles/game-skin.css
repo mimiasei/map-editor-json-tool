@@ -132,6 +132,15 @@
   transform: scale(1.1);
 }
 
+/* Popovers with their own close X (Map settings) get the same heavy cross. */
+.skin-game [data-skin-close] > svg {
+  transform: scale(1.1);
+}
+
+.skin-game [data-skin-close] > svg path {
+  stroke-width: 3.5;
+}
+
 /* The icon sets stroke-width on its <path>, so the svg's own would not win. */
 .skin-game :is([role="dialog"], [role="alertdialog"]):not([data-side]) > button:has(> span.sr-only) > svg path {
   stroke-width: 3.5;
