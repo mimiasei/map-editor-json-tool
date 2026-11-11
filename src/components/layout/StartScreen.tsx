@@ -22,6 +22,7 @@ function Cell({ icon, label, active, onClick }: { icon: ReactNode; label: string
   return (
     <button
       type="button"
+      data-start-cell
       onClick={onClick}
       aria-pressed={active}
       className={cn(

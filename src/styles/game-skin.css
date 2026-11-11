@@ -429,3 +429,11 @@
 .skin-game .text-secondary {
   color: hsl(var(--primary));
 }
+
+/* The five big start-screen buttons get the game's ornamented window edge (no fill: the cell keeps its own background).
+   Doubled attribute for the specificity to beat the pressed-button card art of the Recent cell. */
+.skin-game button[data-start-cell][data-start-cell] {
+  border: 0 solid transparent;
+  border-image: var(--skin-window) var(--skin-window-slice) / 26px stretch;
+  border-radius: 4px;
+}
