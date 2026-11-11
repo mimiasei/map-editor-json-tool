@@ -448,5 +448,5 @@
 }
 
 .skin-game button[data-start-cell]:is(:hover, [aria-pressed="true"])::before {
-  opacity: 0.5;
+  opacity: 0.3;
 }
