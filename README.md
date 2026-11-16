@@ -4,13 +4,13 @@ A visual editor for the scenario scripting JSON files used in **Heroes of Might 
 
 **Web app:** https://mimiasei.github.io/map-editor-json-tool/
 
-**Desktop downloads (v0.9.5-1):**
+**Desktop downloads (v0.9.9):**
 
 | Platform | Download |
 |---|---|
-| macOS — Apple Silicon | [HommOE.Scenario.Editor_0.9.5-1_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.9.5-1/HommOE.Scenario.Editor_0.9.5-1_aarch64.dmg) |
-| Windows | [HommOE.Scenario.Editor_0.9.5-1_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.9.5-1/HommOE.Scenario.Editor_0.9.5-1_x64-setup.exe) |
-| Linux | [HommOE.Scenario.Editor_0.9.5-1_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.9.5-1/HommOE.Scenario.Editor_0.9.5-1_amd64.AppImage) |
+| macOS — Apple Silicon | [HommOE.Scenario.Editor_0.9.9_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.9.9/HommOE.Scenario.Editor_0.9.9_aarch64.dmg) |
+| Windows | [HommOE.Scenario.Editor_0.9.9_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.9.9/HommOE.Scenario.Editor_0.9.9_x64-setup.exe) |
+| Linux | [HommOE.Scenario.Editor_0.9.9_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.9.9/HommOE.Scenario.Editor_0.9.9_amd64.AppImage) |
 
 > **macOS note:** the app is not notarized by Apple. Gatekeeper will block it — especially on Apple Silicon. The reliable workaround is to run this once in Terminal after copying the app to `/Applications`:
 > ```
@@ -26,13 +26,11 @@ The in-game map editor does not expose scenario scripting. Quest flow, win/lose 
 
 This tool gives that file a visual interface, and a lot more:
 
-- **Generate** a complete random map in one click — zones, elevation, rivers, roads, mines, guards and treasure — from the editor or straight from the game's own map editor
-- **Import** an existing scenario JSON and browse its structure in a tree
-- **Edit** counters, interruptions, quests, sub-quests, triggers, conditions, and actions — as structured forms, or as plain-language cards with clickable links to the objects/heroes/nodes they reference
-- **Author dialog flows** — build branching NPC conversations with player choices, speaker titles, and map actions per slide
-- **Localise** — manage text tokens for dialogs and quest names in one panel, in English and any of the game's other 15 languages
-- **Edit the map itself** (desktop) — open the binary `.map` file and use the Map Grid to move, add, delete, rotate, and paint objects and terrain directly. Good for quick changes.
-- **Export** back to a correctly formatted scenario JSON, or as a **distributable map ZIP** ready to drop next to `Core.zip`
+- **Generate** a complete random map in one click, from the editor or from the game's own map editor
+- **Edit the map itself** (desktop): open the binary `.map` and move, add, delete and paint objects and terrain in the Map Grid
+- **Script** quests, counters, triggers, conditions and actions as forms or plain-language cards
+- **Author dialogs and localise** them into any of the game's 16 languages
+- **Export** a scenario JSON or a distributable map ZIP, or **Publish** straight into the game
 
 It is a companion to the map editor, not a replacement for it.
 
@@ -64,39 +62,22 @@ It is a companion to the map editor, not a replacement for it.
 
 ## Features
 
-🗺️**Random map generator** — builds a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Advanced mode unlocks far more options (water and islands, hills, zone shape, object and guard density, roads, portals). Classic mode is tuned to look like the game's own maps:
-- **Layouts** — rings, hubs, pockets and more, with hills following the game's own elevation layouts.
-- **Rivers** — start at a mountain on a hill, drop off it over a single waterfall, wind across level ground, widen toward the mouth, flow into lakes, the sea or each other, and keep clear of cliffs so no row of waterfalls forms.
-- **Roads and guards** — every city gets a road; guards stand on object entrances; zone borders are walled with guarded gates.
-- **Economy** — game-like mine distribution per player and neutral zone, richness-based treasure, guard strength by difficulty.
-- **Fair by design** — a generation scoring low on player balance is re-rolled; a seed reproduces the same map. Generator values can be tuned without rebuilding (see below).
+Ranked from the biggest to the smallest. Items marked *(desktop)* need the desktop app.
 
-⚙️**Game map editor mod** (Windows) — adds Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
-
-↔️**Import Heroes III maps** (desktop) — turn a HoMM3 `.h3m` into an Olden Era map from *More → Import H3 Map*: terrain and scenery, towns (as player starts), heroes, monsters (strength-calibrated), mines, resources, dwellings, artifacts, portals, global events, and the "defeat all enemies" victory as a real quest. Open it in the Map Grid and polish it from there.
-
-✏️**Map Grid** (desktop) — a live 2D view of your actual map, not just the script, with two modes:
-- **Browse** — click any tile to inspect everything placed on it.
-- **Paint** — edits apply immediately (Ctrl+Z/Cmd+Z undoes, with its own history separate from the scenario editor's):
-  - **Objects** — move, add, delete, and rotate; place real creature squads with hover tooltips for stats; assign which player starts where — city or hero.
-  - **Terrain & water** — drag-paint terrain, roads, rivers, and ramps; flood-fill water into lowered terrain; a blocked-tile overlay shows exactly what's walkable; erase anything with the Eraser tool.
-  - **Scatter brushes** — **Obstacles**, **Trees**, and **Landmarks** drop biome-appropriate scenery as you drag, with per-brush settings for mountain/pool chance and cross-biome mixing.
-
-◾**Trigger builder (Card view)** — conditions and actions render as plain-language sentences instead of raw forms. Hero, object, dialog, and node references are clickable — heroes and objects jump to their Game Database entry, nodes open the Map Grid centered on that tile; dialog actions show a tooltip preview of the localized text on hover.
-
-◾**Dialog & localization** — a visual slide editor for branching NPC conversations: portraits, animations, voice lines, player choices, and per-slide map actions. Translate every dialog and quest name into any of the game's 16 languages side by side, with English as a safety-net fallback.
-
-◾**Scenario scripting** — full CRUD across counters → interruptions → quests → sub-quests → triggers → conditions/actions, with 55 condition types and 114 action types, labelled fields and inline tooltips, plus a forward-compatible fallback for anything the registry doesn't know yet.
-
-◾**Story Builder** — add a whole story in a few clicks: ready-made stories (with real player choices), steps you stack yourself, or (desktop, optional) your own idea in any language. It generates ordinary connected quests, integer counters that remember the player's choices, and the dialogs, with an editable text preview. English is always the base language. With an optional free Gemini or Groq key the text is written to fit your story and your map; without one, built-in text is used.
-
-◾**Custom content** — build your own heroes, map objects, artifacts, and buffs, either from scratch or by cloning something that already exists.
-
-◾**Game Data Catalog** — load your game's `Core.zip` to populate every dropdown with real names and artwork, and browse the full Hero / Creature / Artifact / Object database and every one of the game's ~769 shipped dialogs.
-
-◾**Quality of life** — undo/redo, a command palette (Ctrl+K), SID autocomplete, live JSON preview, an event timeline and quest-flow diagram, resizable/movable/undockable panels, and built-in guides with annotated starter templates.
-
-◾**Ship it** — export a distributable map ZIP, or (desktop) **Publish** straight into your game install in one click. Auto-update keeps the desktop app itself current.
+1. **Map Grid** *(desktop)*: a live 2D view of your real `.map`.
+   - **Browse**: click a tile to inspect everything on it; a blocked-tile overlay shows what is walkable and follows the filter pills.
+   - **Paint**: terrain, roads, rivers, ramps and water; objects, heroes, creature squads and player starts (city or hero); scatter brushes for obstacles, trees and landmarks; an Eraser. Edits apply at once, with their own undo/redo (Ctrl+Z).
+2. **Random map generator**: a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Advanced mode adds water and islands, hills, zone shape, object and guard density, roads and portals. Classic mode follows the game's own maps: zone layouts, winding rivers with waterfalls, roads to every city, guards on entrances, game-like mine economy. A map scoring low on player balance is re-rolled, and a seed reproduces the same map. On Windows, the optional **game map editor mod** adds these options to the game editor's *Generate map* dialog (see [gme-mod/README.md](gme-mod/README.md)).
+3. **Scenario scripting**: counters, interruptions, quests, sub-quests and triggers, with 55 condition types and 114 action types. Forms with tooltips, or a **Card view** that reads as plain sentences with clickable links to heroes, objects, dialogs and map tiles.
+4. **Dialogs and localisation**: a slide editor for branching NPC conversations (portraits, animations, voice lines, choices, per-slide map actions). Translate dialogs and quest names side by side, with English as the fallback.
+5. **Story Builder**: add a whole story in a few clicks from ready-made stories, steps you stack yourself, or (desktop, optional) your own idea. It generates normal connected quests, choice counters and dialogs. An optional free Gemini or Groq key writes text that fits your story and map; without one, built-in text is used.
+6. **Import Heroes III maps** *(desktop)*: *More → Import H3 Map* converts a `.h3m` (terrain, scenery, towns, heroes, monsters, mines, dwellings, artifacts, portals, victory quest) into an Olden Era map to polish in the Map Grid.
+7. **Publish and ship**: export a distributable map ZIP, or **Publish** into your game install in one click *(desktop)*. The desktop app updates itself.
+8. **Game data catalog and Game Database**: load `Core.zip` for real names and artwork in every dropdown, and browse heroes, creatures, artifacts, rendered map objects (with filters) and all ~769 shipped dialogs.
+9. **Image to map** *(desktop)*: turn a picture into terrain and per-biome decorations through a colour mapping.
+10. **Custom content**: your own heroes, map objects, artifacts and buffs, from scratch or by cloning.
+11. **Game skin and themes**: an optional look that follows the game's own menus *(desktop)*, plus a Theme editor and 7 UI languages.
+12. **Quality of life**: undo/redo, command palette (Ctrl+K), SID autocomplete, live JSON preview, event timeline and quest-flow diagram, undockable panels, and built-in guides with starter templates.
 
 ---
 
@@ -136,7 +117,8 @@ bundles the game map editor mod and BepInEx (see [gme-mod/README.md](gme-mod/REA
 the build fails without them. The installer also finds the game folder (Steam libraries) or asks
 for it, so the editor loads `Core.zip` on first start without manual setup.
 
-### Tuning the Classic random map generator
+<details>
+<summary><b>Tuning the Classic random map generator</b></summary>
 
 Classic-mode values can be overridden without rebuilding, in an optional
 `rmg-tuning.json` in the app data folder (Windows: `%APPDATA%\com.oe.map-editor\`). It is read on
@@ -149,6 +131,8 @@ pockets, hub), how many mines of which types neutral and player zones get, the d
 dwellings, resources, interactables by rarity, artifacts, treasure, random cities) or per object sid, how often a neutral zone gets a lone guard
 away from any object, how many rivers there are, how much they wind, and how far they keep from cliffs (`rivers.cliffClearance`, so no row of waterfalls under a cliff), how wide they get toward the mouth (`rivers.mouthWidening`), how often a river flows into another one (`rivers.confluenceChance`), and how much clutter lines the banks (`rivers.bankDecoration`). `edges.frame` (0-1, default 1) sets how densely trees and mountains fence in the map edge, as on the game's own maps (0 = bare edge). `interactables.weightBySid` sets how likely a single interactable is to be scattered (0 never); by default the game's own content-list weights are used, and objects the game never rolls (weight 0, e.g. `mirage`, `insaras_eye`) plus the rare tier are left out. Sand, Snow and Lava never mix with other biomes: their seams stay hard, their objects and animals only stand on their own ground, other biomes' objects stay off them (the Grass pines and fish go anywhere), and a beach is only added to water whose whole shore is Grass, Dirt, Autumn or Sand.
 Invalid entries are skipped and listed in the app log. Shape and rules: `src/lib/rmg/rmg-tuning.ts`.
+
+</details>
 
 Desktop-only features are gated behind `isTauri()` (`src/lib/native-fs.ts`), and every Tauri
 API is reached through a dynamic import inside that guard — never imported at module top
@@ -166,67 +150,17 @@ The `examples/` directory contains scenario JSON files (`example_01.json` – `e
 
 ```
 src/
-├── types/
-│   ├── scenario.ts            — Interfaces for the scenario JSON format
-│   ├── dialog.ts              — Dialog flows (DialogFlow, DialogSlide, DialogAnswer, avatars)
-│   └── map-context.ts         — Read-only data derived from a loaded .map file
-├── schema/
-│   ├── conditions.ts          — Registry of known condition types + parameters
-│   ├── actions.ts             — Registry of known action types + parameters
-│   ├── entities.ts            — Built-in entity fallback lists
-│   └── zod.ts                 — Permissive Zod schemas (failures become warnings, not errors)
-├── store/                     — Zustand: scenario (with undo), catalog, map context, guides, theme
-├── lib/
-│   ├── catalog/
-│   │   ├── types.ts           — GameCatalog and per-entity interfaces
-│   │   ├── zip-loader.ts      — Core.zip discovery (Steam paths, resource dir, file picker)
-│   │   ├── builder.ts         — Catalog extraction from Core.zip (heroes, spells, dialogs, …)
-│   │   ├── static-catalog.ts  — Bundled fallback catalog for when Core.zip isn't loaded
-│   │   ├── icon-requests.ts   — Which icons the extractor should fetch (incl. hero portraits)
-│   │   └── thumbnails.tsx     — thumbnailPath, CatalogIcon, PortraitThumb, heroPortraitPath
-│   ├── import.ts / export.ts  — Project JSON round-trip, including the _* editor keys
-│   ├── dialog-file.ts         — The shipped per-dialog file shape ({"array":[flow]})
-│   ├── json-docs.ts           — Documents shown in the editable JSON column
-│   ├── zip-export.ts          — Builds the distributable map ZIP
-│   ├── publish.ts             — Resolves the two publish destinations
-│   ├── languages.ts           — The game's 16 languages + English-fallback resolution
-│   ├── factions.ts            — Faction display names and the game's faction order
-│   ├── validate.ts            — Scenario, dialog-flow and localisation checks
-│   ├── trigger-visual.ts      — Card view: plain-language sentences + clickable link segments
-│   ├── map-parser.ts          — .map binary reader (gzip + LEB128-framed JSON blocks)
-│   ├── map-extract.ts         — Derives MapContext (entities, spawns, placements) from blocks
-│   ├── map-write.ts / map-save.ts — Span-patch-and-splice .map edits, verified before write
-│   ├── map-grid/               — Footprint, passability and cell-visual helpers for the Map Grid
-│   ├── rmg/                   — Random map generator: zones, terrain, rivers, roads, population, tuning, headless CLI args
-│   ├── stories/               — Story Builder: beat generators, premade stories, sid namer, offline text banks
-│   ├── text-writer.ts         — Desktop-only wrapper around the Rust text writer commands
-│   ├── map-file.ts            — Opens a .map plus its sidecar scenario JSON
-│   ├── timeline.ts / quest-flow.ts — Derived views for the timeline and DAG
-│   ├── native-fs.ts           — The only place Tauri file APIs are touched; isTauri() guard
-│   ├── updater.ts             — Auto-update checks and install
-│   ├── session-handoff.ts     — Saves and restores the open project across an update restart
-│   ├── dialog-geometry.ts     — Remembered size/position for resizable modals
-│   └── panel-sync.ts          — BroadcastChannel state mirror for undocked panel windows
-└── components/
-    ├── layout/                — AppShell, Toolbar, MapMetaForm
-    ├── tree/                  — Sidebar scenario tree (incl. the Entity SIDs section)
-    ├── editors/               — Counter, Interruption, Quest, SubQuest, Trigger editors
-    ├── conditions/ actions/   — Condition and action forms and lists
-    ├── dialogs/               — DialogEditor, LocalizationDialog, AvatarStrip, AssetCombobox
-    ├── catalog/               — GameDatabaseDialog, HeroPickerDialog, DialogBrowser, filters
-    ├── guides/                — GuidesDialog, GuideArticle, TemplatePicker, AnnotationBanner
-    ├── story/                 — Story Builder wizard and text writer settings
-    ├── panels/                — Undocked panel windows (PanelShell, PanelContent)
-    ├── map-grid/               — MapGridDialog, ObjectBrowserPanel, cell-info column (desktop)
-    └── common/                — JsonPreview, DraggableDialogContent, Publish/Update/Setup/
-                                 Theme/Thumbnail dialogs, CommandPalette, Timeline, QuestFlow, Stats
+├── types/ schema/ store/      — scenario types, condition/action registries and Zod schemas, Zustand stores
+├── lib/                       — .map parser/writer, catalog loader, export/publish, and the feature engines:
+│   ├── rmg/                     random map generator
+│   ├── stories/                 Story Builder
+│   ├── map-grid/                footprint and passability helpers
+│   └── native-fs.ts             the only place Tauri file APIs are touched (isTauri() guard)
+├── components/                — editors, dialogs, catalog, guides, story, map-grid (desktop), common
+└── locales/                   — UI translations (7 languages)
 
 gme-mod/                       — BepInEx plugin for the game's map editor (see gme-mod/README.md)
-
-src-tauri/
-├── src/lib.rs                 — Tauri setup: menu bar, updater, extract_thumbnails command, headless --generate mode
-├── src/text_writer/           — Story text service: prompts, key store, Gemini/Groq adapters, reply validation, story import
-└── sidecar/                   — Python + UnityPy icon extractor (built by scripts/build-sidecar.sh)
+src-tauri/                     — Tauri (Rust): updater, headless --generate, text writer, Python/UnityPy sidecar
 ```
 
 Content authoring — guide articles, tooltips and templates — is documented separately in
