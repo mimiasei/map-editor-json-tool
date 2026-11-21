@@ -104,6 +104,8 @@ interface ScenarioStore {
    *  disk is still stale until re-exported/published. Drives the "Publish"
    *  header button's needs-attention indicator. */
   zipDirty: boolean
+  /** The .map path ('' when none) of the last Export ZIP/Publish; see hooks/usePublishNeeded. */
+  zipPublishedFor: string | null
   currentFilePath: string | null   // absolute path (Tauri) or '' (browser)
   currentFileName: string | null   // display name, e.g. "my_map.json"
   /** Absolute path to the source .map binary (null if opened from bare JSON) */
@@ -326,6 +328,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   scenario: EMPTY_SCENARIO,
   isDirty: false,
   zipDirty: false,
+  zipPublishedFor: null,
   currentFilePath: null,
   currentFileName: null,
   mapFilePath: null,
@@ -361,7 +364,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   markClean: () => set({ isDirty: false }),
-  markZipPublished: () => set({ zipDirty: false }),
+  markZipPublished: () => set((s) => ({ zipDirty: false, zipPublishedFor: s.mapFilePath ?? '' })),
 
   setCurrentFile: (path, name) => set({ currentFilePath: path, currentFileName: name }),
 

@@ -28,6 +28,7 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
+import { usePublishNeeded, selectPublishNeeded } from '@/hooks/usePublishNeeded'
 import {
   Dialog,
   DialogContent,
@@ -102,7 +103,7 @@ import WhatsNewDialog from '@/components/common/WhatsNewDialog'
 import PlayerBalancePanel, { DecorationBalanceSection, ZoneEconomySection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
-import { ImageIcon } from '@/components/ui/icons'
+import { ImageIcon, X } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { useTranslation } from 'react-i18next'
@@ -190,7 +191,6 @@ export default function Toolbar({
     customMapObjects,
     customArtifacts,
     customBuffs,
-    zipDirty,
     setScenario,
     markClean,
     markZipPublished,
@@ -502,6 +502,19 @@ export default function Toolbar({
   //   unified — one action for both halves, matching how the .map side no
   //   longer has its own separate save trigger).
   const handleSave = async () => {
+    await saveProject()
+    nudgeToPublish()
+  }
+
+  // After a Save or Save As: if the game still lacks the ZIP, say so, with the way to the Publish dialog.
+  const [publishNudge, setPublishNudge] = useState(false)
+  const publishNeeded = usePublishNeeded()
+  const nudgeToPublish = () => {
+    if (isTauri() && selectPublishNeeded(useScenarioStore.getState())) setPublishNudge(true)
+  }
+  useEffect(() => { if (!publishNeeded) setPublishNudge(false) }, [publishNeeded])
+
+  const saveProject = async () => {
     await commitMapIfDirty(mapFilePath)
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
@@ -530,6 +543,11 @@ export default function Toolbar({
   // map, e.g. one just created via New Map).
   const handleExport = async () => {
     if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt — abort the whole Save As
+    await saveSidecarAfterPrompt()
+    nudgeToPublish()
+  }
+
+  const saveSidecarAfterPrompt = async () => {
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
@@ -882,12 +900,17 @@ export default function Toolbar({
             <ToolButton
               icon={
                 <span className="relative">
-                  <UploadCloud className="h-3.5 w-3.5" />
-                  {zipDirty && <span className="absolute -right-1.5 -top-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                  <UploadCloud className={`h-3.5 w-3.5 ${publishNeeded ? 'text-amber-500' : ''}`} />
+                  {publishNeeded && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+                    </span>
+                  )}
                 </span>
               }
               label={t('layout.toolbar.publish')}
-              title={zipDirty ? t('layout.toolbar.publishMapYouHaveChanges') : t('common.publishDialog.publishMap')}
+              title={publishNeeded ? t('layout.toolbar.publishMapYouHaveChanges') : t('common.publishDialog.publishMap')}
               onClick={() => setPublishOpen(true)}
             />
           )}
@@ -1446,6 +1469,22 @@ export default function Toolbar({
       {/* Publish dialog (Tauri only) */}
       {isTauri() && (
         <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} />
+      )}
+
+      {/* After Save: the dialogs, text and custom content only reach the game through Publish. */}
+      {publishNudge && !publishOpen && (
+        <div role="status" className="fixed bottom-4 right-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-amber-500/60 bg-card p-3 text-xs shadow-lg">
+          <UploadCloud className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <div className="space-y-2">
+            <p>{t('layout.toolbar.publishNudge')}</p>
+            <Button size="sm" className="h-7 text-xs" onClick={() => { setPublishNudge(false); setPublishOpen(true) }}>
+              {t('layout.toolbar.publishNudgeAction')}
+            </Button>
+          </div>
+          <button type="button" className="shrink-0 text-muted-foreground hover:text-foreground" onClick={() => setPublishNudge(false)} aria-label={t('ui.close')}>
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       )}
 
       {/* About works in both builds — the version row just reads "web build" on the web. */}

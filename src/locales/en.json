@@ -2259,6 +2259,8 @@
       "generateOnMapTitle": "Add generated decorations and interactables to this map",
       "unpublishedChanges": "Unpublished changes",
       "publishMapYouHaveChanges": "Publish map — you have changes not yet written to the game (custom heroes/objects/artifacts, dialogs, localization)",
+      "publishNudge": "Saved. The game only gets your dialogs, texts and custom content through Publish: publish the map ZIP so they work in the game.",
+      "publishNudgeAction": "Publish…",
       "guides": "Guides",
       "gameDatabase": "Game Database",
       "undoCtrlZ": "Undo (Ctrl+Z)",

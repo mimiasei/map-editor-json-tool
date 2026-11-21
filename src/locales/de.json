@@ -2251,6 +2251,8 @@
       "generateOnMapTitle": "Generierte Dekorationen und Interaktionsobjekte zu dieser Karte hinzufügen",
       "unpublishedChanges": "Unveröffentlichte Änderungen",
       "publishMapYouHaveChanges": "Karte veröffentlichen — Sie haben Änderungen, die noch nicht ins Spiel geschrieben wurden (benutzerdefinierte Helden/Objekte/Artefakte, Dialoge, Lokalisierung)",
+      "publishNudge": "Gespeichert. Dialoge, Texte und eigene Inhalte erreichen das Spiel nur über Veröffentlichen: Veröffentliche die Karten-ZIP, damit sie im Spiel funktionieren.",
+      "publishNudgeAction": "Veröffentlichen…",
       "guides": "Anleitungen",
       "gameDatabase": "Spieldatenbank",
       "undoCtrlZ": "Rückgängig (Strg+Z)",

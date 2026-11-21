@@ -2251,6 +2251,8 @@
       "generateOnMapTitle": "Legg til genererte dekorasjoner og interaktive objekter på dette kartet",
       "unpublishedChanges": "Upubliserte endringer",
       "publishMapYouHaveChanges": "Publiser kart — du har endringer som ennå ikke er skrevet til spillet (egendefinerte helter/objekter/artefakter, dialoger, lokalisering)",
+      "publishNudge": "Lagret. Spillet får dialogene, tekstene og det egendefinerte innholdet ditt bare gjennom Publiser: publiser kart-ZIP-en så de virker i spillet.",
+      "publishNudgeAction": "Publiser…",
       "guides": "Guider",
       "gameDatabase": "Spilldatabase",
       "undoCtrlZ": "Angre (Ctrl+Z)",

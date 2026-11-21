@@ -2286,6 +2286,8 @@
       "generateOnMapTitle": "Ajouter des décors et objets interactifs générés à cette carte",
       "unpublishedChanges": "Modifications non publiées",
       "publishMapYouHaveChanges": "Publier la carte — vous avez des modifications pas encore écrites dans le jeu (héros/objets/artefacts personnalisés, dialogues, localisation)",
+      "publishNudge": "Enregistré. Le jeu ne reçoit vos dialogues, textes et contenus personnalisés que via Publier : publiez le ZIP de la carte pour qu’ils fonctionnent dans le jeu.",
+      "publishNudgeAction": "Publier…",
       "guides": "Guides",
       "gameDatabase": "Base de données du jeu",
       "undoCtrlZ": "Annuler (Ctrl+Z)",

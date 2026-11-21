@@ -2321,6 +2321,8 @@
       "generateOnMapTitle": "Dodaj wygenerowane dekoracje i obiekty interaktywne do tej mapy",
       "unpublishedChanges": "Nieopublikowane zmiany",
       "publishMapYouHaveChanges": "Opublikuj mapę — masz zmiany, które nie trafiły jeszcze do gry (własni bohaterowie/obiekty/artefakty, dialogi, lokalizacja)",
+      "publishNudge": "Zapisano. Gra dostaje dialogi, teksty i własną zawartość tylko przez Publikuj: opublikuj ZIP mapy, żeby działały w grze.",
+      "publishNudgeAction": "Publikuj…",
       "guides": "Poradniki",
       "gameDatabase": "Baza danych gry",
       "undoCtrlZ": "Cofnij (Ctrl+Z)",
