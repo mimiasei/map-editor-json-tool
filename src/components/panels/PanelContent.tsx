@@ -7,6 +7,8 @@ import { StatsContent } from '@/components/common/StatsDialog'
 import { GuidesContent } from '@/components/guides/GuidesPanel'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import { terrainLabel } from '@/lib/map-grid/terrain-colors'
+import { objectFocusPoint } from '@/lib/map-grid/focus'
+import type { PlacedObject } from '@/types/map-context'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useTranslation } from 'react-i18next'
 
@@ -17,7 +19,7 @@ import { useTranslation } from 'react-i18next'
 // channel (which every other field here does go through). Extracted into its
 // own component, not inlined into the switch below, so its hooks are never
 // conditionally called depending on panelId.
-function MapGridCellPanel({ state }: { state: PanelState }) {
+function MapGridCellPanel({ state, sendAction }: { state: PanelState; sendAction: (action: PanelAction) => void }) {
   const { t } = useTranslation()
   const catalog = useCatalogStore((s) => s.catalog)
   useEffect(() => { useCatalogStore.getState().load() }, [])
@@ -36,7 +38,9 @@ function MapGridCellPanel({ state }: { state: PanelState }) {
   const allPortals = mapContext.placedObjects.filter((p) => p.portalInfo)
   // Read-only mirror — no onRename/onSetDisplayName/onSetPortalTarget/onSetHighlightedNode
   // (issue #125 scope decision — edits and the grid-highlight overlay stay docked-only).
-  return <MapGridCellContent items={items} terrainLabel={label} catalog={catalog} allPortals={allPortals} />
+  // A click on an object asks the main window to centre the grid on it.
+  const focusItem = (item: PlacedObject) => { const p = objectFocusPoint(item, catalog); sendAction({ name: 'focusTile', args: [p.x, p.z] }) }
+  return <MapGridCellContent items={items} terrainLabel={label} catalog={catalog} allPortals={allPortals} onFocusItem={focusItem} />
 }
 
 interface Props {
@@ -103,7 +107,7 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
       return <GuidesContent />
 
     case 'mapGridCell':
-      return <MapGridCellPanel state={state} />
+      return <MapGridCellPanel state={state} sendAction={sendAction} />
 
     default:
       return (

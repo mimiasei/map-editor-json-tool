@@ -522,6 +522,8 @@ export default function AppShell() {
       if (action.name === 'setSelection') {
         const [type, path] = action.args
         useScenarioStore.getState().setSelection(type, path)
+      } else if (action.name === 'focusTile') {
+        useMapGridStore.getState().requestFocus(...action.args)
       }
     })
 

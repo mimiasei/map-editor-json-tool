@@ -56,6 +56,8 @@ export interface PanelState {
 /** Actions an undocked panel can send back to the main window. */
 export type PanelAction =
   | { name: 'setSelection'; args: [SelectionType, number[]] }
+  /** Centre the Map Grid on a tile at 100% zoom (a click on an object in the undocked tile-info window). */
+  | { name: 'focusTile'; args: [number, number] }
 
 export type SyncMessage =
   | { type: 'state';  sourceId: string; payload: PanelState }

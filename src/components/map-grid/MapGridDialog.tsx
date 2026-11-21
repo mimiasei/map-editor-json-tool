@@ -89,6 +89,7 @@ import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuz
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
+import { objectFocusPoint } from '@/lib/map-grid/focus'
 import {buildBlockedTileSet, buildEntranceTileSet, objectBlockedCells} from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -3709,10 +3710,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     centerOnTile(item.x, item.z)
     zoomTo100()
   }, [selectNode, centerOnTile])
-  // Centres on the middle of the object's icon footprint (a multi-tile object's x/z is only its anchor tile), then zooms to 100%.
   const focusItem = useCallback((item: PlacedObject) => {
-    const bounds = item.type === 0 ? footprintIconBounds(computeFootprintTiles(catalog?.mapObjects.find((o) => o.id === item.sid), item.x, item.z, item.rotation)) : null
-    centerOnTile(bounds ? (bounds.minX + bounds.maxX) / 2 : item.x, bounds ? (bounds.minZ + bounds.maxZ) / 2 : item.z)
+    const point = objectFocusPoint(item, catalog)
+    centerOnTile(point.x, point.z)
     zoomTo100()
   }, [catalog, centerOnTile, zoomTo100])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
