@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Bla gjennom helter gruppert etter fraksjon",
       "browse": "Bla gjennom",
       "browseHeroesByFaction": "Bla gjennom helter etter fraksjon…",
+      "browseSquads": "Bla gjennom skvadroner etter fraksjon og nivå…",
       "filterMapObjects": "Filtrer kartobjekter",
       "filterMapObjectsActive": "Filtrer kartobjekter ({{filter}})",
       "noMatching": {
@@ -2655,6 +2656,15 @@
       "category": "Kategori",
       "biome": "Biom",
       "noBiome": "Ingen"
+    },
+    "squadPickerDialog": {
+      "title": "Velg en skvadron",
+      "search": "Søk etter skapning eller skvadron-id",
+      "filter": "Filtrer skvadroner",
+      "tier": "Nivå",
+      "noneLoaded": "Ingen skvadronmaler: last Core.zip via Spilldata",
+      "noMatch": "Ingen skvadroner passer til søket og filtrene",
+      "refine": "Viser {{shown}} av {{total}}: avgrens søket eller filtrene"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Søk etter navn, SID eller ikon…",

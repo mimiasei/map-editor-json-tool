@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Browse heroes grouped by faction",
       "browse": "Browse",
       "browseHeroesByFaction": "Browse heroes by faction…",
+      "browseSquads": "Browse squads by faction and tier…",
       "filterMapObjects": "Filter map objects",
       "filterMapObjectsActive": "Filter map objects ({{filter}})",
       "noMatching": {
@@ -2663,6 +2664,15 @@
       "category": "Category",
       "biome": "Biome",
       "noBiome": "None"
+    },
+    "squadPickerDialog": {
+      "title": "Choose a squad",
+      "search": "Search creatures or squad id",
+      "filter": "Filter squads",
+      "tier": "Tier",
+      "noneLoaded": "No squad templates: load Core.zip via Game Data",
+      "noMatch": "No squads match the search and filters",
+      "refine": "Showing {{shown}} of {{total}}: narrow the search or the filters"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Search name, SID or icon…",

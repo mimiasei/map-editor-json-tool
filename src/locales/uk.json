@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Переглянути героїв за фракціями",
       "browse": "Переглянути",
       "browseHeroesByFaction": "Переглянути героїв за фракціями…",
+      "browseSquads": "Переглянути загони за фракцією та рівнем…",
       "filterMapObjects": "Фільтр об'єктів мапи",
       "filterMapObjectsActive": "Фільтр об'єктів мапи ({{filter}})",
       "noMatching": {
@@ -2740,6 +2741,15 @@
       "category": "Категорія",
       "biome": "Біом",
       "noBiome": "Немає"
+    },
+    "squadPickerDialog": {
+      "title": "Обрати загін",
+      "search": "Шукати істоту або id загону",
+      "filter": "Фільтр загонів",
+      "tier": "Рівень",
+      "noneLoaded": "Немає шаблонів загонів: завантажте Core.zip через Дані гри",
+      "noMatch": "Жоден загін не відповідає пошуку та фільтрам",
+      "refine": "Показано {{shown}} із {{total}}: звузьте пошук або фільтри"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Шукати за назвою, SID або значком…",

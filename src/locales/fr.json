@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Parcourir les héros groupés par faction",
       "browse": "Parcourir",
       "browseHeroesByFaction": "Parcourir les héros par faction…",
+      "browseSquads": "Parcourir les escouades par faction et palier…",
       "filterMapObjects": "Filtrer les objets de carte",
       "filterMapObjectsActive": "Filtrer les objets de carte ({{filter}})",
       "noMatching": {
@@ -2697,6 +2698,15 @@
       "category": "Catégorie",
       "biome": "Biome",
       "noBiome": "Aucun"
+    },
+    "squadPickerDialog": {
+      "title": "Choisir une escouade",
+      "search": "Rechercher une créature ou un id d’escouade",
+      "filter": "Filtrer les escouades",
+      "tier": "Palier",
+      "noneLoaded": "Aucun modèle d’escouade : chargez Core.zip via Données du jeu",
+      "noMatch": "Aucune escouade ne correspond à la recherche et aux filtres",
+      "refine": "{{shown}} sur {{total}} affichées : affinez la recherche ou les filtres"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Rechercher par nom, SID ou icône…",

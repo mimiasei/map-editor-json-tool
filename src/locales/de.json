@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Helden nach Fraktion gruppiert durchsuchen",
       "browse": "Durchsuchen",
       "browseHeroesByFaction": "Helden nach Fraktion durchsuchen…",
+      "browseSquads": "Trupps nach Fraktion und Stufe durchsuchen…",
       "filterMapObjects": "Kartenobjekte filtern",
       "filterMapObjectsActive": "Kartenobjekte filtern ({{filter}})",
       "noMatching": {
@@ -2655,6 +2656,15 @@
       "category": "Kategorie",
       "biome": "Biom",
       "noBiome": "Keines"
+    },
+    "squadPickerDialog": {
+      "title": "Trupp wählen",
+      "search": "Kreatur oder Trupp-ID suchen",
+      "filter": "Trupps filtern",
+      "tier": "Stufe",
+      "noneLoaded": "Keine Trupp-Vorlagen: Core.zip über Spieldaten laden",
+      "noMatch": "Kein Trupp passt zu Suche und Filtern",
+      "refine": "{{shown}} von {{total}} angezeigt: Suche oder Filter eingrenzen"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Name, SID oder Symbol suchen…",

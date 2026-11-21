@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Просмотр героев по фракциям",
       "browse": "Обзор",
       "browseHeroesByFaction": "Просмотр героев по фракциям…",
+      "browseSquads": "Просмотр отрядов по фракции и уровню…",
       "filterMapObjects": "Фильтр объектов карты",
       "filterMapObjectsActive": "Фильтр объектов карты ({{filter}})",
       "noMatching": {
@@ -2740,6 +2741,15 @@
       "category": "Категория",
       "biome": "Биом",
       "noBiome": "Нет"
+    },
+    "squadPickerDialog": {
+      "title": "Выбрать отряд",
+      "search": "Поиск существа или id отряда",
+      "filter": "Фильтр отрядов",
+      "tier": "Уровень",
+      "noneLoaded": "Нет шаблонов отрядов: загрузите Core.zip через Данные игры",
+      "noMatch": "Ни один отряд не подходит под поиск и фильтры",
+      "refine": "Показано {{shown}} из {{total}}: сузьте поиск или фильтры"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Поиск по имени, SID или значку…",

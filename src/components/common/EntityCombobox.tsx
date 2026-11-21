@@ -19,6 +19,7 @@ import { ChevronsUpDown, LayoutGrid, SlidersHorizontal, X } from '@/components/u
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import SquadPickerDialog from '@/components/catalog/SquadPickerDialog'
 import { humanizeFxId } from '@/lib/vfx-options'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
@@ -425,6 +426,22 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                   </CommandGroup>
                 )}
 
+                {category === 'squadTemplate' && (
+                  <CommandGroup className="border-b border-border">
+                    <CommandItem
+                      value="__browse_squads__"
+                      onSelect={() => {
+                        setOpen(false)
+                        setPickerOpen(true)
+                      }}
+                      className="flex items-center gap-1.5 text-xs py-1.5 font-medium"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      {t('common.entityCombobox.browseSquads')}
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+
                 <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
                   {filtered.length === 0 && allEntries.length > 0
                     ? t(`common.entityCombobox.noMatching.${category}`)
@@ -455,6 +472,16 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
           onOpenChange={setPickerOpen}
           value={value}
           onSelect={(entry) => onChange(entry.heroId ?? entry.sublabel)}
+        />
+      )}
+
+      {category === 'squadTemplate' && (
+        <SquadPickerDialog
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={value}
+          onSelect={onChange}
+          extraEntries={extraEntries}
         />
       )}
 

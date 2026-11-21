@@ -67,6 +67,7 @@
       "browseHeroesGroupedByFaction": "Przeglądaj bohaterów pogrupowanych według frakcji",
       "browse": "Przeglądaj",
       "browseHeroesByFaction": "Przeglądaj bohaterów według frakcji…",
+      "browseSquads": "Przeglądaj oddziały według frakcji i poziomu…",
       "filterMapObjects": "Filtruj obiekty mapy",
       "filterMapObjectsActive": "Filtruj obiekty mapy ({{filter}})",
       "noMatching": {
@@ -2740,6 +2741,15 @@
       "category": "Kategoria",
       "biome": "Biom",
       "noBiome": "Brak"
+    },
+    "squadPickerDialog": {
+      "title": "Wybierz oddział",
+      "search": "Szukaj stworzenia lub id oddziału",
+      "filter": "Filtruj oddziały",
+      "tier": "Poziom",
+      "noneLoaded": "Brak szablonów oddziałów: wczytaj Core.zip przez Dane gry",
+      "noMatch": "Żaden oddział nie pasuje do wyszukiwania i filtrów",
+      "refine": "Pokazano {{shown}} z {{total}}: zawęź wyszukiwanie lub filtry"
     },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Szukaj nazwy, SID-u lub ikony…",
