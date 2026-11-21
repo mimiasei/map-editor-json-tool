@@ -1625,6 +1625,8 @@
         "selected": "Выбрано: {{count}}",
         "pasting": "Вставка",
         "copyTitle": "Копировать выбранные объекты (Ctrl+C)",
+        "deleteTitle": "Удалить выбранные объекты (Delete)",
+        "deleteCount": "Удалить {{count}} объектов?",
         "pasteTitle": "Вставить скопированную область: она следует за курсором, щелчок ставит, Esc останавливает (Ctrl+V)",
         "flipTitle": "Отразить слева направо (M)",
         "rotateTitle": "Повернуть на 90° по часовой стрелке (R)",
@@ -3048,6 +3050,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Тип действия",
+      "randomSquad": "Случайный",
       "duplicateAction": "Дублировать действие",
       "pickAHeroSpawnerFrom": "Выбрать точку появления героя на карте",
       "pickANodeFromThe": "Выбрать узел на карте",

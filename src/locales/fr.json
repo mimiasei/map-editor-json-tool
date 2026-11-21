@@ -1593,6 +1593,8 @@
         "selected": "{{count}} sélectionné(s)",
         "pasting": "Collage",
         "copyTitle": "Copier les objets sélectionnés (Ctrl+C)",
+        "deleteTitle": "Supprimer les objets sélectionnés (Suppr)",
+        "deleteCount": "Supprimer {{count}} objets ?",
         "pasteTitle": "Coller la zone copiée : elle suit le curseur, cliquer pour poser, Échap pour arrêter (Ctrl+V)",
         "flipTitle": "Retourner gauche-droite (M)",
         "rotateTitle": "Tourner de 90° dans le sens horaire (R)",
@@ -3005,6 +3007,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Type d'action",
+      "randomSquad": "Aléatoire",
       "duplicateAction": "Dupliquer l'action",
       "pickAHeroSpawnerFrom": "Choisir un point d'apparition de héros sur la carte",
       "pickANodeFromThe": "Choisir un nœud sur la carte",

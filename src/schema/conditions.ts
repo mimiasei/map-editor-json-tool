@@ -32,6 +32,8 @@ export interface ParamDef {
   player?: true
   /** The value names something this action creates (entity SID); a duplicate of the action must not reuse it. */
   defines?: true
+  /** A squad template SID (Core.zip DB/squads). Rendered as the squad picker with a "Random" choice (`random`), which is the default. */
+  squadSid?: true
 }
 
 export interface ConditionDef {

@@ -1625,6 +1625,8 @@
         "selected": "Вибрано: {{count}}",
         "pasting": "Вставлення",
         "copyTitle": "Копіювати вибрані об’єкти (Ctrl+C)",
+        "deleteTitle": "Видалити вибрані об’єкти (Delete)",
+        "deleteCount": "Видалити {{count}} об’єктів?",
         "pasteTitle": "Вставити скопійовану область: вона слідує за курсором, клацання ставить, Esc зупиняє (Ctrl+V)",
         "flipTitle": "Віддзеркалити зліва направо (M)",
         "rotateTitle": "Повернути на 90° за годинниковою стрілкою (R)",
@@ -3048,6 +3050,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Тип дії",
+      "randomSquad": "Випадковий",
       "duplicateAction": "Дублювати дію",
       "pickAHeroSpawnerFrom": "Вибрати точку появи героя на мапі",
       "pickANodeFromThe": "Вибрати вузол на мапі",

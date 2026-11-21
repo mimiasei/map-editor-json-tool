@@ -1569,6 +1569,8 @@
         "selected": "{{count}} selected",
         "pasting": "Pasting",
         "copyTitle": "Copy the selected objects (Ctrl+C)",
+        "deleteTitle": "Delete the selected objects (Delete)",
+        "deleteCount": "Delete {{count}} objects?",
         "pasteTitle": "Paste the copied area: it follows the cursor, click to stamp, Esc to stop (Ctrl+V)",
         "flipTitle": "Flip left-right (M)",
         "rotateTitle": "Turn 90° clockwise (R)",
@@ -2971,6 +2973,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Action type",
+      "randomSquad": "Random",
       "duplicateAction": "Duplicate action",
       "pickAHeroSpawnerFrom": "Pick a hero spawner from the map",
       "pickANodeFromThe": "Pick a node from the map",

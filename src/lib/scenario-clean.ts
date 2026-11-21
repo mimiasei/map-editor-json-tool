@@ -10,6 +10,8 @@ import type { Action, Condition, Interruption, Quest, ScenarioFile, Trigger } fr
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
 import type { ParamDef } from '@/schema/conditions'
+import { useCatalogStore } from '@/store/useCatalogStore'
+import { RANDOM_SQUAD_SID, pickRandomSquadTemplate } from '@/lib/random-squad-template'
 
 const isBlank = (v: string | undefined) => v === undefined || v === ''
 
@@ -33,8 +35,18 @@ function withVfxEntity(action: Action): Action {
   return { ...action, p: filled }
 }
 
+/** SpawnSquad / SpawnSquadNPC with the "Random" choice get a real squad template (the game has no random sid there). */
+function withRandomSquad(action: Action): Action {
+  const p = action.p ?? []
+  const index = ACTION_REGISTRY[action.a]?.params.findIndex((param) => param.squadSid) ?? -1
+  if (index < 0 || p[index] !== RANDOM_SQUAD_SID) return action
+  const sid = pickRandomSquadTemplate(useCatalogStore.getState().catalog, Number(p[2]) || 0, `${action.a}:${p[1]}:${p[2]}:${p[4] ?? ''}`)
+  if (!sid) return action
+  return { ...action, p: p.map((v, i) => (i === index ? sid : v)) }
+}
+
 export function cleanAction(raw: Action): Action {
-  const action = withVfxEntity(raw)
+  const action = withRandomSquad(withVfxEntity(raw))
   const p = trimParams(action.p, ACTION_REGISTRY[action.a]?.params)
   return p === raw.p ? action : { ...action, p }
 }

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import type { Trigger } from '@/types/scenario'
-import { CONDITION_REGISTRY } from '@/schema/conditions'
+import { CONDITION_REGISTRY, type ParamDef } from '@/schema/conditions'
+import { defaultParamValues } from '@/lib/random-squad-template'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { Button } from '@/components/ui/button'
 import {
@@ -78,14 +79,24 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
     })
   }
 
+  // A rule made from a map object fills every field that can name it: the verb's own slot, any other entity field (not one the action
+  // creates: a spawn's "Entity SID" would reuse the object's own name) and a node field, which takes the object's entrance tile.
+  const seededParams = (params: ParamDef[], prefillParamIndex?: number): string[] =>
+    params.map((param, i) => {
+      if (activeSubjectSeed) {
+        if (i === prefillParamIndex || (param.mapEntity && !param.defines)) return activeSubjectSeed.entitySid
+        if (param.nodeIndex && activeSubjectSeed.node !== undefined) return String(activeSubjectSeed.node)
+      }
+      return defaultParamValues([param])[0]
+    })
+
   const handleAddCondition = (type: string, prefillParamIndex?: number) => {
     const newIndex = conditions.length
     addCondition(questIndex, subQuestIndex, triggerIndex)
     const def = CONDITION_REGISTRY[type]
-    const seededValue = activeSubjectSeed?.entitySid ?? ''
     updateCondition(questIndex, subQuestIndex, triggerIndex, newIndex, {
       c: type,
-      p: def ? def.params.map((_p, i) => (i === prefillParamIndex ? seededValue : '')) : [],
+      p: def ? seededParams(def.params, prefillParamIndex) : [],
     })
     if (!def || def.params.length > 0) setSelected({ kind: 'condition', index: newIndex })
   }
@@ -98,10 +109,9 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   const handleAddAction = (type: string, prefillParamIndex?: number) => {
     const newIndex = actions.length
     const def = ACTION_REGISTRY[type]
-    const seededValue = activeSubjectSeed?.entitySid ?? ''
     addAction(questIndex, subQuestIndex, triggerIndex, {
       a: type,
-      p: def ? def.params.map((_p, i) => (i === prefillParamIndex ? seededValue : '')) : [],
+      p: def ? seededParams(def.params, prefillParamIndex) : [],
     })
     if (!def || def.params.length > 0) setSelected({ kind: 'action', index: newIndex })
   }

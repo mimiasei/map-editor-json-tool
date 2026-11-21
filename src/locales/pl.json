@@ -1625,6 +1625,8 @@
         "selected": "Zaznaczono: {{count}}",
         "pasting": "Wklejanie",
         "copyTitle": "Kopiuj zaznaczone obiekty (Ctrl+C)",
+        "deleteTitle": "Usuń zaznaczone obiekty (Delete)",
+        "deleteCount": "Usunąć {{count}} obiektów?",
         "pasteTitle": "Wklej skopiowany obszar: podąża za kursorem, kliknij, aby postawić, Esc przerywa (Ctrl+V)",
         "flipTitle": "Odbij lewo-prawo (M)",
         "rotateTitle": "Obróć o 90° w prawo (R)",
@@ -3048,6 +3050,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Typ akcji",
+      "randomSquad": "Losowy",
       "duplicateAction": "Duplikuj akcję",
       "pickAHeroSpawnerFrom": "Wybierz punkt startowy bohatera z mapy",
       "pickANodeFromThe": "Wybierz węzeł z mapy",

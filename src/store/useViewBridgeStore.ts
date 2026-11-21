@@ -61,6 +61,8 @@ export interface PendingSubjectSeed {
   entitySid: string
   displayName?: string
   subjectKey: SubjectKey
+  /** Tile (node index) a node field of a new condition/action starts with: the object's entrance tile. */
+  node?: number
   /** [questIndex, subQuestIndex, triggerIndex] of the Trigger this seed is for. */
   path: [number, number, number]
   /** Castle subjects only: the resolved faction display name (e.g. "Temple"),

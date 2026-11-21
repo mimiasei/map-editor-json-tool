@@ -42,6 +42,8 @@ interface Props {
    *  site (CustomObjectEditorDialog's Visual/Native-behavior pickers) —
    *  every other EntityCombobox usage keeps today's unsorted catalog order. */
   groupByCategory?: boolean
+  /** Choices listed before the category's own entries (the Random choice of a squad picker). */
+  extraEntries?: EntityEntry[]
 }
 
 // Excludes any id that looks campaign/tutorial-specific — used by the vfx/
@@ -213,7 +215,7 @@ function renderEntityItem(entry: EntityEntry, onChange: (value: string) => void,
  * Display format: "Entity Name" visible, ID written to JSON.
  * Free-text entry is always accepted for forward-compatibility.
  */
-export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory }: Props) {
+export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory, extraEntries }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -222,7 +224,8 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
 
   const [filter, setFilter] = useState<MapObjectFilterState>(() => loadSavedFilter())
 
-  const allEntries = useCatalogEntries(category)
+  const categoryEntries = useCatalogEntries(category)
+  const allEntries = useMemo(() => (extraEntries ? [...extraEntries, ...categoryEntries] : categoryEntries), [extraEntries, categoryEntries])
   const catalog = useCatalogStore((s) => s.catalog)
   const rawMapObjects = category === 'mapObject' ? catalog?.mapObjects : undefined
 

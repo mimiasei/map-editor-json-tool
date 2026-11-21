@@ -504,17 +504,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // legible as a set, not pulse in unison.
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const searchMatchedNodes = useMemo(() => {
+  const searchMatchedItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
-    if (!q) return new Set<number>()
-    const nodes = new Set<number>()
-    for (const item of placedObjects) {
-      if ([item.sid, item.entitySid, item.displayName].some((v) => v?.toLowerCase().includes(q))) {
-        nodes.add(item.node)
-      }
-    }
-    return nodes
+    if (!q) return []
+    return placedObjects.filter((item) => [item.sid, item.entitySid, item.displayName].some((v) => v?.toLowerCase().includes(q)))
   }, [placedObjects, searchQuery])
+  const searchMatchedNodes = useMemo(() => new Set(searchMatchedItems.map((item) => item.node)), [searchMatchedItems])
 
   const [settings, setSettings] = useState(loadMapGridSettings)
   // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
@@ -3693,9 +3688,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const ti = useScenarioStore.getState().scenario.quests[qi].subQuests[sqi].triggers.length - 1
 
     setScenarioSelection('trigger', [qi, sqi, ti])
+    // The entrance is the tile a hero steps on to use the object; objects without one (squads, markers, decorations) use their own tile.
+    const entrance = item.type === 0 ? objectBlockedCells(item.sid, item.x, item.z, catalog, true, item.rotation)[0] : undefined
     requestSubjectFirst({
       entitySid,
       displayName: item.displayName,
+      node: entrance ? entrance.z * sizeX + entrance.x : item.node,
       subjectKey,
       path: [qi, sqi, ti],
       factionLabel: subjectKey === 'castle' ? (factionName ?? 'Random') : undefined,
@@ -3860,9 +3858,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Deliberately disabled while a move is active: the arrow keys relocate it
   // there instead (immediately above), and that takes priority over panning
   // the viewport.
+  // With a selection in Select mode the arrows nudge the selected objects instead (see nudgeSelection).
+  const selectionOwnsArrows = copyMode === 'select' && selectedKeys.size > 0
   const PAN_STEP_PX = 60
   useEffect(() => {
-    if (!open || moveState) return
+    if (!open || moveState || selectionOwnsArrows) return
     const handler = (e: KeyboardEvent) => {
       const tag = (document.activeElement as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
@@ -3878,7 +3878,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, moveState])
+  }, [open, moveState, selectionOwnsArrows])
 
   const moveTarget = moveState
     ? { key: moveState.key, x: moveState.node % sizeX, z: Math.floor(moveState.node / sizeX) }
@@ -4128,6 +4128,75 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stopAllTools = () => { stopPlacing(); stopPlacingCreature(); setObjectBrowserOpen(false); setSpawnerSelectorOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
 
   const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
+
+  // Searching selects what it finds (the same selection the Select tool makes), so the hits can be moved or deleted as a batch.
+  // Only when the query changes: later edits to the selection (Ctrl+click) are not overridden. Player spawners, portals and zone markers
+  // are never part of a selection (isCopyable), so a search for them only highlights.
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+    const keys = searchMatchedItems.filter(isCopyable).map((o) => o.key)
+    if (keys.length === 0) { if (copyMode === 'select') setSelectedKeys(new Set()); return }
+    if (copyMode !== 'select') {
+      stopAllTools()
+      setMoveState(null)
+      setPortalLinkFrom(null)
+      setCopyMode('select')
+    }
+    setCopyNote(null)
+    setSelectedKeys(new Set(keys))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
+  // Batch delete and nudge of the selection: one undo step each.
+  const [batchDeleteConfirming, setBatchDeleteConfirming] = useState(false)
+  useEffect(() => { setBatchDeleteConfirming(false) }, [selectedKeys, copyMode])
+  const deleteSelection = () => {
+    if (!canEditEntities || selectedObjects.length === 0) return
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => {
+        for (const o of selectedObjects) apply({ kind: 'deleteObject', entityType: o.type, entityId: o.id })
+      })
+    } catch (e) {
+      logError(`Failed to delete the selection: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    setSelectedKeys(new Set())
+    setBatchDeleteConfirming(false)
+  }
+  const startDeleteSelection = () => { if (settings.confirmBeforeDelete) setBatchDeleteConfirming(true); else deleteSelection() }
+  // All or nothing: if one object would leave the map, none moves.
+  const nudgeSelection = (dx: number, dz: number) => {
+    if (!canEditEntities || selectedObjects.length === 0) return
+    const moves = selectedObjects.map((o) => ({ o, node: (o.z + dz) * sizeX + (o.x + dx), x: o.x + dx }))
+    if (moves.some((m) => m.x < 0 || m.x >= sizeX || !isNodeInBoundsForMove(m.o, m.node))) return
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => {
+        for (const m of moves) apply({ kind: 'moveObject', entityType: m.o.type, entityId: m.o.id, newNode: m.node })
+      })
+    } catch (e) {
+      logError(`Failed to move the selection: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  useEffect(() => {
+    if (!open || !selectionOwnsArrows) return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      const step = e.shiftKey ? 5 : 1
+      let dx = 0
+      let dz = 0
+      if (e.key === 'ArrowUp') dz = step
+      else if (e.key === 'ArrowDown') dz = -step
+      else if (e.key === 'ArrowLeft') dx = -step
+      else if (e.key === 'ArrowRight') dx = step
+      else return
+      e.preventDefault()
+      nudgeSelection(dx, dz)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectionOwnsArrows, selectedObjects, sizeX, sizeZ, canEditEntities])
 
   // Ends when another tool starts, so a stale Select cannot swallow that tool's clicks.
   const otherToolActive = !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || !!moveState || !!portalLinkFrom
@@ -4419,6 +4488,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const deleteSelected = () => {
     if (!canEditEntities) return false
     if (moveState) return false // an in-progress Move already owns arrow keys/Escape
+    if (copyMode === 'select' && selectedKeys.size > 0) { startDeleteSelection(); return }
     const target = selectedItems.find((i) => i.key === inspectedItem?.key) ?? selectedItems[0] ?? null
     if (!target) return false
     // Make sure the confirm row is actually visible if the column was collapsed.
@@ -5339,6 +5409,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={copySelection} title={t('mapGrid.mapGridDialog.copy.copyTitle')}>
                       <ClipboardCopy className="h-3.5 w-3.5" />
                     </Button>
+                  )}
+                  {copyMode === 'select' && canEditEntities && (
+                    batchDeleteConfirming ? (
+                      <>
+                        <span className="text-xs text-destructive">{t('mapGrid.mapGridDialog.copy.deleteCount', { count: selectedKeys.size })}</span>
+                        <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={deleteSelection}>{t('mapGrid.mapGridDialog.confirm')}</Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setBatchDeleteConfirming(false)}>{t('shared.cancel')}</Button>
+                      </>
+                    ) : (
+                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={startDeleteSelection} title={t('mapGrid.mapGridDialog.copy.deleteTitle')}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )
                   )}
                   <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboard || copyMode === 'paste'} onClick={() => setCopyMode('paste')} title={t('mapGrid.mapGridDialog.copy.pasteTitle')}>
                     <ClipboardPaste className="h-3.5 w-3.5" />

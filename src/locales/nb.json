@@ -1561,6 +1561,8 @@
         "selected": "{{count}} valgt",
         "pasting": "Limer inn",
         "copyTitle": "Kopier de valgte objektene (Ctrl+C)",
+        "deleteTitle": "Slett de valgte objektene (Delete)",
+        "deleteCount": "Slette {{count}} objekter?",
         "pasteTitle": "Lim inn det kopierte området: det følger markøren, klikk for å sette inn, Esc for å stoppe (Ctrl+V)",
         "flipTitle": "Speilvend venstre-høyre (M)",
         "rotateTitle": "Roter 90° med klokka (R)",
@@ -2963,6 +2965,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Handlingstype",
+      "randomSquad": "Tilfeldig",
       "duplicateAction": "Dupliser handling",
       "pickAHeroSpawnerFrom": "Velg en helte-spawner fra kartet",
       "pickANodeFromThe": "Velg en node fra kartet",

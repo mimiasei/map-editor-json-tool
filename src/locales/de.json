@@ -1561,6 +1561,8 @@
         "selected": "{{count}} ausgewählt",
         "pasting": "Einfügen",
         "copyTitle": "Ausgewählte Objekte kopieren (Strg+C)",
+        "deleteTitle": "Ausgewählte Objekte löschen (Entf)",
+        "deleteCount": "{{count}} Objekte löschen?",
         "pasteTitle": "Kopierten Bereich einfügen: er folgt dem Cursor, klicken zum Setzen, Esc zum Beenden (Strg+V)",
         "flipTitle": "Links-rechts spiegeln (M)",
         "rotateTitle": "Um 90° im Uhrzeigersinn drehen (R)",
@@ -2963,6 +2965,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Aktionstyp",
+      "randomSquad": "Zufällig",
       "duplicateAction": "Aktion duplizieren",
       "pickAHeroSpawnerFrom": "Einen Helden-Startpunkt von der Karte wählen",
       "pickANodeFromThe": "Einen Knoten von der Karte wählen",
