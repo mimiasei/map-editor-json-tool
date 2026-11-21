@@ -199,6 +199,8 @@ export interface MapGridCellContentProps {
    *  a stable reference); objects/squads only, not markers/zones. Docked-only,
    *  like the other handlers above. */
   onCreateRule?: (item: PlacedObject) => void
+  /** A single click on a row of the info column: the grid centres on the object at 100% zoom. */
+  onFocusItem?: (item: PlacedObject) => void
   /** Move `item` one place up (-1, toward the front) or down (1) in this tile's stack. Docked-only. */
   onMoveInStack?: (item: PlacedObject, delta: -1 | 1) => void
 }
@@ -260,6 +262,7 @@ export default function MapGridCellContent({
   onCancelDelete,
   onSelectionChange,
   onCreateRule,
+  onFocusItem,
   onMoveInStack,
 }: MapGridCellContentProps) {
   const { t } = useTranslation()
@@ -351,7 +354,7 @@ export default function MapGridCellContent({
           return (
             <div key={item.key} className={cn('flex items-center border-b border-border/50 transition-colors', isSelected ? 'bg-accent' : 'hover:bg-accent/50')}>
             <button
-              onClick={() => setSelectedKey(item.key)}
+              onClick={() => { setSelectedKey(item.key); onFocusItem?.(item) }}
               onDoubleClick={item.type === 0 && catalog?.mapObjects.some((o) => o.id === item.sid) ? () => openDatabaseItem('mapObjects', item.sid) : undefined}
               className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 text-left"
             >

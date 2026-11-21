@@ -3709,6 +3709,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     centerOnTile(item.x, item.z)
     zoomTo100()
   }, [selectNode, centerOnTile])
+  // Centres on the middle of the object's icon footprint (a multi-tile object's x/z is only its anchor tile), then zooms to 100%.
+  const focusItem = useCallback((item: PlacedObject) => {
+    const bounds = item.type === 0 ? footprintIconBounds(computeFootprintTiles(catalog?.mapObjects.find((o) => o.id === item.sid), item.x, item.z, item.rotation)) : null
+    centerOnTile(bounds ? (bounds.minX + bounds.maxX) / 2 : item.x, bounds ? (bounds.minZ + bounds.maxZ) / 2 : item.z)
+    zoomTo100()
+  }, [catalog, centerOnTile, zoomTo100])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
     applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
   // Linking: "Link to portal" in the info column arms portalLinkFrom, the next click on another portal makes the pair (both ways).
@@ -6590,6 +6596,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <MapGridCellContent
                   items={selectedItems}
                   onMoveInStack={canEditEntities ? handleMoveInStack : undefined}
+                  onFocusItem={focusItem}
                   terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX, levelsMap, rampDirectionMap.get(selectedNode))}
                   catalog={catalog}
                   existingSids={existingSids}
