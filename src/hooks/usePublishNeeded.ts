@@ -6,6 +6,8 @@
 // never have been written; the game folder is not checked).
 
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
+import { isTauri } from '@/lib/native-fs'
 
 type State = ReturnType<typeof useScenarioStore.getState>
 
@@ -15,6 +17,11 @@ export function selectPublishNeeded(s: State): boolean {
     Object.keys(s.customHeroes).length > 0 || Object.keys(s.customMapObjects).length > 0 ||
     Object.keys(s.customArtifacts).length > 0 || Object.keys(s.customBuffs).length > 0
   return s.zipDirty || (hasZipContent && s.zipPublishedFor !== (s.mapFilePath ?? ''))
+}
+
+/** After a finished Save / Save As: show the Publish notice if the game still lacks the ZIP (desktop only). */
+export function nudgeToPublishIfNeeded(): void {
+  if (isTauri() && selectPublishNeeded(useScenarioStore.getState())) useViewBridgeStore.getState().setPublishNudge(true)
 }
 
 export function usePublishNeeded(): boolean {

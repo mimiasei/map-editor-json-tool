@@ -82,6 +82,9 @@ interface ViewBridgeStore {
   dismissNoMapNotice: () => void
   openMapGrid: () => void
   closeMapGrid: () => void
+  /** Set after Save / Save As when the map ZIP still has to be published (hooks/usePublishNeeded); the Toolbar shows the notice. */
+  publishNudge: boolean
+  setPublishNudge: (on: boolean) => void
   /** The Map tab shows the start screen even though a map is loaded (what closing the Map Grid leads to). */
   startScreenOpen: boolean
   showStartScreen: () => void
@@ -148,6 +151,8 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   // mapGridOpen still true and the ternary never reaches the RMG branch.
   openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: false }),
   closeMapGrid: () => set({ mapGridOpen: false }),
+  publishNudge: false,
+  setPublishNudge: (on) => set({ publishNudge: on }),
   startScreenOpen: false,
   showStartScreen: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: true }),
 

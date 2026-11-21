@@ -28,7 +28,7 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
-import { usePublishNeeded, selectPublishNeeded } from '@/hooks/usePublishNeeded'
+import { usePublishNeeded, nudgeToPublishIfNeeded } from '@/hooks/usePublishNeeded'
 import {
   Dialog,
   DialogContent,
@@ -503,16 +503,14 @@ export default function Toolbar({
   //   longer has its own separate save trigger).
   const handleSave = async () => {
     await saveProject()
-    nudgeToPublish()
+    nudgeToPublishIfNeeded()
   }
 
-  // After a Save or Save As: if the game still lacks the ZIP, say so, with the way to the Publish dialog.
-  const [publishNudge, setPublishNudge] = useState(false)
+  // After a Save or Save As the notice (set by nudgeToPublishIfNeeded) says the game still lacks the ZIP, with the way to Publish.
+  const publishNudge = useViewBridgeStore((s) => s.publishNudge)
+  const setPublishNudge = useViewBridgeStore((s) => s.setPublishNudge)
   const publishNeeded = usePublishNeeded()
-  const nudgeToPublish = () => {
-    if (isTauri() && selectPublishNeeded(useScenarioStore.getState())) setPublishNudge(true)
-  }
-  useEffect(() => { if (!publishNeeded) setPublishNudge(false) }, [publishNeeded])
+  useEffect(() => { if (!publishNeeded) setPublishNudge(false) }, [publishNeeded, setPublishNudge])
 
   const saveProject = async () => {
     await commitMapIfDirty(mapFilePath)
@@ -544,7 +542,7 @@ export default function Toolbar({
   const handleExport = async () => {
     if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt — abort the whole Save As
     await saveSidecarAfterPrompt()
-    nudgeToPublish()
+    nudgeToPublishIfNeeded()
   }
 
   const saveSidecarAfterPrompt = async () => {
