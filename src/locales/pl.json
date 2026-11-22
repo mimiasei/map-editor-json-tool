@@ -61,7 +61,9 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Wpisz treść dialogu…",
-      "createNewDialog": "Utwórz nowy dialog"
+      "createNewDialog": "Utwórz nowy dialog",
+      "newDialogTitle": "Nowy dialog",
+      "newDialogHint": "Tworzy dialog z jednym slajdem pokazującym ten tekst. Później otwórz edytor dialogów, aby dodać slajdy, portrety lub odpowiedzi."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Przeglądaj bohaterów pogrupowanych według frakcji",

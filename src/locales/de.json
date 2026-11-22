@@ -61,7 +61,9 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Dialogtext eingeben…",
-      "createNewDialog": "Neuen Dialog erstellen"
+      "createNewDialog": "Neuen Dialog erstellen",
+      "newDialogTitle": "Neuer Dialog",
+      "newDialogHint": "Erstellt einen Dialog mit einer Folie, die diesen Text zeigt. Im Dialogeditor kannst du später weitere Folien, Porträts oder Antworten hinzufügen."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Helden nach Fraktion gruppiert durchsuchen",

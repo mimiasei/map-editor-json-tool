@@ -61,7 +61,9 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Skriv dialogmeldingen…",
-      "createNewDialog": "Opprett ny dialog"
+      "createNewDialog": "Opprett ny dialog",
+      "newDialogTitle": "Ny dialog",
+      "newDialogHint": "Lager en dialog med ett lysbilde som viser denne teksten. Åpne dialogredigereren senere for å legge til flere lysbilder, portretter eller svar."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Bla gjennom helter gruppert etter fraksjon",

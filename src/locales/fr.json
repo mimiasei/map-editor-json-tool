@@ -61,7 +61,9 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Saisissez le message du dialogue…",
-      "createNewDialog": "Créer un nouveau dialogue"
+      "createNewDialog": "Créer un nouveau dialogue",
+      "newDialogTitle": "Nouveau dialogue",
+      "newDialogHint": "Crée un dialogue d’une seule diapositive affichant ce texte. Ouvrez l’éditeur de dialogues plus tard pour ajouter des diapositives, des portraits ou des réponses."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Parcourir les héros groupés par faction",

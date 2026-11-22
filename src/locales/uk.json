@@ -61,7 +61,9 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Введіть текст повідомлення діалогу…",
-      "createNewDialog": "Створити новий діалог"
+      "createNewDialog": "Створити новий діалог",
+      "newDialogTitle": "Новий діалог",
+      "newDialogHint": "Створює діалог з одним слайдом із цим текстом. Пізніше відкрийте редактор діалогів, щоб додати слайди, портрети або відповіді."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Переглянути героїв за фракціями",

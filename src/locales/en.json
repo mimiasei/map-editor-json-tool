@@ -61,7 +61,9 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Type the dialog message…",
-      "createNewDialog": "Create new dialog"
+      "createNewDialog": "Create new dialog",
+      "newDialogTitle": "New dialog",
+      "newDialogHint": "Creates a dialog with one slide that shows this text. Open the Dialog editor later to add more slides, portraits or answers."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Browse heroes grouped by faction",
