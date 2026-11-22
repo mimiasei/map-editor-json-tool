@@ -436,6 +436,13 @@
       "waiting": "En attente : {{interactables}} objets de carte, puis {{decorations}} éléments de décor (arbres, rochers, animaux), puis {{cliffs}} morceaux de falaise (les bords du terrain surélevé), puis {{rivers}} morceaux de rivière.",
       "notNow": "Pas maintenant"
     },
+    "rebalanceDialog": {
+      "title": "Rééquilibrer la carte",
+      "intro": "Modifications suggérées pour égaliser les joueurs. Décochez celles que vous ne voulez pas, puis appuyez sur Rééquilibrer.",
+      "nothing": "Rien ne peut être rééquilibré automatiquement : les écarts sont faibles ou portent sur des éléments que cet outil ne modifie pas.",
+      "note": "Les distances aux mines et le relief ne sont pas modifiés automatiquement. La carte est notée de nouveau après la modification, et Ctrl+Z annule tout en une seule étape.",
+      "rebalance": "Rééquilibrer"
+    },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Nécessite au moins deux zones de joueur peintes sur la carte (une carte générée aléatoirement en a) pour comparer les joueurs.",
       "dryTilesInThePlayers": "Cases sèches dans la zone du joueur",
@@ -2293,6 +2300,9 @@
       "publishNudge": "Enregistré. Le jeu ne reçoit vos dialogues, textes et contenus personnalisés que via Publier : publiez le ZIP de la carte pour qu’ils fonctionnent dans le jeu.",
       "publishNudgeAction": "Publier…",
       "jsonNoMapWarning": "Ouvert comme script seul : aucun .map correspondant à côté de ce fichier, les quêtes ne peuvent donc pas être enregistrées dans une carte du jeu. Ouvrez le .map pour travailler sur les deux.",
+      "paintPlayerAreas": "Peindre les zones des joueurs",
+      "paintPlayerAreasHint": "Cette carte n’a pas de zones de joueur, les joueurs ne peuvent donc pas être comparés. Peignez-en une autour de chaque ville de joueur, disposée comme le générateur de cartes aléatoires dispose ses zones de joueur.",
+      "rebalance": "Rééquilibrer…",
       "guides": "Guides",
       "gameDatabase": "Base de données du jeu",
       "undoCtrlZ": "Annuler (Ctrl+Z)",
@@ -3358,6 +3368,11 @@
       "guardUnder": "{{where}} — garde d'une valeur de {{guard}} pour un objet estimé à {{reward}} ({{pct}} %) : bien plus faible que dans toute carte livrée",
       "guardOver": "{{where}} — la garde de valeur {{guard}} vaut {{times}} fois le prix de l'objet ({{reward}}) : plus que dans les cartes livrées, elle risque de ne jamais être battue",
       "guardNearStart": "{{where}} — un objet puissant à seulement {{distance}} cases du départ le plus proche : les cartes livrées les placent plus loin"
+    },
+    "rebalance": {
+      "landGrow": "Agrandir la zone du joueur {{owner}} de {{tiles}} cases ({{from}} → {{to}} cases de terre)",
+      "landShrink": "Réduire la zone du joueur {{owner}} de {{tiles}} cases ({{from}} → {{to}} cases de terre)",
+      "sitesAdd": "Ajouter {{count}} sites à la zone du joueur {{owner}} ({{from}} → {{to}}) : {{kinds}}"
     },
     "balance": {
       "startLabel": "Joueur {{owner}} ({{x}}, {{z}})",

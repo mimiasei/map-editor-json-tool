@@ -423,6 +423,13 @@
       "waiting": "Venter: {{interactables}} kartobjekter, deretter {{decorations}} dekorasjoner (trær, steiner, dyr), deretter {{cliffs}} klippestykker (kantene på hevet grunn), deretter {{rivers}} elvestykker.",
       "notNow": "Ikke nå"
     },
+    "rebalanceDialog": {
+      "title": "Balanser kartet på nytt",
+      "intro": "Foreslåtte endringer for å jevne ut spillerne. Fjern haken ved de du ikke vil ha, og trykk så Balanser på nytt.",
+      "nothing": "Ingenting kan balanseres automatisk: forskjellene er små, eller de ligger i ting dette verktøyet ikke endrer.",
+      "note": "Avstander til gruver og høyde endres ikke automatisk. Kartet vurderes på nytt etter endringen, og Ctrl+Z angrer alt i ett steg.",
+      "rebalance": "Balanser på nytt"
+    },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Krever minst to spillerområder malt på kartet (et tilfeldig generert kart har dem) for å sammenligne spillere.",
       "dryTilesInThePlayers": "Tørre ruter i spillerens egen sone",
@@ -2258,6 +2265,9 @@
       "publishNudge": "Lagret. Spillet får dialogene, tekstene og det egendefinerte innholdet ditt bare gjennom Publiser: publiser kart-ZIP-en så de virker i spillet.",
       "publishNudgeAction": "Publiser…",
       "jsonNoMapWarning": "Åpnet som bare skript: fant ingen tilhørende .map ved siden av denne filen, så oppdrag kan ikke lagres i et spillkart. Åpne .map for å jobbe med begge.",
+      "paintPlayerAreas": "Mal spillerområder",
+      "paintPlayerAreasHint": "Dette kartet har ingen spillerområder, så spillerne kan ikke sammenlignes. Mal ett rundt hver spillerby, lagt ut slik tilfeldig-kart-generatoren legger ut spillersonene sine.",
+      "rebalance": "Balanser på nytt…",
       "guides": "Guider",
       "gameDatabase": "Spilldatabase",
       "undoCtrlZ": "Angre (Ctrl+Z)",
@@ -3312,6 +3322,11 @@
       "guardUnder": "{{where}} — vakt verdt {{guard}} for et objekt priset til {{reward}} ({{pct}} %): mye svakere enn i noe medfølgende kart",
       "guardOver": "{{where}} — vakt verdt {{guard}} er {{times}} ganger objektets pris ({{reward}}): mer enn medfølgende kart bruker, den blir kanskje aldri tatt",
       "guardNearStart": "{{where}} — et sterkt objekt bare {{distance}} ruter fra nærmeste start: medfølgende kart holder disse lenger unna"
+    },
+    "rebalance": {
+      "landGrow": "Utvid området til spiller {{owner}} med {{tiles}} ruter ({{from}} → {{to}} landruter)",
+      "landShrink": "Krymp området til spiller {{owner}} med {{tiles}} ruter ({{from}} → {{to}} landruter)",
+      "sitesAdd": "Legg til {{count}} steder i området til spiller {{owner}} ({{from}} → {{to}}): {{kinds}}"
     },
     "balance": {
       "startLabel": "Spiller {{owner}} ({{x}}, {{z}})",

@@ -423,6 +423,13 @@
       "waiting": "Wartend: {{interactables}} Kartenobjekte, dann {{decorations}} Dekorationen (Bäume, Felsen, Tiere), dann {{cliffs}} Klippenteile (die Ränder erhöhten Bodens), dann {{rivers}} Flussteile.",
       "notNow": "Jetzt nicht"
     },
+    "rebalanceDialog": {
+      "title": "Karte neu ausbalancieren",
+      "intro": "Vorgeschlagene Änderungen, um die Spieler anzugleichen. Entferne die Haken bei unerwünschten und drücke dann Neu ausbalancieren.",
+      "nothing": "Nichts lässt sich automatisch ausbalancieren: Die Unterschiede sind klein oder liegen in Dingen, die dieses Werkzeug nicht ändert.",
+      "note": "Minenabstände und Höhen werden nicht automatisch geändert. Die Karte wird danach neu bewertet, und Strg+Z macht alles in einem Schritt rückgängig.",
+      "rebalance": "Neu ausbalancieren"
+    },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Erfordert mindestens zwei auf die Karte gemalte Spielerbereiche (eine zufällig generierte Karte hat sie), um Spieler zu vergleichen.",
       "dryTilesInThePlayers": "Trockene Kacheln in der eigenen Zone des Spielers",
@@ -2258,6 +2265,9 @@
       "publishNudge": "Gespeichert. Dialoge, Texte und eigene Inhalte erreichen das Spiel nur über Veröffentlichen: Veröffentliche die Karten-ZIP, damit sie im Spiel funktionieren.",
       "publishNudgeAction": "Veröffentlichen…",
       "jsonNoMapWarning": "Nur als Skript geöffnet: neben dieser Datei wurde keine passende .map gefunden, daher können Quests nicht in eine Spielkarte gespeichert werden. Öffne die .map, um beides zu bearbeiten.",
+      "paintPlayerAreas": "Spielerbereiche malen",
+      "paintPlayerAreasHint": "Diese Karte hat keine Spielerbereiche, daher lassen sich die Spieler nicht vergleichen. Male um jede Spielerstadt einen, so angelegt wie der Zufallskartengenerator seine Spielerzonen anlegt.",
+      "rebalance": "Neu ausbalancieren…",
       "guides": "Anleitungen",
       "gameDatabase": "Spieldatenbank",
       "undoCtrlZ": "Rückgängig (Strg+Z)",
@@ -3312,6 +3322,11 @@
       "guardUnder": "{{where}} — Wache im Wert von {{guard}} bei einem Objekt mit Preis {{reward}} ({{pct}} %): viel schwächer als in jeder mitgelieferten Karte",
       "guardOver": "{{where}} — Wache im Wert von {{guard}} ist das {{times}}-Fache des Objektpreises ({{reward}}): mehr als in mitgelieferten Karten, sie wird womöglich nie besiegt",
       "guardNearStart": "{{where}} — ein starkes Objekt nur {{distance}} Felder vom nächsten Start entfernt: mitgelieferte Karten halten diese weiter weg"
+    },
+    "rebalance": {
+      "landGrow": "Bereich von Spieler {{owner}} um {{tiles}} Felder vergrößern ({{from}} → {{to}} Landfelder)",
+      "landShrink": "Bereich von Spieler {{owner}} um {{tiles}} Felder verkleinern ({{from}} → {{to}} Landfelder)",
+      "sitesAdd": "{{count}} Orte im Bereich von Spieler {{owner}} hinzufügen ({{from}} → {{to}}): {{kinds}}"
     },
     "balance": {
       "startLabel": "Spieler {{owner}} ({{x}}, {{z}})",

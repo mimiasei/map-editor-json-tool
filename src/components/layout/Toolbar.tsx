@@ -103,6 +103,9 @@ import WhatsNewDialog from '@/components/common/WhatsNewDialog'
 import PlayerBalancePanel, { DecorationBalanceSection, ZoneEconomySection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
+import { hasPlayerAreas, planPlayerAreas, playerCities } from '@/lib/map-grid/auto-player-areas'
+import { planRebalance, type RebalanceSuggestion } from '@/lib/map-grid/player-rebalance'
+import RebalanceDialog from '@/components/common/RebalanceDialog'
 import { ImageIcon, X } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
@@ -227,6 +230,10 @@ export default function Toolbar({
   const [fairness, setFairness] = useState<PlayerBalance | null>(null)
   const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
   const [zoneEconomy, setZoneEconomy] = useState<ZoneEconomy | null>(null)
+  /** Whether the map has Player Areas, and how many player cities it has (the area painter needs two). */
+  const [areaState, setAreaState] = useState({ hasAreas: false, cities: 0 })
+  const [rebalanceOpen, setRebalanceOpen] = useState(false)
+  const [rebalancePlan, setRebalancePlan] = useState<RebalanceSuggestion[]>([])
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   /** Which bulk delete is waiting for its confirmation in the Validate dialog. */
@@ -736,12 +743,50 @@ export default function Toolbar({
   // like `validation` above (a full reachability flood-fill/BFS isn't cheap
   // on a large map, and continuously re-validating while the user is mid-edit
   // would be noisy besides) — only recomputed right before the dialog opens.
-  const handleOpenFairness = () => {
+  const refreshFairness = () => {
     const context = useMapContextStore.getState().context
     setFairness(context ? computePlayerBalance(context, catalog) : null)
     setDecorationBalance(context ? computeDecorationBalance(context, catalog) : null)
     setZoneEconomy(context && catalog ? computeZoneEconomy(context, catalog) : null)
+    setAreaState({ hasAreas: !!context && hasPlayerAreas(context), cities: context ? playerCities(context).length : 0 })
+  }
+  const handleOpenFairness = () => {
+    refreshFairness()
     setFairnessOpen(true)
+  }
+
+  // Paints a Player Area around each player city, the way the random map generator lays out its player zones (one undo step).
+  const handlePaintPlayerAreas = () => {
+    const context = useMapContextStore.getState().context
+    const plan = context ? planPlayerAreas(context) : null
+    if (!plan) return
+    try {
+      useMapDocumentStore.getState().applyEdit({ kind: 'paintZone', changes: plan.changes })
+    } catch (e) {
+      logError(`Failed to paint player areas: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    refreshFairness()
+  }
+
+  const handleOpenRebalance = () => {
+    const context = useMapContextStore.getState().context
+    setRebalancePlan(context ? planRebalance(context, catalog, fairness) : [])
+    setRebalanceOpen(true)
+  }
+
+  // The ticked suggestions together, as one undo step.
+  const handleRebalance = (chosen: RebalanceSuggestion[]) => {
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => {
+        for (const suggestion of chosen) for (const edit of suggestion.edits) apply(edit)
+      })
+    } catch (e) {
+      logError(`Failed to rebalance: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    setRebalanceOpen(false)
+    refreshFairness()
   }
 
   const recheckPlacement = () => {
@@ -1187,7 +1232,16 @@ export default function Toolbar({
             <DialogTitle>{t('layout.toolbar.mapFairness')}</DialogTitle>
           </DraggableDialogDragHandle>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+            {!areaState.hasAreas && areaState.cities >= 2 && (
+              <div className="space-y-2 rounded border border-border p-3">
+                <p className="text-xs text-muted-foreground">{t('layout.toolbar.paintPlayerAreasHint')}</p>
+                <Button size="sm" onClick={handlePaintPlayerAreas}>{t('layout.toolbar.paintPlayerAreas')}</Button>
+              </div>
+            )}
             <PlayerBalancePanel balance={fairness} />
+            {fairness && (
+              <Button size="sm" variant="outline" onClick={handleOpenRebalance}>{t('layout.toolbar.rebalance')}</Button>
+            )}
             <ZoneEconomySection economy={zoneEconomy} />
             <DecorationBalanceSection decoration={decorationBalance} />
             <p className="text-xs text-muted-foreground">
@@ -1196,6 +1250,8 @@ export default function Toolbar({
           </div>
         </DraggableDialogContent>
       </Dialog>
+
+      <RebalanceDialog open={rebalanceOpen} onOpenChange={setRebalanceOpen} suggestions={rebalancePlan} onRebalance={handleRebalance} />
 
       {/* Validate dialog */}
       <Dialog open={validateOpen} onOpenChange={setValidateOpen}>

@@ -431,6 +431,13 @@
       "waiting": "Waiting: {{interactables}} map objects, then {{decorations}} decorations (trees, rocks, animals), then {{cliffs}} cliff pieces (the edges of raised ground), then {{rivers}} river pieces.",
       "notNow": "Not now"
     },
+    "rebalanceDialog": {
+      "title": "Rebalance the map",
+      "intro": "Suggested changes to even out the players. Untick the ones you do not want, then press Rebalance.",
+      "nothing": "Nothing can be rebalanced automatically: the gaps are small, or they are in things this tool does not change.",
+      "note": "Mine distances and elevation are not changed automatically. The map is re-scored after the change, and Ctrl+Z undoes it all in one step.",
+      "rebalance": "Rebalance"
+    },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Needs at least two player areas painted on the map (a randomly generated map has them) to compare players.",
       "dryTilesInThePlayers": "Dry tiles in the player's own zone",
@@ -2266,6 +2273,9 @@
       "publishNudge": "Saved. The game only gets your dialogs, texts and custom content through Publish: publish the map ZIP so they work in the game.",
       "publishNudgeAction": "Publish…",
       "jsonNoMapWarning": "Opened as a script only: no matching .map was found next to this file, so quests cannot be saved into a game map. Open the .map to work on both.",
+      "paintPlayerAreas": "Paint player areas",
+      "paintPlayerAreasHint": "This map has no player areas, so the players cannot be compared. Paint one around each player city, laid out the way the random map generator lays out its player zones.",
+      "rebalance": "Rebalance…",
       "guides": "Guides",
       "gameDatabase": "Game Database",
       "undoCtrlZ": "Undo (Ctrl+Z)",
@@ -3320,6 +3330,11 @@
       "guardUnder": "{{where}} — guard worth {{guard}} for an object priced {{reward}} ({{pct}}%): much weaker than any shipped map uses",
       "guardOver": "{{where}} — guard worth {{guard}} is {{times}}× the object's price ({{reward}}): more than shipped maps use, it may never be taken",
       "guardNearStart": "{{where}} — a strong object only {{distance}} tiles from the nearest start: shipped maps keep these further out"
+    },
+    "rebalance": {
+      "landGrow": "Grow Player {{owner}}'s area by {{tiles}} tiles ({{from}} → {{to}} land tiles)",
+      "landShrink": "Shrink Player {{owner}}'s area by {{tiles}} tiles ({{from}} → {{to}} land tiles)",
+      "sitesAdd": "Add {{count}} sites to Player {{owner}}'s area ({{from}} → {{to}}): {{kinds}}"
     },
     "balance": {
       "startLabel": "Player {{owner}} ({{x}}, {{z}})",
