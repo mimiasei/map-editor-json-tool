@@ -710,7 +710,7 @@ export default function MapGridCellContent({
                                 </>
                               )}
                             </div>
-                            <p className="text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
+                            <p className="mt-[5px] text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
                             {onSetHeroSid && (
                               <HeroPickerDialog
                                 open={heroPickerOpen}
