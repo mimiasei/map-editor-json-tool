@@ -709,7 +709,7 @@ export default function MapGridCellContent({
                                 </>
                               )}
                             </div>
-                            <p className="mt-[5px] text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
+                            <p className="pt-[5px] text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
                             {onSetHeroSid && (
                               <HeroPickerDialog
                                 open={heroPickerOpen}
@@ -742,6 +742,7 @@ export default function MapGridCellContent({
                             </>
                           )}
                         </div>
+                        
                         {onSetHeroSid && (
                           <HeroPickerDialog
                             open={heroPickerOpen}
@@ -756,12 +757,6 @@ export default function MapGridCellContent({
                   </>
                 )
               })()}
-              {isCitySpawner && (
-                <div>
-                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.spawnerType')}</p>
-                  <p className="text-xs">{t('shared.city')}</p>
-                </div>
-              )}
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.playerAttachedToThisSpawner')}</p>
                 {onSetSpawnerOwner && playersCount > 0 ? (
