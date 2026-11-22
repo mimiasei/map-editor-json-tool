@@ -1310,6 +1310,7 @@
       "highlightConnectedPortalOnGrid": "Verbundenes Portal im Raster hervorheben",
       "rewards": "Belohnungen",
       "zone": "Zone",
+      "zoneSize": "Größe",
       "theOfficialEditorsOwnActivate": "Das Kontrollkästchen „Aktivieren“ des offiziellen Editors. Ist es aus, unterbricht diese Zone weder die Heldenbewegung noch löst sie ihre Aktionen aus — sie kann später über die Skriptaktion SetActiveMarker wieder eingeschaltet werden.",
       "deleteAfterTrigger": "Nach Auslösung löschen",
       "whetherThisZoneRemovesItself": "Ob sich diese Zone beim ersten Auslösen automatisch entfernt. Ist es aus, bleibt die Zone auf der Karte und kann erneut auslösen.",

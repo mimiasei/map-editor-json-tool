@@ -1339,6 +1339,7 @@
       "highlightConnectedPortalOnGrid": "Surligner le portail relié sur la grille",
       "rewards": "Récompenses",
       "zone": "Zone",
+      "zoneSize": "Taille",
       "theOfficialEditorsOwnActivate": "La case « Activer » de l'éditeur officiel. Désactivée, cette zone n'interrompt pas le déplacement des héros et ne déclenche aucune de ses actions ; elle peut être réactivée plus tard avec l'action de script SetActiveMarker.",
       "deleteAfterTrigger": "Supprimer après déclenchement",
       "whetherThisZoneRemovesItself": "Indique si cette zone se supprime automatiquement la première fois qu'elle se déclenche. Désactivé, la zone reste sur la carte et peut se déclencher de nouveau.",

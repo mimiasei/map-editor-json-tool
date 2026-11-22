@@ -3646,6 +3646,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
   const handleSetObjectActions = (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) =>
     applyEdit({ kind: 'setObjectActions', entityType: item.type, entityId: item.id, which, value }, `set actions ${which}`)
+  // A zone changes size by taking another template; one whose shape would leave the map is refused.
+  const zoneFits = (item: PlacedObject, sid: string): boolean => {
+    const zone = catalog?.zoneTemplates.find((z) => z.id === sid)
+    return !zone || isFootprintInBounds(computeFootprintTiles(zone, item.x, item.z), sizeX, sizeZ)
+  }
+  const handleSetZoneTemplate = (item: PlacedObject, sid: string) => {
+    if (zoneFits(item, sid)) applyEdit({ kind: 'setMarkerSid', entityId: item.id, sid }, 'resize zone')
+  }
   const handleSetMarkerState = (item: PlacedObject, isActivate: boolean, isDelete: boolean) =>
     applyEdit({ kind: 'setMarkerState', entityId: item.id, isActivate, isDelete }, 'set zone state')
 
@@ -6643,6 +6651,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetRandomCityFaction={canEditEntities ? handleSetRandomCityFaction : undefined}
                   onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
                   onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
+                  onSetZoneTemplate={canEditEntities ? handleSetZoneTemplate : undefined}
+                  zoneFits={zoneFits}
                   allPortals={allPortals}
                   portalSids={portalSids}
                   onStartPortalLink={canEditEntities ? setPortalLinkFrom : undefined}

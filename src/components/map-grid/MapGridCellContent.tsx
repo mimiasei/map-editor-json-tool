@@ -125,6 +125,9 @@ export interface MapGridCellContentProps {
   onSetObjectActions?: (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) => void
   /** A zone's Activate / Delete-after-trigger switches — docked-only. */
   onSetMarkerState?: (item: PlacedObject, isActivate: boolean, isDelete: boolean) => void
+  /** A zone's size: the zone template it uses. `zoneFits` says whether a template's shape stays on the map from this zone's tile. */
+  onSetZoneTemplate?: (item: PlacedObject, sid: string) => void
+  zoneFits?: (item: PlacedObject, sid: string) => boolean
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -236,6 +239,8 @@ export default function MapGridCellContent({
   onSetRandomCityFaction,
   onSetObjectActions,
   onSetMarkerState,
+  onSetZoneTemplate,
+  zoneFits,
   allPortals = [],
   onSetPortalTarget,
   portalSids,
@@ -1227,9 +1232,26 @@ export default function MapGridCellContent({
             )
           })()}
 
-          {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined) && (
+          {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined || (catalog?.zoneTemplates.length ?? 0) > 0) && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.zone')}</p>
+              {(catalog?.zoneTemplates.length ?? 0) > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.zoneSize')}</p>
+                  <Select value={selected.sid} onValueChange={(sid) => onSetZoneTemplate?.(selected, sid)} disabled={!onSetZoneTemplate}>
+                    <SelectTrigger className="h-7 text-xs w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalog!.zoneTemplates.map((z) => (
+                        <SelectItem key={z.id} value={z.id} disabled={z.id !== selected.sid && zoneFits?.(selected, z.id) === false}>
+                          {z.id} ({z.sizeX}×{z.sizeZ})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               {selected.markerActive !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

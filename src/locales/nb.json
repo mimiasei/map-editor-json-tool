@@ -1310,6 +1310,7 @@
       "highlightConnectedPortalOnGrid": "Fremhev tilkoblet portal i rutenettet",
       "rewards": "Belønninger",
       "zone": "Sone",
+      "zoneSize": "Størrelse",
       "theOfficialEditorsOwnActivate": "Den offisielle redigererens egen «Activate»-avkrysning. Når den er av, avbryter ikke denne sonen heltebevegelse og utløser ikke handlingene sine i det hele tatt — den kan slås på igjen senere via skripthandlingen SetActiveMarker.",
       "deleteAfterTrigger": "Slett etter utløsning",
       "whetherThisZoneRemovesItself": "Om denne sonen fjerner seg selv automatisk første gang den utløses. Når den er av, blir sonen værende på kartet og kan utløses igjen.",

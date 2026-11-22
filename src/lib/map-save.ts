@@ -36,6 +36,7 @@ import {
   upsertPropMarker,
   upsertPropHeroRow,
   setCitySpawnHero,
+  setMarkerSid,
   setCityFaction,
   setRandomCityFaction,
   upsertPropSquads,
@@ -88,6 +89,8 @@ export type MapSaveEdit =
   | { kind: 'setObjectActions'; entityType: number; entityId: number; which: 'before' | 'after'; value: { repeat: boolean; sides: string; actions: { a: string; p: string[]; comment?: string }[] } | null }
   | { kind: 'replaceActionTable'; which: 'before' | 'after'; rows: unknown[] }
   | { kind: 'setMarkerState'; entityId: number; isActivate: boolean; isDelete: boolean }
+  /** A zone marker's template (size and shape). */
+  | { kind: 'setMarkerSid'; entityId: number; sid: string }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
   /** A free-standing `random-city`: propCities only, no Block 1 spawns entry. */
@@ -236,6 +239,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = replaceActionTable(newChunks[1], edit.which, edit.rows)
   } else if (edit?.kind === 'setMarkerState') {
     newChunks[1] = upsertPropMarker(newChunks[1], edit.entityId, edit.isActivate, edit.isDelete)
+  } else if (edit?.kind === 'setMarkerSid') {
+    newChunks[1] = setMarkerSid(newChunks[1], edit.entityId, edit.sid)
   } else if (edit?.kind === 'setCitySpawnHero') {
     const patched = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
     newChunks[0] = patched.block1Chunk
@@ -493,6 +498,11 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     }
     const rows = edit.which === 'before' ? block2.objectsProperties?.propActionsBefore : block2.objectsProperties?.propActionsAfter
     if (JSON.stringify(rows) !== JSON.stringify(edit.rows)) throw new Error('Verification failed: actions table not reflected in the rebuilt map')
+  } else if (edit?.kind === 'setMarkerSid') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { markers?: Array<{ id?: number; sid?: string }> }
+    if ((block2.markers ?? []).find((m) => m.id === edit.entityId)?.sid !== edit.sid) {
+      throw new Error('Verification failed: zone size not reflected in the rebuilt markers table')
+    }
   } else if (edit?.kind === 'setMarkerState') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: { propMarkers?: Array<{ type?: number | string; id?: number; isActivate?: boolean; isDelete?: boolean }> }

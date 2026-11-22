@@ -1110,6 +1110,18 @@ export function moveObjectInstance(chunk: Uint8Array, entityType: 0 | 1 | 2, ent
   throw new Error(`No ${key} entry found for id ${entityId}`)
 }
 
+/** Give a zone marker another zone template (its size and shape, DB/map/trigger_zones/zones.json); node, id and the zone's
+ *  own settings stay. The template id is the marker's `sid`. */
+export function setMarkerSid(chunk: Uint8Array, entityId: number, sid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'markers')
+  const entries = JSON.parse(span) as MarkerEntry[]
+  const existing = entries.find((e) => e.id === entityId)
+  if (!existing) throw new Error(`No markers[] entry found for id ${entityId}`)
+  existing.sid = sid
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── Rotate a placed instance (objects[] only) ─────────────────────────────
 // `rotations[]` is a 0-3 quadrant enum (0/90/180/270°) with a `+10` offset
 // for a mirrored variant (10-13) — confirmed against every real sample map's

@@ -1318,6 +1318,7 @@
       "highlightConnectedPortalOnGrid": "Highlight connected portal on grid",
       "rewards": "Rewards",
       "zone": "Zone",
+      "zoneSize": "Size",
       "theOfficialEditorsOwnActivate": "The official editor's own \"Activate\" checkbox. When off, this zone doesn't interrupt hero movement or fire its actions at all — it can be turned back on later via the SetActiveMarker script action.",
       "deleteAfterTrigger": "Delete after trigger",
       "whetherThisZoneRemovesItself": "Whether this zone removes itself automatically the first time it fires. When off, the zone remains on the map and can fire again.",

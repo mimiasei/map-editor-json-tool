@@ -1368,6 +1368,7 @@
       "highlightConnectedPortalOnGrid": "Podświetl połączony portal na siatce",
       "rewards": "Nagrody",
       "zone": "Strefa",
+      "zoneSize": "Rozmiar",
       "theOfficialEditorsOwnActivate": "Pole „Aktywuj” z oficjalnego edytora. Gdy jest wyłączone, ta strefa w ogóle nie przerywa ruchu bohatera ani nie uruchamia swoich akcji — można ją później ponownie włączyć akcją skryptu SetActiveMarker.",
       "deleteAfterTrigger": "Usuń po uruchomieniu",
       "whetherThisZoneRemovesItself": "Czy strefa usuwa się sama po pierwszym uruchomieniu. Gdy wyłączone, strefa pozostaje na mapie i może uruchomić się ponownie.",
