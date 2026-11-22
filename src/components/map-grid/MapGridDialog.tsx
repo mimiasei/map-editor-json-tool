@@ -3635,12 +3635,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const heroSid = spawnHero && factionSid ? pickRandomHeroForFaction(factionSid) : undefined
     applyEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero, heroSid }, 'toggle companion hero')
   }
-  const handleSetHeroSid = (item: PlacedObject, requested: string) => {
-    // "Random" on a city that has a faction is a random hero of that faction (the placeholder would crash the game there).
-    const cityFaction = item.spawnerInfo?.spawnPointType === 0 ? item.spawnerInfo.factionSid : undefined
-    const heroSid = requested === 'random' && cityFaction ? (pickRandomHeroForFaction(cityFaction) ?? 'random') : requested
+  const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
-  }
   // A random-hero belongs to an existing player; no spawner slot is involved.
   const handleSetObjectOwner = (item: PlacedObject, owner: number) =>
     applyEdit({ kind: 'setObjectOwner', entityType: item.type, entityId: item.id, owner }, 'set hero owner')

@@ -505,12 +505,16 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: {
         propHeroes?: Array<{ type?: number | string; id?: number; heroSid?: string }>
+        propCities?: Array<{ type?: number | string; id?: number }>
         propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
       }
     }
     const entries = block2.objectsProperties?.propHeroes ?? []
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
-    if (!match || match.heroSid !== edit.heroSid) {
+    // A city's random hero is the absence of the row (see upsertPropHero).
+    const cityRandom = edit.heroSid === 'random' &&
+      (block2.objectsProperties?.propCities ?? []).some((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (cityRandom ? match : (!match || match.heroSid !== edit.heroSid)) {
       throw new Error('Verification failed: heroSid not reflected in the rebuilt propHeroes table')
     }
     const owner = (block2.objectsProperties?.propSpawns ?? [])

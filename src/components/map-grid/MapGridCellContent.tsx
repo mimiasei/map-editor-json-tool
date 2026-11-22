@@ -702,8 +702,7 @@ export default function MapGridCellContent({
                                   <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
                                     {t('mapGrid.mapGridCellContent.browse')}
                                   </Button>
-                                  {/* With a city faction the handler picks a random hero of that faction: the random placeholder crashed the game once
-                                      such a city is active (see setCityFaction in map-save.ts). */}
+                                  {/* Empties the hero: the game picks one, and the player may choose before the game starts. */}
                                   <Button variant="outline" size="sm" className="h-6 text-xs" disabled={currentHeroSid === 'random'} onClick={() => onSetHeroSid(selected, 'random')}>
                                     {t('common.generateRandomMapDialog.random')}
                                   </Button>

@@ -698,6 +698,10 @@ interface PropHeroEntry {
  * shipped maps that define one, e.g. testingStartHero.map (city human, hero human_hero_16 -> takenHeroes ["human_hero_16"]) and
  * Stormlight.map. It is kept in step here: the old hero leaves it (unless another player still has that hero), the new one joins.
  * Heroes it lists for other reasons are left alone.
+ *
+ * A city spawner whose hero is random has NO propHeroes row (testingStartHero.map: city 2, spawnHero true, nothing defined; Block 1
+ * isHeroDefined false, heroSid ""), so 'random' removes the row for a city and a specific hero creates it. The {isDefined:false,
+ * heroSid:"random"} placeholder crashed the game for a city with a faction (Player.log). A hero spawner keeps the placeholder row.
  */
 export function upsertPropHero(
   block1Chunk: Uint8Array,
@@ -710,13 +714,21 @@ export function upsertPropHero(
   const span2 = findJsonArraySpan(text2, 'propHeroes')
 
   const entries = JSON.parse(span2.span) as PropHeroEntry[]
-  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
-  if (!existing) {
+  const index = entries.findIndex((e) => String(e.type) === String(entityType) && e.id === entityId)
+  const cities = JSON.parse(findJsonArraySpan(text2, 'propCities').span) as { type?: number | string; id?: number }[]
+  const isCity = cities.some((e) => String(e.type) === String(entityType) && e.id === entityId)
+  const isDefined = heroSid !== 'random'
+  if (index === -1 && !isCity) {
     throw new Error(`No propHeroes entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured hero spawner`)
   }
-  existing.heroSid = heroSid
-  const isDefined = heroSid !== 'random'
-  existing.isDefined = isDefined
+  if (isCity && !isDefined) {
+    if (index !== -1) entries.splice(index, 1)
+  } else if (index === -1) {
+    entries.push({ type: entityType, id: entityId, isDefined, heroSid })
+  } else {
+    entries[index].heroSid = heroSid
+    entries[index].isDefined = isDefined
+  }
   const patchedText2 = text2.slice(0, span2.arrayOpen) + JSON.stringify(entries) + text2.slice(span2.arrayClose + 1)
 
   const owner = findOwnerForEntity(patchedText2, entityType, entityId)
