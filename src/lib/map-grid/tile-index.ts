@@ -60,6 +60,12 @@ export function groupOf(placed: PlacedObject, catalog: GameCatalog | null): Grid
  * bounding-box computation, so both agree on exactly the same shape.
  */
 export function resolveFootprintCells(obj: PlacedObject, catalog: GameCatalog | null): FootprintCell[] {
+  if (obj.type === 1) {
+    // A trigger zone's marker is named after its template ("Zone 3x3", DB/map/trigger_zones/zones.json), which gives the shape;
+    // a marker whose template is unknown keeps the single tile.
+    const zone = catalog?.zoneTemplates.find((z) => z.id === obj.sid)
+    return zone?.nodes?.length ? computeFootprintTiles(zone, obj.x, obj.z) : [{ x: obj.x, z: obj.z, value: 1 }]
+  }
   if (obj.type !== 0) return [{ x: obj.x, z: obj.z, value: 1 }]
   const template = findMapObject(catalog, obj.sid)
   return computeFootprintTiles(template, obj.x, obj.z, obj.rotation)
@@ -95,7 +101,7 @@ export function buildTileIndex(
     else index.set(node, [obj])
   }
   for (const obj of objects) {
-    if (obj.type !== 0 || sizeX <= 0 || sizeZ <= 0) {
+    if (obj.type === 2 || sizeX <= 0 || sizeZ <= 0) {
       add(obj.node, obj)
       continue
     }

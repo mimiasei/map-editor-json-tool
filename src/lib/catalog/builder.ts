@@ -362,7 +362,8 @@ async function collectZoneTemplates(zip: JSZip): Promise<CatalogZoneTemplate[]> 
   for (const entry of entries) {
     const id = str(entry.id)
     if (!id) continue
-    templates.push({ id, sizeX: num(entry.sizeX) || 1, sizeZ: num(entry.sizeZ) || 1 })
+    const nodes = Array.isArray(entry.nodes) ? entry.nodes.map((n) => num(n)) : undefined
+    templates.push({ id, sizeX: num(entry.sizeX) || 1, sizeZ: num(entry.sizeZ) || 1, nodes })
   }
   return templates
 }

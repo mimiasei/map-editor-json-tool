@@ -268,6 +268,8 @@ export interface CatalogZoneTemplate {
   id: string
   sizeX: number
   sizeZ: number
+  /** Row-major cells of the shape, 1 = part of the zone (a few shapes have holes). */
+  nodes?: number[]
 }
 
 /** A content_list entry (Core/generator/content_lists/*.json) — issue #240

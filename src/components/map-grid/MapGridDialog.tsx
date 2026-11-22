@@ -589,7 +589,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const footprintCellsByKey = useMemo(() => {
     const map = new Map<string, FootprintCell[]>()
     for (const obj of placedObjects) {
-      if (obj.type !== 0) continue
+      if (obj.type === 2) continue
       map.set(obj.key, resolveFootprintCells(obj, catalog))
     }
     return map
@@ -3404,7 +3404,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           // Multi-tile footprints (issue #167) get one bigger icon spanning
           // their bounding box instead — see multiTileIcons below — so skip
           // them here to avoid rendering the same object once per cell.
-          const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+          const cells1 = pick.primary.type !== 2 ? footprintCellsByKey.get(pick.primary.key) : undefined
           const bounds1 = cells1 ? footprintIconBounds(cells1) : null
           if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
           cells.push({ x, z, node, pick })
@@ -3432,7 +3432,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       pick: { primary: PlacedObject; group: GridGroup; count: number }
     }[] = []
     for (const obj of placedObjects) {
-      if (obj.type !== 0) continue
+      if (obj.type === 2) continue
       const cells = footprintCellsByKey.get(obj.key)
       if (!cells) continue
       const bounds = footprintIconBounds(cells)
@@ -4007,6 +4007,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stopPlacingZone = () => setPlacingZoneSid(null)
   const placeZoneAt = (node: number) => {
     if (!placingZoneSid) return
+    // The whole shape has to fit on the map, like any multi-tile object.
+    const zone = catalog?.zoneTemplates.find((z) => z.id === placingZoneSid)
+    if (zone && !isFootprintInBounds(computeFootprintTiles(zone, node % sizeX, Math.floor(node / sizeX)), sizeX, sizeZ)) return
     applyEdit({ kind: 'addMarker', sid: placingZoneSid, node }, 'place zone')
   }
   const placingCreatureTemplateSid = useMemo(() => {
@@ -4231,7 +4234,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const selectionOutlines = useMemo(() => {
     const boxes: { key: string; minX: number; maxX: number; minZ: number; maxZ: number }[] = []
     for (const obj of selectedObjects) {
-      const cells = (obj.type === 0 ? resolveFootprintCells(obj, catalog).filter((c) => c.value !== 0) : [])
+      const cells = (obj.type !== 2 ? resolveFootprintCells(obj, catalog).filter((c) => c.value !== 0) : [])
       const xs = cells.map((c) => c.x)
       const zs = cells.map((c) => c.z)
       boxes.push(cells.length === 0
@@ -4544,6 +4547,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [activePlacingSid, hoveredNode, sizeX, catalog])
   const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
+
+  // The Zones tool's ghost: the chosen shape under the cursor, red where it would not fit on the map.
+  const zoneGhost = useMemo(() => {
+    if (!placingZoneSid || hoveredNode === null) return null
+    const zone = catalog?.zoneTemplates.find((z) => z.id === placingZoneSid)
+    const x = hoveredNode % sizeX
+    const z = Math.floor(hoveredNode / sizeX)
+    const cells = computeFootprintTiles(zone, x, z)
+    const bounds = footprintIconBounds(cells) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+    return { bounds, valid: isFootprintInBounds(cells, sizeX, sizeZ) }
+  }, [placingZoneSid, hoveredNode, sizeX, sizeZ, catalog])
 
   // Brush-shape cursor preview (requested follow-up to the brush-radius
   // control) — same gating as the Size stepper's own visibility (Freehand
@@ -6409,6 +6423,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     top: (sizeZ - 1 - placingFootprintBounds.maxZ) * effectiveCellPx,
                     width: (placingFootprintBounds.maxX - placingFootprintBounds.minX + 1) * effectiveCellPx,
                     height: (placingFootprintBounds.maxZ - placingFootprintBounds.minZ + 1) * effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+              {zoneGhost && (
+                <div
+                  className={`absolute pointer-events-none rounded-sm border-[3px] ${zoneGhost.valid ? 'border-emerald-400' : 'border-red-500'}`}
+                  style={{
+                    left: zoneGhost.bounds.minX * effectiveCellPx,
+                    top: (sizeZ - 1 - zoneGhost.bounds.maxZ) * effectiveCellPx,
+                    width: (zoneGhost.bounds.maxX - zoneGhost.bounds.minX + 1) * effectiveCellPx,
+                    height: (zoneGhost.bounds.maxZ - zoneGhost.bounds.minZ + 1) * effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     boxSizing: 'border-box',
                   }}
