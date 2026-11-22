@@ -648,6 +648,10 @@ export default function MapGridCellContent({
                   return name ? `${name} (${sid})` : sid
                 }
                 const canEditFaction = isCitySpawnerHere ? !!onSetCityFaction : !!onSetHeroSid
+                const cityHeroName = (sid: string) => {
+                  const hero = catalog?.heroes.find((h) => h.id === sid)
+                  return hero ? `${localName(catalog, 'heroes', hero)} (${sid})` : sid
+                }
                 return (
                   <>
                     <div className="space-y-1">
@@ -689,7 +693,37 @@ export default function MapGridCellContent({
                           )}
                           {t('mapGrid.mapGridCellContent.spawnsWithHero')}
                         </label>
-                        {currentSpawnHero && <p className="text-xs text-muted-foreground pl-6">{t('mapGrid.mapGridCellContent.randomHero')}</p>}
+                        {currentSpawnHero && (
+                          <div className="space-y-1 pl-6">
+                            <p className="text-xs text-muted-foreground">{t('common.statsDialog.hero')}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
+                              {onSetHeroSid && (
+                                <>
+                                  <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
+                                    {t('mapGrid.mapGridCellContent.browse')}
+                                  </Button>
+                                  {/* A city with a faction needs a real hero: the random placeholder crashed the game once such a city is active
+                                      (see setCityFaction in map-save.ts), so "Random" is offered only while the faction is random too. */}
+                                  {currentHeroSid !== 'random' && !currentFactionSid && (
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetHeroSid(selected, 'random')}>
+                                      {t('mapGrid.mapGridCellContent.setToRandom')}
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                            {onSetHeroSid && (
+                              <HeroPickerDialog
+                                open={heroPickerOpen}
+                                onOpenChange={setHeroPickerOpen}
+                                value={currentHeroSid !== 'random' ? currentHeroSid : undefined}
+                                lockedFaction={currentFactionSid || undefined}
+                                onSelect={(entry) => { if (entry.heroId) onSetHeroSid(selected, entry.heroId) }}
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 

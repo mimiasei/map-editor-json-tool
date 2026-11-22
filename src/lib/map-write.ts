@@ -693,6 +693,11 @@ interface PropHeroEntry {
  * (which updates both) worked every time. Block 1 uses '' as its "no
  * defined hero" sentinel, not the literal "random" string propHeroes uses —
  * confirmed distinct per block from the same real comparison.
+ *
+ * Block 1's `spawns.takenHeroes` lists every defined starting hero (a hero spawner's and a city's companion alike): in all 12
+ * shipped maps that define one, e.g. testingStartHero.map (city human, hero human_hero_16 -> takenHeroes ["human_hero_16"]) and
+ * Stormlight.map. It is kept in step here: the old hero leaves it (unless another player still has that hero), the new one joins.
+ * Heroes it lists for other reasons are left alone.
  */
 export function upsertPropHero(
   block1Chunk: Uint8Array,
@@ -722,9 +727,11 @@ export function upsertPropHero(
   if (!entry1) {
     throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
   }
+  const previousHero = entry1.isHeroDefined ? entry1.heroSid : undefined
   entry1.isHeroDefined = isDefined
   entry1.heroSid = isDefined ? heroSid : ''
-  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  let patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  patchedText1 = syncTakenHeroes(patchedText1, previousHero, isDefined ? heroSid : undefined, block1Spawns)
 
   return {
     block1Chunk: new TextEncoder().encode(patchedText1),
@@ -732,12 +739,20 @@ export function upsertPropHero(
   }
 }
 
+/** Block 1 `spawns.takenHeroes`: drops `previous` when no spawn entry still defines it, adds `next` (see upsertPropHero). */
+function syncTakenHeroes(text1: string, previous: string | undefined, next: string | undefined, spawns: Block1SpawnEntry[]): string {
+  if (!text1.includes('"takenHeroes":[')) return text1
+  const span = findJsonArraySpan(text1, 'takenHeroes')
+  let taken = JSON.parse(span.span) as string[]
+  if (previous && previous !== next && !spawns.some((e) => e.isHeroDefined && e.heroSid === previous)) taken = taken.filter((h) => h !== previous)
+  if (next && !taken.includes(next)) taken = [...taken, next]
+  return text1.slice(0, span.arrayOpen) + JSON.stringify(taken) + text1.slice(span.arrayClose + 1)
+}
+
 /**
- * Toggle whether a city spawner comes with a companion hero. A city's
- * companion hero has no "pick a specific one" state at all — confirmed on a
- * user-built test map, GME only ever produces {isDefined:false,
- * heroSid:"random"} for it — so turning this on always (re)creates that
- * exact row; turning it off removes it entirely. Confirmed on the same test
+ * Toggle whether a city spawner comes with a companion hero. Turning it on (re)creates the placeholder row
+ * {isDefined:false, heroSid:"random"} (the state GME writes for a city whose faction is not set); a specific hero is then set with
+ * upsertPropHero (testingStartHero.map has {isDefined:true, heroSid:"human_hero_16"} for a human city). Turning it off removes the row. Confirmed on the same test
  * map that spawnHero:true/false always co-occurs with a propHeroes row
  * existing/not existing for that (type,id).
  *
@@ -782,9 +797,11 @@ export function setCitySpawnHero(
   if (!entry1) {
     throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
   }
+  const previousHero = entry1.isHeroDefined ? entry1.heroSid : undefined
   entry1.isHeroDefined = false
   entry1.heroSid = ''
-  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  const patchedText1 = syncTakenHeroes(
+    text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1), previousHero, undefined, block1Spawns)
 
   return {
     block1Chunk: new TextEncoder().encode(patchedText1),
