@@ -695,24 +695,22 @@ export default function MapGridCellContent({
                         </label>
                         {currentSpawnHero && (
                           <div className="space-y-1 pl-6">
-                            <p className="text-xs text-muted-foreground">{t('common.statsDialog.hero')}</p>
                             <div className="flex items-center gap-2">
-                              <p className="text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
+                              <p className="text-xs text-muted-foreground">{t('common.statsDialog.hero')}</p>
                               {onSetHeroSid && (
                                 <>
                                   <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
                                     {t('mapGrid.mapGridCellContent.browse')}
                                   </Button>
-                                  {/* A city with a faction needs a real hero: the random placeholder crashed the game once such a city is active
-                                      (see setCityFaction in map-save.ts), so "Random" is offered only while the faction is random too. */}
-                                  {currentHeroSid !== 'random' && !currentFactionSid && (
-                                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetHeroSid(selected, 'random')}>
-                                      {t('mapGrid.mapGridCellContent.setToRandom')}
-                                    </Button>
-                                  )}
+                                  {/* With a city faction the handler picks a random hero of that faction: the random placeholder crashed the game once
+                                      such a city is active (see setCityFaction in map-save.ts). */}
+                                  <Button variant="outline" size="sm" className="h-6 text-xs" disabled={currentHeroSid === 'random'} onClick={() => onSetHeroSid(selected, 'random')}>
+                                    {t('common.generateRandomMapDialog.random')}
+                                  </Button>
                                 </>
                               )}
                             </div>
+                            <p className="text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
                             {onSetHeroSid && (
                               <HeroPickerDialog
                                 open={heroPickerOpen}
