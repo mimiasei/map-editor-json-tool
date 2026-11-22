@@ -613,7 +613,7 @@ export default function AppShell() {
         switch (event.payload) {
           case 'new':      handleNew(); break
           case 'open':     window.dispatchEvent(new Event('oe:open')); break
-          case 'open-map': window.dispatchEvent(new Event('oe:open-map')); break
+          case 'import-json': window.dispatchEvent(new Event('oe:import-json')); break
           case 'clear-recent': clearRecentFiles(); break
           case 'import-h3m': window.dispatchEvent(new Event('oe:import-h3m')); break
           case 'save':     handleSave(); break

@@ -18,7 +18,7 @@ import { findGuardRewardMismatches, describeGuardRewardMismatch, scaleGuardEdit,
 import { computeZoneEconomy, type ZoneEconomy } from '@/lib/map-grid/zone-economy'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
-import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
+import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt, readBinaryFile, pickMapOrScriptPath } from '@/lib/native-fs'
 import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
 import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
@@ -473,6 +473,44 @@ export default function Toolbar({
     }
   }
 
+  // ── Open (desktop): a .map, or a scenario .json ──────────────────────────────
+  // A .json that has its map next to it (testquest.json beside testquest.map, or x.map.json) opens that map, which loads the
+  // .json as its quests. A script with no map is still opened, as a script only, with a notice.
+  const openMapAt = async (path: string) => {
+    try {
+      const result = await openMapFromPath(path)
+      logInfo(`Opened .map: ${result.name}`)
+      if (result.warnings.length > 0) {
+        setImportWarnings(result.warnings)
+        setImportFeedbackOpen(true)
+      }
+      onMapGridOpen?.()   // a .map opens in the Map Grid, its main workspace
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      logError(`Failed to open .map: ${msg}`)
+      setImportErrors([msg])
+      setImportFeedbackOpen(true)
+    }
+  }
+
+  const handleLoad = async () => {
+    const path = await pickMapOrScriptPath()
+    if (!path) return
+    if (!/\.json$/i.test(path)) { await openMapAt(path); return }
+    const stem = path.replace(/\.json$/i, '')
+    const mapPath = /\.map$/i.test(stem) ? stem : `${stem}.map`
+    if (await readBinaryFile(mapPath)) { await openMapAt(mapPath); return }
+    const content = await readTextFileAt(path)
+    if (content === null) {
+      setImportErrors([`Could not read ${path}.`])
+      setImportFeedbackOpen(true)
+      return
+    }
+    loadImportedJson({ name: path.replace(/\\/g, '/').split('/').pop() ?? path, path, content })
+    setImportWarnings((prev) => [...prev, t('layout.toolbar.jsonNoMapWarning')])
+    setImportFeedbackOpen(true)
+  }
+
   // ── Open .map file ────────────────────────────────────────────────────────────
   const handleOpenMap = async () => {
     console.log('[Toolbar] handleOpenMap called')
@@ -634,12 +672,14 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
-  handlersRef.current = { handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
+  const handlersRef = useRef({ handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleLoad, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
+  handlersRef.current = { handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleLoad, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
 
   useEffect(() => {
-    const onOpen      = () => { handlersRef.current.handleImport() }
-    const onOpenMap   = () => { handlersRef.current.handleOpenMap() }
+    // Desktop has one Open for maps and scripts; the web build keeps its two (a .json import and a .map import).
+    const onOpen      = () => { if (isTauri()) void handlersRef.current.handleLoad(); else handlersRef.current.handleImport() }
+    const onOpenMap   = () => { if (isTauri()) void handlersRef.current.handleLoad(); else handlersRef.current.handleOpenMap() }
+    const onImportJson = () => { handlersRef.current.handleImport() }
     const onNewMap    = () => { void handlersRef.current.handleNewMapClick() }
     const onRandomMap = () => { void handlersRef.current.handleGenerateMapClick() }
     const onHotkeys    = () => { setHotkeysOpen(true) }
@@ -660,6 +700,7 @@ export default function Toolbar({
     window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',       onOpen)
     window.addEventListener('oe:open-map',   onOpenMap)
+    window.addEventListener('oe:import-json', onImportJson)
     window.addEventListener('oe:new-map',    onNewMap)
     window.addEventListener('oe:random-map', onRandomMap)
     window.addEventListener('oe:hotkeys',    onHotkeys)
@@ -673,6 +714,7 @@ export default function Toolbar({
       window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',       onOpen)
       window.removeEventListener('oe:open-map',   onOpenMap)
+      window.removeEventListener('oe:import-json', onImportJson)
       window.removeEventListener('oe:new-map',    onNewMap)
       window.removeEventListener('oe:random-map', onRandomMap)
       window.removeEventListener('oe:hotkeys',    onHotkeys)
@@ -1071,6 +1113,10 @@ export default function Toolbar({
                   <DropdownMenuItem onClick={() => setTimeout(handleImportH3mClick, 0)}>
                     <FileInput className="h-4 w-4 mr-2" />
                     {t('layout.toolbar.menu.importH3Map')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTimeout(handleImport, 0)}>
+                    <FileInput className="h-4 w-4 mr-2" />
+                    {t('layout.toolbar.menu.importScript')}
                   </DropdownMenuItem>
                 </>
               )}
