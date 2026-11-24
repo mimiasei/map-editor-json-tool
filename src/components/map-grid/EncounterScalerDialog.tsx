@@ -155,9 +155,9 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
           <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.encounterScaler.afterScaling')}</p>
           <div className="flex flex-wrap gap-1.5">
             {bands.map((label) => (
-              <Button key={label} type="button" size="sm" variant="outline" tabIndex={-1} aria-disabled className="pointer-events-none h-7 text-xs">
+              <span key={label} className="inline-flex h-7 items-center rounded-md border border-input px-3 text-xs">
                 {bandKey(label)} ({countsAfter.get(bandKey(label)) ?? 0})
-              </Button>
+              </span>
             ))}
           </div>
         </div>
