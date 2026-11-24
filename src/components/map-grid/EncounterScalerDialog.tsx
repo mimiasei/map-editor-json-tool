@@ -79,7 +79,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="max-w-[33.6rem]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('mapGrid.encounterScaler.title')}</DialogTitle>
           <DialogDescription>
