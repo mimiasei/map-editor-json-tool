@@ -125,6 +125,9 @@ export interface MapGridCellContentProps {
   onSetObjectActions?: (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) => void
   /** A zone's Activate / Delete-after-trigger switches — docked-only. */
   onSetMarkerState?: (item: PlacedObject, isActivate: boolean, isDelete: boolean) => void
+  /** A zone's size: the zone template it uses. `zoneFits` says whether a template's shape stays on the map from this zone's tile. */
+  onSetZoneTemplate?: (item: PlacedObject, sid: string) => void
+  zoneFits?: (item: PlacedObject, sid: string) => boolean
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -199,6 +202,8 @@ export interface MapGridCellContentProps {
    *  a stable reference); objects/squads only, not markers/zones. Docked-only,
    *  like the other handlers above. */
   onCreateRule?: (item: PlacedObject) => void
+  /** A single click on a row of the info column: the grid centres on the object at 100% zoom. */
+  onFocusItem?: (item: PlacedObject) => void
   /** Move `item` one place up (-1, toward the front) or down (1) in this tile's stack. Docked-only. */
   onMoveInStack?: (item: PlacedObject, delta: -1 | 1) => void
 }
@@ -234,6 +239,8 @@ export default function MapGridCellContent({
   onSetRandomCityFaction,
   onSetObjectActions,
   onSetMarkerState,
+  onSetZoneTemplate,
+  zoneFits,
   allPortals = [],
   onSetPortalTarget,
   portalSids,
@@ -260,6 +267,7 @@ export default function MapGridCellContent({
   onCancelDelete,
   onSelectionChange,
   onCreateRule,
+  onFocusItem,
   onMoveInStack,
 }: MapGridCellContentProps) {
   const { t } = useTranslation()
@@ -351,7 +359,7 @@ export default function MapGridCellContent({
           return (
             <div key={item.key} className={cn('flex items-center border-b border-border/50 transition-colors', isSelected ? 'bg-accent' : 'hover:bg-accent/50')}>
             <button
-              onClick={() => setSelectedKey(item.key)}
+              onClick={() => { setSelectedKey(item.key); onFocusItem?.(item) }}
               onDoubleClick={item.type === 0 && catalog?.mapObjects.some((o) => o.id === item.sid) ? () => openDatabaseItem('mapObjects', item.sid) : undefined}
               className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 text-left"
             >
@@ -645,6 +653,10 @@ export default function MapGridCellContent({
                   return name ? `${name} (${sid})` : sid
                 }
                 const canEditFaction = isCitySpawnerHere ? !!onSetCityFaction : !!onSetHeroSid
+                const cityHeroName = (sid: string) => {
+                  const hero = catalog?.heroes.find((h) => h.id === sid)
+                  return hero ? `${localName(catalog, 'heroes', hero)} (${sid})` : sid
+                }
                 return (
                   <>
                     <div className="space-y-1">
@@ -686,7 +698,34 @@ export default function MapGridCellContent({
                           )}
                           {t('mapGrid.mapGridCellContent.spawnsWithHero')}
                         </label>
-                        {currentSpawnHero && <p className="text-xs text-muted-foreground pl-6">{t('mapGrid.mapGridCellContent.randomHero')}</p>}
+                        {currentSpawnHero && (
+                          <div className="space-y-1 pl-6">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground">{t('common.statsDialog.hero')}</p>
+                              {onSetHeroSid && (
+                                <>
+                                  <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
+                                    {t('mapGrid.mapGridCellContent.browse')}
+                                  </Button>
+                                  {/* Empties the hero: the game picks one, and the player may choose before the game starts. */}
+                                  <Button variant="outline" size="sm" className="h-6 text-xs" disabled={currentHeroSid === 'random'} onClick={() => onSetHeroSid(selected, 'random')}>
+                                    {t('common.generateRandomMapDialog.random')}
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                            <p className="pt-[5px] text-xs">{currentHeroSid === 'random' ? t('mapGrid.mapGridCellContent.randomHero') : cityHeroName(currentHeroSid)}</p>
+                            {onSetHeroSid && (
+                              <HeroPickerDialog
+                                open={heroPickerOpen}
+                                onOpenChange={setHeroPickerOpen}
+                                value={currentHeroSid !== 'random' ? currentHeroSid : undefined}
+                                lockedFaction={currentFactionSid || undefined}
+                                onSelect={(entry) => { if (entry.heroId) onSetHeroSid(selected, entry.heroId) }}
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -708,6 +747,7 @@ export default function MapGridCellContent({
                             </>
                           )}
                         </div>
+                        
                         {onSetHeroSid && (
                           <HeroPickerDialog
                             open={heroPickerOpen}
@@ -722,12 +762,6 @@ export default function MapGridCellContent({
                   </>
                 )
               })()}
-              {isCitySpawner && (
-                <div>
-                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.spawnerType')}</p>
-                  <p className="text-xs">{t('shared.city')}</p>
-                </div>
-              )}
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.playerAttachedToThisSpawner')}</p>
                 {onSetSpawnerOwner && playersCount > 0 ? (
@@ -1198,9 +1232,26 @@ export default function MapGridCellContent({
             )
           })()}
 
-          {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined) && (
+          {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined || (catalog?.zoneTemplates.length ?? 0) > 0) && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.mapGridCellContent.zone')}</p>
+              {(catalog?.zoneTemplates.length ?? 0) > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">{t('mapGrid.mapGridCellContent.zoneSize')}</p>
+                  <Select value={selected.sid} onValueChange={(sid) => onSetZoneTemplate?.(selected, sid)} disabled={!onSetZoneTemplate}>
+                    <SelectTrigger className="h-7 text-xs w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalog!.zoneTemplates.map((z) => (
+                        <SelectItem key={z.id} value={z.id} disabled={z.id !== selected.sid && zoneFits?.(selected, z.id) === false}>
+                          {z.id} ({z.sizeX}×{z.sizeZ})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               {selected.markerActive !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

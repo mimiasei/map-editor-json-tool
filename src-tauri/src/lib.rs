@@ -89,11 +89,9 @@ fn set_recent_files(
 fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<Menu<Wry>> {
     let new_item = with_accel(MenuItemBuilder::with_id("new", label(labels, "new", "New")), labels, "new", "CmdOrCtrl+N").build(app)?;
     let open_item = with_accel(MenuItemBuilder::with_id("open", label(labels, "open", "Open...")), labels, "open", "CmdOrCtrl+O").build(app)?;
-    // issue #160: the header's "Import Map"/"Open Map" button is redundant
-    // with the native File menu on desktop (same as New/Open/Save/Save As
-    // already were) — this gives it a native home instead of removing the
-    // capability. Ctrl+O is already "Open" (scenario JSON), so its default shortcut is Ctrl+Alt+O.
-    let open_map_item = with_accel(MenuItemBuilder::with_id("open-map", label(labels, "open-map", "Open Map...")), labels, "open-map", "CmdOrCtrl+Alt+O").build(app)?;
+    // "Open..." takes a .map or a scenario .json (the frontend decides); a script on its own has its own item below.
+    let import_json_item =
+        MenuItemBuilder::with_id("import-json", label(labels, "import-json", "Import script (JSON)...")).build(app)?;
     // Filled by the frontend through set_recent_files once it has loaded; until then (and when empty) a disabled placeholder.
     let recent_placeholder = MenuItemBuilder::with_id("recent-none", label(labels, "recent-none", "No recent files"))
         .enabled(false)
@@ -121,9 +119,9 @@ fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Resul
     let file_menu = SubmenuBuilder::new(app, label(labels, "file", "File"))
         .item(&new_item)
         .item(&open_item)
-        .item(&open_map_item)
         .item(&recent_menu)
         .item(&import_h3m_item)
+        .item(&import_json_item)
         .separator()
         .item(&save_item)
         .item(&save_as_item)

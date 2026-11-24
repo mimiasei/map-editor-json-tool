@@ -61,12 +61,15 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Saisissez le message du dialogue…",
-      "createNewDialog": "Créer un nouveau dialogue"
+      "createNewDialog": "Créer un nouveau dialogue",
+      "newDialogTitle": "Nouveau dialogue",
+      "newDialogHint": "Crée un dialogue d’une seule diapositive affichant ce texte. Ouvrez l’éditeur de dialogues plus tard pour ajouter des diapositives, des portraits ou des réponses."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Parcourir les héros groupés par faction",
       "browse": "Parcourir",
       "browseHeroesByFaction": "Parcourir les héros par faction…",
+      "browseSquads": "Parcourir les escouades par faction et palier…",
       "filterMapObjects": "Filtrer les objets de carte",
       "filterMapObjectsActive": "Filtrer les objets de carte ({{filter}})",
       "noMatching": {
@@ -432,6 +435,13 @@
       "renderNow": "Générer maintenant",
       "waiting": "En attente : {{interactables}} objets de carte, puis {{decorations}} éléments de décor (arbres, rochers, animaux), puis {{cliffs}} morceaux de falaise (les bords du terrain surélevé), puis {{rivers}} morceaux de rivière.",
       "notNow": "Pas maintenant"
+    },
+    "rebalanceDialog": {
+      "title": "Rééquilibrer la carte",
+      "intro": "Modifications suggérées pour égaliser les joueurs. Décochez celles que vous ne voulez pas, puis appuyez sur Rééquilibrer.",
+      "nothing": "Rien ne peut être rééquilibré automatiquement : les écarts sont faibles ou portent sur des éléments que cet outil ne modifie pas.",
+      "note": "Les distances aux mines et le relief ne sont pas modifiés automatiquement. La carte est notée de nouveau après la modification, et Ctrl+Z annule tout en une seule étape.",
+      "rebalance": "Rééquilibrer"
     },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Nécessite au moins deux zones de joueur peintes sur la carte (une carte générée aléatoirement en a) pour comparer les joueurs.",
@@ -1028,6 +1038,7 @@
     },
     "fileFilters": {
       "map": "Carte",
+      "mapOrScript": "Carte ou script",
       "mapFile": "Fichier de carte",
       "h3Map": "Carte Heroes 3",
       "image": "Image",
@@ -1335,6 +1346,7 @@
       "highlightConnectedPortalOnGrid": "Surligner le portail relié sur la grille",
       "rewards": "Récompenses",
       "zone": "Zone",
+      "zoneSize": "Taille",
       "theOfficialEditorsOwnActivate": "La case « Activer » de l'éditeur officiel. Désactivée, cette zone n'interrompt pas le déplacement des héros et ne déclenche aucune de ses actions ; elle peut être réactivée plus tard avec l'action de script SetActiveMarker.",
       "deleteAfterTrigger": "Supprimer après déclenchement",
       "whetherThisZoneRemovesItself": "Indique si cette zone se supprime automatiquement la première fois qu'elle se déclenche. Désactivé, la zone reste sur la carte et peut se déclencher de nouveau.",
@@ -1593,6 +1605,8 @@
         "selected": "{{count}} sélectionné(s)",
         "pasting": "Collage",
         "copyTitle": "Copier les objets sélectionnés (Ctrl+C)",
+        "deleteTitle": "Supprimer les objets sélectionnés (Suppr)",
+        "deleteCount": "Supprimer {{count}} objets ?",
         "pasteTitle": "Coller la zone copiée : elle suit le curseur, cliquer pour poser, Échap pour arrêter (Ctrl+V)",
         "flipTitle": "Retourner gauche-droite (M)",
         "rotateTitle": "Tourner de 90° dans le sens horaire (R)",
@@ -1684,6 +1698,30 @@
       "decorations": "Décorations",
       "zones": "Zones",
       "toggle": "Activer/désactiver {{group}}"
+    },
+    "encounterScaler": {
+    "title": "Ajuster les rencontres",
+    "introSelection": "{{count}} rencontres sélectionnées. Modifiez leur force d’un pourcentage.",
+    "introMap": "Les {{count}} rencontres de la carte. Modifiez leur force d’un pourcentage.",
+    "filter": "Difficulté",
+    "all": "Toutes",
+    "none": "Aucune",
+    "by": "de",
+    "toggleTitle": "Basculer entre réduire et augmenter",
+    "reduce": "Réduire",
+    "increase": "Augmenter",
+    "preview_one": "{{count}} rencontre : valeur totale {{before}} → {{after}}",
+    "preview_many": "{{count}} rencontres : valeur totale {{before}} → {{after}}",
+    "preview_other": "{{count}} rencontres : valeur totale {{before}} → {{after}}",
+    "afterScaling": "Après l’ajustement",
+    "average": "Moyenne: {{before}} → {{after}}",
+    "max": "Max: {{before}} → {{after}}",
+    "min": "Min: {{before}} → {{after}}",
+    "scale_one": "Ajuster {{count}} rencontre",
+    "scale_many": "Ajuster {{count}} rencontres",
+    "scale_other": "Ajuster {{count}} rencontres",
+    "button": "Ajuster les rencontres",
+    "buttonTitle": "Augmenter ou réduire la force de nombreuses rencontres à la fois, par difficulté"
     },
     "squadDifficulty": {
       "Random": "Aléatoire",
@@ -2283,6 +2321,12 @@
       "generateOnMapTitle": "Ajouter des décors et objets interactifs générés à cette carte",
       "unpublishedChanges": "Modifications non publiées",
       "publishMapYouHaveChanges": "Publier la carte — vous avez des modifications pas encore écrites dans le jeu (héros/objets/artefacts personnalisés, dialogues, localisation)",
+      "publishNudge": "Enregistré. Le jeu ne reçoit vos dialogues, textes et contenus personnalisés que via Publier : publiez le ZIP de la carte pour qu’ils fonctionnent dans le jeu.",
+      "publishNudgeAction": "Publier…",
+      "jsonNoMapWarning": "Ouvert comme script seul : aucun .map correspondant à côté de ce fichier, les quêtes ne peuvent donc pas être enregistrées dans une carte du jeu. Ouvrez le .map pour travailler sur les deux.",
+      "paintPlayerAreas": "Peindre les zones des joueurs",
+      "paintPlayerAreasHint": "Cette carte n’a pas de zones de joueur, les joueurs ne peuvent donc pas être comparés. Peignez-en une autour de chaque ville de joueur, disposée comme le générateur de cartes aléatoires dispose ses zones de joueur.",
+      "rebalance": "Rééquilibrer…",
       "guides": "Guides",
       "gameDatabase": "Base de données du jeu",
       "undoCtrlZ": "Annuler (Ctrl+Z)",
@@ -2356,6 +2400,7 @@
         "gameData": "Données du jeu",
         "extractThumbnails": "Extraire les miniatures…",
         "renderObjectImages": "Générer les images d'objets…",
+        "importScript": "Importer un script (.json)…",
         "importH3Map": "Importer une carte H3…"
       },
       "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
@@ -2696,6 +2741,15 @@
       "biome": "Biome",
       "noBiome": "Aucun"
     },
+    "squadPickerDialog": {
+      "title": "Choisir une escouade",
+      "search": "Rechercher une créature ou un id d’escouade",
+      "filter": "Filtrer les escouades",
+      "tier": "Palier",
+      "noneLoaded": "Aucun modèle d’escouade : chargez Core.zip via Données du jeu",
+      "noMatch": "Aucune escouade ne correspond à la recherche et aux filtres",
+      "refine": "{{shown}} sur {{total}} affichées : affinez la recherche ou les filtres"
+    },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Rechercher par nom, SID ou icône…",
       "noPortraitsToBrowseLoad": "Aucun portrait à parcourir : chargez Core.zip via Données du jeu.",
@@ -3005,6 +3059,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Type d'action",
+      "randomSquad": "Aléatoire",
       "duplicateAction": "Dupliquer l'action",
       "pickAHeroSpawnerFrom": "Choisir un point d'apparition de héros sur la carte",
       "pickANodeFromThe": "Choisir un nœud sur la carte",
@@ -3338,6 +3393,11 @@
       "guardOver": "{{where}} — la garde de valeur {{guard}} vaut {{times}} fois le prix de l'objet ({{reward}}) : plus que dans les cartes livrées, elle risque de ne jamais être battue",
       "guardNearStart": "{{where}} — un objet puissant à seulement {{distance}} cases du départ le plus proche : les cartes livrées les placent plus loin"
     },
+    "rebalance": {
+      "landGrow": "Agrandir la zone du joueur {{owner}} de {{tiles}} cases ({{from}} → {{to}} cases de terre)",
+      "landShrink": "Réduire la zone du joueur {{owner}} de {{tiles}} cases ({{from}} → {{to}} cases de terre)",
+      "sitesAdd": "Ajouter {{count}} sites à la zone du joueur {{owner}} ({{from}} → {{to}}) : {{kinds}}"
+    },
     "balance": {
       "startLabel": "Joueur {{owner}} ({{x}}, {{z}})",
       "outsideArea": "{{start}} n'est dans aucune zone de joueur : il n'est donc pas comparé. Peignez une zone sur sa case de départ.",
@@ -3421,9 +3481,9 @@
     "help": "Aide",
     "new": "Nouveau",
     "open": "Ouvrir…",
-    "openMap": "Ouvrir une carte…",
     "recent": "Ouvrir un fichier récent",
     "importH3m": "Importer une carte H3…",
+    "importJson": "Importer un script (JSON)...",
     "save": "Sauvegarder",
     "saveAs": "Sauvegarder sous…",
     "quit": "Quitter",

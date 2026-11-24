@@ -10,6 +10,8 @@ import type { Action, Condition, Interruption, Quest, ScenarioFile, Trigger } fr
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
 import type { ParamDef } from '@/schema/conditions'
+import { useCatalogStore } from '@/store/useCatalogStore'
+import { RANDOM_SQUAD_SID, pickRandomSquadTemplate } from '@/lib/random-squad-template'
 
 const isBlank = (v: string | undefined) => v === undefined || v === ''
 
@@ -33,8 +35,36 @@ function withVfxEntity(action: Action): Action {
   return { ...action, p: filled }
 }
 
+/** The spawn actions read every slot by position, like CreateVFX: all 62 shipped SpawnObject in The_Mysterious_Island.json carry the
+ *  mirror flag and the entity SID ([sid, node, "false", entity]). SpawnSquad ran with [sid, node, value] (the optional bool and
+ *  entity trimmed away) and the game logged IndexOutOfRangeException in the action's Invoke when the quest fired, so nothing spawned.
+ *  Blank slots get the enum's default and a generated entity name. */
+const SPAWN_FULL_SLOTS = new Set(['SpawnSquad', 'SpawnSquadNPC', 'SpawnObject', 'SpawnMapObject'])
+
+function withSpawnSlots(action: Action): Action {
+  const params = ACTION_REGISTRY[action.a]?.params
+  const p = action.p ?? []
+  if (!SPAWN_FULL_SLOTS.has(action.a) || !params || !p[0] || !p[1]) return action
+  const filled = params.map((param, i) => {
+    if (!isBlank(p[i])) return p[i]
+    if (param.type === 'enum' && param.options?.length) return param.options[0]
+    return param.defines ? `spawn_${p[0]}_${p[1]}` : ''
+  })
+  return filled.every((v, i) => v === p[i]) ? action : { ...action, p: filled }
+}
+
+/** SpawnSquad / SpawnSquadNPC with the "Random" choice get a real squad template (the game has no random sid there). */
+function withRandomSquad(action: Action): Action {
+  const p = action.p ?? []
+  const index = ACTION_REGISTRY[action.a]?.params.findIndex((param) => param.squadSid) ?? -1
+  if (index < 0 || p[index] !== RANDOM_SQUAD_SID) return action
+  const sid = pickRandomSquadTemplate(useCatalogStore.getState().catalog, Number(p[2]) || 0, `${action.a}:${p[1]}:${p[2]}:${p[4] ?? ''}`)
+  if (!sid) return action
+  return { ...action, p: p.map((v, i) => (i === index ? sid : v)) }
+}
+
 export function cleanAction(raw: Action): Action {
-  const action = withVfxEntity(raw)
+  const action = withSpawnSlots(withRandomSquad(withVfxEntity(raw)))
   const p = trimParams(action.p, ACTION_REGISTRY[action.a]?.params)
   return p === raw.p ? action : { ...action, p }
 }

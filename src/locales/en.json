@@ -61,12 +61,15 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Type the dialog message…",
-      "createNewDialog": "Create new dialog"
+      "createNewDialog": "Create new dialog",
+      "newDialogTitle": "New dialog",
+      "newDialogHint": "Creates a dialog with one slide that shows this text. Open the Dialog editor later to add more slides, portraits or answers."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Browse heroes grouped by faction",
       "browse": "Browse",
       "browseHeroesByFaction": "Browse heroes by faction…",
+      "browseSquads": "Browse squads by faction and tier…",
       "filterMapObjects": "Filter map objects",
       "filterMapObjectsActive": "Filter map objects ({{filter}})",
       "noMatching": {
@@ -427,6 +430,13 @@
       "renderNow": "Render now",
       "waiting": "Waiting: {{interactables}} map objects, then {{decorations}} decorations (trees, rocks, animals), then {{cliffs}} cliff pieces (the edges of raised ground), then {{rivers}} river pieces.",
       "notNow": "Not now"
+    },
+    "rebalanceDialog": {
+      "title": "Rebalance the map",
+      "intro": "Suggested changes to even out the players. Untick the ones you do not want, then press Rebalance.",
+      "nothing": "Nothing can be rebalanced automatically: the gaps are small, or they are in things this tool does not change.",
+      "note": "Mine distances and elevation are not changed automatically. The map is re-scored after the change, and Ctrl+Z undoes it all in one step.",
+      "rebalance": "Rebalance"
     },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Needs at least two player areas painted on the map (a randomly generated map has them) to compare players.",
@@ -1007,6 +1017,7 @@
     },
     "fileFilters": {
       "map": "Map",
+      "mapOrScript": "Map or script",
       "mapFile": "Map file",
       "h3Map": "Heroes 3 Map",
       "image": "Image",
@@ -1314,6 +1325,7 @@
       "highlightConnectedPortalOnGrid": "Highlight connected portal on grid",
       "rewards": "Rewards",
       "zone": "Zone",
+      "zoneSize": "Size",
       "theOfficialEditorsOwnActivate": "The official editor's own \"Activate\" checkbox. When off, this zone doesn't interrupt hero movement or fire its actions at all — it can be turned back on later via the SetActiveMarker script action.",
       "deleteAfterTrigger": "Delete after trigger",
       "whetherThisZoneRemovesItself": "Whether this zone removes itself automatically the first time it fires. When off, the zone remains on the map and can fire again.",
@@ -1569,6 +1581,8 @@
         "selected": "{{count}} selected",
         "pasting": "Pasting",
         "copyTitle": "Copy the selected objects (Ctrl+C)",
+        "deleteTitle": "Delete the selected objects (Delete)",
+        "deleteCount": "Delete {{count}} objects?",
         "pasteTitle": "Paste the copied area: it follows the cursor, click to stamp, Esc to stop (Ctrl+V)",
         "flipTitle": "Flip left-right (M)",
         "rotateTitle": "Turn 90° clockwise (R)",
@@ -1660,6 +1674,28 @@
       "decorations": "Decorations",
       "zones": "Zones",
       "toggle": "Toggle {{group}}"
+    },
+    "encounterScaler": {
+    "title": "Scale encounters",
+    "introSelection": "{{count}} selected encounters. Change their strength by a percentage.",
+    "introMap": "All {{count}} encounters on the map. Change their strength by a percentage.",
+    "filter": "Difficulty",
+    "all": "All",
+    "none": "None",
+    "by": "by",
+    "toggleTitle": "Switch between reducing and increasing",
+    "reduce": "Reduce",
+    "increase": "Increase",
+    "preview_one": "{{count}} encounter: total value {{before}} → {{after}}",
+    "preview_other": "{{count}} encounters: total value {{before}} → {{after}}",
+    "afterScaling": "After scaling",
+    "average": "Average: {{before}} → {{after}}",
+    "max": "Max: {{before}} → {{after}}",
+    "min": "Min: {{before}} → {{after}}",
+    "scale_one": "Scale {{count}} encounter",
+    "scale_other": "Scale {{count}} encounters",
+    "button": "Scale encounters",
+    "buttonTitle": "Raise or lower the strength of many encounters at once, by difficulty"
     },
     "squadDifficulty": {
       "Random": "Random",
@@ -2256,6 +2292,12 @@
       "generateOnMapTitle": "Add generated decorations and interactables to this map",
       "unpublishedChanges": "Unpublished changes",
       "publishMapYouHaveChanges": "Publish map — you have changes not yet written to the game (custom heroes/objects/artifacts, dialogs, localization)",
+      "publishNudge": "Saved. The game only gets your dialogs, texts and custom content through Publish: publish the map ZIP so they work in the game.",
+      "publishNudgeAction": "Publish…",
+      "jsonNoMapWarning": "Opened as a script only: no matching .map was found next to this file, so quests cannot be saved into a game map. Open the .map to work on both.",
+      "paintPlayerAreas": "Paint player areas",
+      "paintPlayerAreasHint": "This map has no player areas, so the players cannot be compared. Paint one around each player city, laid out the way the random map generator lays out its player zones.",
+      "rebalance": "Rebalance…",
       "guides": "Guides",
       "gameDatabase": "Game Database",
       "undoCtrlZ": "Undo (Ctrl+Z)",
@@ -2329,6 +2371,7 @@
         "gameData": "Game Data",
         "extractThumbnails": "Extract Thumbnails…",
         "renderObjectImages": "Render Object Images…",
+        "importScript": "Import script (.json)…",
         "importH3Map": "Import H3 Map…"
       },
       "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
@@ -2662,6 +2705,15 @@
       "biome": "Biome",
       "noBiome": "None"
     },
+    "squadPickerDialog": {
+      "title": "Choose a squad",
+      "search": "Search creatures or squad id",
+      "filter": "Filter squads",
+      "tier": "Tier",
+      "noneLoaded": "No squad templates: load Core.zip via Game Data",
+      "noMatch": "No squads match the search and filters",
+      "refine": "Showing {{shown}} of {{total}}: narrow the search or the filters"
+    },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Search name, SID or icon…",
       "noPortraitsToBrowseLoad": "No portraits to browse — load Core.zip via Game Data.",
@@ -2971,6 +3023,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Action type",
+      "randomSquad": "Random",
       "duplicateAction": "Duplicate action",
       "pickAHeroSpawnerFrom": "Pick a hero spawner from the map",
       "pickANodeFromThe": "Pick a node from the map",
@@ -3300,6 +3353,11 @@
       "guardOver": "{{where}} — guard worth {{guard}} is {{times}}× the object's price ({{reward}}): more than shipped maps use, it may never be taken",
       "guardNearStart": "{{where}} — a strong object only {{distance}} tiles from the nearest start: shipped maps keep these further out"
     },
+    "rebalance": {
+      "landGrow": "Grow Player {{owner}}'s area by {{tiles}} tiles ({{from}} → {{to}} land tiles)",
+      "landShrink": "Shrink Player {{owner}}'s area by {{tiles}} tiles ({{from}} → {{to}} land tiles)",
+      "sitesAdd": "Add {{count}} sites to Player {{owner}}'s area ({{from}} → {{to}}): {{kinds}}"
+    },
     "balance": {
       "startLabel": "Player {{owner}} ({{x}}, {{z}})",
       "outsideArea": "{{start}} is not inside any Player Area, so it is not compared. Paint an area over its start tile.",
@@ -3383,9 +3441,9 @@
     "help": "Help",
     "new": "New",
     "open": "Open...",
-    "openMap": "Open Map...",
     "recent": "Open Recent",
     "importH3m": "Import H3 Map...",
+    "importJson": "Import script (JSON)...",
     "save": "Save",
     "saveAs": "Save As...",
     "quit": "Quit",

@@ -29,7 +29,7 @@ export const HOTKEY_DEFS: readonly HotkeyDef[] = [
   { id: 'viewMap', scope: 'global', group: 'app', defaultCombo: 'g' },
   { id: 'viewQuests', scope: 'global', group: 'app', defaultCombo: 'q' },
   { id: 'newMap', scope: 'global', group: 'app', defaultCombo: 'mod+alt+n' },
-  { id: 'openMap', scope: 'global', group: 'app', defaultCombo: 'mod+alt+o', nativeMenuId: 'open-map' },
+  { id: 'openMap', scope: 'global', group: 'app', defaultCombo: 'mod+alt+o' },
   { id: 'randomMap', scope: 'global', group: 'app', defaultCombo: 'mod+alt+r' },
   { id: 'newScenario', scope: 'global', group: 'app', defaultCombo: 'mod+n', nativeMenuId: 'new' },
   { id: 'openScenario', scope: 'global', group: 'app', defaultCombo: 'mod+o', nativeMenuId: 'open' },

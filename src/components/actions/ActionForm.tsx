@@ -24,6 +24,7 @@ import PlayerSelect from '@/components/common/PlayerSelect'
 import SidCombobox from '@/components/common/SidCombobox'
 import DialogSidField from '@/components/common/DialogSidField'
 import EntityCombobox from '@/components/common/EntityCombobox'
+import { RANDOM_SQUAD_SID, defaultParamValues } from '@/lib/random-squad-template'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
 import { duplicateAction, definedEntityNames } from '@/lib/action-duplicate'
@@ -88,12 +89,14 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
     [catalog, selectedBuildingSid, castleFaction],
   )
 
+  const randomSquadEntries = useMemo(() => [{ id: RANDOM_SQUAD_SID, label: t('actions.actionForm.randomSquad') }], [t])
+
   const updateType = (type: string) => {
     if (type === '__custom__') {
       onChange({ a: '', p: [] })
     } else {
       const newDef = ACTION_REGISTRY[type]
-      onChange({ a: type, p: newDef ? newDef.params.map(() => '') : [] })
+      onChange({ a: type, p: newDef ? defaultParamValues(newDef.params) : [] })
     }
   }
 
@@ -256,6 +259,14 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
                     ))}
                   </SelectContent>
                 </Select>
+              ) : param.squadSid ? (
+                <EntityCombobox
+                  value={(action.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
+                  category="squadTemplate"
+                  placeholder={param.hint}
+                  extraEntries={randomSquadEntries}
+                />
               ) : param.ref === 'dialog' ? (
                 <DialogSidField
                   value={(action.p ?? [])[i] ?? ''}

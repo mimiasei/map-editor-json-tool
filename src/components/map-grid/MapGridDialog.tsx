@@ -89,6 +89,7 @@ import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuz
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
 import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
+import { objectFocusPoint } from '@/lib/map-grid/focus'
 import {buildBlockedTileSet, buildEntranceTileSet, objectBlockedCells} from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -99,6 +100,7 @@ import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import MapGameSettingsDialog from '@/components/map-grid/MapGameSettingsDialog'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
+import EncounterScalerDialog from '@/components/map-grid/EncounterScalerDialog'
 import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -504,17 +506,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // legible as a set, not pulse in unison.
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const searchMatchedNodes = useMemo(() => {
+  const searchMatchedItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
-    if (!q) return new Set<number>()
-    const nodes = new Set<number>()
-    for (const item of placedObjects) {
-      if ([item.sid, item.entitySid, item.displayName].some((v) => v?.toLowerCase().includes(q))) {
-        nodes.add(item.node)
-      }
-    }
-    return nodes
+    if (!q) return []
+    return placedObjects.filter((item) => [item.sid, item.entitySid, item.displayName].some((v) => v?.toLowerCase().includes(q)))
   }, [placedObjects, searchQuery])
+  const searchMatchedNodes = useMemo(() => new Set(searchMatchedItems.map((item) => item.node)), [searchMatchedItems])
 
   const [settings, setSettings] = useState(loadMapGridSettings)
   // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
@@ -593,7 +590,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const footprintCellsByKey = useMemo(() => {
     const map = new Map<string, FootprintCell[]>()
     for (const obj of placedObjects) {
-      if (obj.type !== 0) continue
+      if (obj.type === 2) continue
       map.set(obj.key, resolveFootprintCells(obj, catalog))
     }
     return map
@@ -3408,7 +3405,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           // Multi-tile footprints (issue #167) get one bigger icon spanning
           // their bounding box instead — see multiTileIcons below — so skip
           // them here to avoid rendering the same object once per cell.
-          const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+          const cells1 = pick.primary.type !== 2 ? footprintCellsByKey.get(pick.primary.key) : undefined
           const bounds1 = cells1 ? footprintIconBounds(cells1) : null
           if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
           cells.push({ x, z, node, pick })
@@ -3436,7 +3433,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       pick: { primary: PlacedObject; group: GridGroup; count: number }
     }[] = []
     for (const obj of placedObjects) {
-      if (obj.type !== 0) continue
+      if (obj.type === 2) continue
       const cells = footprintCellsByKey.get(obj.key)
       if (!cells) continue
       const bounds = footprintIconBounds(cells)
@@ -3650,6 +3647,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
   const handleSetObjectActions = (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) =>
     applyEdit({ kind: 'setObjectActions', entityType: item.type, entityId: item.id, which, value }, `set actions ${which}`)
+  // A zone changes size by taking another template; one whose shape would leave the map is refused.
+  const zoneFits = (item: PlacedObject, sid: string): boolean => {
+    const zone = catalog?.zoneTemplates.find((z) => z.id === sid)
+    return !zone || isFootprintInBounds(computeFootprintTiles(zone, item.x, item.z), sizeX, sizeZ)
+  }
+  const handleSetZoneTemplate = (item: PlacedObject, sid: string) => {
+    if (zoneFits(item, sid)) applyEdit({ kind: 'setMarkerSid', entityId: item.id, sid }, 'resize zone')
+  }
   const handleSetMarkerState = (item: PlacedObject, isActivate: boolean, isDelete: boolean) =>
     applyEdit({ kind: 'setMarkerState', entityId: item.id, isActivate, isDelete }, 'set zone state')
 
@@ -3693,9 +3698,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const ti = useScenarioStore.getState().scenario.quests[qi].subQuests[sqi].triggers.length - 1
 
     setScenarioSelection('trigger', [qi, sqi, ti])
+    // The entrance is the tile a hero steps on to use the object; objects without one (squads, markers, decorations) use their own tile.
+    const entrance = item.type === 0 ? objectBlockedCells(item.sid, item.x, item.z, catalog, true, item.rotation)[0] : undefined
     requestSubjectFirst({
       entitySid,
       displayName: item.displayName,
+      node: entrance ? entrance.z * sizeX + entrance.x : item.node,
       subjectKey,
       path: [qi, sqi, ti],
       factionLabel: subjectKey === 'castle' ? (factionName ?? 'Random') : undefined,
@@ -3711,6 +3719,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     centerOnTile(item.x, item.z)
     zoomTo100()
   }, [selectNode, centerOnTile])
+  const focusItem = useCallback((item: PlacedObject) => {
+    const point = objectFocusPoint(item, catalog)
+    centerOnTile(point.x, point.z)
+    zoomTo100()
+  }, [catalog, centerOnTile, zoomTo100])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
     applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
   // Linking: "Link to portal" in the info column arms portalLinkFrom, the next click on another portal makes the pair (both ways).
@@ -3860,9 +3873,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Deliberately disabled while a move is active: the arrow keys relocate it
   // there instead (immediately above), and that takes priority over panning
   // the viewport.
+  // With a selection in Select mode the arrows nudge the selected objects instead (see nudgeSelection).
+  const selectionOwnsArrows = copyMode === 'select' && selectedKeys.size > 0
   const PAN_STEP_PX = 60
   useEffect(() => {
-    if (!open || moveState) return
+    if (!open || moveState || selectionOwnsArrows) return
     const handler = (e: KeyboardEvent) => {
       const tag = (document.activeElement as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
@@ -3878,7 +3893,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, moveState])
+  }, [open, moveState, selectionOwnsArrows])
 
   const moveTarget = moveState
     ? { key: moveState.key, x: moveState.node % sizeX, z: Math.floor(moveState.node / sizeX) }
@@ -4001,6 +4016,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stopPlacingZone = () => setPlacingZoneSid(null)
   const placeZoneAt = (node: number) => {
     if (!placingZoneSid) return
+    // The whole shape has to fit on the map, like any multi-tile object.
+    const zone = catalog?.zoneTemplates.find((z) => z.id === placingZoneSid)
+    if (zone && !isFootprintInBounds(computeFootprintTiles(zone, node % sizeX, Math.floor(node / sizeX)), sizeX, sizeZ)) return
     applyEdit({ kind: 'addMarker', sid: placingZoneSid, node }, 'place zone')
   }
   const placingCreatureTemplateSid = useMemo(() => {
@@ -4129,6 +4147,87 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
 
+  // Searching selects what it finds (the same selection the Select tool makes), so the hits can be moved or deleted as a batch.
+  // Only when the query changes: later edits to the selection (Ctrl+click) are not overridden. Player spawners, portals and zone markers
+  // are never part of a selection (isCopyable), so a search for them only highlights.
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+    const keys = searchMatchedItems.filter(isCopyable).map((o) => o.key)
+    if (keys.length === 0) { if (copyMode === 'select') setSelectedKeys(new Set()); return }
+    if (copyMode !== 'select') {
+      stopAllTools()
+      setMoveState(null)
+      setPortalLinkFrom(null)
+      setCopyMode('select')
+    }
+    setCopyNote(null)
+    setSelectedKeys(new Set(keys))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
+  // Batch delete and nudge of the selection: one undo step each.
+  const [batchDeleteConfirming, setBatchDeleteConfirming] = useState(false)
+  // Encounter scaler: the selected random-squads when the selection holds any, else every one on the map.
+  const [scalerOpen, setScalerOpen] = useState(false)
+  const scalerEncounters = useMemo(() => {
+    const isEncounter = (o: PlacedObject) => o.type === 0 && o.sid === 'random-squad' && o.randomSquadValue !== undefined
+    const fromSelection = copyMode === 'select' ? selectedObjects.filter(isEncounter) : []
+    const list = fromSelection.length > 0 ? fromSelection : placedObjects.filter(isEncounter)
+    return { fromSelection: fromSelection.length > 0, list: list.map((o) => ({ entityType: o.type, entityId: o.id, value: o.randomSquadValue as number })) }
+  }, [copyMode, selectedObjects, placedObjects])
+  const scaleEncounters = (entries: { entityType: number; entityId: number; requestedValue: number }[]) => {
+    applyEdit({ kind: 'setRandomSquadValues', entries }, 'scale encounters')
+    setScalerOpen(false)
+  }
+  useEffect(() => { setBatchDeleteConfirming(false) }, [selectedKeys, copyMode])
+  const deleteSelection = () => {
+    if (!canEditEntities || selectedObjects.length === 0) return
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => {
+        for (const o of selectedObjects) apply({ kind: 'deleteObject', entityType: o.type, entityId: o.id })
+      })
+    } catch (e) {
+      logError(`Failed to delete the selection: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    setSelectedKeys(new Set())
+    setBatchDeleteConfirming(false)
+  }
+  const startDeleteSelection = () => { if (settings.confirmBeforeDelete) setBatchDeleteConfirming(true); else deleteSelection() }
+  // All or nothing: if one object would leave the map, none moves.
+  const nudgeSelection = (dx: number, dz: number) => {
+    if (!canEditEntities || selectedObjects.length === 0) return
+    const moves = selectedObjects.map((o) => ({ o, node: (o.z + dz) * sizeX + (o.x + dx), x: o.x + dx }))
+    if (moves.some((m) => m.x < 0 || m.x >= sizeX || !isNodeInBoundsForMove(m.o, m.node))) return
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => {
+        for (const m of moves) apply({ kind: 'moveObject', entityType: m.o.type, entityId: m.o.id, newNode: m.node })
+      })
+    } catch (e) {
+      logError(`Failed to move the selection: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  useEffect(() => {
+    if (!open || !selectionOwnsArrows) return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      const step = e.shiftKey ? 5 : 1
+      let dx = 0
+      let dz = 0
+      if (e.key === 'ArrowUp') dz = step
+      else if (e.key === 'ArrowDown') dz = -step
+      else if (e.key === 'ArrowLeft') dx = -step
+      else if (e.key === 'ArrowRight') dx = step
+      else return
+      e.preventDefault()
+      nudgeSelection(dx, dz)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectionOwnsArrows, selectedObjects, sizeX, sizeZ, canEditEntities])
+
   // Ends when another tool starts, so a stale Select cannot swallow that tool's clicks.
   const otherToolActive = !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || !!moveState || !!portalLinkFrom
   useEffect(() => {
@@ -4156,7 +4255,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const selectionOutlines = useMemo(() => {
     const boxes: { key: string; minX: number; maxX: number; minZ: number; maxZ: number }[] = []
     for (const obj of selectedObjects) {
-      const cells = (obj.type === 0 ? resolveFootprintCells(obj, catalog).filter((c) => c.value !== 0) : [])
+      const cells = (obj.type !== 2 ? resolveFootprintCells(obj, catalog).filter((c) => c.value !== 0) : [])
       const xs = cells.map((c) => c.x)
       const zs = cells.map((c) => c.z)
       boxes.push(cells.length === 0
@@ -4419,6 +4518,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const deleteSelected = () => {
     if (!canEditEntities) return false
     if (moveState) return false // an in-progress Move already owns arrow keys/Escape
+    if (copyMode === 'select' && selectedKeys.size > 0) { startDeleteSelection(); return }
     const target = selectedItems.find((i) => i.key === inspectedItem?.key) ?? selectedItems[0] ?? null
     if (!target) return false
     // Make sure the confirm row is actually visible if the column was collapsed.
@@ -4468,6 +4568,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [activePlacingSid, hoveredNode, sizeX, catalog])
   const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
+
+  // The Zones tool's ghost: the chosen shape under the cursor, red where it would not fit on the map.
+  const zoneGhost = useMemo(() => {
+    if (!placingZoneSid || hoveredNode === null) return null
+    const zone = catalog?.zoneTemplates.find((z) => z.id === placingZoneSid)
+    const x = hoveredNode % sizeX
+    const z = Math.floor(hoveredNode / sizeX)
+    const cells = computeFootprintTiles(zone, x, z)
+    const bounds = footprintIconBounds(cells) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+    return { bounds, valid: isFootprintInBounds(cells, sizeX, sizeZ) }
+  }, [placingZoneSid, hoveredNode, sizeX, sizeZ, catalog])
 
   // Brush-shape cursor preview (requested follow-up to the brush-radius
   // control) — same gating as the Size stepper's own visibility (Freehand
@@ -4661,6 +4772,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
             </div>
             <MapGameSettingsDialog />
+            <EncounterScalerDialog
+              open={scalerOpen}
+              onOpenChange={setScalerOpen}
+              encounters={scalerEncounters.list}
+              fromSelection={scalerEncounters.fromSelection}
+              ranges={settings.squadDifficultyRanges}
+              onScale={scaleEncounters}
+            />
             <ToolButton
               active={spawnerSelectorOpen}
               icon={<Users />}
@@ -5340,6 +5459,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <ClipboardCopy className="h-3.5 w-3.5" />
                     </Button>
                   )}
+                  {copyMode === 'select' && canEditEntities && (
+                    batchDeleteConfirming ? (
+                      <>
+                        <span className="text-xs text-destructive">{t('mapGrid.mapGridDialog.copy.deleteCount', { count: selectedKeys.size })}</span>
+                        <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={deleteSelection}>{t('mapGrid.mapGridDialog.confirm')}</Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setBatchDeleteConfirming(false)}>{t('shared.cancel')}</Button>
+                      </>
+                    ) : (
+                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={startDeleteSelection} title={t('mapGrid.mapGridDialog.copy.deleteTitle')}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )
+                  )}
                   <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboard || copyMode === 'paste'} onClick={() => setCopyMode('paste')} title={t('mapGrid.mapGridDialog.copy.pasteTitle')}>
                     <ClipboardPaste className="h-3.5 w-3.5" />
                   </Button>
@@ -5373,6 +5505,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setCopyNote(null)
                     setCopyMode('select')
                   }}
+                />
+              )}
+
+              {canEditEntities && scalerEncounters.list.length > 0 && (
+                <ToolButton
+                  icon={<Percent className="h-3.5 w-3.5" />}
+                  label={t('mapGrid.encounterScaler.button')}
+                  title={t('mapGrid.encounterScaler.buttonTitle')}
+                  onClick={() => setScalerOpen(true)}
                 />
               )}
 
@@ -6325,6 +6466,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
+              {zoneGhost && (
+                <div
+                  className={`absolute pointer-events-none rounded-sm border-[3px] ${zoneGhost.valid ? 'border-emerald-400' : 'border-red-500'}`}
+                  style={{
+                    left: zoneGhost.bounds.minX * effectiveCellPx,
+                    top: (sizeZ - 1 - zoneGhost.bounds.maxZ) * effectiveCellPx,
+                    width: (zoneGhost.bounds.maxX - zoneGhost.bounds.minX + 1) * effectiveCellPx,
+                    height: (zoneGhost.bounds.maxZ - zoneGhost.bounds.minZ + 1) * effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
               {/* Rectangle-mode live drag preview (issue #193 Phase 4) —
                   same screen-space overlay technique as Move/Place above,
                   amber to match the Paint-mode row's own accent color. */}
@@ -6507,6 +6661,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <MapGridCellContent
                   items={selectedItems}
                   onMoveInStack={canEditEntities ? handleMoveInStack : undefined}
+                  onFocusItem={focusItem}
                   terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX, levelsMap, rampDirectionMap.get(selectedNode))}
                   catalog={catalog}
                   existingSids={existingSids}
@@ -6526,6 +6681,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetRandomCityFaction={canEditEntities ? handleSetRandomCityFaction : undefined}
                   onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
                   onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
+                  onSetZoneTemplate={canEditEntities ? handleSetZoneTemplate : undefined}
+                  zoneFits={zoneFits}
                   allPortals={allPortals}
                   portalSids={portalSids}
                   onStartPortalLink={canEditEntities ? setPortalLinkFrom : undefined}

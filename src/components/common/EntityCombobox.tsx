@@ -19,6 +19,7 @@ import { ChevronsUpDown, LayoutGrid, SlidersHorizontal, X } from '@/components/u
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import SquadPickerDialog from '@/components/catalog/SquadPickerDialog'
 import { humanizeFxId } from '@/lib/vfx-options'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
@@ -42,6 +43,8 @@ interface Props {
    *  site (CustomObjectEditorDialog's Visual/Native-behavior pickers) —
    *  every other EntityCombobox usage keeps today's unsorted catalog order. */
   groupByCategory?: boolean
+  /** Choices listed before the category's own entries (the Random choice of a squad picker). */
+  extraEntries?: EntityEntry[]
 }
 
 // Excludes any id that looks campaign/tutorial-specific — used by the vfx/
@@ -213,7 +216,7 @@ function renderEntityItem(entry: EntityEntry, onChange: (value: string) => void,
  * Display format: "Entity Name" visible, ID written to JSON.
  * Free-text entry is always accepted for forward-compatibility.
  */
-export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory }: Props) {
+export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory, extraEntries }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -222,7 +225,8 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
 
   const [filter, setFilter] = useState<MapObjectFilterState>(() => loadSavedFilter())
 
-  const allEntries = useCatalogEntries(category)
+  const categoryEntries = useCatalogEntries(category)
+  const allEntries = useMemo(() => (extraEntries ? [...extraEntries, ...categoryEntries] : categoryEntries), [extraEntries, categoryEntries])
   const catalog = useCatalogStore((s) => s.catalog)
   const rawMapObjects = category === 'mapObject' ? catalog?.mapObjects : undefined
 
@@ -422,6 +426,22 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                   </CommandGroup>
                 )}
 
+                {category === 'squadTemplate' && (
+                  <CommandGroup className="border-b border-border">
+                    <CommandItem
+                      value="__browse_squads__"
+                      onSelect={() => {
+                        setOpen(false)
+                        setPickerOpen(true)
+                      }}
+                      className="flex items-center gap-1.5 text-xs py-1.5 font-medium"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      {t('common.entityCombobox.browseSquads')}
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+
                 <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
                   {filtered.length === 0 && allEntries.length > 0
                     ? t(`common.entityCombobox.noMatching.${category}`)
@@ -452,6 +472,16 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
           onOpenChange={setPickerOpen}
           value={value}
           onSelect={(entry) => onChange(entry.heroId ?? entry.sublabel)}
+        />
+      )}
+
+      {category === 'squadTemplate' && (
+        <SquadPickerDialog
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={value}
+          onSelect={onChange}
+          extraEntries={extraEntries}
         />
       )}
 

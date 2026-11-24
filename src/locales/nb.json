@@ -61,12 +61,15 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Skriv dialogmeldingen…",
-      "createNewDialog": "Opprett ny dialog"
+      "createNewDialog": "Opprett ny dialog",
+      "newDialogTitle": "Ny dialog",
+      "newDialogHint": "Lager en dialog med ett lysbilde som viser denne teksten. Åpne dialogredigereren senere for å legge til flere lysbilder, portretter eller svar."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Bla gjennom helter gruppert etter fraksjon",
       "browse": "Bla gjennom",
       "browseHeroesByFaction": "Bla gjennom helter etter fraksjon…",
+      "browseSquads": "Bla gjennom skvadroner etter fraksjon og nivå…",
       "filterMapObjects": "Filtrer kartobjekter",
       "filterMapObjectsActive": "Filtrer kartobjekter ({{filter}})",
       "noMatching": {
@@ -419,6 +422,13 @@
       "renderNow": "Tegn nå",
       "waiting": "Venter: {{interactables}} kartobjekter, deretter {{decorations}} dekorasjoner (trær, steiner, dyr), deretter {{cliffs}} klippestykker (kantene på hevet grunn), deretter {{rivers}} elvestykker.",
       "notNow": "Ikke nå"
+    },
+    "rebalanceDialog": {
+      "title": "Balanser kartet på nytt",
+      "intro": "Foreslåtte endringer for å jevne ut spillerne. Fjern haken ved de du ikke vil ha, og trykk så Balanser på nytt.",
+      "nothing": "Ingenting kan balanseres automatisk: forskjellene er små, eller de ligger i ting dette verktøyet ikke endrer.",
+      "note": "Avstander til gruver og høyde endres ikke automatisk. Kartet vurderes på nytt etter endringen, og Ctrl+Z angrer alt i ett steg.",
+      "rebalance": "Balanser på nytt"
     },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Krever minst to spillerområder malt på kartet (et tilfeldig generert kart har dem) for å sammenligne spillere.",
@@ -999,6 +1009,7 @@
     },
     "fileFilters": {
       "map": "Kart",
+      "mapOrScript": "Kart eller skript",
       "mapFile": "Kartfil",
       "h3Map": "Heroes 3-kart",
       "image": "Bilde",
@@ -1306,6 +1317,7 @@
       "highlightConnectedPortalOnGrid": "Fremhev tilkoblet portal i rutenettet",
       "rewards": "Belønninger",
       "zone": "Sone",
+      "zoneSize": "Størrelse",
       "theOfficialEditorsOwnActivate": "Den offisielle redigererens egen «Activate»-avkrysning. Når den er av, avbryter ikke denne sonen heltebevegelse og utløser ikke handlingene sine i det hele tatt — den kan slås på igjen senere via skripthandlingen SetActiveMarker.",
       "deleteAfterTrigger": "Slett etter utløsning",
       "whetherThisZoneRemovesItself": "Om denne sonen fjerner seg selv automatisk første gang den utløses. Når den er av, blir sonen værende på kartet og kan utløses igjen.",
@@ -1561,6 +1573,8 @@
         "selected": "{{count}} valgt",
         "pasting": "Limer inn",
         "copyTitle": "Kopier de valgte objektene (Ctrl+C)",
+        "deleteTitle": "Slett de valgte objektene (Delete)",
+        "deleteCount": "Slette {{count}} objekter?",
         "pasteTitle": "Lim inn det kopierte området: det følger markøren, klikk for å sette inn, Esc for å stoppe (Ctrl+V)",
         "flipTitle": "Speilvend venstre-høyre (M)",
         "rotateTitle": "Roter 90° med klokka (R)",
@@ -1652,6 +1666,28 @@
       "decorations": "Dekorasjoner",
       "zones": "Soner",
       "toggle": "Slå av/på {{group}}"
+    },
+    "encounterScaler": {
+    "title": "Skaler møter",
+    "introSelection": "{{count}} valgte møter. Endre styrken med en prosentandel.",
+    "introMap": "Alle {{count}} møter på kartet. Endre styrken med en prosentandel.",
+    "filter": "Vanskelighetsgrad",
+    "all": "Alle",
+    "none": "Ingen",
+    "by": "med",
+    "toggleTitle": "Bytt mellom å redusere og øke",
+    "reduce": "Reduser",
+    "increase": "Øk",
+    "preview_one": "{{count}} møte: total verdi {{before}} → {{after}}",
+    "preview_other": "{{count}} møter: total verdi {{before}} → {{after}}",
+    "afterScaling": "Etter skalering",
+    "average": "Gjennomsnitt: {{before}} → {{after}}",
+    "max": "Maks: {{before}} → {{after}}",
+    "min": "Min: {{before}} → {{after}}",
+    "scale_one": "Skaler {{count}} møte",
+    "scale_other": "Skaler {{count}} møter",
+    "button": "Skaler møter",
+    "buttonTitle": "Øk eller reduser styrken til mange møter samtidig, etter vanskelighetsgrad"
     },
     "squadDifficulty": {
       "Random": "Tilfeldig",
@@ -2248,6 +2284,12 @@
       "generateOnMapTitle": "Legg til genererte dekorasjoner og interaktive objekter på dette kartet",
       "unpublishedChanges": "Upubliserte endringer",
       "publishMapYouHaveChanges": "Publiser kart — du har endringer som ennå ikke er skrevet til spillet (egendefinerte helter/objekter/artefakter, dialoger, lokalisering)",
+      "publishNudge": "Lagret. Spillet får dialogene, tekstene og det egendefinerte innholdet ditt bare gjennom Publiser: publiser kart-ZIP-en så de virker i spillet.",
+      "publishNudgeAction": "Publiser…",
+      "jsonNoMapWarning": "Åpnet som bare skript: fant ingen tilhørende .map ved siden av denne filen, så oppdrag kan ikke lagres i et spillkart. Åpne .map for å jobbe med begge.",
+      "paintPlayerAreas": "Mal spillerområder",
+      "paintPlayerAreasHint": "Dette kartet har ingen spillerområder, så spillerne kan ikke sammenlignes. Mal ett rundt hver spillerby, lagt ut slik tilfeldig-kart-generatoren legger ut spillersonene sine.",
+      "rebalance": "Balanser på nytt…",
       "guides": "Guider",
       "gameDatabase": "Spilldatabase",
       "undoCtrlZ": "Angre (Ctrl+Z)",
@@ -2321,6 +2363,7 @@
         "gameData": "Spilldata",
         "extractThumbnails": "Trekk ut miniatyrer…",
         "renderObjectImages": "Tegn objektbilder…",
+        "importScript": "Importer skript (.json)…",
         "importH3Map": "Importer H3-kart…"
       },
       "resaved": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}}",
@@ -2654,6 +2697,15 @@
       "biome": "Biom",
       "noBiome": "Ingen"
     },
+    "squadPickerDialog": {
+      "title": "Velg en skvadron",
+      "search": "Søk etter skapning eller skvadron-id",
+      "filter": "Filtrer skvadroner",
+      "tier": "Nivå",
+      "noneLoaded": "Ingen skvadronmaler: last Core.zip via Spilldata",
+      "noMatch": "Ingen skvadroner passer til søket og filtrene",
+      "refine": "Viser {{shown}} av {{total}}: avgrens søket eller filtrene"
+    },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Søk etter navn, SID eller ikon…",
       "noPortraitsToBrowseLoad": "Ingen portretter å bla gjennom — last inn Core.zip via Spilldata.",
@@ -2963,6 +3015,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Handlingstype",
+      "randomSquad": "Tilfeldig",
       "duplicateAction": "Dupliser handling",
       "pickAHeroSpawnerFrom": "Velg en helte-spawner fra kartet",
       "pickANodeFromThe": "Velg en node fra kartet",
@@ -3292,6 +3345,11 @@
       "guardOver": "{{where}} — vakt verdt {{guard}} er {{times}} ganger objektets pris ({{reward}}): mer enn medfølgende kart bruker, den blir kanskje aldri tatt",
       "guardNearStart": "{{where}} — et sterkt objekt bare {{distance}} ruter fra nærmeste start: medfølgende kart holder disse lenger unna"
     },
+    "rebalance": {
+      "landGrow": "Utvid området til spiller {{owner}} med {{tiles}} ruter ({{from}} → {{to}} landruter)",
+      "landShrink": "Krymp området til spiller {{owner}} med {{tiles}} ruter ({{from}} → {{to}} landruter)",
+      "sitesAdd": "Legg til {{count}} steder i området til spiller {{owner}} ({{from}} → {{to}}): {{kinds}}"
+    },
     "balance": {
       "startLabel": "Spiller {{owner}} ({{x}}, {{z}})",
       "outsideArea": "{{start}} er ikke inne i noe spillerområde, så den sammenlignes ikke. Mal et område over startruten.",
@@ -3375,9 +3433,9 @@
     "help": "Hjelp",
     "new": "Ny",
     "open": "Åpne...",
-    "openMap": "Åpne kart...",
     "recent": "Åpne nylige",
     "importH3m": "Importer H3-kart...",
+    "importJson": "Importer skript (JSON)...",
     "save": "Lagre",
     "saveAs": "Lagre som...",
     "quit": "Avslutt",

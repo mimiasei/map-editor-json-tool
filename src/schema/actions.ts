@@ -790,7 +790,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Squads',
     description: 'Adds a new neutral squad at the specified node with the given total strength value. boolDifficulty: multiply value by difficulty coefficient.',
     params: [
-      { label: 'Squad SID', hint: 'e.g. wolf_raiders', required: true },
+      { label: 'Squad SID', hint: 'e.g. wolf_raiders', required: true, squadSid: true },
       { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
@@ -803,7 +803,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Squads',
     description: 'Like SpawnSquad but combat cannot be initiated upon interaction. Used for squads that call a dialog via SquadInteraction condition.',
     params: [
-      { label: 'Squad SID', hint: 'e.g. wolf_raiders', required: true },
+      { label: 'Squad SID', hint: 'e.g. wolf_raiders', required: true, squadSid: true },
       { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },

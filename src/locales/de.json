@@ -61,12 +61,15 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Dialogtext eingeben…",
-      "createNewDialog": "Neuen Dialog erstellen"
+      "createNewDialog": "Neuen Dialog erstellen",
+      "newDialogTitle": "Neuer Dialog",
+      "newDialogHint": "Erstellt einen Dialog mit einer Folie, die diesen Text zeigt. Im Dialogeditor kannst du später weitere Folien, Porträts oder Antworten hinzufügen."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Helden nach Fraktion gruppiert durchsuchen",
       "browse": "Durchsuchen",
       "browseHeroesByFaction": "Helden nach Fraktion durchsuchen…",
+      "browseSquads": "Trupps nach Fraktion und Stufe durchsuchen…",
       "filterMapObjects": "Kartenobjekte filtern",
       "filterMapObjectsActive": "Kartenobjekte filtern ({{filter}})",
       "noMatching": {
@@ -419,6 +422,13 @@
       "renderNow": "Jetzt rendern",
       "waiting": "Wartend: {{interactables}} Kartenobjekte, dann {{decorations}} Dekorationen (Bäume, Felsen, Tiere), dann {{cliffs}} Klippenteile (die Ränder erhöhten Bodens), dann {{rivers}} Flussteile.",
       "notNow": "Jetzt nicht"
+    },
+    "rebalanceDialog": {
+      "title": "Karte neu ausbalancieren",
+      "intro": "Vorgeschlagene Änderungen, um die Spieler anzugleichen. Entferne die Haken bei unerwünschten und drücke dann Neu ausbalancieren.",
+      "nothing": "Nichts lässt sich automatisch ausbalancieren: Die Unterschiede sind klein oder liegen in Dingen, die dieses Werkzeug nicht ändert.",
+      "note": "Minenabstände und Höhen werden nicht automatisch geändert. Die Karte wird danach neu bewertet, und Strg+Z macht alles in einem Schritt rückgängig.",
+      "rebalance": "Neu ausbalancieren"
     },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Erfordert mindestens zwei auf die Karte gemalte Spielerbereiche (eine zufällig generierte Karte hat sie), um Spieler zu vergleichen.",
@@ -999,6 +1009,7 @@
     },
     "fileFilters": {
       "map": "Karte",
+      "mapOrScript": "Karte oder Skript",
       "mapFile": "Kartendatei",
       "h3Map": "Heroes-3-Karte",
       "image": "Bild",
@@ -1306,6 +1317,7 @@
       "highlightConnectedPortalOnGrid": "Verbundenes Portal im Raster hervorheben",
       "rewards": "Belohnungen",
       "zone": "Zone",
+      "zoneSize": "Größe",
       "theOfficialEditorsOwnActivate": "Das Kontrollkästchen „Aktivieren“ des offiziellen Editors. Ist es aus, unterbricht diese Zone weder die Heldenbewegung noch löst sie ihre Aktionen aus — sie kann später über die Skriptaktion SetActiveMarker wieder eingeschaltet werden.",
       "deleteAfterTrigger": "Nach Auslösung löschen",
       "whetherThisZoneRemovesItself": "Ob sich diese Zone beim ersten Auslösen automatisch entfernt. Ist es aus, bleibt die Zone auf der Karte und kann erneut auslösen.",
@@ -1561,6 +1573,8 @@
         "selected": "{{count}} ausgewählt",
         "pasting": "Einfügen",
         "copyTitle": "Ausgewählte Objekte kopieren (Strg+C)",
+        "deleteTitle": "Ausgewählte Objekte löschen (Entf)",
+        "deleteCount": "{{count}} Objekte löschen?",
         "pasteTitle": "Kopierten Bereich einfügen: er folgt dem Cursor, klicken zum Setzen, Esc zum Beenden (Strg+V)",
         "flipTitle": "Links-rechts spiegeln (M)",
         "rotateTitle": "Um 90° im Uhrzeigersinn drehen (R)",
@@ -1652,6 +1666,28 @@
       "decorations": "Dekorationen",
       "zones": "Zonen",
       "toggle": "{{group}} umschalten"
+    },
+    "encounterScaler": {
+    "title": "Begegnungen skalieren",
+    "introSelection": "{{count}} ausgewählte Begegnungen. Ihre Stärke um einen Prozentsatz ändern.",
+    "introMap": "Alle {{count}} Begegnungen der Karte. Ihre Stärke um einen Prozentsatz ändern.",
+    "filter": "Schwierigkeit",
+    "all": "Alle",
+    "none": "Keine",
+    "by": "um",
+    "toggleTitle": "Zwischen Senken und Erhöhen umschalten",
+    "reduce": "Senken",
+    "increase": "Erhöhen",
+    "preview_one": "{{count}} Begegnung: Gesamtwert {{before}} → {{after}}",
+    "preview_other": "{{count}} Begegnungen: Gesamtwert {{before}} → {{after}}",
+    "afterScaling": "Nach der Skalierung",
+    "average": "Durchschnitt: {{before}} → {{after}}",
+    "max": "Max: {{before}} → {{after}}",
+    "min": "Min: {{before}} → {{after}}",
+    "scale_one": "{{count}} Begegnung skalieren",
+    "scale_other": "{{count}} Begegnungen skalieren",
+    "button": "Begegnungen skalieren",
+    "buttonTitle": "Die Stärke vieler Begegnungen auf einmal erhöhen oder senken, nach Schwierigkeit"
     },
     "squadDifficulty": {
       "Random": "Zufällig",
@@ -2248,6 +2284,12 @@
       "generateOnMapTitle": "Generierte Dekorationen und Interaktionsobjekte zu dieser Karte hinzufügen",
       "unpublishedChanges": "Unveröffentlichte Änderungen",
       "publishMapYouHaveChanges": "Karte veröffentlichen — Sie haben Änderungen, die noch nicht ins Spiel geschrieben wurden (benutzerdefinierte Helden/Objekte/Artefakte, Dialoge, Lokalisierung)",
+      "publishNudge": "Gespeichert. Dialoge, Texte und eigene Inhalte erreichen das Spiel nur über Veröffentlichen: Veröffentliche die Karten-ZIP, damit sie im Spiel funktionieren.",
+      "publishNudgeAction": "Veröffentlichen…",
+      "jsonNoMapWarning": "Nur als Skript geöffnet: neben dieser Datei wurde keine passende .map gefunden, daher können Quests nicht in eine Spielkarte gespeichert werden. Öffne die .map, um beides zu bearbeiten.",
+      "paintPlayerAreas": "Spielerbereiche malen",
+      "paintPlayerAreasHint": "Diese Karte hat keine Spielerbereiche, daher lassen sich die Spieler nicht vergleichen. Male um jede Spielerstadt einen, so angelegt wie der Zufallskartengenerator seine Spielerzonen anlegt.",
+      "rebalance": "Neu ausbalancieren…",
       "guides": "Anleitungen",
       "gameDatabase": "Spieldatenbank",
       "undoCtrlZ": "Rückgängig (Strg+Z)",
@@ -2321,6 +2363,7 @@
         "gameData": "Spieldaten",
         "extractThumbnails": "Miniaturen extrahieren…",
         "renderObjectImages": "Objektbilder rendern…",
+        "importScript": "Skript importieren (.json)…",
         "importH3Map": "H3-Karte importieren…"
       },
       "resaved": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}}",
@@ -2654,6 +2697,15 @@
       "biome": "Biom",
       "noBiome": "Keines"
     },
+    "squadPickerDialog": {
+      "title": "Trupp wählen",
+      "search": "Kreatur oder Trupp-ID suchen",
+      "filter": "Trupps filtern",
+      "tier": "Stufe",
+      "noneLoaded": "Keine Trupp-Vorlagen: Core.zip über Spieldaten laden",
+      "noMatch": "Kein Trupp passt zu Suche und Filtern",
+      "refine": "{{shown}} von {{total}} angezeigt: Suche oder Filter eingrenzen"
+    },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Name, SID oder Symbol suchen…",
       "noPortraitsToBrowseLoad": "Keine Porträts zum Durchsuchen — Core.zip über Spieldaten laden.",
@@ -2963,6 +3015,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Aktionstyp",
+      "randomSquad": "Zufällig",
       "duplicateAction": "Aktion duplizieren",
       "pickAHeroSpawnerFrom": "Einen Helden-Startpunkt von der Karte wählen",
       "pickANodeFromThe": "Einen Knoten von der Karte wählen",
@@ -3292,6 +3345,11 @@
       "guardOver": "{{where}} — Wache im Wert von {{guard}} ist das {{times}}-Fache des Objektpreises ({{reward}}): mehr als in mitgelieferten Karten, sie wird womöglich nie besiegt",
       "guardNearStart": "{{where}} — ein starkes Objekt nur {{distance}} Felder vom nächsten Start entfernt: mitgelieferte Karten halten diese weiter weg"
     },
+    "rebalance": {
+      "landGrow": "Bereich von Spieler {{owner}} um {{tiles}} Felder vergrößern ({{from}} → {{to}} Landfelder)",
+      "landShrink": "Bereich von Spieler {{owner}} um {{tiles}} Felder verkleinern ({{from}} → {{to}} Landfelder)",
+      "sitesAdd": "{{count}} Orte im Bereich von Spieler {{owner}} hinzufügen ({{from}} → {{to}}): {{kinds}}"
+    },
     "balance": {
       "startLabel": "Spieler {{owner}} ({{x}}, {{z}})",
       "outsideArea": "{{start}} liegt in keinem Spielerbereich und wird daher nicht verglichen. Malen Sie einen Bereich über seine Startkachel.",
@@ -3375,9 +3433,9 @@
     "help": "Hilfe",
     "new": "Neu",
     "open": "Öffnen...",
-    "openMap": "Karte öffnen...",
     "recent": "Zuletzt geöffnet",
     "importH3m": "H3-Karte importieren...",
+    "importJson": "Skript importieren (JSON)...",
     "save": "Speichern",
     "saveAs": "Speichern unter...",
     "quit": "Beenden",

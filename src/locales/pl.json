@@ -61,12 +61,15 @@
     },
     "dialogSidField": {
       "typeTheDialogMessage": "Wpisz treść dialogu…",
-      "createNewDialog": "Utwórz nowy dialog"
+      "createNewDialog": "Utwórz nowy dialog",
+      "newDialogTitle": "Nowy dialog",
+      "newDialogHint": "Tworzy dialog z jednym slajdem pokazującym ten tekst. Później otwórz edytor dialogów, aby dodać slajdy, portrety lub odpowiedzi."
     },
     "entityCombobox": {
       "browseHeroesGroupedByFaction": "Przeglądaj bohaterów pogrupowanych według frakcji",
       "browse": "Przeglądaj",
       "browseHeroesByFaction": "Przeglądaj bohaterów według frakcji…",
+      "browseSquads": "Przeglądaj oddziały według frakcji i poziomu…",
       "filterMapObjects": "Filtruj obiekty mapy",
       "filterMapObjectsActive": "Filtruj obiekty mapy ({{filter}})",
       "noMatching": {
@@ -445,6 +448,13 @@
       "renderNow": "Renderuj teraz",
       "waiting": "Oczekuje: obiekty mapy: {{interactables}}, potem dekoracje: {{decorations}} (drzewa, skały, zwierzęta), potem elementy klifów: {{cliffs}} (krawędzie wyniesionego terenu), potem elementy rzek: {{rivers}}.",
       "notNow": "Nie teraz"
+    },
+    "rebalanceDialog": {
+      "title": "Wyrównaj mapę",
+      "intro": "Proponowane zmiany wyrównujące graczy. Odznacz te, których nie chcesz, a potem naciśnij Wyrównaj.",
+      "nothing": "Nic nie da się wyrównać automatycznie: różnice są małe albo dotyczą rzeczy, których to narzędzie nie zmienia.",
+      "note": "Odległości do kopalń i wysokość terenu nie są zmieniane automatycznie. Po zmianie mapa jest oceniana ponownie, a Ctrl+Z cofa wszystko jednym krokiem.",
+      "rebalance": "Wyrównaj"
     },
     "playerBalancePanel": {
       "needsAtLeastTwoPlayer": "Do porównania graczy potrzeba co najmniej dwóch obszarów graczy namalowanych na mapie (losowo wygenerowana mapa je ma).",
@@ -1057,6 +1067,7 @@
     },
     "fileFilters": {
       "map": "Mapa",
+      "mapOrScript": "Mapa lub skrypt",
       "mapFile": "Plik mapy",
       "h3Map": "Mapa Heroes 3",
       "image": "Obraz",
@@ -1364,6 +1375,7 @@
       "highlightConnectedPortalOnGrid": "Podświetl połączony portal na siatce",
       "rewards": "Nagrody",
       "zone": "Strefa",
+      "zoneSize": "Rozmiar",
       "theOfficialEditorsOwnActivate": "Pole „Aktywuj” z oficjalnego edytora. Gdy jest wyłączone, ta strefa w ogóle nie przerywa ruchu bohatera ani nie uruchamia swoich akcji — można ją później ponownie włączyć akcją skryptu SetActiveMarker.",
       "deleteAfterTrigger": "Usuń po uruchomieniu",
       "whetherThisZoneRemovesItself": "Czy strefa usuwa się sama po pierwszym uruchomieniu. Gdy wyłączone, strefa pozostaje na mapie i może uruchomić się ponownie.",
@@ -1625,6 +1637,8 @@
         "selected": "Zaznaczono: {{count}}",
         "pasting": "Wklejanie",
         "copyTitle": "Kopiuj zaznaczone obiekty (Ctrl+C)",
+        "deleteTitle": "Usuń zaznaczone obiekty (Delete)",
+        "deleteCount": "Usunąć {{count}} obiektów?",
         "pasteTitle": "Wklej skopiowany obszar: podąża za kursorem, kliknij, aby postawić, Esc przerywa (Ctrl+V)",
         "flipTitle": "Odbij lewo-prawo (M)",
         "rotateTitle": "Obróć o 90° w prawo (R)",
@@ -1716,6 +1730,32 @@
       "decorations": "Dekoracje",
       "zones": "Strefy",
       "toggle": "Przełącz: {{group}}"
+    },
+    "encounterScaler": {
+    "title": "Skaluj spotkania",
+    "introSelection": "Wybrane spotkania: {{count}}. Zmień ich siłę o procent.",
+    "introMap": "Wszystkie spotkania na mapie: {{count}}. Zmień ich siłę o procent.",
+    "filter": "Poziom trudności",
+    "all": "Wszystkie",
+    "none": "Żadne",
+    "by": "o",
+    "toggleTitle": "Przełącz między zmniejszaniem a zwiększaniem",
+    "reduce": "Zmniejsz",
+    "increase": "Zwiększ",
+    "preview_one": "{{count}} spotkanie: łączna wartość {{before}} → {{after}}",
+    "preview_few": "{{count}} spotkania: łączna wartość {{before}} → {{after}}",
+    "preview_many": "{{count}} spotkań: łączna wartość {{before}} → {{after}}",
+    "preview_other": "{{count}} spotkania: łączna wartość {{before}} → {{after}}",
+    "afterScaling": "Po skalowaniu",
+    "average": "Średnia: {{before}} → {{after}}",
+    "max": "Maks.: {{before}} → {{after}}",
+    "min": "Min.: {{before}} → {{after}}",
+    "scale_one": "Skaluj {{count}} spotkanie",
+    "scale_few": "Skaluj {{count}} spotkania",
+    "scale_many": "Skaluj {{count}} spotkań",
+    "scale_other": "Skaluj {{count}} spotkania",
+    "button": "Skaluj spotkania",
+    "buttonTitle": "Zwiększ lub zmniejsz siłę wielu spotkań naraz, według trudności"
     },
     "squadDifficulty": {
       "Random": "Losowy",
@@ -2318,6 +2358,12 @@
       "generateOnMapTitle": "Dodaj wygenerowane dekoracje i obiekty interaktywne do tej mapy",
       "unpublishedChanges": "Nieopublikowane zmiany",
       "publishMapYouHaveChanges": "Opublikuj mapę — masz zmiany, które nie trafiły jeszcze do gry (własni bohaterowie/obiekty/artefakty, dialogi, lokalizacja)",
+      "publishNudge": "Zapisano. Gra dostaje dialogi, teksty i własną zawartość tylko przez Publikuj: opublikuj ZIP mapy, żeby działały w grze.",
+      "publishNudgeAction": "Publikuj…",
+      "jsonNoMapWarning": "Otwarto tylko jako skrypt: obok pliku nie znaleziono pasującego .map, więc zadań nie można zapisać w mapie gry. Otwórz .map, aby pracować nad obiema częściami.",
+      "paintPlayerAreas": "Maluj obszary graczy",
+      "paintPlayerAreasHint": "Ta mapa nie ma obszarów graczy, więc nie można porównać graczy. Namaluj po jednym wokół każdego miasta gracza, rozmieszczone tak, jak generator map losowych rozmieszcza strefy graczy.",
+      "rebalance": "Wyrównaj…",
       "guides": "Poradniki",
       "gameDatabase": "Baza danych gry",
       "undoCtrlZ": "Cofnij (Ctrl+Z)",
@@ -2391,6 +2437,7 @@
         "gameData": "Dane gry",
         "extractThumbnails": "Wyodrębnij miniatury…",
         "renderObjectImages": "Renderuj obrazy obiektów…",
+        "importScript": "Importuj skrypt (.json)…",
         "importH3Map": "Importuj mapę H3…"
       },
       "resaved": "Zapisano ponownie {{bytes}} bajtów.\nKopia zapasowa: {{path}}",
@@ -2739,6 +2786,15 @@
       "biome": "Biom",
       "noBiome": "Brak"
     },
+    "squadPickerDialog": {
+      "title": "Wybierz oddział",
+      "search": "Szukaj stworzenia lub id oddziału",
+      "filter": "Filtruj oddziały",
+      "tier": "Poziom",
+      "noneLoaded": "Brak szablonów oddziałów: wczytaj Core.zip przez Dane gry",
+      "noMatch": "Żaden oddział nie pasuje do wyszukiwania i filtrów",
+      "refine": "Pokazano {{shown}} z {{total}}: zawęź wyszukiwanie lub filtry"
+    },
     "heroPickerDialog": {
       "searchNameSIDOrIcon": "Szukaj nazwy, SID-u lub ikony…",
       "noPortraitsToBrowseLoad": "Brak portretów do przeglądania — wczytaj Core.zip przez Dane gry.",
@@ -3048,6 +3104,7 @@
   "actions": {
     "actionForm": {
       "actionType": "Typ akcji",
+      "randomSquad": "Losowy",
       "duplicateAction": "Duplikuj akcję",
       "pickAHeroSpawnerFrom": "Wybierz punkt startowy bohatera z mapy",
       "pickANodeFromThe": "Wybierz węzeł z mapy",
@@ -3385,6 +3442,11 @@
       "guardOver": "{{where}} — straż o wartości {{guard}} to {{times}}× cena obiektu ({{reward}}): więcej niż w dołączonych mapach, może nigdy nie zostać pokonana",
       "guardNearStart": "{{where}} — silny obiekt tylko {{distance}} pól od najbliższego startu: dołączone mapy trzymają je dalej"
     },
+    "rebalance": {
+      "landGrow": "Powiększ obszar gracza {{owner}} o {{tiles}} pól ({{from}} → {{to}} pól lądu)",
+      "landShrink": "Zmniejsz obszar gracza {{owner}} o {{tiles}} pól ({{from}} → {{to}} pól lądu)",
+      "sitesAdd": "Dodaj {{count}} miejsc do obszaru gracza {{owner}} ({{from}} → {{to}}): {{kinds}}"
+    },
     "balance": {
       "startLabel": "Gracz {{owner}} ({{x}}, {{z}})",
       "outsideArea": "{{start}} nie leży w żadnym Obszarze gracza, więc nie jest porównywany. Zamaluj obszar nad jego kafelkiem startowym.",
@@ -3468,9 +3530,9 @@
     "help": "Pomoc",
     "new": "Nowy",
     "open": "Otwórz...",
-    "openMap": "Otwórz mapę...",
     "recent": "Otwórz ostatnie",
     "importH3m": "Importuj mapę H3...",
+    "importJson": "Importuj skrypt (JSON)...",
     "save": "Zapisz",
     "saveAs": "Zapisz jako...",
     "quit": "Zakończ",

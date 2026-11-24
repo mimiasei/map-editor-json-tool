@@ -18,7 +18,7 @@ import { findGuardRewardMismatches, describeGuardRewardMismatch, scaleGuardEdit,
 import { computeZoneEconomy, type ZoneEconomy } from '@/lib/map-grid/zone-economy'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
-import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
+import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt, readBinaryFile, pickMapOrScriptPath } from '@/lib/native-fs'
 import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
 import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
@@ -28,6 +28,7 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
+import { usePublishNeeded, nudgeToPublishIfNeeded } from '@/hooks/usePublishNeeded'
 import {
   Dialog,
   DialogContent,
@@ -102,7 +103,10 @@ import WhatsNewDialog from '@/components/common/WhatsNewDialog'
 import PlayerBalancePanel, { DecorationBalanceSection, ZoneEconomySection } from '@/components/common/PlayerBalancePanel'
 import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
-import { ImageIcon } from '@/components/ui/icons'
+import { hasPlayerAreas, planPlayerAreas, playerCities } from '@/lib/map-grid/auto-player-areas'
+import { planRebalance, type RebalanceSuggestion } from '@/lib/map-grid/player-rebalance'
+import RebalanceDialog from '@/components/common/RebalanceDialog'
+import { ImageIcon, X } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { useTranslation } from 'react-i18next'
@@ -190,7 +194,6 @@ export default function Toolbar({
     customMapObjects,
     customArtifacts,
     customBuffs,
-    zipDirty,
     setScenario,
     markClean,
     markZipPublished,
@@ -227,6 +230,10 @@ export default function Toolbar({
   const [fairness, setFairness] = useState<PlayerBalance | null>(null)
   const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
   const [zoneEconomy, setZoneEconomy] = useState<ZoneEconomy | null>(null)
+  /** Whether the map has Player Areas, and how many player cities it has (the area painter needs two). */
+  const [areaState, setAreaState] = useState({ hasAreas: false, cities: 0 })
+  const [rebalanceOpen, setRebalanceOpen] = useState(false)
+  const [rebalancePlan, setRebalancePlan] = useState<RebalanceSuggestion[]>([])
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   /** Which bulk delete is waiting for its confirmation in the Validate dialog. */
@@ -473,6 +480,44 @@ export default function Toolbar({
     }
   }
 
+  // ── Open (desktop): a .map, or a scenario .json ──────────────────────────────
+  // A .json that has its map next to it (testquest.json beside testquest.map, or x.map.json) opens that map, which loads the
+  // .json as its quests. A script with no map is still opened, as a script only, with a notice.
+  const openMapAt = async (path: string) => {
+    try {
+      const result = await openMapFromPath(path)
+      logInfo(`Opened .map: ${result.name}`)
+      if (result.warnings.length > 0) {
+        setImportWarnings(result.warnings)
+        setImportFeedbackOpen(true)
+      }
+      onMapGridOpen?.()   // a .map opens in the Map Grid, its main workspace
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      logError(`Failed to open .map: ${msg}`)
+      setImportErrors([msg])
+      setImportFeedbackOpen(true)
+    }
+  }
+
+  const handleLoad = async () => {
+    const path = await pickMapOrScriptPath()
+    if (!path) return
+    if (!/\.json$/i.test(path)) { await openMapAt(path); return }
+    const stem = path.replace(/\.json$/i, '')
+    const mapPath = /\.map$/i.test(stem) ? stem : `${stem}.map`
+    if (await readBinaryFile(mapPath)) { await openMapAt(mapPath); return }
+    const content = await readTextFileAt(path)
+    if (content === null) {
+      setImportErrors([`Could not read ${path}.`])
+      setImportFeedbackOpen(true)
+      return
+    }
+    loadImportedJson({ name: path.replace(/\\/g, '/').split('/').pop() ?? path, path, content })
+    setImportWarnings((prev) => [...prev, t('layout.toolbar.jsonNoMapWarning')])
+    setImportFeedbackOpen(true)
+  }
+
   // ── Open .map file ────────────────────────────────────────────────────────────
   const handleOpenMap = async () => {
     console.log('[Toolbar] handleOpenMap called')
@@ -502,6 +547,17 @@ export default function Toolbar({
   //   unified — one action for both halves, matching how the .map side no
   //   longer has its own separate save trigger).
   const handleSave = async () => {
+    await saveProject()
+    nudgeToPublishIfNeeded()
+  }
+
+  // After a Save or Save As the notice (set by nudgeToPublishIfNeeded) says the game still lacks the ZIP, with the way to Publish.
+  const publishNudge = useViewBridgeStore((s) => s.publishNudge)
+  const setPublishNudge = useViewBridgeStore((s) => s.setPublishNudge)
+  const publishNeeded = usePublishNeeded()
+  useEffect(() => { if (!publishNeeded) setPublishNudge(false) }, [publishNeeded, setPublishNudge])
+
+  const saveProject = async () => {
     await commitMapIfDirty(mapFilePath)
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
@@ -530,6 +586,11 @@ export default function Toolbar({
   // map, e.g. one just created via New Map).
   const handleExport = async () => {
     if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt — abort the whole Save As
+    await saveSidecarAfterPrompt()
+    nudgeToPublishIfNeeded()
+  }
+
+  const saveSidecarAfterPrompt = async () => {
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
@@ -618,12 +679,14 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
-  handlersRef.current = { handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
+  const handlersRef = useRef({ handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleLoad, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
+  handlersRef.current = { handleNewMapClick, handleGenerateMapClick, handleImport, handleOpenMap, handleLoad, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
 
   useEffect(() => {
-    const onOpen      = () => { handlersRef.current.handleImport() }
-    const onOpenMap   = () => { handlersRef.current.handleOpenMap() }
+    // Desktop has one Open for maps and scripts; the web build keeps its two (a .json import and a .map import).
+    const onOpen      = () => { if (isTauri()) void handlersRef.current.handleLoad(); else handlersRef.current.handleImport() }
+    const onOpenMap   = () => { if (isTauri()) void handlersRef.current.handleLoad(); else handlersRef.current.handleOpenMap() }
+    const onImportJson = () => { handlersRef.current.handleImport() }
     const onNewMap    = () => { void handlersRef.current.handleNewMapClick() }
     const onRandomMap = () => { void handlersRef.current.handleGenerateMapClick() }
     const onHotkeys    = () => { setHotkeysOpen(true) }
@@ -644,6 +707,7 @@ export default function Toolbar({
     window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',       onOpen)
     window.addEventListener('oe:open-map',   onOpenMap)
+    window.addEventListener('oe:import-json', onImportJson)
     window.addEventListener('oe:new-map',    onNewMap)
     window.addEventListener('oe:random-map', onRandomMap)
     window.addEventListener('oe:hotkeys',    onHotkeys)
@@ -657,6 +721,7 @@ export default function Toolbar({
       window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',       onOpen)
       window.removeEventListener('oe:open-map',   onOpenMap)
+      window.removeEventListener('oe:import-json', onImportJson)
       window.removeEventListener('oe:new-map',    onNewMap)
       window.removeEventListener('oe:random-map', onRandomMap)
       window.removeEventListener('oe:hotkeys',    onHotkeys)
@@ -678,12 +743,50 @@ export default function Toolbar({
   // like `validation` above (a full reachability flood-fill/BFS isn't cheap
   // on a large map, and continuously re-validating while the user is mid-edit
   // would be noisy besides) — only recomputed right before the dialog opens.
-  const handleOpenFairness = () => {
+  const refreshFairness = () => {
     const context = useMapContextStore.getState().context
     setFairness(context ? computePlayerBalance(context, catalog) : null)
     setDecorationBalance(context ? computeDecorationBalance(context, catalog) : null)
     setZoneEconomy(context && catalog ? computeZoneEconomy(context, catalog) : null)
+    setAreaState({ hasAreas: !!context && hasPlayerAreas(context), cities: context ? playerCities(context).length : 0 })
+  }
+  const handleOpenFairness = () => {
+    refreshFairness()
     setFairnessOpen(true)
+  }
+
+  // Paints a Player Area around each player city, the way the random map generator lays out its player zones (one undo step).
+  const handlePaintPlayerAreas = () => {
+    const context = useMapContextStore.getState().context
+    const plan = context ? planPlayerAreas(context) : null
+    if (!plan) return
+    try {
+      useMapDocumentStore.getState().applyEdit({ kind: 'paintZone', changes: plan.changes })
+    } catch (e) {
+      logError(`Failed to paint player areas: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    refreshFairness()
+  }
+
+  const handleOpenRebalance = () => {
+    const context = useMapContextStore.getState().context
+    setRebalancePlan(context ? planRebalance(context, catalog, fairness) : [])
+    setRebalanceOpen(true)
+  }
+
+  // The ticked suggestions together, as one undo step.
+  const handleRebalance = (chosen: RebalanceSuggestion[]) => {
+    try {
+      useMapDocumentStore.getState().applyEditsAsOne((apply) => {
+        for (const suggestion of chosen) for (const edit of suggestion.edits) apply(edit)
+      })
+    } catch (e) {
+      logError(`Failed to rebalance: ${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    setRebalanceOpen(false)
+    refreshFairness()
   }
 
   const recheckPlacement = () => {
@@ -882,12 +985,17 @@ export default function Toolbar({
             <ToolButton
               icon={
                 <span className="relative">
-                  <UploadCloud className="h-3.5 w-3.5" />
-                  {zipDirty && <span className="absolute -right-1.5 -top-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                  <UploadCloud className={`h-3.5 w-3.5 ${publishNeeded ? 'text-amber-500' : ''}`} />
+                  {publishNeeded && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+                    </span>
+                  )}
                 </span>
               }
               label={t('layout.toolbar.publish')}
-              title={zipDirty ? t('layout.toolbar.publishMapYouHaveChanges') : t('common.publishDialog.publishMap')}
+              title={publishNeeded ? t('layout.toolbar.publishMapYouHaveChanges') : t('common.publishDialog.publishMap')}
               onClick={() => setPublishOpen(true)}
             />
           )}
@@ -1051,6 +1159,10 @@ export default function Toolbar({
                     <FileInput className="h-4 w-4 mr-2" />
                     {t('layout.toolbar.menu.importH3Map')}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTimeout(handleImport, 0)}>
+                    <FileInput className="h-4 w-4 mr-2" />
+                    {t('layout.toolbar.menu.importScript')}
+                  </DropdownMenuItem>
                 </>
               )}
 
@@ -1120,7 +1232,16 @@ export default function Toolbar({
             <DialogTitle>{t('layout.toolbar.mapFairness')}</DialogTitle>
           </DraggableDialogDragHandle>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+            {!areaState.hasAreas && areaState.cities >= 2 && (
+              <div className="space-y-2 rounded border border-border p-3">
+                <p className="text-xs text-muted-foreground">{t('layout.toolbar.paintPlayerAreasHint')}</p>
+                <Button size="sm" onClick={handlePaintPlayerAreas}>{t('layout.toolbar.paintPlayerAreas')}</Button>
+              </div>
+            )}
             <PlayerBalancePanel balance={fairness} />
+            {fairness && (
+              <Button size="sm" variant="outline" onClick={handleOpenRebalance}>{t('layout.toolbar.rebalance')}</Button>
+            )}
             <ZoneEconomySection economy={zoneEconomy} />
             <DecorationBalanceSection decoration={decorationBalance} />
             <p className="text-xs text-muted-foreground">
@@ -1129,6 +1250,8 @@ export default function Toolbar({
           </div>
         </DraggableDialogContent>
       </Dialog>
+
+      <RebalanceDialog open={rebalanceOpen} onOpenChange={setRebalanceOpen} suggestions={rebalancePlan} onRebalance={handleRebalance} />
 
       {/* Validate dialog */}
       <Dialog open={validateOpen} onOpenChange={setValidateOpen}>
@@ -1446,6 +1569,22 @@ export default function Toolbar({
       {/* Publish dialog (Tauri only) */}
       {isTauri() && (
         <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} />
+      )}
+
+      {/* After Save: the dialogs, text and custom content only reach the game through Publish. */}
+      {publishNudge && !publishOpen && (
+        <div role="status" className="fixed bottom-4 right-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-amber-500/60 bg-card p-3 text-xs shadow-lg">
+          <UploadCloud className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <div className="space-y-2">
+            <p>{t('layout.toolbar.publishNudge')}</p>
+            <Button size="sm" className="h-7 text-xs" onClick={() => { setPublishNudge(false); setPublishOpen(true) }}>
+              {t('layout.toolbar.publishNudgeAction')}
+            </Button>
+          </div>
+          <button type="button" className="shrink-0 text-muted-foreground hover:text-foreground" onClick={() => setPublishNudge(false)} aria-label={t('ui.close')}>
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       )}
 
       {/* About works in both builds — the version row just reads "web build" on the web. */}

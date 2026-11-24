@@ -125,6 +125,20 @@ export async function confirmDialog(message: string, title?: string): Promise<bo
 
 // ─── Open .map file (binary) ──────────────────────────────────────────────────
 
+/** Desktop "Open": one dialog for a .map or a scenario .json. Returns the chosen path, or null when cancelled. */
+export async function pickMapOrScriptPath(): Promise<string | null> {
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const selected = await open({
+    multiple: false,
+    filters: [
+      { name: i18n.t('shared.fileFilters.mapOrScript'), extensions: ['map', 'json'] },
+      { name: i18n.t('shared.fileFilters.map'), extensions: ['map'] },
+      { name: 'JSON', extensions: ['json'] },
+    ],
+  })
+  return typeof selected === 'string' ? selected : null
+}
+
 /**
  * Open a .map file. Shows a native dialog in Tauri, or an invisible <input>
  * in the browser. Returns null if the user cancels.

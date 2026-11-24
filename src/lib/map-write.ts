@@ -693,6 +693,15 @@ interface PropHeroEntry {
  * (which updates both) worked every time. Block 1 uses '' as its "no
  * defined hero" sentinel, not the literal "random" string propHeroes uses —
  * confirmed distinct per block from the same real comparison.
+ *
+ * Block 1's `spawns.takenHeroes` lists every defined starting hero (a hero spawner's and a city's companion alike): in all 12
+ * shipped maps that define one, e.g. testingStartHero.map (city human, hero human_hero_16 -> takenHeroes ["human_hero_16"]) and
+ * Stormlight.map. It is kept in step here: the old hero leaves it (unless another player still has that hero), the new one joins.
+ * Heroes it lists for other reasons are left alone.
+ *
+ * A city spawner whose hero is random has NO propHeroes row (testingStartHero.map: city 2, spawnHero true, nothing defined; Block 1
+ * isHeroDefined false, heroSid ""), so 'random' removes the row for a city and a specific hero creates it. The {isDefined:false,
+ * heroSid:"random"} placeholder crashed the game for a city with a faction (Player.log). A hero spawner keeps the placeholder row.
  */
 export function upsertPropHero(
   block1Chunk: Uint8Array,
@@ -705,13 +714,21 @@ export function upsertPropHero(
   const span2 = findJsonArraySpan(text2, 'propHeroes')
 
   const entries = JSON.parse(span2.span) as PropHeroEntry[]
-  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
-  if (!existing) {
+  const index = entries.findIndex((e) => String(e.type) === String(entityType) && e.id === entityId)
+  const cities = JSON.parse(findJsonArraySpan(text2, 'propCities').span) as { type?: number | string; id?: number }[]
+  const isCity = cities.some((e) => String(e.type) === String(entityType) && e.id === entityId)
+  const isDefined = heroSid !== 'random'
+  if (index === -1 && !isCity) {
     throw new Error(`No propHeroes entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured hero spawner`)
   }
-  existing.heroSid = heroSid
-  const isDefined = heroSid !== 'random'
-  existing.isDefined = isDefined
+  if (isCity && !isDefined) {
+    if (index !== -1) entries.splice(index, 1)
+  } else if (index === -1) {
+    entries.push({ type: entityType, id: entityId, isDefined, heroSid })
+  } else {
+    entries[index].heroSid = heroSid
+    entries[index].isDefined = isDefined
+  }
   const patchedText2 = text2.slice(0, span2.arrayOpen) + JSON.stringify(entries) + text2.slice(span2.arrayClose + 1)
 
   const owner = findOwnerForEntity(patchedText2, entityType, entityId)
@@ -722,9 +739,11 @@ export function upsertPropHero(
   if (!entry1) {
     throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
   }
+  const previousHero = entry1.isHeroDefined ? entry1.heroSid : undefined
   entry1.isHeroDefined = isDefined
   entry1.heroSid = isDefined ? heroSid : ''
-  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  let patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  patchedText1 = syncTakenHeroes(patchedText1, previousHero, isDefined ? heroSid : undefined, block1Spawns)
 
   return {
     block1Chunk: new TextEncoder().encode(patchedText1),
@@ -732,12 +751,20 @@ export function upsertPropHero(
   }
 }
 
+/** Block 1 `spawns.takenHeroes`: drops `previous` when no spawn entry still defines it, adds `next` (see upsertPropHero). */
+function syncTakenHeroes(text1: string, previous: string | undefined, next: string | undefined, spawns: Block1SpawnEntry[]): string {
+  if (!text1.includes('"takenHeroes":[')) return text1
+  const span = findJsonArraySpan(text1, 'takenHeroes')
+  let taken = JSON.parse(span.span) as string[]
+  if (previous && previous !== next && !spawns.some((e) => e.isHeroDefined && e.heroSid === previous)) taken = taken.filter((h) => h !== previous)
+  if (next && !taken.includes(next)) taken = [...taken, next]
+  return text1.slice(0, span.arrayOpen) + JSON.stringify(taken) + text1.slice(span.arrayClose + 1)
+}
+
 /**
- * Toggle whether a city spawner comes with a companion hero. A city's
- * companion hero has no "pick a specific one" state at all — confirmed on a
- * user-built test map, GME only ever produces {isDefined:false,
- * heroSid:"random"} for it — so turning this on always (re)creates that
- * exact row; turning it off removes it entirely. Confirmed on the same test
+ * Toggle whether a city spawner comes with a companion hero. Turning it on (re)creates the placeholder row
+ * {isDefined:false, heroSid:"random"} (the state GME writes for a city whose faction is not set); a specific hero is then set with
+ * upsertPropHero (testingStartHero.map has {isDefined:true, heroSid:"human_hero_16"} for a human city). Turning it off removes the row. Confirmed on the same test
  * map that spawnHero:true/false always co-occurs with a propHeroes row
  * existing/not existing for that (type,id).
  *
@@ -782,9 +809,11 @@ export function setCitySpawnHero(
   if (!entry1) {
     throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
   }
+  const previousHero = entry1.isHeroDefined ? entry1.heroSid : undefined
   entry1.isHeroDefined = false
   entry1.heroSid = ''
-  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  const patchedText1 = syncTakenHeroes(
+    text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1), previousHero, undefined, block1Spawns)
 
   return {
     block1Chunk: new TextEncoder().encode(patchedText1),
@@ -957,6 +986,21 @@ export function setRandomSquadValue(chunk: Uint8Array, entityType: number, entit
   return new TextEncoder().encode(patchedText)
 }
 
+/** Many random-squad values in one pass (the encounter scaler): the table is parsed and spliced once instead of once per squad. */
+export function setRandomSquadValues(chunk: Uint8Array, entries: { entityType: number; entityId: number; requestedValue: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+  const rows = JSON.parse(span) as PropRandomSquadEntry[]
+  for (const { entityType, entityId, requestedValue } of entries) {
+    const existing = rows.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+    if (!existing) {
+      throw new Error(`No propRandomSquads entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured random-squad`)
+    }
+    existing.requestedValue = requestedValue
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(rows) + text.slice(arrayClose + 1))
+}
+
 /** A random-squad's faction (propRandomSquads.fraction): a faction, 'neutral' or '' (any). A GME-made map (squads.map) with 'nature', '' and
  *  'neutral' squads showed up in the game; a 'mix' one did not, so 'mix' is not offered. */
 export function setRandomSquadFraction(chunk: Uint8Array, entityType: number, entityId: number, fraction: string): Uint8Array {
@@ -1079,6 +1123,18 @@ export function moveObjectInstance(chunk: Uint8Array, entityType: 0 | 1 | 2, ent
     return new TextEncoder().encode(patchedText)
   }
   throw new Error(`No ${key} entry found for id ${entityId}`)
+}
+
+/** Give a zone marker another zone template (its size and shape, DB/map/trigger_zones/zones.json); node, id and the zone's
+ *  own settings stay. The template id is the marker's `sid`. */
+export function setMarkerSid(chunk: Uint8Array, entityId: number, sid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'markers')
+  const entries = JSON.parse(span) as MarkerEntry[]
+  const existing = entries.find((e) => e.id === entityId)
+  if (!existing) throw new Error(`No markers[] entry found for id ${entityId}`)
+  existing.sid = sid
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
 // ─── Rotate a placed instance (objects[] only) ─────────────────────────────

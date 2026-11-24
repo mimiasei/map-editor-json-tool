@@ -36,11 +36,13 @@ import {
   upsertPropMarker,
   upsertPropHeroRow,
   setCitySpawnHero,
+  setMarkerSid,
   setCityFaction,
   setRandomCityFaction,
   upsertPropSquads,
   upsertPropRandomSquads,
   setRandomSquadValue,
+  setRandomSquadValues,
   setRandomSquadFraction,
   setRandomHire,
   upsertPropRewardParams,
@@ -88,6 +90,8 @@ export type MapSaveEdit =
   | { kind: 'setObjectActions'; entityType: number; entityId: number; which: 'before' | 'after'; value: { repeat: boolean; sides: string; actions: { a: string; p: string[]; comment?: string }[] } | null }
   | { kind: 'replaceActionTable'; which: 'before' | 'after'; rows: unknown[] }
   | { kind: 'setMarkerState'; entityId: number; isActivate: boolean; isDelete: boolean }
+  /** A zone marker's template (size and shape). */
+  | { kind: 'setMarkerSid'; entityId: number; sid: string }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
   /** A free-standing `random-city`: propCities only, no Block 1 spawns entry. */
@@ -97,6 +101,8 @@ export type MapSaveEdit =
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadFraction'; entityType: number; entityId: number; fraction: string }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
+  /** Several random-squad values at once (encounter scaler). */
+  | { kind: 'setRandomSquadValues'; entries: { entityType: number; entityId: number; requestedValue: number }[] }
   | { kind: 'setRandomHire'; entityType: number; entityId: number; tier?: number; fraction?: number }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
@@ -236,6 +242,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = replaceActionTable(newChunks[1], edit.which, edit.rows)
   } else if (edit?.kind === 'setMarkerState') {
     newChunks[1] = upsertPropMarker(newChunks[1], edit.entityId, edit.isActivate, edit.isDelete)
+  } else if (edit?.kind === 'setMarkerSid') {
+    newChunks[1] = setMarkerSid(newChunks[1], edit.entityId, edit.sid)
   } else if (edit?.kind === 'setCitySpawnHero') {
     const patched = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
     newChunks[0] = patched.block1Chunk
@@ -278,6 +286,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = setRandomHire(newChunks[1], edit.entityType, edit.entityId, { tier: edit.tier, fraction: edit.fraction })
   } else if (edit?.kind === 'setRandomSquadValue') {
     newChunks[1] = setRandomSquadValue(newChunks[1], edit.entityType, edit.entityId, edit.requestedValue)
+  } else if (edit?.kind === 'setRandomSquadValues') {
+    newChunks[1] = setRandomSquadValues(newChunks[1], edit.entries)
   } else if (edit?.kind === 'setRewardParams') {
     newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
   } else if (edit?.kind === 'moveObject') {
@@ -493,6 +503,11 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     }
     const rows = edit.which === 'before' ? block2.objectsProperties?.propActionsBefore : block2.objectsProperties?.propActionsAfter
     if (JSON.stringify(rows) !== JSON.stringify(edit.rows)) throw new Error('Verification failed: actions table not reflected in the rebuilt map')
+  } else if (edit?.kind === 'setMarkerSid') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { markers?: Array<{ id?: number; sid?: string }> }
+    if ((block2.markers ?? []).find((m) => m.id === edit.entityId)?.sid !== edit.sid) {
+      throw new Error('Verification failed: zone size not reflected in the rebuilt markers table')
+    }
   } else if (edit?.kind === 'setMarkerState') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: { propMarkers?: Array<{ type?: number | string; id?: number; isActivate?: boolean; isDelete?: boolean }> }
@@ -505,12 +520,16 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: {
         propHeroes?: Array<{ type?: number | string; id?: number; heroSid?: string }>
+        propCities?: Array<{ type?: number | string; id?: number }>
         propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
       }
     }
     const entries = block2.objectsProperties?.propHeroes ?? []
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
-    if (!match || match.heroSid !== edit.heroSid) {
+    // A city's random hero is the absence of the row (see upsertPropHero).
+    const cityRandom = edit.heroSid === 'random' &&
+      (block2.objectsProperties?.propCities ?? []).some((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (cityRandom ? match : (!match || match.heroSid !== edit.heroSid)) {
       throw new Error('Verification failed: heroSid not reflected in the rebuilt propHeroes table')
     }
     const owner = (block2.objectsProperties?.propSpawns ?? [])
@@ -628,6 +647,17 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.requestedValue !== edit.requestedValue) {
       throw new Error('Verification failed: requested value not reflected in the rebuilt propRandomSquads table')
+    }
+  } else if (edit?.kind === 'setRandomSquadValues') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; requestedValue?: number }> }
+    }
+    const rows = block2.objectsProperties?.propRandomSquads ?? []
+    for (const e of edit.entries) {
+      const match = rows.find((r) => String(r.type) === String(e.entityType) && r.id === e.entityId)
+      if (!match || match.requestedValue !== e.requestedValue) {
+        throw new Error('Verification failed: requested values not reflected in the rebuilt propRandomSquads table')
+      }
     }
   } else if (edit?.kind === 'setRewardParams') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

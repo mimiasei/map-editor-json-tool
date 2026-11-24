@@ -3,6 +3,7 @@ import { useApplyThemeSettings } from '@/hooks/useApplyThemeSettings'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { nudgeToPublishIfNeeded } from '@/hooks/usePublishNeeded'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
@@ -386,8 +387,8 @@ export default function AppShell() {
   // write behaves exactly like Save As, instead of the old commitMapIfDirty
   // silently dropping the in-memory .map edits on the floor when no path
   // was known.
-  const handleSave = useCallback(async () => {
-    if ((await commitMapWithPathPrompt()) !== 'saved') return // user cancelled the prompt — abort the whole Save
+  const saveProject = useCallback(async (): Promise<'cancelled' | undefined> => {
+    if ((await commitMapWithPathPrompt()) !== 'saved') return 'cancelled' // user cancelled the prompt — abort the whole Save
     if (isScenarioEmpty(
       scenarioRef.current, dialogsRef.current, localizationRef.current, translationsRef.current,
       customHeroesRef.current, customMapObjectsRef.current, customArtifactsRef.current, customBuffsRef.current,
@@ -424,6 +425,10 @@ export default function AppShell() {
       }
     }
   }, [markClean, setCurrentFile])
+
+  const handleSave = useCallback(async () => {
+    if ((await saveProject()) !== 'cancelled') nudgeToPublishIfNeeded()
+  }, [saveProject])
 
   // Web-only unsaved-changes exit guard (issue #195 follow-up) — the
   // desktop build gets a real confirmation dialog with a Save shortcut via
@@ -517,6 +522,8 @@ export default function AppShell() {
       if (action.name === 'setSelection') {
         const [type, path] = action.args
         useScenarioStore.getState().setSelection(type, path)
+      } else if (action.name === 'focusTile') {
+        useMapGridStore.getState().requestFocus(...action.args)
       }
     })
 
@@ -606,7 +613,7 @@ export default function AppShell() {
         switch (event.payload) {
           case 'new':      handleNew(); break
           case 'open':     window.dispatchEvent(new Event('oe:open')); break
-          case 'open-map': window.dispatchEvent(new Event('oe:open-map')); break
+          case 'import-json': window.dispatchEvent(new Event('oe:import-json')); break
           case 'clear-recent': clearRecentFiles(); break
           case 'import-h3m': window.dispatchEvent(new Event('oe:import-h3m')); break
           case 'save':     handleSave(); break
