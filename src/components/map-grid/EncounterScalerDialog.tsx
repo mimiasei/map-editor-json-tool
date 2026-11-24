@@ -62,11 +62,11 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
   const valuesBefore = chosen.map((e) => e.value)
   const valuesAfter = chosen.map((e) => scaled(e.value, percent))
   const average = (v: number[]) => Math.round(v.reduce((s, n) => s + n, 0) / v.length)
-  const moved = new Map<string, number>()
-  for (const e of chosen) {
-    const from = bandOf(e.value)
-    const to = bandOf(scaled(e.value, percent))
-    if (from !== to) moved.set(`${from} → ${to}`, (moved.get(`${from} → ${to}`) ?? 0) + 1)
+  // Band counts once the scaling is applied: the chosen encounters at their new value, the rest unchanged.
+  const countsAfter = new Map<string, number>()
+  for (const e of encounters) {
+    const band = bandOf(picked.has(bandOf(e.value)) ? scaled(e.value, percent) : e.value)
+    countsAfter.set(band, (countsAfter.get(band) ?? 0) + 1)
   }
 
   const toggle = (name: string) => setPicked((prev) => {
@@ -149,9 +149,17 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
               <p>{t('mapGrid.encounterScaler.min', { before: Math.min(...valuesBefore), after: Math.min(...valuesAfter) })}</p>
             </>
           )}
-          {[...moved.entries()].map(([label, n]) => (
-            <p key={label}>{t('mapGrid.encounterScaler.bandChange', { count: n, change: label })}</p>
-          ))}
+        </div>
+
+        <div className="space-y-1.5">
+          <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.encounterScaler.afterScaling')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {bands.map((label) => (
+              <Button key={label} type="button" size="sm" variant="outline" tabIndex={-1} aria-disabled className="pointer-events-none h-7 text-xs">
+                {bandKey(label)} ({countsAfter.get(bandKey(label)) ?? 0})
+              </Button>
+            ))}
+          </div>
         </div>
 
         <DialogFooter>
