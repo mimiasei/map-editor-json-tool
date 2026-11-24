@@ -62,10 +62,10 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
   const valuesBefore = chosen.map((e) => e.value)
   const valuesAfter = chosen.map((e) => scaled(e.value, percent))
   const average = (v: number[]) => Math.round(v.reduce((s, n) => s + n, 0) / v.length)
-  // Band counts once the scaling is applied: the chosen encounters at their new value, the rest unchanged.
+  // Band counts of the chosen encounters at their new value; the ones the filter left out are not shown.
   const countsAfter = new Map<string, number>()
-  for (const e of encounters) {
-    const band = bandOf(picked.has(bandOf(e.value)) ? scaled(e.value, percent) : e.value)
+  for (const e of chosen) {
+    const band = bandOf(scaled(e.value, percent))
     countsAfter.set(band, (countsAfter.get(band) ?? 0) + 1)
   }
 
