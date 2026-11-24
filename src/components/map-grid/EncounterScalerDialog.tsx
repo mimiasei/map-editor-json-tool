@@ -127,23 +127,18 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-semibold text-muted-foreground">{t(increase ? 'mapGrid.encounterScaler.increaseBy' : 'mapGrid.encounterScaler.reduceBy')}</p>
-            <div className="flex gap-1">
-              {([false, true] as const).map((up) => (
-                <Button
-                  key={String(up)}
-                  type="button"
-                  size="sm"
-                  variant={increase === up ? 'default' : 'outline'}
-                  className="h-6 px-2 text-xs"
-                  aria-pressed={increase === up}
-                  onClick={() => { setIncrease(up); setPercent((p) => Math.min(up ? MAX_INCREASE : MAX_REDUCE, p)) }}
-                >
-                  {t(up ? 'mapGrid.encounterScaler.increase' : 'mapGrid.encounterScaler.reduce')}
-                </Button>
-              ))}
-            </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-6 w-24 px-2 text-xs"
+              title={t('mapGrid.encounterScaler.toggleTitle')}
+              onClick={() => { setIncrease(!increase); setPercent((p) => Math.min(increase ? MAX_REDUCE : MAX_INCREASE, p)) }}
+            >
+              {t(increase ? 'mapGrid.encounterScaler.increase' : 'mapGrid.encounterScaler.reduce')}
+            </Button>
+            <span className="text-xs font-semibold text-muted-foreground">{t('mapGrid.encounterScaler.by')}</span>
           </div>
           <div className="flex items-center gap-3">
             <Slider min={1} max={maxPercent} step={1} value={[percent]} onValueChange={([v]) => setPercentClamped(v)} className="flex-1" />
