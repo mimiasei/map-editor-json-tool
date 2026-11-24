@@ -79,7 +79,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[35.3rem]" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="w-[35.3rem] max-w-[calc(100vw-2rem)]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('mapGrid.encounterScaler.title')}</DialogTitle>
           <DialogDescription>
@@ -142,13 +142,12 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
 
         <div className="space-y-0.5 text-xs text-muted-foreground">
           <p>{t('mapGrid.encounterScaler.preview', { count: chosen.length, before, after })}</p>
-          {chosen.length > 0 && (
-            <>
-              <p>{t('mapGrid.encounterScaler.average', { before: average(valuesBefore), after: average(valuesAfter) })}</p>
-              <p>{t('mapGrid.encounterScaler.max', { before: Math.max(...valuesBefore), after: Math.max(...valuesAfter) })}</p>
-              <p>{t('mapGrid.encounterScaler.min', { before: Math.min(...valuesBefore), after: Math.min(...valuesAfter) })}</p>
-            </>
-          )}
+          {/* Hidden, not removed, with nothing chosen: the dialog keeps the height it has with every line showing. */}
+          <div className={cn(chosen.length === 0 && 'invisible')}>
+            <p>{t('mapGrid.encounterScaler.average', { before: chosen.length ? average(valuesBefore) : 0, after: chosen.length ? average(valuesAfter) : 0 })}</p>
+            <p>{t('mapGrid.encounterScaler.max', { before: chosen.length ? Math.max(...valuesBefore) : 0, after: chosen.length ? Math.max(...valuesAfter) : 0 })}</p>
+            <p>{t('mapGrid.encounterScaler.min', { before: chosen.length ? Math.min(...valuesBefore) : 0, after: chosen.length ? Math.min(...valuesAfter) : 0 })}</p>
+          </div>
         </div>
 
         <div className="space-y-1.5">
