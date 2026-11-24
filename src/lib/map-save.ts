@@ -42,6 +42,7 @@ import {
   upsertPropSquads,
   upsertPropRandomSquads,
   setRandomSquadValue,
+  setRandomSquadValues,
   setRandomSquadFraction,
   setRandomHire,
   upsertPropRewardParams,
@@ -100,6 +101,8 @@ export type MapSaveEdit =
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadFraction'; entityType: number; entityId: number; fraction: string }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
+  /** Several random-squad values at once (encounter scaler). */
+  | { kind: 'setRandomSquadValues'; entries: { entityType: number; entityId: number; requestedValue: number }[] }
   | { kind: 'setRandomHire'; entityType: number; entityId: number; tier?: number; fraction?: number }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
@@ -283,6 +286,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = setRandomHire(newChunks[1], edit.entityType, edit.entityId, { tier: edit.tier, fraction: edit.fraction })
   } else if (edit?.kind === 'setRandomSquadValue') {
     newChunks[1] = setRandomSquadValue(newChunks[1], edit.entityType, edit.entityId, edit.requestedValue)
+  } else if (edit?.kind === 'setRandomSquadValues') {
+    newChunks[1] = setRandomSquadValues(newChunks[1], edit.entries)
   } else if (edit?.kind === 'setRewardParams') {
     newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
   } else if (edit?.kind === 'moveObject') {
@@ -642,6 +647,17 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.requestedValue !== edit.requestedValue) {
       throw new Error('Verification failed: requested value not reflected in the rebuilt propRandomSquads table')
+    }
+  } else if (edit?.kind === 'setRandomSquadValues') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; requestedValue?: number }> }
+    }
+    const rows = block2.objectsProperties?.propRandomSquads ?? []
+    for (const e of edit.entries) {
+      const match = rows.find((r) => String(r.type) === String(e.entityType) && r.id === e.entityId)
+      if (!match || match.requestedValue !== e.requestedValue) {
+        throw new Error('Verification failed: requested values not reflected in the rebuilt propRandomSquads table')
+      }
     }
   } else if (edit?.kind === 'setRewardParams') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

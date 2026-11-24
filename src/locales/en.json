@@ -1675,6 +1675,23 @@
       "zones": "Zones",
       "toggle": "Toggle {{group}}"
     },
+    "encounterScaler": {
+    "title": "Scale encounters",
+    "introSelection": "{{count}} selected encounters. Lower their strength by a percentage.",
+    "introMap": "All {{count}} encounters on the map. Lower their strength by a percentage.",
+    "filter": "Difficulty",
+    "all": "All",
+    "none": "None",
+    "reduceBy": "Reduce by",
+    "preview_one": "{{count}} encounter: total value {{before}} → {{after}}",
+    "preview_other": "{{count}} encounters: total value {{before}} → {{after}}",
+    "bandChange_one": "{{count}} moves {{change}}",
+    "bandChange_other": "{{count}} move {{change}}",
+    "scale_one": "Scale {{count}} encounter",
+    "scale_other": "Scale {{count}} encounters",
+    "button": "Scale encounters",
+    "buttonTitle": "Lower the strength of many encounters at once, by difficulty"
+    },
     "squadDifficulty": {
       "Random": "Random",
       "Easy": "Easy",

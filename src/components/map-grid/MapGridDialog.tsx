@@ -100,6 +100,7 @@ import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import MapGameSettingsDialog from '@/components/map-grid/MapGameSettingsDialog'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
+import EncounterScalerDialog from '@/components/map-grid/EncounterScalerDialog'
 import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -4166,6 +4167,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Batch delete and nudge of the selection: one undo step each.
   const [batchDeleteConfirming, setBatchDeleteConfirming] = useState(false)
+  // Encounter scaler: the selected random-squads when the selection holds any, else every one on the map.
+  const [scalerOpen, setScalerOpen] = useState(false)
+  const scalerEncounters = useMemo(() => {
+    const isEncounter = (o: PlacedObject) => o.type === 0 && o.sid === 'random-squad' && o.randomSquadValue !== undefined
+    const fromSelection = copyMode === 'select' ? selectedObjects.filter(isEncounter) : []
+    const list = fromSelection.length > 0 ? fromSelection : placedObjects.filter(isEncounter)
+    return { fromSelection: fromSelection.length > 0, list: list.map((o) => ({ entityType: o.type, entityId: o.id, value: o.randomSquadValue as number })) }
+  }, [copyMode, selectedObjects, placedObjects])
+  const scaleEncounters = (entries: { entityType: number; entityId: number; requestedValue: number }[]) => {
+    applyEdit({ kind: 'setRandomSquadValues', entries }, 'scale encounters')
+    setScalerOpen(false)
+  }
   useEffect(() => { setBatchDeleteConfirming(false) }, [selectedKeys, copyMode])
   const deleteSelection = () => {
     if (!canEditEntities || selectedObjects.length === 0) return
@@ -4759,6 +4772,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
             </div>
             <MapGameSettingsDialog />
+            <EncounterScalerDialog
+              open={scalerOpen}
+              onOpenChange={setScalerOpen}
+              encounters={scalerEncounters.list}
+              fromSelection={scalerEncounters.fromSelection}
+              ranges={settings.squadDifficultyRanges}
+              onScale={scaleEncounters}
+            />
             <ToolButton
               active={spawnerSelectorOpen}
               icon={<Users />}
@@ -5484,6 +5505,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setCopyNote(null)
                     setCopyMode('select')
                   }}
+                />
+              )}
+
+              {canEditEntities && scalerEncounters.list.length > 0 && (
+                <ToolButton
+                  icon={<Percent className="h-3.5 w-3.5" />}
+                  label={t('mapGrid.encounterScaler.button')}
+                  title={t('mapGrid.encounterScaler.buttonTitle')}
+                  onClick={() => setScalerOpen(true)}
                 />
               )}
 

@@ -986,6 +986,21 @@ export function setRandomSquadValue(chunk: Uint8Array, entityType: number, entit
   return new TextEncoder().encode(patchedText)
 }
 
+/** Many random-squad values in one pass (the encounter scaler): the table is parsed and spliced once instead of once per squad. */
+export function setRandomSquadValues(chunk: Uint8Array, entries: { entityType: number; entityId: number; requestedValue: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+  const rows = JSON.parse(span) as PropRandomSquadEntry[]
+  for (const { entityType, entityId, requestedValue } of entries) {
+    const existing = rows.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+    if (!existing) {
+      throw new Error(`No propRandomSquads entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured random-squad`)
+    }
+    existing.requestedValue = requestedValue
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(rows) + text.slice(arrayClose + 1))
+}
+
 /** A random-squad's faction (propRandomSquads.fraction): a faction, 'neutral' or '' (any). A GME-made map (squads.map) with 'nature', '' and
  *  'neutral' squads showed up in the game; a 'mix' one did not, so 'mix' is not offered. */
 export function setRandomSquadFraction(chunk: Uint8Array, entityType: number, entityId: number, fraction: string): Uint8Array {

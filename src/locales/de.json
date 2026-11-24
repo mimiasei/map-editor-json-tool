@@ -1667,6 +1667,23 @@
       "zones": "Zonen",
       "toggle": "{{group}} umschalten"
     },
+    "encounterScaler": {
+    "title": "Begegnungen skalieren",
+    "introSelection": "{{count}} ausgewählte Begegnungen. Ihre Stärke um einen Prozentsatz senken.",
+    "introMap": "Alle {{count}} Begegnungen der Karte. Ihre Stärke um einen Prozentsatz senken.",
+    "filter": "Schwierigkeit",
+    "all": "Alle",
+    "none": "Keine",
+    "reduceBy": "Senken um",
+    "preview_one": "{{count}} Begegnung: Gesamtwert {{before}} → {{after}}",
+    "preview_other": "{{count}} Begegnungen: Gesamtwert {{before}} → {{after}}",
+    "bandChange_one": "{{count}} wechselt {{change}}",
+    "bandChange_other": "{{count}} wechseln {{change}}",
+    "scale_one": "{{count}} Begegnung skalieren",
+    "scale_other": "{{count}} Begegnungen skalieren",
+    "button": "Begegnungen skalieren",
+    "buttonTitle": "Die Stärke vieler Begegnungen auf einmal senken, nach Schwierigkeit"
+    },
     "squadDifficulty": {
       "Random": "Zufällig",
       "Easy": "Einfach",

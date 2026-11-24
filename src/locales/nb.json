@@ -1667,6 +1667,23 @@
       "zones": "Soner",
       "toggle": "Slå av/på {{group}}"
     },
+    "encounterScaler": {
+    "title": "Skaler møter",
+    "introSelection": "{{count}} valgte møter. Reduser styrken med en prosentandel.",
+    "introMap": "Alle {{count}} møter på kartet. Reduser styrken med en prosentandel.",
+    "filter": "Vanskelighetsgrad",
+    "all": "Alle",
+    "none": "Ingen",
+    "reduceBy": "Reduser med",
+    "preview_one": "{{count}} møte: total verdi {{before}} → {{after}}",
+    "preview_other": "{{count}} møter: total verdi {{before}} → {{after}}",
+    "bandChange_one": "{{count}} går {{change}}",
+    "bandChange_other": "{{count}} går {{change}}",
+    "scale_one": "Skaler {{count}} møte",
+    "scale_other": "Skaler {{count}} møter",
+    "button": "Skaler møter",
+    "buttonTitle": "Reduser styrken til mange møter samtidig, etter vanskelighetsgrad"
+    },
     "squadDifficulty": {
       "Random": "Tilfeldig",
       "Easy": "Lett",
