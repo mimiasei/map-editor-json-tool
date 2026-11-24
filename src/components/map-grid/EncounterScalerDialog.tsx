@@ -156,7 +156,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
           <div className="flex flex-wrap gap-1.5">
             {bands.map((label) => (
               <span key={label} className="inline-flex h-7 items-center rounded-md border border-input px-3 text-xs">
-                {bandKey(label)} ({countsAfter.get(bandKey(label)) ?? 0})
+                {bandKey(label)}&nbsp;(<span className="inline-block text-center tabular-nums" style={{ minWidth: `${String(encounters.length).length}ch` }}>{countsAfter.get(bandKey(label)) ?? 0}</span>)
               </span>
             ))}
           </div>
