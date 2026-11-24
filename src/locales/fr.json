@@ -1701,11 +1701,14 @@
     },
     "encounterScaler": {
     "title": "Ajuster les rencontres",
-    "introSelection": "{{count}} rencontres sélectionnées. Réduisez leur force d’un pourcentage.",
-    "introMap": "Les {{count}} rencontres de la carte. Réduisez leur force d’un pourcentage.",
+    "introSelection": "{{count}} rencontres sélectionnées. Modifiez leur force d’un pourcentage.",
+    "introMap": "Les {{count}} rencontres de la carte. Modifiez leur force d’un pourcentage.",
     "filter": "Difficulté",
     "all": "Toutes",
     "none": "Aucune",
+    "increaseBy": "Augmenter de",
+    "reduce": "Réduire",
+    "increase": "Augmenter",
     "reduceBy": "Réduire de",
     "preview_one": "{{count}} rencontre : valeur totale {{before}} → {{after}}",
     "preview_many": "{{count}} rencontres : valeur totale {{before}} → {{after}}",
@@ -1718,7 +1721,7 @@
     "scale_many": "Ajuster {{count}} rencontres",
     "scale_other": "Ajuster {{count}} rencontres",
     "button": "Ajuster les rencontres",
-    "buttonTitle": "Réduire la force de nombreuses rencontres à la fois, par difficulté"
+    "buttonTitle": "Augmenter ou réduire la force de nombreuses rencontres à la fois, par difficulté"
     },
     "squadDifficulty": {
       "Random": "Aléatoire",

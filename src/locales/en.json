@@ -1677,11 +1677,14 @@
     },
     "encounterScaler": {
     "title": "Scale encounters",
-    "introSelection": "{{count}} selected encounters. Lower their strength by a percentage.",
-    "introMap": "All {{count}} encounters on the map. Lower their strength by a percentage.",
+    "introSelection": "{{count}} selected encounters. Change their strength by a percentage.",
+    "introMap": "All {{count}} encounters on the map. Change their strength by a percentage.",
     "filter": "Difficulty",
     "all": "All",
     "none": "None",
+    "increaseBy": "Increase by",
+    "reduce": "Reduce",
+    "increase": "Increase",
     "reduceBy": "Reduce by",
     "preview_one": "{{count}} encounter: total value {{before}} → {{after}}",
     "preview_other": "{{count}} encounters: total value {{before}} → {{after}}",
@@ -1692,7 +1695,7 @@
     "scale_one": "Scale {{count}} encounter",
     "scale_other": "Scale {{count}} encounters",
     "button": "Scale encounters",
-    "buttonTitle": "Lower the strength of many encounters at once, by difficulty"
+    "buttonTitle": "Raise or lower the strength of many encounters at once, by difficulty"
     },
     "squadDifficulty": {
       "Random": "Random",

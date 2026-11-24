@@ -1669,11 +1669,14 @@
     },
     "encounterScaler": {
     "title": "Begegnungen skalieren",
-    "introSelection": "{{count}} ausgewählte Begegnungen. Ihre Stärke um einen Prozentsatz senken.",
-    "introMap": "Alle {{count}} Begegnungen der Karte. Ihre Stärke um einen Prozentsatz senken.",
+    "introSelection": "{{count}} ausgewählte Begegnungen. Ihre Stärke um einen Prozentsatz ändern.",
+    "introMap": "Alle {{count}} Begegnungen der Karte. Ihre Stärke um einen Prozentsatz ändern.",
     "filter": "Schwierigkeit",
     "all": "Alle",
     "none": "Keine",
+    "increaseBy": "Erhöhen um",
+    "reduce": "Senken",
+    "increase": "Erhöhen",
     "reduceBy": "Senken um",
     "preview_one": "{{count}} Begegnung: Gesamtwert {{before}} → {{after}}",
     "preview_other": "{{count}} Begegnungen: Gesamtwert {{before}} → {{after}}",
@@ -1684,7 +1687,7 @@
     "scale_one": "{{count}} Begegnung skalieren",
     "scale_other": "{{count}} Begegnungen skalieren",
     "button": "Begegnungen skalieren",
-    "buttonTitle": "Die Stärke vieler Begegnungen auf einmal senken, nach Schwierigkeit"
+    "buttonTitle": "Die Stärke vieler Begegnungen auf einmal erhöhen oder senken, nach Schwierigkeit"
     },
     "squadDifficulty": {
       "Random": "Zufällig",

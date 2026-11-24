@@ -1733,11 +1733,14 @@
     },
     "encounterScaler": {
     "title": "Skaluj spotkania",
-    "introSelection": "Wybrane spotkania: {{count}}. Zmniejsz ich siłę o procent.",
-    "introMap": "Wszystkie spotkania na mapie: {{count}}. Zmniejsz ich siłę o procent.",
+    "introSelection": "Wybrane spotkania: {{count}}. Zmień ich siłę o procent.",
+    "introMap": "Wszystkie spotkania na mapie: {{count}}. Zmień ich siłę o procent.",
     "filter": "Poziom trudności",
     "all": "Wszystkie",
     "none": "Żadne",
+    "increaseBy": "Zwiększ o",
+    "reduce": "Zmniejsz",
+    "increase": "Zwiększ",
     "reduceBy": "Zmniejsz o",
     "preview_one": "{{count}} spotkanie: łączna wartość {{before}} → {{after}}",
     "preview_few": "{{count}} spotkania: łączna wartość {{before}} → {{after}}",
@@ -1752,7 +1755,7 @@
     "scale_many": "Skaluj {{count}} spotkań",
     "scale_other": "Skaluj {{count}} spotkania",
     "button": "Skaluj spotkania",
-    "buttonTitle": "Zmniejsz siłę wielu spotkań naraz, według trudności"
+    "buttonTitle": "Zwiększ lub zmniejsz siłę wielu spotkań naraz, według trudności"
     },
     "squadDifficulty": {
       "Random": "Losowy",

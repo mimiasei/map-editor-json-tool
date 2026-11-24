@@ -1669,11 +1669,14 @@
     },
     "encounterScaler": {
     "title": "Skaler møter",
-    "introSelection": "{{count}} valgte møter. Reduser styrken med en prosentandel.",
-    "introMap": "Alle {{count}} møter på kartet. Reduser styrken med en prosentandel.",
+    "introSelection": "{{count}} valgte møter. Endre styrken med en prosentandel.",
+    "introMap": "Alle {{count}} møter på kartet. Endre styrken med en prosentandel.",
     "filter": "Vanskelighetsgrad",
     "all": "Alle",
     "none": "Ingen",
+    "increaseBy": "Øk med",
+    "reduce": "Reduser",
+    "increase": "Øk",
     "reduceBy": "Reduser med",
     "preview_one": "{{count}} møte: total verdi {{before}} → {{after}}",
     "preview_other": "{{count}} møter: total verdi {{before}} → {{after}}",
@@ -1684,7 +1687,7 @@
     "scale_one": "Skaler {{count}} møte",
     "scale_other": "Skaler {{count}} møter",
     "button": "Skaler møter",
-    "buttonTitle": "Reduser styrken til mange møter samtidig, etter vanskelighetsgrad"
+    "buttonTitle": "Øk eller reduser styrken til mange møter samtidig, etter vanskelighetsgrad"
     },
     "squadDifficulty": {
       "Random": "Tilfeldig",

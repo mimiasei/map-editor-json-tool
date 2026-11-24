@@ -25,12 +25,13 @@ interface Props {
 }
 
 const DEFAULT_PERCENT = 25
-const MAX_PERCENT = 90
+const MAX_REDUCE = 90
+const MAX_INCREASE = 200
 
 /** A value of 0 makes a random-squad never appear in the game (verified), so scaling stops at 1. */
-const scaled = (value: number, percent: number) => Math.max(1, Math.round(value * (1 - percent / 100)))
+const scaled = (value: number, percent: number, increase: boolean) => Math.max(1, Math.round(value * (1 + (increase ? percent : -percent) / 100)))
 
-/** Lowers many encounters (random-squads) by a percentage, picked by difficulty band. The X, Cancel and Esc close it without changing
+/** Lowers or raises many encounters (random-squads) by a percentage, picked by difficulty band. The X, Cancel and Esc close it without changing
  *  anything; a click outside does not. */
 export default function EncounterScalerDialog({ open, onOpenChange, encounters, fromSelection, ranges, onScale }: Props) {
   const { t } = useTranslation()
@@ -40,10 +41,13 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
   const bandKey = (label: string) => squadDifficultyName(label)
 
   const [percent, setPercent] = useState(DEFAULT_PERCENT)
+  const [increase, setIncrease] = useState(false)
+  const maxPercent = increase ? MAX_INCREASE : MAX_REDUCE
   const [picked, setPicked] = useState<Set<string>>(new Set())
   useEffect(() => {
     if (open) {
       setPercent(DEFAULT_PERCENT)
+      setIncrease(false)
       setPicked(new Set(bands.map(bandKey)))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,14 +62,14 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
 
   const chosen = encounters.filter((e) => picked.has(bandOf(e.value)))
   const before = chosen.reduce((s, e) => s + e.value, 0)
-  const after = chosen.reduce((s, e) => s + scaled(e.value, percent), 0)
+  const after = chosen.reduce((s, e) => s + scaled(e.value, percent, increase), 0)
   const valuesBefore = chosen.map((e) => e.value)
-  const valuesAfter = chosen.map((e) => scaled(e.value, percent))
+  const valuesAfter = chosen.map((e) => scaled(e.value, percent, increase))
   const average = (v: number[]) => Math.round(v.reduce((s, n) => s + n, 0) / v.length)
   // Band counts of the chosen encounters at their new value; the ones the filter left out are not shown.
   const countsAfter = new Map<string, number>()
   for (const e of chosen) {
-    const band = bandOf(scaled(e.value, percent))
+    const band = bandOf(scaled(e.value, percent, increase))
     countsAfter.set(band, (countsAfter.get(band) ?? 0) + 1)
   }
 
@@ -75,7 +79,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
     else next.add(name)
     return next
   })
-  const setPercentClamped = (n: number) => setPercent(Math.min(MAX_PERCENT, Math.max(1, Math.round(Number.isFinite(n) ? n : DEFAULT_PERCENT))))
+  const setPercentClamped = (n: number) => setPercent(Math.min(maxPercent, Math.max(1, Math.round(Number.isFinite(n) ? n : DEFAULT_PERCENT))))
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,14 +127,31 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.encounterScaler.reduceBy')}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-semibold text-muted-foreground">{t(increase ? 'mapGrid.encounterScaler.increaseBy' : 'mapGrid.encounterScaler.reduceBy')}</p>
+            <div className="flex gap-1">
+              {([false, true] as const).map((up) => (
+                <Button
+                  key={String(up)}
+                  type="button"
+                  size="sm"
+                  variant={increase === up ? 'default' : 'outline'}
+                  className="h-6 px-2 text-xs"
+                  aria-pressed={increase === up}
+                  onClick={() => { setIncrease(up); setPercent((p) => Math.min(up ? MAX_INCREASE : MAX_REDUCE, p)) }}
+                >
+                  {t(up ? 'mapGrid.encounterScaler.increase' : 'mapGrid.encounterScaler.reduce')}
+                </Button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center gap-3">
-            <Slider min={1} max={MAX_PERCENT} step={1} value={[percent]} onValueChange={([v]) => setPercentClamped(v)} className="flex-1" />
+            <Slider min={1} max={maxPercent} step={1} value={[percent]} onValueChange={([v]) => setPercentClamped(v)} className="flex-1" />
             <div className="flex items-center gap-1">
               <Input
                 type="number"
                 min={1}
-                max={MAX_PERCENT}
+                max={maxPercent}
                 value={percent}
                 onChange={(e) => setPercentClamped(Number(e.target.value))}
                 className="h-7 w-16 text-xs"
@@ -169,7 +190,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
             type="button"
             data-skin-large
             disabled={chosen.length === 0}
-            onClick={() => onScale(chosen.map((e) => ({ entityType: e.entityType, entityId: e.entityId, requestedValue: scaled(e.value, percent) })))}
+            onClick={() => onScale(chosen.map((e) => ({ entityType: e.entityType, entityId: e.entityId, requestedValue: scaled(e.value, percent, increase) })))}
           >
             {t('mapGrid.encounterScaler.scale', { count: chosen.length })}
           </Button>
