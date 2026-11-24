@@ -99,7 +99,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${bands.length}, minmax(0, 1fr))` }}>
             {bands.map((label) => {
               const name = bandKey(label)
               const count = counts.get(name) ?? 0
@@ -110,7 +110,7 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
                   type="button"
                   size="sm"
                   variant={on ? 'default' : 'outline'}
-                  className={cn('h-7 text-xs', count === 0 && 'opacity-50')}
+                  className={cn('h-7 px-1 text-xs', count === 0 && 'opacity-50')}
                   disabled={count === 0}
                   aria-pressed={on}
                   onClick={() => toggle(name)}
@@ -153,9 +153,9 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
 
         <div className="space-y-1.5">
           <p className="text-xs font-semibold text-muted-foreground">{t('mapGrid.encounterScaler.afterScaling')}</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${bands.length}, minmax(0, 1fr))` }}>
             {bands.map((label) => (
-              <span key={label} className="inline-flex h-7 items-center rounded-md border border-input px-3 text-xs">
+              <span key={label} className="inline-flex h-7 items-center justify-center rounded-md border border-input px-1 text-xs">
                 {bandKey(label)}&nbsp;(<span className="inline-block text-center tabular-nums" style={{ minWidth: `${String(encounters.length).length}ch` }}>{countsAfter.get(bandKey(label)) ?? 0}</span>)
               </span>
             ))}
