@@ -59,6 +59,9 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
   const chosen = encounters.filter((e) => picked.has(bandOf(e.value)))
   const before = chosen.reduce((s, e) => s + e.value, 0)
   const after = chosen.reduce((s, e) => s + scaled(e.value, percent), 0)
+  const valuesBefore = chosen.map((e) => e.value)
+  const valuesAfter = chosen.map((e) => scaled(e.value, percent))
+  const average = (v: number[]) => Math.round(v.reduce((s, n) => s + n, 0) / v.length)
   const moved = new Map<string, number>()
   for (const e of chosen) {
     const from = bandOf(e.value)
@@ -139,6 +142,13 @@ export default function EncounterScalerDialog({ open, onOpenChange, encounters, 
 
         <div className="space-y-0.5 text-xs text-muted-foreground">
           <p>{t('mapGrid.encounterScaler.preview', { count: chosen.length, before, after })}</p>
+          {chosen.length > 0 && (
+            <>
+              <p>{t('mapGrid.encounterScaler.average', { before: average(valuesBefore), after: average(valuesAfter) })}</p>
+              <p>{t('mapGrid.encounterScaler.max', { before: Math.max(...valuesBefore), after: Math.max(...valuesAfter) })}</p>
+              <p>{t('mapGrid.encounterScaler.min', { before: Math.min(...valuesBefore), after: Math.min(...valuesAfter) })}</p>
+            </>
+          )}
           {[...moved.entries()].map(([label, n]) => (
             <p key={label}>{t('mapGrid.encounterScaler.bandChange', { count: n, change: label })}</p>
           ))}
