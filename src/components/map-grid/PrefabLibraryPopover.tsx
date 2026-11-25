@@ -81,7 +81,9 @@ export default function PrefabLibraryPopover({ clipboard, knowsSid, onUse, label
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[21rem] space-y-2 p-2" data-nodrag>
+      {/* From the selection toaster (z-[1000], top right of the map) it opens to its left and above it: the default z-50 sat under the toaster
+          and left the library unusable. */}
+      <PopoverContent side={label ? 'left' : 'bottom'} align="start" collisionPadding={8} className="z-[1100] w-[21rem] space-y-2 p-2" data-nodrag>
         <div className="flex items-center justify-between gap-1">
           <Input
             value={name}

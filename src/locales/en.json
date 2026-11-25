@@ -1653,7 +1653,8 @@
       "rectHint": {
         "square": "Shift: square",
         "fromCentre": "Alt: from centre"
-      }
+      },
+      "toasterMoveTitle": "Drag to move. Double-click to put it back."
     },
     "objectBrowserPanel": {
       "units": "Units",

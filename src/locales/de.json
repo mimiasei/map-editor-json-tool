@@ -1645,7 +1645,8 @@
       "rectHint": {
         "square": "Shift: Quadrat",
         "fromCentre": "Alt: von der Mitte"
-      }
+      },
+      "toasterMoveTitle": "Ziehen zum Verschieben. Doppelklick setzt es zurück."
     },
     "objectBrowserPanel": {
       "units": "Einheiten",
