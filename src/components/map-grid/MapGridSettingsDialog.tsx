@@ -404,7 +404,9 @@ export default function MapGridSettingsDialog({
           <Switch
               id="grid-show-elevation"
               checked={settings.showElevationShading}
-              onCheckedChange={(v) => update({ showElevationShading: v })}
+              // Without cliff edges the elevation would not show at all, so turning shading off brings the cliffs back (and the reverse below).
+              // Only the switch being flipped triggers it: both can be on together when the user turns the other one on by hand.
+              onCheckedChange={(v) => update(v ? { showElevationShading: true } : { showElevationShading: false, showCliffs: true })}
           />
         </div>
 
@@ -413,7 +415,7 @@ export default function MapGridSettingsDialog({
           <Switch
               id="grid-show-cliffs"
               checked={settings.showCliffs}
-              onCheckedChange={(v) => update({ showCliffs: v })}
+              onCheckedChange={(v) => update(v ? { showCliffs: true } : { showCliffs: false, showElevationShading: true })}
           />
         </div>
 

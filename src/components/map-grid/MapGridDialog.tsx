@@ -1403,7 +1403,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [sizeX, sizeZ, paintBiome, levelBrush, paintZone, applyEdit, spreadWaterOver, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
 
+  // True while an elevation (Level or Ramp) stroke is down. The cliff pieces are heavy to draw and every pointer move changes the staged
+  // elevation, so the cliff layer is hidden for the stroke and drawn once when the button is released; the flat elevation shading shows
+  // the stroke meanwhile, whatever the shading setting is.
+  const [elevationStroke, setElevationStroke] = useState(false)
   const stopLevelPainting = () => {
+    setElevationStroke(false)
     setLevelBrush(null)
     setPaintLevelStaged((prev) => (prev.size ? new Map() : prev))
   }
@@ -1491,6 +1496,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [rampActive, setRampActive] = useState(false)
   const rampPaintingRef = useRef(false)
   const stopRampPainting = () => {
+    setElevationStroke(false)
     setRampActive(false)
     setPaintRampStaged((prev) => (prev.size ? new Set() : prev))
   }
@@ -1863,6 +1869,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
       levelPaintingRef.current = true
+      setElevationStroke(true)
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stageLevelNode(node, levelBrush)
@@ -1892,6 +1899,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // so a stale 'rectangle' mode left over from another tool has no effect.
     if (rampActive) {
       rampPaintingRef.current = true
+      setElevationStroke(true)
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stageRampNode(node)
@@ -2445,6 +2453,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     if (levelPaintingRef.current) {
       levelPaintingRef.current = false
+      setElevationStroke(false)
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       commitLevelStroke()
       return
@@ -2457,6 +2466,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     if (rampPaintingRef.current) {
       rampPaintingRef.current = false
+      setElevationStroke(false)
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       commitRampStroke()
       return
@@ -2723,7 +2733,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const cliffSprites = useCliffSprites()
   const cliffLayerCacheRef = useRef<{ canvas: HTMLCanvasElement; key: unknown[]; scale: number; sizeX: number; sizeZ: number } | null>(null)
   useEffect(() => {
-    if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0 || elevationStroke) return
     const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
@@ -2911,7 +2921,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     cliffLayerCacheRef.current = { canvas: layer, key: cacheKey, scale, sizeX, sizeZ }
     out.drawImage(layer, 0, 0)
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs, elevationStroke])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2952,7 +2962,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // toggle-gated. On top of the occupied swatch pass (translucent, so the
     // category color underneath stays legible) but before the blocked-tile
     // pass below.
-    if (settings.showElevationShading) {
+    if (settings.showElevationShading || elevationStroke) {
       for (const [node, tint] of elevationTintMap) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
@@ -2962,7 +2972,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, textureStrength,
-    settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
+    settings.showElevationShading, elevationStroke, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
   ])
 
   // ── Road/river line-feature canvas — a SEPARATE, higher-internal-
@@ -3364,30 +3374,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Object paint has no "pending" outline canvas (user-requested removal, as for Road below): the real catalog icon of each staged
   // stamp renders via `stagedObjectPaintIcons`, and a thick green square on every tile's centre read as an artifact.
 
-  // ── Level/Water "pending" indicator canvases (issue #193 Phase 2) — same
-  // outline technique as the two above: the real color already renders via
-  // the base canvasEl pass (elevationTintMap/terrainFillColor merges above),
-  // so these only mark which tiles are unsaved.
-  const [paintLevelCanvasEl, setPaintLevelCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => {
-    if (!paintLevelCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const canvas = paintLevelCanvasEl
-    const SUBPX = 8
-    canvas.width = sizeX * SUBPX
-    canvas.height = sizeZ * SUBPX
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (paintLevelStaged.size === 0) return
-    ctx.strokeStyle = 'rgba(37, 99, 235, 0.9)'
-    ctx.lineWidth = 2
-    for (const node of paintLevelStaged.keys()) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      const screenRow = sizeZ - 1 - z
-      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
-    }
-  }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
+  // Level has no "pending" outline canvas either (user-requested removal: blue squares around every drawn tile looked bad): the staged
+  // elevation shows through the base canvas's elevation shading, which is forced on while the stroke is down.
 
   // Road has no in-progress-stroke outline canvas (user-requested removal —
   // it read as a distracting thick square border around every tile while
@@ -5829,7 +5817,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <canvas
                   ref={setCliffCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
-                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming ? 'hidden' : 'visible' }}
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming || elevationStroke ? 'hidden' : 'visible' }}
                 />
 
                 {/* Water surface — see waterCanvasEl above. After the cliff canvas, before the icon layer. */}
@@ -6088,18 +6076,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     overlay above. */}
                 <canvas
                   ref={setPaintCanvasEl}
-                  className="absolute top-0 left-0 pointer-events-none"
-                  style={{
-                    width: sizeX * BASE_CELL_PX,
-                    height: sizeZ * BASE_CELL_PX,
-                    imageRendering: 'pixelated',
-                  }}
-                />
-
-                {/* Level/Water "pending" outline indicators (issue #193
-                    Phase 2) — same stacking as the overlays above. */}
-                <canvas
-                  ref={setPaintLevelCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,
