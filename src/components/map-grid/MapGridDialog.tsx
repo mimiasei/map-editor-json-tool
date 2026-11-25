@@ -103,6 +103,7 @@ import ToolButton from '@/components/map-grid/ToolButton'
 import EncounterScalerDialog from '@/components/map-grid/EncounterScalerDialog'
 import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import SelectionToaster from '@/components/map-grid/SelectionToaster'
+import TreesToaster from '@/components/map-grid/TreesToaster'
 import { nodesInPolygon, type LassoPoint } from '@/lib/map-grid/lasso'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -5341,28 +5342,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       (buildTreePools, fuzzy-obstacle.ts). Same drag/
                       sampling/apply-immediately behavior. */}
                   {treesActive ? (
-                    <div className="flex items-center gap-1">
-                      <ToolButton active icon={treeKind === 'flowers' ? <Flower2 className="h-3.5 w-3.5" /> : <Trees className="h-3.5 w-3.5" />} label={t('mapGrid.mapGridDialog.trees')} />
-                      <div className="flex items-center rounded border border-border overflow-hidden">
-                        <button
-                          className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
-                          title={t('mapGrid.mapGridDialog.freehandBrushDragToScatter')}
-                          onClick={() => setTreeBucketMode(false)}
-                        >
-                          {t('mapGrid.mapGridDialog.brush')}
-                        </button>
-                        <button
-                          className={`h-6 px-2 text-xs transition-colors ${treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'text-foreground/50 hover:bg-accent'}`}
-                          title={t('mapGrid.mapGridDialog.bucketFillClickToScatter')}
-                          onClick={() => setTreeBucketMode(true)}
-                        >
-                          {t('mapGrid.mapGridDialog.bucket')}
-                        </button>
-                      </div>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopTreePainting} title={t('mapGrid.mapGridDialog.stopEsc')}>
-                        <Cancel className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+                    <ToolButton
+                      active
+                      icon={treeKind === 'flowers' ? <Flower2 className="h-3.5 w-3.5" /> : <Trees className="h-3.5 w-3.5" />}
+                      hotkeyId="toolTrees" label={t('mapGrid.mapGridDialog.trees')}
+                      title={t('mapGrid.mapGridDialog.stopEsc')}
+                      onClick={stopTreePainting}
+                    />
                   ) : (
                     <ToolButton
                       icon={<Trees className="h-3.5 w-3.5" />}
@@ -5564,22 +5550,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   ordinary ground matches no level-(-1) tile, so nothing
                   visibly happens) — Ramp's own onPointerDown branch ignores
                   interactionMode entirely for the same reason. */}
-              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid))) && (
+              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || interactableActive || squadActive || obstacleBrushActive || eraserActive || resourceActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid))) && (
                 <>
                   <div className="flex-1" />
-                  {(obstacleBrushActive || treesActive || interactableActive || squadActive || resourceActive) && (
+                  {(obstacleBrushActive || interactableActive || squadActive || resourceActive) && (
                     <ToolBrushSettingsPopover
-                      tool={obstacleBrushActive ? 'obstacles' : treesActive ? treeKind : squadActive ? 'squad' : resourceActive ? 'resource' : 'interactable'}
+                      tool={obstacleBrushActive ? 'obstacles' : squadActive ? 'squad' : resourceActive ? 'resource' : 'interactable'}
                       mountainChance={obstacleMountainChance}
                       onMountainChanceChange={setObstacleMountainChance}
                       poolChance={obstaclePoolChance}
                       onPoolChanceChange={setObstaclePoolChance}
-                      biomePurity={obstacleBrushActive ? obstacleBiomePurity : treesActive ? (treeKind === 'flowers' ? flowerBiomePurity : treeBiomePurity) : squadActive ? squadBiomePurity : interactableBiomePurity}
+                      biomePurity={obstacleBrushActive ? obstacleBiomePurity : squadActive ? squadBiomePurity : interactableBiomePurity}
                       grassChance={flowerGrassChance}
                       onGrassChanceChange={setFlowerGrassChance}
-                      onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? (treeKind === 'flowers' ? setFlowerBiomePurity : setTreeBiomePurity) : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
-                      allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : treesActive ? (treeKind === 'flowers' ? flowerAllowHighContrast : treeAllowHighContrast) : interactableAllowHighContrast}
-                      onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? (treeKind === 'flowers' ? setFlowerAllowHighContrast : setTreeAllowHighContrast) : setInteractableAllowHighContrast}
+                      onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
+                      allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : interactableAllowHighContrast}
+                      onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : setInteractableAllowHighContrast}
                       squadDifficulties={squadDifficulties}
                       onToggleSquadDifficulty={toggleSquadDifficulty}
                       squadDifficultyRanges={settings.squadDifficultyRanges}
@@ -5621,7 +5607,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   already select their own explicit region, so radius has
                   nothing to modify for either. Ramp/Road are deliberately
                   excluded too — always single-tile, no brush to size. */}
-              {interactionMode === 'freehand' && !activeToolIsBucket && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
+              {interactionMode === 'freehand' && !activeToolIsBucket && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">{t('mapGrid.mapGridDialog.size')}</span>
                   <span className="text-xs tabular-nums w-5 text-center">{brushRadius}</span>
@@ -6381,6 +6367,26 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
+              )}
+              {treesActive && (
+                <TreesToaster
+                  kind={treeKind}
+                  bucket={treeBucketMode}
+                  onBucket={setTreeBucketMode}
+                  shape={interactionMode}
+                  onShape={setInteractionMode}
+                  radius={brushRadius}
+                  onRadius={setBrushRadius}
+                  disperse={brushDisperse}
+                  onDisperse={setBrushDisperse}
+                  biomePurity={treeKind === 'flowers' ? flowerBiomePurity : treeBiomePurity}
+                  onBiomePurity={treeKind === 'flowers' ? setFlowerBiomePurity : setTreeBiomePurity}
+                  allowHighContrast={treeKind === 'flowers' ? flowerAllowHighContrast : treeAllowHighContrast}
+                  onAllowHighContrast={treeKind === 'flowers' ? setFlowerAllowHighContrast : setTreeAllowHighContrast}
+                  grassChance={flowerGrassChance}
+                  onGrassChance={setFlowerGrassChance}
+                  onClose={stopTreePainting}
+                />
               )}
               {copyMode !== 'off' && (
                 <SelectionToaster

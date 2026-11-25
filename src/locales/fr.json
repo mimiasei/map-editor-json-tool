@@ -1630,7 +1630,8 @@
         "hintMore": "Ctrl+clic ajoute ou retire un objet. Ctrl+glisser en ajoute d’autres.",
         "shapeRectangle": "Rectangle",
         "shapeLasso": "Lasso",
-        "lassoHint": "Tracez une boucle autour des objets."
+        "lassoHint": "Tracez une boucle autour des objets.",
+        "shapeFreehand": "Main levée"
       },
       "confirm": "Confirmer",
       "imageMap": "Carte d'image",

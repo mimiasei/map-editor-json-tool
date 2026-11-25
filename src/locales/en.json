@@ -1605,7 +1605,8 @@
         "hintMore": "Ctrl+click adds or removes one. Ctrl+drag adds more.",
         "shapeRectangle": "Rectangle",
         "shapeLasso": "Lasso",
-        "lassoHint": "Drag a loop around the objects."
+        "lassoHint": "Drag a loop around the objects.",
+        "shapeFreehand": "Freehand"
       },
       "confirm": "Confirm",
       "imageMap": "Image map",

@@ -1597,7 +1597,8 @@
         "hintMore": "Strg+Klick fügt eines hinzu oder entfernt es. Strg+Ziehen fügt weitere hinzu.",
         "shapeRectangle": "Rechteck",
         "shapeLasso": "Lasso",
-        "lassoHint": "Eine Schlinge um die Objekte ziehen."
+        "lassoHint": "Eine Schlinge um die Objekte ziehen.",
+        "shapeFreehand": "Freihand"
       },
       "confirm": "Bestätigen",
       "imageMap": "Bildkarte",

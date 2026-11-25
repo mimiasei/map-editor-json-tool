@@ -1663,7 +1663,8 @@
         "hintMore": "Ctrl+klik dodaje lub usuwa jeden. Ctrl+przeciągnięcie dodaje kolejne.",
         "shapeRectangle": "Prostokąt",
         "shapeLasso": "Lasso",
-        "lassoHint": "Narysuj pętlę wokół obiektów."
+        "lassoHint": "Narysuj pętlę wokół obiektów.",
+        "shapeFreehand": "Odręcznie"
       },
       "confirm": "Potwierdź",
       "imageMap": "Mapa z obrazu",

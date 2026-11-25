@@ -1597,7 +1597,8 @@
         "hintMore": "Ctrl+klikk legger til eller fjerner ett. Ctrl+dra legger til flere.",
         "shapeRectangle": "Rektangel",
         "shapeLasso": "Lasso",
-        "lassoHint": "Dra en løkke rundt objektene."
+        "lassoHint": "Dra en løkke rundt objektene.",
+        "shapeFreehand": "Frihånd"
       },
       "confirm": "Bekreft",
       "imageMap": "Bildekart",
