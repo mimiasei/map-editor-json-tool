@@ -1,10 +1,11 @@
 // ─── Map Grid — a small picture of one water type ─────────────────────────────
-// Drawn the way the grid draws water: the type's tinted ground colour, its translucent overlay and the game's ripple surface on top
-// (the surface only when the textures have been extracted, desktop build).
+// The type's own water colour with the game's ripple surface on top (the surface only when the textures have been extracted, desktop
+// build). On the map the water sits on dark ground, so it reads as the plain type colour; the light ground tint the base canvas uses
+// under water made this swatch much paler than the water on the map (checked against a GME screenshot of Water (Grass)).
 
 import { useEffect, useRef } from 'react'
-import { terrainFillColor, waterOverlayColor } from '@/lib/map-grid/terrain-colors'
-import { useWaterSurface, waterSurfacePattern, WATER_SURFACE_ALPHA } from '@/lib/map-grid/water-surface'
+import { waterOverlayColor } from '@/lib/map-grid/terrain-colors'
+import { useWaterSurface, waterSurfacePattern } from '@/lib/map-grid/water-surface'
 
 const W = 56
 const H = 26
@@ -21,9 +22,7 @@ export default function WaterSwatch({ waterId }: { waterId: number }) {
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = terrainFillColor(undefined, waterId)
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = waterOverlayColor(waterId, WATER_SURFACE_ALPHA)
+    ctx.fillStyle = waterOverlayColor(waterId, 1)
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     const pattern = surface ? waterSurfacePattern(ctx, surface, PX_PER_TILE * DPR) : null
     if (pattern) {
