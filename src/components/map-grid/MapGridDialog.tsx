@@ -83,7 +83,7 @@ import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
 import { copyObjects, flipHorizontal, isCopyable, planPaste, rotateClockwise } from '@/lib/map-grid/clipboard'
-import { combineSelection, keysInRectangle } from '@/lib/map-grid/selection'
+import { combineSelection, keysInRectangle, keysOnNodes } from '@/lib/map-grid/selection'
 import { applyPaste, type PasteResult } from '@/lib/map-grid/paste-apply'
 import { buildFuzzyObstaclePools, buildTreePools, buildWalkablePools, computeFuzzyDistances, computeStrokeBoundingSize, mergeStrokeDecisions, rebalanceGrass, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
@@ -103,6 +103,7 @@ import ToolButton from '@/components/map-grid/ToolButton'
 import EncounterScalerDialog from '@/components/map-grid/EncounterScalerDialog'
 import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import SelectionToaster from '@/components/map-grid/SelectionToaster'
+import { nodesInPolygon, type LassoPoint } from '@/lib/map-grid/lasso'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -179,6 +180,7 @@ import { useTranslation, Trans } from 'react-i18next'
 const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
+const SELECT_SHAPE_KEY = 'oe-map-grid-select-shape'
 const ZOOM_SETTLE_MS = 1000
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
@@ -845,6 +847,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
   const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects' | 'select'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
+  // Shift (square) and Alt (from the centre) change a rectangle while it is dragged; the chip beside the rectangle shows them lit, and
+  // pressing one without moving the mouse still updates it (the last pointer tile is kept for that).
+  const [rectMods, setRectMods] = useState({ shift: false, alt: false })
+  const rectPointerRef = useRef<{ x: number; z: number } | null>(null)
+  // Select's shape: a rectangle, or a freehand loop (lasso) in tile-space floats.
+  const [selectShape, setSelectShapeState] = useState<'rectangle' | 'lasso'>(() => {
+    try { return localStorage.getItem(SELECT_SHAPE_KEY) === 'lasso' ? 'lasso' : 'rectangle' } catch { return 'rectangle' }
+  })
+  const setSelectShape = (shape: 'rectangle' | 'lasso') => {
+    setSelectShapeState(shape)
+    try { localStorage.setItem(SELECT_SHAPE_KEY, shape) } catch { /* not remembered */ }
+  }
+  const lassoRef = useRef<LassoPoint[] | null>(null)
+  const [lassoPath, setLassoPath] = useState<LassoPoint[] | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
   const obstacleDragRef = useRef<Set<number> | null>(null)
@@ -1771,6 +1787,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // Select / paste: a left press starts a selection rectangle (a plain click is a one-tile rectangle) or stamps the copied area.
     if (copyMode === 'select') {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null && selectShape === 'lasso') {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        const first = screenToTileFloat(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        lassoRef.current = [first]
+        setLassoPath([first])
+        return
+      }
       if (node !== null) {
         e.currentTarget.setPointerCapture(e.pointerId)
         rectangleDragRef.current = { tool: 'select', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
@@ -2137,7 +2160,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return { x, z }
   }, [transform, sizeZ])
 
+  // The same mapping with the fractions kept (tile (x, z) covers [x, x+1) x [z, z+1)), for the lasso path.
+  const screenToTileFloat = (clientX: number, clientY: number, rect: DOMRect): LassoPoint => ({
+    x: (clientX - rect.left - transform.x) / transform.scale / BASE_CELL_PX,
+    z: sizeZ - (clientY - rect.top - transform.y) / transform.scale / BASE_CELL_PX,
+  })
+
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (lassoRef.current) {
+      const point = screenToTileFloat(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      const last = lassoRef.current[lassoRef.current.length - 1]
+      // 0.25 tile apart keeps a long drag to a few hundred points.
+      if (Math.hypot(point.x - last.x, point.z - last.z) >= 0.25) {
+        lassoRef.current = [...lassoRef.current, point]
+        setLassoPath(lassoRef.current)
+      }
+      return
+    }
     if (copyMode === 'paste') {
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       setPasteAnchor((prev) => (prev && prev.x === x && prev.z === z ? prev : { x, z }))
@@ -2145,6 +2184,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (rectangleDragRef.current) {
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      rectPointerRef.current = { x, z }
+      setRectMods((prev) => (prev.shift === e.shiftKey && prev.alt === e.altKey ? prev : { shift: e.shiftKey, alt: e.altKey }))
       setRectanglePreview(computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ))
       return
     }
@@ -2360,6 +2401,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       rotateDragRef.current = null
       return
     }
+    if (lassoRef.current) {
+      const path = lassoRef.current
+      lassoRef.current = null
+      setLassoPath(null)
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      const additive = e.ctrlKey || e.metaKey
+      const start = path[0]
+      // A loop that never left its first tile is a click.
+      if (path.every((q) => Math.hypot(q.x - start.x, q.z - start.z) < 1)) {
+        const x = Math.min(sizeX - 1, Math.max(0, Math.floor(start.x)))
+        const z = Math.min(sizeZ - 1, Math.max(0, Math.floor(start.z)))
+        applySelectHit({ minX: x, maxX: x, minZ: z, maxZ: z }, additive)
+        return
+      }
+      const hits = keysOnNodes(nodesInPolygon(path, sizeX, sizeZ), (n) => tileIndex.get(n) ?? [])
+      setCopyNote(null)
+      setSelectedKeys((prev) => combineSelection(prev, hits, additive ? 'add' : 'replace'))
+      return
+    }
     if (rectangleDragRef.current) {
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -2377,6 +2437,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         applyRectangleFill(drag.tool, bounds)
       }
       rectangleDragRef.current = null
+      rectPointerRef.current = null
+      setRectMods({ shift: false, alt: false })
       setRectanglePreview(null)
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       return
@@ -4206,6 +4268,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectionOwnsArrows, selectedObjects, sizeX, sizeZ, canEditEntities])
 
+  // Shift and Alt pressed or released mid-drag redraw the rectangle without the mouse having to move. Alt is swallowed because on Windows a
+  // lone Alt press otherwise moves focus to the menu bar and the drag loses its keys.
+  const rectDragging = rectanglePreview !== null
+  useEffect(() => {
+    if (!rectDragging) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift' && e.key !== 'Alt') return
+      const drag = rectangleDragRef.current
+      const pointer = rectPointerRef.current
+      if (e.key === 'Alt') e.preventDefault()
+      setRectMods({ shift: e.shiftKey, alt: e.altKey })
+      if (drag && pointer) setRectanglePreview(computeRectangleBounds(drag.startX, drag.startZ, pointer.x, pointer.z, e.shiftKey, e.altKey, sizeX, sizeZ))
+    }
+    window.addEventListener('keydown', handler)
+    window.addEventListener('keyup', handler)
+    return () => {
+      window.removeEventListener('keydown', handler)
+      window.removeEventListener('keyup', handler)
+    }
+  }, [rectDragging, sizeX, sizeZ])
+
   // Ends when another tool starts, so a stale Select cannot swallow that tool's clicks.
   const otherToolActive = !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || !!moveState || !!portalLinkFrom
   useEffect(() => {
@@ -5517,6 +5600,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       <RectSelect className="h-3.5 w-3.5" />
                     </button>
                   </div>
+                  {interactionMode === 'rectangle' && (
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {t('mapGrid.mapGridDialog.rectHint.square')} · {t('mapGrid.mapGridDialog.rectHint.fromCentre')}
+                    </span>
+                  )}
                 </>
               )}
               {/* Brush-size radius (issue #193 punch-list item, never wired
@@ -6296,6 +6384,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   hasClipboard={!!clipboard}
                   canScale={scalerEncounters.fromSelection}
                   deleteConfirming={batchDeleteConfirming}
+                  shape={selectShape}
+                  onShape={setSelectShape}
                   note={copyNote}
                   prefabs={
                     <PrefabLibraryPopover
@@ -6426,17 +6516,54 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   same screen-space overlay technique as Move/Place above,
                   amber to match the Paint-mode row's own accent color. */}
               {rectanglePreview && (
-                <div
-                  className="absolute pointer-events-none rounded-sm border-[3px] border-amber-500"
-                  style={{
-                    left: rectanglePreview.minX * effectiveCellPx,
-                    top: (sizeZ - 1 - rectanglePreview.maxZ) * effectiveCellPx,
-                    width: (rectanglePreview.maxX - rectanglePreview.minX + 1) * effectiveCellPx,
-                    height: (rectanglePreview.maxZ - rectanglePreview.minZ + 1) * effectiveCellPx,
-                    transform: `translate(${transform.x}px, ${transform.y}px)`,
-                    boxSizing: 'border-box',
-                  }}
-                />
+                <>
+                  <div
+                    className="absolute pointer-events-none rounded-sm border-[3px] border-amber-500"
+                    style={{
+                      left: rectanglePreview.minX * effectiveCellPx,
+                      top: (sizeZ - 1 - rectanglePreview.maxZ) * effectiveCellPx,
+                      width: (rectanglePreview.maxX - rectanglePreview.minX + 1) * effectiveCellPx,
+                      height: (rectanglePreview.maxZ - rectanglePreview.minZ + 1) * effectiveCellPx,
+                      transform: `translate(${transform.x}px, ${transform.y}px)`,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  {/* The two keys that change a rectangle, shown where the eye is while dragging, lit while held. */}
+                  <div
+                    className="absolute pointer-events-none flex items-center gap-1 whitespace-nowrap text-[11px]"
+                    style={{
+                      left: (rectanglePreview.maxX + 1) * effectiveCellPx + 8,
+                      top: (sizeZ - rectanglePreview.minZ) * effectiveCellPx + 8,
+                      transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    }}
+                  >
+                    <span className="rounded bg-popover/95 px-1.5 py-0.5 font-medium shadow ring-1 ring-border">
+                      {rectanglePreview.maxX - rectanglePreview.minX + 1} × {rectanglePreview.maxZ - rectanglePreview.minZ + 1}
+                    </span>
+                    <span className={`rounded px-1.5 py-0.5 shadow ring-1 ring-border ${rectMods.shift ? 'bg-primary text-primary-foreground' : 'bg-popover/95 text-muted-foreground'}`}>
+                      {t('mapGrid.mapGridDialog.rectHint.square')}
+                    </span>
+                    <span className={`rounded px-1.5 py-0.5 shadow ring-1 ring-border ${rectMods.alt ? 'bg-primary text-primary-foreground' : 'bg-popover/95 text-muted-foreground'}`}>
+                      {t('mapGrid.mapGridDialog.rectHint.fromCentre')}
+                    </span>
+                  </div>
+                </>
+              )}
+              {lassoPath && lassoPath.length > 1 && (
+                <svg
+                  className="absolute left-0 top-0 pointer-events-none overflow-visible"
+                  width={1}
+                  height={1}
+                  style={{ transform: `translate(${transform.x}px, ${transform.y}px)` }}
+                >
+                  <polygon
+                    points={lassoPath.map((q) => `${q.x * effectiveCellPx},${(sizeZ - q.z) * effectiveCellPx}`).join(' ')}
+                    className="fill-amber-500/15 stroke-amber-500"
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               )}
               {/* Select / paste layer: outlines of the selected objects, and the copied area (blue where it can land, red where it cannot) following the cursor. */}
               {(selectionOutlines.length > 0 || pastePlan) && (

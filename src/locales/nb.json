@@ -1581,8 +1581,6 @@
         "nothingToCopy": "Ingenting å kopiere: spillerstarter, portaler og sonemarkører kopieres aldri.",
         "copied": "Kopierte {{count}} objekter. Klikk for å sette inn, M speilvender, R roterer, Esc stopper.",
         "pasted": "Limte inn {{placed}}; {{blocked}} blokkert; {{skipped}} egenskaper ikke overført.",
-        "hint": "Klikk på et objekt, Ctrl+klikk for å legge til flere, eller dra et rektangel.",
-        "hintMore": "Ctrl+klikk legger til eller fjerner ett. Å dra legger til et rektangel.",
         "pasteHint": "Klikk for å plassere kopien. Esc går tilbake til å velge.",
         "copy": "Kopier",
         "paste": "Lim inn",
@@ -1594,7 +1592,12 @@
         "deleteNow": "Slett nå",
         "keep": "Behold",
         "delete_one": "Slett {{count}} objekt",
-        "delete_other": "Slett {{count}} objekter"
+        "delete_other": "Slett {{count}} objekter",
+        "hint": "Klikk på et objekt, eller dra for å velge flere. Ctrl legger til i utvalget.",
+        "hintMore": "Ctrl+klikk legger til eller fjerner ett. Ctrl+dra legger til flere.",
+        "shapeRectangle": "Rektangel",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Dra en løkke rundt objektene."
       },
       "confirm": "Bekreft",
       "imageMap": "Bildekart",
@@ -1637,6 +1640,10 @@
         "clickObject": "Klikk på et objekt i rutenettet.",
         "noEntitySid": "Dette objektet har ingen entitets-SID ennå, og entiteter kan ikke redigeres her.",
         "clickHeroSpawner": "Klikk på en helte-spawner med en tildelt helt."
+      },
+      "rectHint": {
+        "square": "Shift: kvadrat",
+        "fromCentre": "Alt: fra midten"
       }
     },
     "objectBrowserPanel": {

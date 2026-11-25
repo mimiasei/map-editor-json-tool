@@ -6,7 +6,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { ClipboardCopy, ClipboardPaste, FlipHorizontal, Percent, RotateCw, Trash2, X } from '@/components/ui/icons'
+import { Freehand, RectSelect, ClipboardCopy, ClipboardPaste, FlipHorizontal, Percent, RotateCw, Trash2, X } from '@/components/ui/icons'
 import { comboLabel } from '@/lib/hotkeys'
 import { useHotkeyCombo } from '@/store/useHotkeyStore'
 import ToolToaster from './ToolToaster'
@@ -19,6 +19,8 @@ interface Props {
   /** The selection holds encounters the scaler can work on. */
   canScale: boolean
   deleteConfirming: boolean
+  shape: 'rectangle' | 'lasso'
+  onShape: (shape: 'rectangle' | 'lasso') => void
   note: string | null
   /** The prefab library button, rendered by the caller (it owns the clipboard and paste hand-over). */
   prefabs: ReactNode
@@ -55,6 +57,29 @@ export default function SelectionToaster(p: Props) {
       <p className="font-medium">
         {p.mode === 'paste' ? t('mapGrid.mapGridDialog.copy.pasting') : t('mapGrid.mapGridDialog.copy.selected', { count: p.selectedCount })}
       </p>
+      {p.mode === 'select' && (
+        <div className="space-y-1">
+          <div className="grid grid-cols-2 overflow-hidden rounded border border-border">
+            {(['rectangle', 'lasso'] as const).map((shape) => (
+              <button
+                key={shape}
+                type="button"
+                aria-pressed={p.shape === shape}
+                className={`flex h-7 items-center justify-center gap-1.5 text-xs transition-colors ${p.shape === shape ? 'bg-secondary font-medium text-secondary-foreground' : 'text-foreground/60 hover:bg-accent'}`}
+                onClick={() => p.onShape(shape)}
+              >
+                {shape === 'rectangle' ? <RectSelect className="h-3.5 w-3.5" /> : <Freehand className="h-3.5 w-3.5" />}
+                {t(shape === 'rectangle' ? 'mapGrid.mapGridDialog.copy.shapeRectangle' : 'mapGrid.mapGridDialog.copy.shapeLasso')}
+              </button>
+            ))}
+          </div>
+          <p className="text-muted-foreground">
+            {p.shape === 'rectangle'
+              ? `${t('mapGrid.mapGridDialog.rectHint.square')} · ${t('mapGrid.mapGridDialog.rectHint.fromCentre')}`
+              : t('mapGrid.mapGridDialog.copy.lassoHint')}
+          </p>
+        </div>
+      )}
       <p className="text-muted-foreground">
         {p.mode === 'paste' ? t('mapGrid.mapGridDialog.copy.pasteHint') : none ? t('mapGrid.mapGridDialog.copy.hint') : t('mapGrid.mapGridDialog.copy.hintMore')}
       </p>

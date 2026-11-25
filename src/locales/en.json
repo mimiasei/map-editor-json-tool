@@ -1589,8 +1589,6 @@
         "nothingToCopy": "Nothing to copy: player spawners, portals and zone markers are never copied.",
         "copied": "Copied {{count}} objects. Click to stamp, M flips, R turns, Esc stops.",
         "pasted": "Pasted {{placed}}; {{blocked}} blocked; {{skipped}} properties not carried over.",
-        "hint": "Click an object, Ctrl+click to add more, or drag a rectangle.",
-        "hintMore": "Ctrl+click adds or removes one. Drag adds a rectangle.",
         "pasteHint": "Click to stamp the copy. Esc goes back to selecting.",
         "copy": "Copy",
         "paste": "Paste",
@@ -1602,7 +1600,12 @@
         "deleteNow": "Delete now",
         "keep": "Keep",
         "delete_one": "Delete {{count}} object",
-        "delete_other": "Delete {{count}} objects"
+        "delete_other": "Delete {{count}} objects",
+        "hint": "Click an object, or drag to select several. Ctrl adds to the selection.",
+        "hintMore": "Ctrl+click adds or removes one. Ctrl+drag adds more.",
+        "shapeRectangle": "Rectangle",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Drag a loop around the objects."
       },
       "confirm": "Confirm",
       "imageMap": "Image map",
@@ -1645,6 +1648,10 @@
         "clickObject": "Click an object on the grid.",
         "noEntitySid": "This object has no entity SID yet, and entities cannot be edited here.",
         "clickHeroSpawner": "Click a hero spawner with a hero assigned."
+      },
+      "rectHint": {
+        "square": "Shift: square",
+        "fromCentre": "Alt: from centre"
       }
     },
     "objectBrowserPanel": {

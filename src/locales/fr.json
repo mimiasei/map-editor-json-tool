@@ -1613,8 +1613,6 @@
         "nothingToCopy": "Rien à copier : les points de départ, portails et marqueurs de zone ne sont jamais copiés.",
         "copied": "{{count}} objets copiés. Cliquer pour poser, M retourne, R tourne, Échap arrête.",
         "pasted": "{{placed}} collés ; {{blocked}} bloqués ; {{skipped}} propriétés non reprises.",
-        "hint": "Cliquez sur un objet, Ctrl+clic pour en ajouter, ou tracez un rectangle.",
-        "hintMore": "Ctrl+clic ajoute ou retire un objet. Un tracé ajoute un rectangle.",
         "pasteHint": "Cliquez pour poser la copie. Échap revient à la sélection.",
         "copy": "Copier",
         "paste": "Coller",
@@ -1627,7 +1625,12 @@
         "keep": "Garder",
         "delete_one": "Supprimer {{count}} objet",
         "delete_many": "Supprimer {{count}} objets",
-        "delete_other": "Supprimer {{count}} objets"
+        "delete_other": "Supprimer {{count}} objets",
+        "hint": "Cliquez sur un objet, ou faites glisser pour en sélectionner plusieurs. Ctrl ajoute à la sélection.",
+        "hintMore": "Ctrl+clic ajoute ou retire un objet. Ctrl+glisser en ajoute d’autres.",
+        "shapeRectangle": "Rectangle",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Tracez une boucle autour des objets."
       },
       "confirm": "Confirmer",
       "imageMap": "Carte d'image",
@@ -1670,6 +1673,10 @@
         "clickObject": "Cliquez sur un objet de la grille.",
         "noEntitySid": "Cet objet n'a pas encore de SID d'entité, et les entités ne peuvent pas être modifiées ici.",
         "clickHeroSpawner": "Cliquez sur un point d'apparition de héros auquel un héros est assigné."
+      },
+      "rectHint": {
+        "square": "Maj : carré",
+        "fromCentre": "Alt : depuis le centre"
       }
     },
     "objectBrowserPanel": {

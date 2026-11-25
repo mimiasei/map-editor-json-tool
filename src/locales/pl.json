@@ -1645,8 +1645,6 @@
         "nothingToCopy": "Nic do skopiowania: starty graczy, portale i znaczniki stref nie są kopiowane.",
         "copied": "Skopiowano obiektów: {{count}}. Kliknij, aby wstawić, M odbija, R obraca, Esc przerywa.",
         "pasted": "Wklejono {{placed}}; zablokowane: {{blocked}}; nieprzeniesione właściwości: {{skipped}}.",
-        "hint": "Kliknij obiekt, Ctrl+klik dodaje kolejne, albo przeciągnij prostokąt.",
-        "hintMore": "Ctrl+klik dodaje lub usuwa jeden. Przeciągnięcie dodaje prostokąt.",
         "pasteHint": "Kliknij, aby wstawić kopię. Esc wraca do zaznaczania.",
         "copy": "Kopiuj",
         "paste": "Wklej",
@@ -1660,7 +1658,12 @@
         "delete_one": "Usuń {{count}} obiekt",
         "delete_few": "Usuń {{count}} obiekty",
         "delete_many": "Usuń {{count}} obiektów",
-        "delete_other": "Usuń {{count}} obiektu"
+        "delete_other": "Usuń {{count}} obiektu",
+        "hint": "Kliknij obiekt lub przeciągnij, aby zaznaczyć kilka. Ctrl dodaje do zaznaczenia.",
+        "hintMore": "Ctrl+klik dodaje lub usuwa jeden. Ctrl+przeciągnięcie dodaje kolejne.",
+        "shapeRectangle": "Prostokąt",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Narysuj pętlę wokół obiektów."
       },
       "confirm": "Potwierdź",
       "imageMap": "Mapa z obrazu",
@@ -1703,6 +1706,10 @@
         "clickObject": "Kliknij obiekt na siatce.",
         "noEntitySid": "Ten obiekt nie ma jeszcze SID encji, a encji nie można tu edytować.",
         "clickHeroSpawner": "Kliknij spawner bohatera z przypisanym bohaterem."
+      },
+      "rectHint": {
+        "square": "Shift: kwadrat",
+        "fromCentre": "Alt: od środka"
       }
     },
     "objectBrowserPanel": {

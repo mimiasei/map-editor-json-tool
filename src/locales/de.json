@@ -1581,8 +1581,6 @@
         "nothingToCopy": "Nichts zu kopieren: Spielerstarts, Portale und Zonenmarker werden nie kopiert.",
         "copied": "{{count}} Objekte kopiert. Klicken zum Setzen, M spiegelt, R dreht, Esc beendet.",
         "pasted": "{{placed}} eingefügt; {{blocked}} blockiert; {{skipped}} Eigenschaften nicht übernommen.",
-        "hint": "Objekt anklicken, mit Strg+Klick weitere hinzufügen oder ein Rechteck aufziehen.",
-        "hintMore": "Strg+Klick fügt eines hinzu oder entfernt es. Ziehen fügt ein Rechteck hinzu.",
         "pasteHint": "Klicken, um die Kopie zu platzieren. Esc geht zurück zum Auswählen.",
         "copy": "Kopieren",
         "paste": "Einfügen",
@@ -1594,7 +1592,12 @@
         "deleteNow": "Jetzt löschen",
         "keep": "Behalten",
         "delete_one": "{{count}} Objekt löschen",
-        "delete_other": "{{count}} Objekte löschen"
+        "delete_other": "{{count}} Objekte löschen",
+        "hint": "Objekt anklicken oder ziehen, um mehrere auszuwählen. Strg fügt zur Auswahl hinzu.",
+        "hintMore": "Strg+Klick fügt eines hinzu oder entfernt es. Strg+Ziehen fügt weitere hinzu.",
+        "shapeRectangle": "Rechteck",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Eine Schlinge um die Objekte ziehen."
       },
       "confirm": "Bestätigen",
       "imageMap": "Bildkarte",
@@ -1637,6 +1640,10 @@
         "clickObject": "Klicken Sie auf ein Objekt im Raster.",
         "noEntitySid": "Dieses Objekt hat noch keine Entitäts-SID, und Entitäten können hier nicht bearbeitet werden.",
         "clickHeroSpawner": "Klicken Sie auf einen Helden-Startpunkt mit zugewiesenem Helden."
+      },
+      "rectHint": {
+        "square": "Shift: Quadrat",
+        "fromCentre": "Alt: von der Mitte"
       }
     },
     "objectBrowserPanel": {
