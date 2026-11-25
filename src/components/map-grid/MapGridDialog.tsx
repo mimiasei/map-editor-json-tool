@@ -4832,7 +4832,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 </Button>
               )}
               {searchQuery.trim() && (
-                <span className="absolute left-1 top-full mt-2 text-[10px] leading-none text-muted-foreground pointer-events-none">
+                <span className="absolute right-1 top-full mt-2 text-[10px] leading-none text-muted-foreground pointer-events-none">
                   {t('mapGrid.mapGridDialog.objectsFound', { size: searchMatchedNodes.size })}
                 </span>
               )}
