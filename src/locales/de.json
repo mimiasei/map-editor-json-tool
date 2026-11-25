@@ -1580,12 +1580,27 @@
         "rotateTitle": "Um 90° im Uhrzeigersinn drehen (R)",
         "nothingToCopy": "Nichts zu kopieren: Spielerstarts, Portale und Zonenmarker werden nie kopiert.",
         "copied": "{{count}} Objekte kopiert. Klicken zum Setzen, M spiegelt, R dreht, Esc beendet.",
-        "pasted": "{{placed}} eingefügt; {{blocked}} blockiert; {{skipped}} Eigenschaften nicht übernommen."
+        "pasted": "{{placed}} eingefügt; {{blocked}} blockiert; {{skipped}} Eigenschaften nicht übernommen.",
+        "pasteHint": "Klicken, um die Kopie zu platzieren. Esc geht zurück zum Auswählen.",
+        "copy": "Kopieren",
+        "paste": "Einfügen",
+        "flip": "Spiegeln",
+        "turn": "Drehen",
+        "clearSelection": "Auswahl aufheben",
+        "scale": "Begegnungen skalieren…",
+        "deleteNone": "Auswahl löschen",
+        "deleteNow": "Jetzt löschen",
+        "keep": "Behalten",
+        "delete_one": "{{count}} Objekt löschen",
+        "delete_other": "{{count}} Objekte löschen",
+        "hint": "Objekt anklicken oder ziehen, um mehrere auszuwählen. Strg fügt zur Auswahl hinzu.",
+        "hintMore": "Strg+Klick fügt eines hinzu oder entfernt es. Strg+Ziehen fügt weitere hinzu.",
+        "shapeRectangle": "Rechteck",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Eine Schlinge um die Objekte ziehen.",
+        "shapeFreehand": "Freihand"
       },
-      "clearEverything": "Alles löschen?",
       "confirm": "Bestätigen",
-      "clearAll": "Alles löschen",
-      "deleteEveryObjectSquadZone": "Löscht jedes Objekt, jeden Trupp, jede Zone, jeden Fluss und jeden Spielerstart-Startpunkt der Karte und setzt das gesamte Gelände auf Gras zurück",
       "imageMap": "Bildkarte",
       "loadAnImageAndMap": "Ein Bild laden und seine Farben Gelände-, Wasser-, Wald- oder Gebirgs-Assets zuordnen",
       "mode": "Modus:",
@@ -1626,6 +1641,10 @@
         "clickObject": "Klicken Sie auf ein Objekt im Raster.",
         "noEntitySid": "Dieses Objekt hat noch keine Entitäts-SID, und Entitäten können hier nicht bearbeitet werden.",
         "clickHeroSpawner": "Klicken Sie auf einen Helden-Startpunkt mit zugewiesenem Helden."
+      },
+      "rectHint": {
+        "square": "Shift: Quadrat",
+        "fromCentre": "Alt: von der Mitte"
       }
     },
     "objectBrowserPanel": {
@@ -2364,7 +2383,8 @@
         "extractThumbnails": "Miniaturen extrahieren…",
         "renderObjectImages": "Objektbilder rendern…",
         "importScript": "Skript importieren (.json)…",
-        "importH3Map": "H3-Karte importieren…"
+        "importH3Map": "H3-Karte importieren…",
+        "clearMap": "Karte leeren"
       },
       "resaved": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}}",
       "resavedBackupKept": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}} (bestand bereits — nicht überschrieben)",
@@ -2560,6 +2580,17 @@
       "tokensOnlyTheseDialogs_other": "• {{count}} Lokalisierungstokens, die nur von diesen Dialogen verwendet werden",
       "noUndo": "Dies kann mit Strg+Z nicht rückgängig gemacht werden.",
       "noMap": "(In dieser Sitzung ist keine Karte geladen, daher wurden Namen/Beschreibungen von Kartenobjekten nicht geprüft.)"
+    },
+    "clearMap": {
+      "title": "Karte leeren",
+      "noMap": "Es ist keine Karte geöffnet.",
+      "intro": "Leert die gesamte Karte und behält Namen und Einstellungen.",
+      "removes": "Entfernt: Objekte {{objects}} · Trupps {{squads}} · Markierungen {{markers}}.",
+      "resets": "Gelände, Wasser, Höhen, Straßen, Flüsse und Spielerbereiche werden wie bei einer leeren Karte zurückgesetzt.",
+      "keeps": "Name, Beschreibung, Größe und alle Karteneinstellungen bleiben erhalten. Quests und Dialoge bleiben, aber solche, die auf entfernte Objekte verweisen, erscheinen unter Prüfen.",
+      "undo": "Das ändert die Karte im Speicher; Strg+Z macht es rückgängig, und erst beim Speichern wird etwas auf die Festplatte geschrieben.",
+      "typeToConfirm": "Zur Bestätigung {{word}} eingeben",
+      "button": "Karte leeren"
     }
   },
   "editors": {
@@ -3445,7 +3476,8 @@
     "about": "Über",
     "checkUpdates": "Nach Updates suchen...",
     "recentNone": "Keine zuletzt geöffneten Dateien",
-    "clearRecent": "Zuletzt geöffnete Dateien löschen"
+    "clearRecent": "Zuletzt geöffnete Dateien löschen",
+    "clearMap": "Karte leeren..."
   },
   "hotkeys": {
     "title": "Tastenkürzel",

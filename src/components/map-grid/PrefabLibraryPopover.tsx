@@ -20,9 +20,11 @@ interface Props {
   knowsSid: (sid: string, type: 0 | 2) => boolean
   /** Puts a prefab's clip on the clipboard and starts pasting it. */
   onUse: (clip: ObjectClipboard, note: string | null) => void
+  /** A text label next to the icon, making the trigger a full-width row (the selection toaster); omitted, it is an icon button. */
+  label?: string
 }
 
-export default function PrefabLibraryPopover({ clipboard, knowsSid, onUse }: Props) {
+export default function PrefabLibraryPopover({ clipboard, knowsSid, onUse, label }: Props) {
   const { t } = useTranslation()
   const prefabs = usePrefabStore((s) => s.prefabs)
   const add = usePrefabStore((s) => s.add)
@@ -69,8 +71,14 @@ export default function PrefabLibraryPopover({ clipboard, knowsSid, onUse }: Pro
   return (
     <Popover onOpenChange={(o) => { if (!o) setNote(null) }}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" title={`${t('mapGrid.mapGridDialog.library.title')}: ${t('mapGrid.mapGridDialog.library.titleHint')}`}>
+        <Button
+          variant={label ? 'outline' : 'ghost'}
+          size={label ? 'sm' : 'icon'}
+          className={label ? 'h-7 w-full justify-start gap-2 px-2 text-xs' : 'h-6 w-6'}
+          title={`${t('mapGrid.mapGridDialog.library.title')}: ${t('mapGrid.mapGridDialog.library.titleHint')}`}
+        >
           <BookOpen className="h-3.5 w-3.5" />
+          {label}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[21rem] space-y-2 p-2" data-nodrag>

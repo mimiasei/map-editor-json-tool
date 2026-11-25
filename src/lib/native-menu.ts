@@ -19,6 +19,7 @@ function menuLabels(): Record<string, string> {
     recent: t('nativeMenu.recent'),
     'import-h3m': t('nativeMenu.importH3m'),
     'import-json': t('nativeMenu.importJson'),
+    'clear-map': t('nativeMenu.clearMap'),
     save: t('nativeMenu.save'),
     'save-as': t('nativeMenu.saveAs'),
     quit: t('nativeMenu.quit'),

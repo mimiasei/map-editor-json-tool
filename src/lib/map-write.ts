@@ -2010,8 +2010,9 @@ export function paintObjects(
  *  time). Sweeps every objectsProperties.* table generically (Object.keys,
  *  not a static list — same convention as deleteObjectInstance's own
  *  cleanup sweep), emptying every array table since nothing survives.
- *  Deliberately does not touch waterMap/levelsMap/climbsMap/roadsMap — only
- *  tilesMap was asked for.
+ *  Also resets customAreasPainting to 0 and areas[] to the one whole-map
+ *  region of a blank map. waterMap/levelsMap/climbsMap/roadsMap are zeroed
+ *  below (issue #205).
  *
  *  Deliberately its own function rather than looping deleteObjectInstance
  *  once per placement: that would re-parse/re-stringify all of Block 1+2
@@ -2037,6 +2038,27 @@ export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array
       text2 = text2.slice(0, arrayOpen) + JSON.stringify(values.fill(0)) + text2.slice(arrayClose + 1)
     } catch { /* table absent in this file */ }
   }
+
+  // Player areas and the region index: a blank map (buildBlankMap) has no painted areas and one region over every tile, so Clear map
+  // returns to that. haveCustomAreas stays as it is (resetting it is not confirmed against a real map, see paintZoneTiles).
+  try {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'customAreasPainting')
+    const painted = JSON.parse(span) as number[]
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(painted.fill(0)) + text2.slice(arrayClose + 1)
+  } catch { /* table absent in this file */ }
+  {
+    const tileCount = (JSON.parse(findJsonArraySpan(text2, 'tilesMap').span) as number[]).length
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'areas')
+    const first = (JSON.parse(span) as Array<Record<string, unknown>>)[0] ?? {}
+    const whole = [{ ...first, id: 0, keyObjectId: -1, rootNode: 0, nodes: Array.from({ length: tileCount }, (_, i) => i), neighbors: [], biome: 'Grass' }]
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(whole) + text2.slice(arrayClose + 1)
+  }
+
+  // keyObjects[] lists object ids (every shipped map has some); none of them exists after this.
+  try {
+    const { arrayOpen, arrayClose } = findJsonArraySpan(text2, 'keyObjects')
+    text2 = text2.slice(0, arrayOpen) + '[]' + text2.slice(arrayClose + 1)
+  } catch { /* table absent in this file */ }
 
   // objects[]/squads[]/markers[] — fully cleared, no exceptions.
   for (const key of ['objects', 'squads', 'markers']) {
@@ -2073,8 +2095,10 @@ export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array
     const { arrayOpen, arrayClose } = findJsonArraySpan(text1, 'spawns')
     text1 = text1.slice(0, arrayOpen) + '[]' + text1.slice(arrayClose + 1)
     const spawnsObjSpan = findJsonObjectSpan(text1, 'spawns')
-    const spawnsObj = JSON.parse(spawnsObjSpan.span) as { playersCount?: number }
+    const spawnsObj = JSON.parse(spawnsObjSpan.span) as { playersCount?: number; takenHeroes?: string[] }
     spawnsObj.playersCount = 0
+    // Every taken hero was defined by a spawn entry that is gone now.
+    if (spawnsObj.takenHeroes) spawnsObj.takenHeroes = []
     text1 = text1.slice(0, spawnsObjSpan.objOpen) + JSON.stringify(spawnsObj) + text1.slice(spawnsObjSpan.objClose + 1)
   }
 

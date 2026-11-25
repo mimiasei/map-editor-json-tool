@@ -1612,12 +1612,28 @@
         "rotateTitle": "Tourner de 90° dans le sens horaire (R)",
         "nothingToCopy": "Rien à copier : les points de départ, portails et marqueurs de zone ne sont jamais copiés.",
         "copied": "{{count}} objets copiés. Cliquer pour poser, M retourne, R tourne, Échap arrête.",
-        "pasted": "{{placed}} collés ; {{blocked}} bloqués ; {{skipped}} propriétés non reprises."
+        "pasted": "{{placed}} collés ; {{blocked}} bloqués ; {{skipped}} propriétés non reprises.",
+        "pasteHint": "Cliquez pour poser la copie. Échap revient à la sélection.",
+        "copy": "Copier",
+        "paste": "Coller",
+        "flip": "Retourner",
+        "turn": "Pivoter",
+        "clearSelection": "Désélectionner",
+        "scale": "Ajuster les rencontres…",
+        "deleteNone": "Supprimer la sélection",
+        "deleteNow": "Supprimer maintenant",
+        "keep": "Garder",
+        "delete_one": "Supprimer {{count}} objet",
+        "delete_many": "Supprimer {{count}} objets",
+        "delete_other": "Supprimer {{count}} objets",
+        "hint": "Cliquez sur un objet, ou faites glisser pour en sélectionner plusieurs. Ctrl ajoute à la sélection.",
+        "hintMore": "Ctrl+clic ajoute ou retire un objet. Ctrl+glisser en ajoute d’autres.",
+        "shapeRectangle": "Rectangle",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Tracez une boucle autour des objets.",
+        "shapeFreehand": "Main levée"
       },
-      "clearEverything": "Tout effacer ?",
       "confirm": "Confirmer",
-      "clearAll": "Tout effacer",
-      "deleteEveryObjectSquadZone": "Supprime tous les objets, pelotons, zones, rivières et points d'apparition de départ de joueur de la carte, et remet tout le terrain en Herbe",
       "imageMap": "Carte d'image",
       "loadAnImageAndMap": "Charge une image et associe ses couleurs à des éléments de terrain, d'eau, de forêt ou de montagne",
       "mode": "Mode :",
@@ -1658,6 +1674,10 @@
         "clickObject": "Cliquez sur un objet de la grille.",
         "noEntitySid": "Cet objet n'a pas encore de SID d'entité, et les entités ne peuvent pas être modifiées ici.",
         "clickHeroSpawner": "Cliquez sur un point d'apparition de héros auquel un héros est assigné."
+      },
+      "rectHint": {
+        "square": "Maj : carré",
+        "fromCentre": "Alt : depuis le centre"
       }
     },
     "objectBrowserPanel": {
@@ -2401,7 +2421,8 @@
         "extractThumbnails": "Extraire les miniatures…",
         "renderObjectImages": "Générer les images d'objets…",
         "importScript": "Importer un script (.json)…",
-        "importH3Map": "Importer une carte H3…"
+        "importH3Map": "Importer une carte H3…",
+        "clearMap": "Vider la carte"
       },
       "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
       "resavedBackupKept": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}} (existait déjà — non écrasée)",
@@ -2603,6 +2624,17 @@
       "tokensOnlyTheseDialogs_other": "• {{count}} jetons de localisation utilisés uniquement par ces dialogues",
       "noUndo": "Cette action ne peut pas être annulée avec Ctrl+Z.",
       "noMap": "(Aucune carte n’est chargée dans cette session : les noms et descriptions des objets de carte n’ont donc pas été vérifiés.)"
+    },
+    "clearMap": {
+      "title": "Vider la carte",
+      "noMap": "Aucune carte n’est ouverte.",
+      "intro": "Vide toute la carte et conserve son nom et ses paramètres.",
+      "removes": "Supprimés : objets {{objects}} · escouades {{squads}} · marqueurs {{markers}}.",
+      "resets": "Le terrain, l’eau, le relief, les routes, les rivières et les zones des joueurs sont remis à zéro, comme sur une carte vierge.",
+      "keeps": "Le nom, la description, la taille et tous les paramètres de la carte sont conservés. Les quêtes et les dialogues restent, mais ceux qui pointent vers des objets supprimés apparaîtront dans Valider.",
+      "undo": "Cela modifie la carte en mémoire ; Ctrl+Z l’annule, et rien n’est écrit sur le disque avant l’enregistrement.",
+      "typeToConfirm": "Saisissez {{word}} pour confirmer",
+      "button": "Vider la carte"
     }
   },
   "editors": {
@@ -3493,7 +3525,8 @@
     "about": "À propos",
     "checkUpdates": "Rechercher des mises à jour…",
     "recentNone": "Aucun fichier récent",
-    "clearRecent": "Effacer les fichiers récents"
+    "clearRecent": "Effacer les fichiers récents",
+    "clearMap": "Vider la carte..."
   },
   "hotkeys": {
     "title": "Raccourcis clavier",

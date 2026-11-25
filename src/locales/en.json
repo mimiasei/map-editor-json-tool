@@ -1588,12 +1588,27 @@
         "rotateTitle": "Turn 90° clockwise (R)",
         "nothingToCopy": "Nothing to copy: player spawners, portals and zone markers are never copied.",
         "copied": "Copied {{count}} objects. Click to stamp, M flips, R turns, Esc stops.",
-        "pasted": "Pasted {{placed}}; {{blocked}} blocked; {{skipped}} properties not carried over."
+        "pasted": "Pasted {{placed}}; {{blocked}} blocked; {{skipped}} properties not carried over.",
+        "pasteHint": "Click to stamp the copy. Esc goes back to selecting.",
+        "copy": "Copy",
+        "paste": "Paste",
+        "flip": "Flip",
+        "turn": "Turn",
+        "clearSelection": "Clear selection",
+        "scale": "Scale encounters…",
+        "deleteNone": "Delete selection",
+        "deleteNow": "Delete now",
+        "keep": "Keep",
+        "delete_one": "Delete {{count}} object",
+        "delete_other": "Delete {{count}} objects",
+        "hint": "Click an object, or drag to select several. Ctrl adds to the selection.",
+        "hintMore": "Ctrl+click adds or removes one. Ctrl+drag adds more.",
+        "shapeRectangle": "Rectangle",
+        "shapeLasso": "Lasso",
+        "lassoHint": "Drag a loop around the objects.",
+        "shapeFreehand": "Freehand"
       },
-      "clearEverything": "Clear everything?",
       "confirm": "Confirm",
-      "clearAll": "Clear All",
-      "deleteEveryObjectSquadZone": "Delete every object, squad, zone, river, and player-start spawner on the map, and reset all terrain to Grass",
       "imageMap": "Image map",
       "loadAnImageAndMap": "Load an image and map its colors to terrain, water, forest, or mountain assets",
       "mode": "Mode:",
@@ -1634,6 +1649,10 @@
         "clickObject": "Click an object on the grid.",
         "noEntitySid": "This object has no entity SID yet, and entities cannot be edited here.",
         "clickHeroSpawner": "Click a hero spawner with a hero assigned."
+      },
+      "rectHint": {
+        "square": "Shift: square",
+        "fromCentre": "Alt: from centre"
       }
     },
     "objectBrowserPanel": {
@@ -2372,7 +2391,8 @@
         "extractThumbnails": "Extract Thumbnails…",
         "renderObjectImages": "Render Object Images…",
         "importScript": "Import script (.json)…",
-        "importH3Map": "Import H3 Map…"
+        "importH3Map": "Import H3 Map…",
+        "clearMap": "Clear map"
       },
       "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
       "resavedBackupKept": "Re-saved {{bytes}} bytes.\nBackup: {{path}} (already existed — not overwritten)",
@@ -2568,6 +2588,17 @@
       "tokensOnlyTheseDialogs_other": "• {{count}} localization tokens used only by these dialogs",
       "noUndo": "This cannot be undone with Ctrl+Z.",
       "noMap": "(No map is loaded this session, so map object names/descriptions weren’t checked.)"
+    },
+    "clearMap": {
+      "title": "Clear map",
+      "noMap": "No map is open.",
+      "intro": "Empties the whole map and keeps its name and settings.",
+      "removes": "Removes: objects {{objects}} · squads {{squads}} · markers {{markers}}.",
+      "resets": "Terrain, water, elevation, roads, rivers and player areas are reset to a blank map.",
+      "keeps": "Name, description, size and every map setting stay. Quests and dialogs are kept, but those that point at removed objects will show up in Validate.",
+      "undo": "This changes the map in memory; Ctrl+Z undoes it, and nothing is written to disk until you save.",
+      "typeToConfirm": "Type {{word}} to confirm",
+      "button": "Clear map"
     }
   },
   "editors": {
@@ -3453,7 +3484,8 @@
     "about": "About",
     "checkUpdates": "Check for Updates...",
     "recentNone": "No recent files",
-    "clearRecent": "Clear Recent Files"
+    "clearRecent": "Clear Recent Files",
+    "clearMap": "Clear map..."
   },
   "hotkeys": {
     "title": "Keyboard shortcuts",

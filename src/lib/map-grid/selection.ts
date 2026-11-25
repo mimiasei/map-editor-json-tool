@@ -17,16 +17,23 @@ export function combineSelection(prev: ReadonlySet<string>, hits: readonly strin
   return next
 }
 
-/** Copyable objects that stand on any tile of the rectangle (an object counts on every solid footprint tile, like the tile index). */
+/** Copyable objects that stand on any of the nodes (an object counts on every solid footprint tile, like the tile index). */
+export function keysOnNodes(nodes: Iterable<number>, itemsAt: (node: number) => readonly PlacedObject[]): string[] {
+  const keys = new Set<string>()
+  for (const node of nodes) {
+    for (const item of itemsAt(node)) if (isCopyable(item)) keys.add(item.key)
+  }
+  return [...keys]
+}
+
+/** Copyable objects that stand on any tile of the rectangle. */
 export function keysInRectangle(
   minX: number, maxX: number, minZ: number, maxZ: number, sizeX: number,
   itemsAt: (node: number) => readonly PlacedObject[],
 ): string[] {
-  const keys = new Set<string>()
+  const nodes: number[] = []
   for (let z = minZ; z <= maxZ; z++) {
-    for (let x = minX; x <= maxX; x++) {
-      for (const item of itemsAt(z * sizeX + x)) if (isCopyable(item)) keys.add(item.key)
-    }
+    for (let x = minX; x <= maxX; x++) nodes.push(z * sizeX + x)
   }
-  return [...keys]
+  return keysOnNodes(nodes, itemsAt)
 }
