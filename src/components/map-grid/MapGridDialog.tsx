@@ -102,6 +102,7 @@ import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPop
 import ToolButton from '@/components/map-grid/ToolButton'
 import EncounterScalerDialog from '@/components/map-grid/EncounterScalerDialog'
 import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
+import SelectionToaster from '@/components/map-grid/SelectionToaster'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -153,7 +154,6 @@ import {
     TrendingUpDown,
     Landmark,
     Swords,
-    Trash2,
     ImageIcon,
     Users,
     Gem,
@@ -169,10 +169,6 @@ import {
   StepDown,
   Freehand,
   RectSelect,
-  ClipboardCopy,
-  ClipboardPaste,
-  FlipHorizontal,
-  RotateCw,
 } from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 import { useTranslation, Trans } from 'react-i18next'
@@ -5429,65 +5425,26 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               
               {/* Select / copy / paste of objects (map-grid/clipboard.ts). Select: click, Ctrl+click or drag a rectangle; Ctrl+C copies, then the
                   copied area follows the cursor until Esc; click stamps it (one undo step). M flips it, R turns decoration groups. */}
-              {copyMode !== 'off' ? (
-                <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+              {/* Select: its actions live in the SelectionToaster at the top right of the map view. */}
+              <ToolButton
+                active={copyMode !== 'off'}
+                icon={
+                  <span className="relative inline-flex">
                     <RectSelect className="h-3.5 w-3.5" />
-                    {copyMode === 'paste' ? t('mapGrid.mapGridDialog.copy.pasting') : t('mapGrid.mapGridDialog.copy.selected', { count: selectedKeys.size })}
-                  </Button>
-                  {copyMode === 'select' && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={copySelection} title={t('mapGrid.mapGridDialog.copy.copyTitle')}>
-                      <ClipboardCopy className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                  {copyMode === 'select' && canEditEntities && (
-                    batchDeleteConfirming ? (
-                      <>
-                        <span className="text-xs text-destructive">{t('mapGrid.mapGridDialog.copy.deleteCount', { count: selectedKeys.size })}</span>
-                        <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={deleteSelection}>{t('mapGrid.mapGridDialog.confirm')}</Button>
-                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setBatchDeleteConfirming(false)}>{t('shared.cancel')}</Button>
-                      </>
-                    ) : (
-                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={selectedKeys.size === 0} onClick={startDeleteSelection} title={t('mapGrid.mapGridDialog.copy.deleteTitle')}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )
-                  )}
-                  <Button variant="ghost" size="icon" className="h-6 w-6" disabled={!clipboard || copyMode === 'paste'} onClick={() => setCopyMode('paste')} title={t('mapGrid.mapGridDialog.copy.pasteTitle')}>
-                    <ClipboardPaste className="h-3.5 w-3.5" />
-                  </Button>
-                  {copyMode === 'paste' && (
-                    <>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={flipClipboard} title={t('mapGrid.mapGridDialog.copy.flipTitle')}>
-                        <FlipHorizontal className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={turnClipboard} title={t('mapGrid.mapGridDialog.copy.rotateTitle')}>
-                        <RotateCw className="h-3.5 w-3.5" />
-                      </Button>
-                    </>
-                  )}
-                  <PrefabLibraryPopover
-                    clipboard={clipboard}
-                    knowsSid={(sid, type) => type === 2 || !!findMapObject(catalog, sid)}
-                    onUse={(clip, note) => { stopAllTools(); setClipboard(clip); setPasteAnchor(null); setCopyNote(note); setCopyMode('paste') }}
-                  />
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopCopyMode} title={t('mapGrid.mapGridDialog.stopEsc')}>
-                    <Cancel className="h-3.5 w-3.5" />
-                  </Button>
-                  {copyNote && <span className="text-xs text-muted-foreground">{copyNote}</span>}
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<RectSelect className="h-3.5 w-3.5" />}
-                  hotkeyId="toolSelect" label={t('mapGrid.mapGridDialog.copy.select')}
-                  title={t('mapGrid.mapGridDialog.copy.selectTitle')}
-                  onClick={() => {
-                    stopAllTools()
-                    setCopyNote(null)
-                    setCopyMode('select')
-                  }}
-                />
-              )}
+                    {selectedKeys.size > 0 && (
+                      <span className="absolute -right-3 -top-2 min-w-4 rounded-full bg-primary px-1 text-center text-[9px] font-bold leading-4 text-primary-foreground">{selectedKeys.size}</span>
+                    )}
+                  </span>
+                }
+                hotkeyId="toolSelect" label={t('mapGrid.mapGridDialog.copy.select')}
+                title={t('mapGrid.mapGridDialog.copy.selectTitle')}
+                onClick={() => {
+                  if (copyMode !== 'off') { stopCopyMode(); return }
+                  stopAllTools()
+                  setCopyNote(null)
+                  setCopyMode('select')
+                }}
+              />
 
               {canEditEntities && scalerEncounters.list.length > 0 && (
                 <ToolButton
@@ -6330,6 +6287,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
+              )}
+              {copyMode !== 'off' && (
+                <SelectionToaster
+                  mode={copyMode}
+                  selectedCount={selectedKeys.size}
+                  canEdit={canEditEntities}
+                  hasClipboard={!!clipboard}
+                  canScale={scalerEncounters.fromSelection}
+                  deleteConfirming={batchDeleteConfirming}
+                  note={copyNote}
+                  prefabs={
+                    <PrefabLibraryPopover
+                      label={t('mapGrid.mapGridDialog.library.title')}
+                      clipboard={clipboard}
+                      knowsSid={(sid, type) => type === 2 || !!findMapObject(catalog, sid)}
+                      onUse={(clip, note) => { stopAllTools(); setClipboard(clip); setPasteAnchor(null); setCopyNote(note); setCopyMode('paste') }}
+                    />
+                  }
+                  onCopy={copySelection}
+                  onPaste={() => setCopyMode('paste')}
+                  onFlip={flipClipboard}
+                  onTurn={turnClipboard}
+                  onScale={() => setScalerOpen(true)}
+                  onClearSelection={() => setSelectedKeys(new Set())}
+                  onDelete={startDeleteSelection}
+                  onDeleteConfirm={deleteSelection}
+                  onDeleteCancel={() => setBatchDeleteConfirming(false)}
+                  onClose={stopCopyMode}
+                />
               )}
               {portalLinkFrom && (
                 <>
