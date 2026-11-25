@@ -1711,7 +1711,8 @@
       "rectHint": {
         "square": "Shift: kwadrat",
         "fromCentre": "Alt: od środka"
-      }
+      },
+      "toasterMoveTitle": "Przeciągnij, aby przesunąć. Dwukrotne kliknięcie przywraca położenie."
     },
     "objectBrowserPanel": {
       "units": "Jednostki",

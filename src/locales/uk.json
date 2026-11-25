@@ -1711,7 +1711,8 @@
       "rectHint": {
         "square": "Shift: квадрат",
         "fromCentre": "Alt: від центру"
-      }
+      },
+      "toasterMoveTitle": "Перетягніть, щоб перемістити. Подвійний клац повертає на місце."
     },
     "objectBrowserPanel": {
       "units": "Бійці",

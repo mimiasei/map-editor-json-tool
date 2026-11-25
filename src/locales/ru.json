@@ -1711,7 +1711,8 @@
       "rectHint": {
         "square": "Shift: квадрат",
         "fromCentre": "Alt: от центра"
-      }
+      },
+      "toasterMoveTitle": "Перетащите, чтобы переместить. Двойной щелчок возвращает на место."
     },
     "objectBrowserPanel": {
       "units": "Существа",

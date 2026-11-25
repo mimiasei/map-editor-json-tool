@@ -1645,7 +1645,8 @@
       "rectHint": {
         "square": "Shift: kvadrat",
         "fromCentre": "Alt: fra midten"
-      }
+      },
+      "toasterMoveTitle": "Dra for å flytte. Dobbeltklikk for å sette det tilbake."
     },
     "objectBrowserPanel": {
       "units": "Enheter",

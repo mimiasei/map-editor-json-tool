@@ -1678,7 +1678,8 @@
       "rectHint": {
         "square": "Maj : carré",
         "fromCentre": "Alt : depuis le centre"
-      }
+      },
+      "toasterMoveTitle": "Faites glisser pour déplacer. Double-clic pour le remettre en place."
     },
     "objectBrowserPanel": {
       "units": "Unités",
