@@ -15,13 +15,15 @@ export interface PaintKind {
   title?: string
   /** A colour dot before the label (biome, road, zone). */
   swatch?: string
+  /** A picture at the right end of the row (list layout). */
+  preview?: ReactNode
 }
 
 interface Props {
   title: string
   onClose: () => void
   /** The tool's own type choice (biome, level, road, water, city/hero, zone). */
-  kinds?: { options: PaintKind[]; value: string | number; onChange: (value: string | number) => void }
+  kinds?: { options: PaintKind[]; value: string | number; onChange: (value: string | number) => void; /** One choice per row, label left and preview right. */ list?: boolean }
   /** Brush | Bucket. */
   bucket?: { value: boolean; onChange: (value: boolean) => void; brushTitle: string; bucketTitle: string }
   /** Freehand | Rectangle (the shared drag mode). */
@@ -57,7 +59,7 @@ export default function PaintToaster({ title, onClose, kinds, bucket, shape, bru
   return (
     <ToolToaster title={title} closeTitle={t('mapGrid.mapGridDialog.stopEsc')} onClose={onClose}>
       {kinds && (
-        <div className="flex flex-wrap gap-1">
+        <div className={kinds.list ? 'flex flex-col gap-1' : 'flex flex-wrap gap-1'}>
           {kinds.options.map((k) => (
             <button
               key={k.value}
@@ -65,10 +67,11 @@ export default function PaintToaster({ title, onClose, kinds, bucket, shape, bru
               aria-pressed={kinds.value === k.value}
               title={k.title}
               onClick={() => kinds.onChange(k.value)}
-              className={`flex h-7 items-center gap-1.5 rounded border px-2 text-xs transition-colors ${kinds.value === k.value ? 'border-border bg-secondary font-medium text-secondary-foreground' : 'border-transparent text-foreground/60 hover:bg-accent'}`}
+              className={`flex items-center gap-1.5 rounded border px-2 text-xs transition-colors ${kinds.list ? 'min-h-8 w-full py-0.5' : 'h-7'} ${kinds.value === k.value ? 'border-border bg-secondary font-medium text-secondary-foreground' : 'border-transparent text-foreground/60 hover:bg-accent'}`}
             >
               {k.swatch && <span className="inline-block h-2.5 w-2.5 rounded-full border border-border/50" style={{ backgroundColor: k.swatch }} />}
               {k.label}
+              {k.preview && <span className="ml-auto">{k.preview}</span>}
             </button>
           ))}
         </div>

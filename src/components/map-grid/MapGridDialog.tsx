@@ -104,6 +104,7 @@ import EncounterScalerDialog from '@/components/map-grid/EncounterScalerDialog'
 import PrefabLibraryPopover from '@/components/map-grid/PrefabLibraryPopover'
 import SelectionToaster from '@/components/map-grid/SelectionToaster'
 import PaintToaster from '@/components/map-grid/PaintToaster'
+import WaterSwatch from '@/components/map-grid/WaterSwatch'
 import { nodesInPolygon, type LassoPoint } from '@/lib/map-grid/lasso'
 import ModeToggleButton from '@/components/map-grid/ModeToggleButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -4755,7 +4756,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         <PaintToaster
           title={t('common.generateRandomMapDialog.water')}
           onClose={stopWaterPainting}
-          kinds={{ options: WATER_TYPE_ORDER.map((w) => ({ value: w, label: waterTypeName(w) })), value: waterBrush, onChange: (v) => setWaterBrush(v as typeof waterBrush) }}
+          kinds={{ list: true, options: WATER_TYPE_ORDER.map((w) => ({ value: w, label: waterTypeName(w), preview: <WaterSwatch waterId={w} /> })), value: waterBrush, onChange: (v) => setWaterBrush(v as typeof waterBrush) }}
         />
       )
     }
