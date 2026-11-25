@@ -2186,7 +2186,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       rectPointerRef.current = { x, z }
       setRectMods((prev) => (prev.shift === e.shiftKey && prev.alt === e.altKey ? prev : { shift: e.shiftKey, alt: e.altKey }))
-      setRectanglePreview(computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ))
+      const bounds = computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ)
+      // Same tile bounds: keep the old object so a pointer move inside one tile does not re-render this whole dialog.
+      setRectanglePreview((prev) => (prev && prev.minX === bounds.minX && prev.maxX === bounds.maxX && prev.minZ === bounds.minZ && prev.maxZ === bounds.maxZ ? prev : bounds))
       return
     }
     if (paintingRef.current && paintBiome !== null) {
@@ -4274,11 +4276,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   useEffect(() => {
     if (!rectDragging) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Shift' && e.key !== 'Alt') return
+      // Held keys auto-repeat keydown; every repeat re-rendered the whole dialog, which made Alt-drag crawl.
+      if ((e.key !== 'Shift' && e.key !== 'Alt') || e.repeat) {
+        if (e.key === 'Alt') e.preventDefault()
+        return
+      }
       const drag = rectangleDragRef.current
       const pointer = rectPointerRef.current
       if (e.key === 'Alt') e.preventDefault()
-      setRectMods({ shift: e.shiftKey, alt: e.altKey })
+      setRectMods((prev) => (prev.shift === e.shiftKey && prev.alt === e.altKey ? prev : { shift: e.shiftKey, alt: e.altKey }))
       if (drag && pointer) setRectanglePreview(computeRectangleBounds(drag.startX, drag.startZ, pointer.x, pointer.z, e.shiftKey, e.altKey, sizeX, sizeZ))
     }
     window.addEventListener('keydown', handler)
