@@ -1646,10 +1646,7 @@
         "copied": "Skopiowano obiektów: {{count}}. Kliknij, aby wstawić, M odbija, R obraca, Esc przerywa.",
         "pasted": "Wklejono {{placed}}; zablokowane: {{blocked}}; nieprzeniesione właściwości: {{skipped}}."
       },
-      "clearEverything": "Wyczyścić wszystko?",
       "confirm": "Potwierdź",
-      "clearAll": "Wyczyść wszystko",
-      "deleteEveryObjectSquadZone": "Usuwa każdy obiekt, oddział, strefę, rzekę i spawner startowy gracza z mapy oraz przywraca cały teren do Trawy",
       "imageMap": "Mapa z obrazu",
       "loadAnImageAndMap": "Wczytaj obraz i przypisz jego kolory do terenu, wody, lasu lub zasobów górskich",
       "mode": "Tryb:",
@@ -2438,7 +2435,8 @@
         "extractThumbnails": "Wyodrębnij miniatury…",
         "renderObjectImages": "Renderuj obrazy obiektów…",
         "importScript": "Importuj skrypt (.json)…",
-        "importH3Map": "Importuj mapę H3…"
+        "importH3Map": "Importuj mapę H3…",
+        "clearMap": "Wyczyść mapę"
       },
       "resaved": "Zapisano ponownie {{bytes}} bajtów.\nKopia zapasowa: {{path}}",
       "resavedBackupKept": "Zapisano ponownie {{bytes}} bajtów.\nKopia zapasowa: {{path}} (już istniała — nie nadpisano)",
@@ -2647,6 +2645,17 @@
       "tokensOnlyTheseDialogs_other": "• {{count}} tokenu lokalizacji używanego tylko przez te dialogi",
       "noUndo": "Tego nie można cofnąć przez Ctrl+Z.",
       "noMap": "(W tej sesji nie wczytano mapy, więc nazwy i opisy obiektów mapy nie zostały sprawdzone.)"
+    },
+    "clearMap": {
+      "title": "Wyczyść mapę",
+      "noMap": "Żadna mapa nie jest otwarta.",
+      "intro": "Opróżnia całą mapę i zachowuje jej nazwę oraz ustawienia.",
+      "removes": "Usuwa: obiekty {{objects}} · oddziały {{squads}} · znaczniki {{markers}}.",
+      "resets": "Teren, woda, wysokości, drogi, rzeki i obszary graczy wracają do stanu pustej mapy.",
+      "keeps": "Nazwa, opis, rozmiar i wszystkie ustawienia mapy zostają. Zadania i dialogi zostają, ale te wskazujące na usunięte obiekty pojawią się w Sprawdzeniu.",
+      "undo": "To zmienia mapę w pamięci; Ctrl+Z to cofa, a na dysk nic nie trafia przed zapisem.",
+      "typeToConfirm": "Wpisz {{word}}, aby potwierdzić",
+      "button": "Wyczyść mapę"
     }
   },
   "editors": {
@@ -3542,7 +3551,8 @@
     "about": "O programie",
     "checkUpdates": "Sprawdź aktualizacje...",
     "recentNone": "Brak ostatnich plików",
-    "clearRecent": "Wyczyść ostatnie pliki"
+    "clearRecent": "Wyczyść ostatnie pliki",
+    "clearMap": "Wyczyść mapę..."
   },
   "hotkeys": {
     "title": "Skróty klawiszowe",

@@ -1614,10 +1614,7 @@
         "copied": "{{count}} objets copiés. Cliquer pour poser, M retourne, R tourne, Échap arrête.",
         "pasted": "{{placed}} collés ; {{blocked}} bloqués ; {{skipped}} propriétés non reprises."
       },
-      "clearEverything": "Tout effacer ?",
       "confirm": "Confirmer",
-      "clearAll": "Tout effacer",
-      "deleteEveryObjectSquadZone": "Supprime tous les objets, pelotons, zones, rivières et points d'apparition de départ de joueur de la carte, et remet tout le terrain en Herbe",
       "imageMap": "Carte d'image",
       "loadAnImageAndMap": "Charge une image et associe ses couleurs à des éléments de terrain, d'eau, de forêt ou de montagne",
       "mode": "Mode :",
@@ -2401,7 +2398,8 @@
         "extractThumbnails": "Extraire les miniatures…",
         "renderObjectImages": "Générer les images d'objets…",
         "importScript": "Importer un script (.json)…",
-        "importH3Map": "Importer une carte H3…"
+        "importH3Map": "Importer une carte H3…",
+        "clearMap": "Vider la carte"
       },
       "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
       "resavedBackupKept": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}} (existait déjà — non écrasée)",
@@ -2603,6 +2601,17 @@
       "tokensOnlyTheseDialogs_other": "• {{count}} jetons de localisation utilisés uniquement par ces dialogues",
       "noUndo": "Cette action ne peut pas être annulée avec Ctrl+Z.",
       "noMap": "(Aucune carte n’est chargée dans cette session : les noms et descriptions des objets de carte n’ont donc pas été vérifiés.)"
+    },
+    "clearMap": {
+      "title": "Vider la carte",
+      "noMap": "Aucune carte n’est ouverte.",
+      "intro": "Vide toute la carte et conserve son nom et ses paramètres.",
+      "removes": "Supprimés : objets {{objects}} · escouades {{squads}} · marqueurs {{markers}}.",
+      "resets": "Le terrain, l’eau, le relief, les routes, les rivières et les zones des joueurs sont remis à zéro, comme sur une carte vierge.",
+      "keeps": "Le nom, la description, la taille et tous les paramètres de la carte sont conservés. Les quêtes et les dialogues restent, mais ceux qui pointent vers des objets supprimés apparaîtront dans Valider.",
+      "undo": "Cela modifie la carte en mémoire ; Ctrl+Z l’annule, et rien n’est écrit sur le disque avant l’enregistrement.",
+      "typeToConfirm": "Saisissez {{word}} pour confirmer",
+      "button": "Vider la carte"
     }
   },
   "editors": {
@@ -3493,7 +3502,8 @@
     "about": "À propos",
     "checkUpdates": "Rechercher des mises à jour…",
     "recentNone": "Aucun fichier récent",
-    "clearRecent": "Effacer les fichiers récents"
+    "clearRecent": "Effacer les fichiers récents",
+    "clearMap": "Vider la carte..."
   },
   "hotkeys": {
     "title": "Raccourcis clavier",

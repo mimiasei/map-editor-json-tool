@@ -18,6 +18,7 @@ import { useHotkeys } from '@/hooks/useHotkeys'
 import { useHotkeyStore } from '@/store/useHotkeyStore'
 import StartScreen from './StartScreen'
 import NoMapNoticeDialog from './NoMapNoticeDialog'
+import ClearMapDialog from '@/components/dialogs/ClearMapDialog'
 import i18n from '@/lib/i18n'
 import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META, panelTitle } from '@/lib/panel-sync'
@@ -616,6 +617,7 @@ export default function AppShell() {
           case 'import-json': window.dispatchEvent(new Event('oe:import-json')); break
           case 'clear-recent': clearRecentFiles(); break
           case 'import-h3m': window.dispatchEvent(new Event('oe:import-h3m')); break
+          case 'clear-map': window.dispatchEvent(new Event('oe:clear-map')); break
           case 'save':     handleSave(); break
           case 'save-as':  window.dispatchEvent(new Event('oe:save-as')); break
           case 'undo':
@@ -933,6 +935,7 @@ export default function AppShell() {
       )}
       <ObjectRenderProgressBar />
       <NoMapNoticeDialog />
+      <ClearMapDialog />
     </div>
   )
 }

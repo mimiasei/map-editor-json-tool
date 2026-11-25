@@ -103,6 +103,7 @@ fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Resul
     // Same rationale as open_map_item above: gives the "More" dropdown's
     // existing Import H3 Map action (Toolbar.tsx) a second, native home
     // rather than replacing it.
+    let clear_map_item = MenuItemBuilder::with_id("clear-map", label(labels, "clear-map", "Clear map...")).build(app)?;
     let import_h3m_item =
         MenuItemBuilder::with_id("import-h3m", label(labels, "import-h3m", "Import H3 Map...")).build(app)?;
     let save_item = with_accel(MenuItemBuilder::with_id("save", label(labels, "save", "Save")), labels, "save", "CmdOrCtrl+S").build(app)?;
@@ -122,6 +123,8 @@ fn build_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Resul
         .item(&recent_menu)
         .item(&import_h3m_item)
         .item(&import_json_item)
+        .separator()
+        .item(&clear_map_item)
         .separator()
         .item(&save_item)
         .item(&save_as_item)

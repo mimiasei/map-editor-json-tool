@@ -106,7 +106,7 @@ import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-
 import { hasPlayerAreas, planPlayerAreas, playerCities } from '@/lib/map-grid/auto-player-areas'
 import { planRebalance, type RebalanceSuggestion } from '@/lib/map-grid/player-rebalance'
 import RebalanceDialog from '@/components/common/RebalanceDialog'
-import { ImageIcon, X } from '@/components/ui/icons'
+import { Eraser, ImageIcon, X } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { useTranslation } from 'react-i18next'
@@ -1119,6 +1119,14 @@ export default function Toolbar({
                     <RefreshCw className="h-4 w-4 mr-2" />
                   )}
                   {t('layout.toolbar.menu.checkForUpdates')}
+                </DropdownMenuItem>
+              )}
+
+              {/* The desktop build has this in the native File menu; the web build has no such menu. */}
+              {!isTauri() && hasMap && (
+                <DropdownMenuItem onClick={() => setTimeout(() => window.dispatchEvent(new Event('oe:clear-map')), 0)}>
+                  <Eraser className="h-4 w-4 mr-2" />
+                  {t('layout.toolbar.menu.clearMap')}
                 </DropdownMenuItem>
               )}
 

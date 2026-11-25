@@ -1130,24 +1130,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
   }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, roadsMap, climbsMap, applyEdit])
 
-  // ── Clear All — Eraser's whole-map sibling: wipes absolutely everything
-  // (every object/squad/marker/river node, including player-start city-
-  // spawner/hero-spawner — explicit user decision, not just decorations/
-  // encounters) plus resets tilesMap to Grass, in one atomic edit
-  // (clearAllObjects, map-write.ts), not a loop of per-object deletes
-  // (would re-parse Block 1+2 once per object on a map with thousands of
-  // them — see that function's own doc comment). A single click only arms
-  // a same-row confirm (Confirm/Cancel) — this has no undo beyond Ctrl+Z/
-  // the one-time .bak, same as every other edit here, but the blast radius
-  // is the whole map, so it gets the deliberate confirmation CLAUDE.md's
-  // own convention reserves for destructive actions.
-  const [clearAllConfirming, setClearAllConfirming] = useState(false)
-  const stopClearAllConfirm = () => setClearAllConfirming(false)
-  const commitClearAll = useCallback(() => {
-    applyEdit({ kind: 'clearAll' }, 'clear all')
-    setClearAllConfirming(false)
-  }, [applyEdit])
-
   const stopPainting = () => {
     setPaintBiome(null)
     setPaintStaged((prev) => (prev.size ? new Map() : prev))
@@ -4143,7 +4125,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   // Every other tool off, so only one is ever active: the start of every tool, of Select and of pasting a library prefab.
-  const stopAllTools = () => { stopPlacing(); stopPlacingCreature(); setObjectBrowserOpen(false); setSpawnerSelectorOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
+  const stopAllTools = () => { stopPlacing(); stopPlacingCreature(); setObjectBrowserOpen(false); setSpawnerSelectorOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser() }
 
   const stopCopyMode = () => { setCopyMode('off'); setSelectedKeys(new Set()); setPasteAnchor(null); setCopyNote(null) }
 
@@ -4723,7 +4705,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setObstacleBrushActive(false)
                     setTreesActive(false)
                     setEraserActive(false)
-                    setClearAllConfirming(false)
                     setPlacingSid(null)
                     setPlacingCreatureId(null)
                     setPlacingZoneSid(null)
@@ -5517,30 +5498,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 />
               )}
 
-              {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
-                  own doc comment for why player-start spawners are kept and
-                  why this is one atomic edit rather than a per-object loop. */}
-              {clearAllConfirming ? (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-destructive">{t('mapGrid.mapGridDialog.clearEverything')}</span>
-                  <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={commitClearAll}>
-                    {t('mapGrid.mapGridDialog.confirm')}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setClearAllConfirming(false)}>
-                    {t('shared.cancel')}
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Trash2 className="h-3.5 w-3.5" />}
-                  label={t('mapGrid.mapGridDialog.clearAll')}
-                  title={t('mapGrid.mapGridDialog.deleteEveryObjectSquadZone')}
-                  onClick={() => {
-                    stopAllTools()
-                    setClearAllConfirming(true)
-                  }}
-                />
-              )}
               <ToolButton
                 icon={<ImageIcon className="h-3.5 w-3.5" />}
                 label={t('mapGrid.mapGridDialog.imageMap')}

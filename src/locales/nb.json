@@ -1582,10 +1582,7 @@
         "copied": "Kopierte {{count}} objekter. Klikk for å sette inn, M speilvender, R roterer, Esc stopper.",
         "pasted": "Limte inn {{placed}}; {{blocked}} blokkert; {{skipped}} egenskaper ikke overført."
       },
-      "clearEverything": "Tømme alt?",
       "confirm": "Bekreft",
-      "clearAll": "Tøm alt",
-      "deleteEveryObjectSquadZone": "Slett hvert objekt, hver tropp, sone, elv og spillerstart-spawner på kartet, og tilbakestill alt terreng til Gress",
       "imageMap": "Bildekart",
       "loadAnImageAndMap": "Last inn et bilde og tilordne fargene til terreng-, vann-, skog- eller fjellressurser",
       "mode": "Modus:",
@@ -2364,7 +2361,8 @@
         "extractThumbnails": "Trekk ut miniatyrer…",
         "renderObjectImages": "Tegn objektbilder…",
         "importScript": "Importer skript (.json)…",
-        "importH3Map": "Importer H3-kart…"
+        "importH3Map": "Importer H3-kart…",
+        "clearMap": "Tøm kartet"
       },
       "resaved": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}}",
       "resavedBackupKept": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}} (fantes allerede — ikke overskrevet)",
@@ -2560,6 +2558,17 @@
       "tokensOnlyTheseDialogs_other": "• {{count}} lokaliseringstokens som bare brukes av disse dialogene",
       "noUndo": "Dette kan ikke angres med Ctrl+Z.",
       "noMap": "(Ingen kart er lastet i denne økten, så navn/beskrivelser på kartobjekter ble ikke sjekket.)"
+    },
+    "clearMap": {
+      "title": "Tøm kartet",
+      "noMap": "Ingen kart er åpent.",
+      "intro": "Tømmer hele kartet og beholder navn og innstillinger.",
+      "removes": "Fjerner: objekter {{objects}} · tropper {{squads}} · markører {{markers}}.",
+      "resets": "Terreng, vann, høyder, veier, elver og spillerområder tilbakestilles til et tomt kart.",
+      "keeps": "Navn, beskrivelse, størrelse og alle kartinnstillinger beholdes. Oppdrag og dialoger beholdes, men de som peker på fjernede objekter vises i Valider.",
+      "undo": "Dette endrer kartet i minnet; Ctrl+Z angrer det, og ingenting skrives til disk før du lagrer.",
+      "typeToConfirm": "Skriv {{word}} for å bekrefte",
+      "button": "Tøm kartet"
     }
   },
   "editors": {
@@ -3445,7 +3454,8 @@
     "about": "Om",
     "checkUpdates": "Se etter oppdateringer...",
     "recentNone": "Ingen nylige filer",
-    "clearRecent": "Tøm nylige filer"
+    "clearRecent": "Tøm nylige filer",
+    "clearMap": "Tøm kartet..."
   },
   "hotkeys": {
     "title": "Hurtigtaster",

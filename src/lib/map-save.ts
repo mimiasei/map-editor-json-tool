@@ -877,6 +877,14 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       markers?: unknown[]
       rivers?: Array<{ nodes?: unknown[] }>
       tilesMap?: number[]
+      customAreasPainting?: number[]
+      areas?: Array<{ nodes?: number[] }>
+    }
+    if ((block2.customAreasPainting ?? []).some((z) => z !== 0)) {
+      throw new Error('Verification failed: clear-all left painted player areas behind')
+    }
+    if ((block2.areas?.length ?? 0) !== 1 || (block2.areas?.[0]?.nodes?.length ?? 0) !== (block2.tilesMap?.length ?? -1)) {
+      throw new Error('Verification failed: clear-all did not reset areas[] to one whole-map region')
     }
     const survivingIds = (block2.objects ?? []).flatMap((g) => g.ids ?? [])
     if (survivingIds.length > 0 || (block2.squads?.length ?? 0) > 0 || (block2.markers?.length ?? 0) > 0) {
