@@ -2020,7 +2020,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // optional).
   if (portalAdjacency.size > 0) {
     const tempIdToFinalId = new Map<number, number>()
-    newIds.forEach((finalId, i) => tempIdToFinalId.set(additionTempIds[i], finalId))
+    newIds.forEach((finalId, i) => { if (finalId >= 0) tempIdToFinalId.set(additionTempIds[i], finalId) })
     for (const [fromTempId, toTempId] of portalAdjacency) {
       const fromId = tempIdToFinalId.get(fromTempId)
       const toId = tempIdToFinalId.get(toTempId)

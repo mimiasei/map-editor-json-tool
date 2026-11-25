@@ -2185,7 +2185,14 @@ export function addObjectInstances(
     else propRowsByTable.set(table, [row])
   }
 
+  // A tile holds at most one encounter: a random-squad on a tile that has one (or got one earlier in this batch) is skipped, and its entry
+  // in newIds is -1 so the result still lines up with `additions`.
+  const encounterNodes = randomSquadNodes(block2Chunk)
   for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides, randomCityOverrides, randomHireOverrides } of additions) {
+    if (sid === 'random-squad') {
+      if (encounterNodes.has(node)) { newIds.push(-1); continue }
+      encounterNodes.add(node)
+    }
     const id = nextId++
     newIds.push(id)
     let group = groupsBySid.get(sid)
