@@ -842,7 +842,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects' | 'select'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects' | 'select'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
   // Shift (square) and Alt (from the centre) change a rectangle while it is dragged; the chip beside the rectangle shows them lit, and
   // pressing one without moving the mouse still updates it (the last pointer tile is kept for that).
@@ -1323,7 +1323,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return false
   }, [levelsMap, sizeX, sizeZ])
-  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone', bounds: RectangleBounds) => {
+  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone', bounds: RectangleBounds) => {
     const nodes = nodesInRectangle(bounds, sizeX)
     if (nodes.length === 0) return
     if (tool === 'obstacles') {
@@ -1400,10 +1400,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const changes = nodes.map((n) => ({ node: n, level: levelBrush }))
       applyEdit({ kind: 'paintLevel', changes }, 'paint level')
       spreadWaterOver(changes)
-    } else if (tool === 'road' && roadBrush !== null) {
-      applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, applyEdit, spreadWaterOver, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, paintZone, applyEdit, spreadWaterOver, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -1880,17 +1878,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) applyWaterFill(node, waterBrush)
       return
     }
-    // Same freehand-stroke idea for the Road brush.
+    // The Road brush is always a freehand stroke (a stale 'rectangle' mode left over from another tool has no effect).
     if (roadBrush !== null) {
-      if (interactionMode === 'rectangle') {
-        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null) {
-          e.currentTarget.setPointerCapture(e.pointerId)
-          rectangleDragRef.current = { tool: 'road', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
-          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
-        }
-        return
-      }
       roadPaintingRef.current = true
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -4766,7 +4755,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           title={t('mapGrid.mapGridDialog.road')}
           onClose={stopRoadPainting}
           kinds={{ options: ([1, 2] as const).map((r) => ({ value: r, label: roadTypeName(r), swatch: ROAD_BASE_COLORS[r] })), value: roadBrush, onChange: (v) => setRoadBrush(v as 1 | 2) }}
-          shape={shape} staged={paintRoadStaged.size}
+          staged={paintRoadStaged.size}
         />
       )
     }
