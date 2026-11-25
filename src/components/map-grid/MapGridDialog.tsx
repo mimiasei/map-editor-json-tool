@@ -3787,14 +3787,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // be nudged/clicked to a spot that would push any part of it off the edge.
   // Markers/squads (type 1/2) have no footprint template, so this reduces to
   // a plain single-tile bounds check for them.
-  const isNodeInBoundsForMove = useCallback((state: { type: 0 | 1 | 2; sid: string }, node: number): boolean => {
+  // A tile holds at most one encounter (random-squad): two on one tile stop the game from loading the map. Value = the id standing there.
+  const encounterAtNode = useMemo(() => {
+    const out = new Map<number, number>()
+    for (const o of placedObjects) if (o.type === 0 && o.sid === 'random-squad') out.set(o.node, o.id)
+    return out
+  }, [placedObjects])
+  // `ignoreIds`: encounters that move along (a nudged selection), so their old tiles do not count as taken; by default only the mover itself.
+  const isNodeInBoundsForMove = useCallback((state: { type: 0 | 1 | 2; sid: string; id?: number }, node: number, ignoreIds?: ReadonlySet<number>): boolean => {
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
     if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return false
+    if (state.type === 0 && state.sid === 'random-squad') {
+      const there = encounterAtNode.get(node)
+      if (there !== undefined && !(ignoreIds ?? new Set([state.id])).has(there)) return false
+    }
     if (state.type !== 0) return true
     const template = catalog?.mapObjects.find((o) => o.id === state.sid)
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
-  }, [catalog, sizeX, sizeZ])
+  }, [catalog, sizeX, sizeZ, encounterAtNode])
 
   // Relocates the currently-armed move target to `node` immediately (issue
   // #195 follow-up — no more separate Save step). Move mode stays armed
@@ -4214,7 +4225,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const nudgeSelection = (dx: number, dz: number) => {
     if (!canEditEntities || selectedObjects.length === 0) return
     const moves = selectedObjects.map((o) => ({ o, node: (o.z + dz) * sizeX + (o.x + dx), x: o.x + dx }))
-    if (moves.some((m) => m.x < 0 || m.x >= sizeX || !isNodeInBoundsForMove(m.o, m.node))) return
+    const movingIds = new Set(selectedObjects.filter((o) => o.type === 0 && o.sid === 'random-squad').map((o) => o.id))
+    if (moves.some((m) => m.x < 0 || m.x >= sizeX || !isNodeInBoundsForMove(m.o, m.node, movingIds))) return
     try {
       useMapDocumentStore.getState().applyEditsAsOne((apply) => {
         for (const m of moves) apply({ kind: 'moveObject', entityType: m.o.type, entityId: m.o.id, newNode: m.node })

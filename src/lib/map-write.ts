@@ -1286,6 +1286,9 @@ export function addObjectInstance(
 ): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newId: number } {
   const key = entityType === 0 ? 'objects' : 'squads'
   const freeIdKey = entityType === 0 ? 'objectsFreeId' : 'squadsFreeId'
+  if (entityType === 0 && sid === 'random-squad' && randomSquadNodes(block2Chunk).has(node)) {
+    throw new Error(`Tile ${node} already holds an encounter; a tile holds at most one`)
+  }
 
   const text2 = new TextDecoder('utf-8').decode(block2Chunk)
   const newId = findTopLevelScalarSpan(text2, freeIdKey).value
@@ -1957,6 +1960,14 @@ function patchRandomSquadRow(
   return new TextEncoder().encode(patchedText)
 }
 
+/** The tiles that already hold an encounter (a `random-squad` object). The game does not load a map with two on one tile. */
+export function randomSquadNodes(block2Chunk: Uint8Array): Set<number> {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { span } = findJsonArraySpan(text, 'objects')
+  const group = (JSON.parse(span) as ObjectGroupEntry[]).find((g) => g.sid === 'random-squad')
+  return new Set(group?.nodes ?? [])
+}
+
 /** A drag-painted batch of `objects[]` (type 0) placements — the terrain
  *  painter's technique (Phase D) generalized to any placeable object, not
  *  just tilesMap biomes. `deletions` are existing non-blocking decorative
@@ -1982,7 +1993,13 @@ export function paintObjects(
     b2 = result.block2Chunk
   }
   const newIds: number[] = []
+  // A tile holds at most one encounter: a random-squad on a tile that already has one (or got one earlier in this stroke) is skipped.
+  const encounterNodes = randomSquadNodes(b2)
   for (const { node, sid, rotation, randomSquadOverrides } of additions) {
+    if (sid === 'random-squad') {
+      if (encounterNodes.has(node)) continue
+      encounterNodes.add(node)
+    }
     const result = addObjectInstance(b1, b2, 0, sid, node, rotation)
     b1 = result.block1Chunk
     b2 = result.block2Chunk

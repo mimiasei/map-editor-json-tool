@@ -850,11 +850,23 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
         throw new Error('Verification failed: painted-over instance still present in the rebuilt placement table')
       }
     }
+    // A tile holds at most one encounter, so paintObjects skips a random-squad on a tile that has one: its row then belongs to the earlier
+    // squad (an id from before this edit, or the first of this batch), and only a squad this edit created is checked against the overrides.
+    const squadNodes = groups.find((g) => g.sid === 'random-squad')?.nodes ?? []
+    if (new Set(squadNodes).size !== squadNodes.length) {
+      throw new Error('Verification failed: two encounters ended up on one tile')
+    }
+    const freeIdBefore = Number(/"objectsFreeId":(\d+)/.exec(new TextDecoder('utf-8').decode(container.chunks[1]))?.[1] ?? 0)
+    const seenSquadNodes = new Set<number>()
     for (const { node, sid, rotation, randomSquadOverrides } of edit.additions) {
       const group = groups.find((g) => g.sid === sid)
       const nodeIdx = (group?.nodes ?? []).indexOf(node)
       if (nodeIdx === -1) {
         throw new Error('Verification failed: painted instance not reflected in the rebuilt placement table')
+      }
+      if (sid === 'random-squad') {
+        if (seenSquadNodes.has(node) || (group?.ids?.[nodeIdx] ?? 0) < freeIdBefore) continue
+        seenSquadNodes.add(node)
       }
       if ((group?.rotations?.[nodeIdx] ?? 0) !== (rotation ?? 0)) {
         throw new Error('Verification failed: painted instance rotation not reflected in the rebuilt placement table')
