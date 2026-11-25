@@ -2584,13 +2584,9 @@
     "clearMap": {
       "title": "Tøm kartet",
       "noMap": "Ingen kart er åpent.",
-      "intro": "Tømmer hele kartet og beholder navn og innstillinger.",
-      "removes": "Fjerner: objekter {{objects}} · tropper {{squads}} · markører {{markers}}.",
-      "resets": "Terreng, vann, høyder, veier, elver og spillerområder tilbakestilles til et tomt kart.",
-      "keeps": "Navn, beskrivelse, størrelse og alle kartinnstillinger beholdes. Oppdrag og dialoger beholdes, men de som peker på fjernede objekter vises i Valider.",
-      "undo": "Dette endrer kartet i minnet; Ctrl+Z angrer det, og ingenting skrives til disk før du lagrer.",
-      "typeToConfirm": "Skriv {{word}} for å bekrefte",
-      "button": "Tøm kartet"
+      "button": "Tøm kartet",
+      "intro": "Tømmer hele kartet. Navn og innstillinger beholdes. Ctrl+Z angrer det.",
+      "removes": "Fjerner: objekter {{objects}} · tropper {{squads}} · markører {{markers}}."
     }
   },
   "editors": {

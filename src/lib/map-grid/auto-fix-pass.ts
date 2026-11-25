@@ -17,6 +17,7 @@ import { computeElevationRampGuarantee } from './elevation-ramp-guarantee'
 import { computeConnectivityGuarantee } from './connectivity-guarantee'
 import { computeWaterSpeckGuarantee } from './water-specks'
 import { computeOverlapAutoFix } from './overlap-autofix'
+import { duplicateEncounterIds } from './encounter-dedupe'
 import { computeElevationSpikeAutoFix } from './elevation-spike-autofix'
 import { findMapValidationIssues, describeMapValidationIssue } from './map-validation'
 
@@ -117,6 +118,11 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
       fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
     }
     overlapFixCount += overlap.relocations.length
+  }
+
+  // The relocations above can stack two encounters on one tile, which the game cannot load.
+  for (const id of duplicateEncounterIds(extractMapContext(containerToRawBlocks(fixed)).placedObjects, may)) {
+    fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: id }).container
   }
 
   const spikeCtx = extractMapContext(containerToRawBlocks(fixed))

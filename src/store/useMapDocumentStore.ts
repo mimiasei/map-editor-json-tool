@@ -22,6 +22,7 @@ import { useStackOrderStore } from '@/store/useStackOrderStore'
 import { findMapValidationIssues, type MapValidationIssue } from '@/lib/map-grid/map-validation'
 import { computeBoundsAutoFix } from '@/lib/map-grid/bounds-autofix'
 import { computeEntranceAutoFix } from '@/lib/map-grid/entrance-autofix'
+import { duplicateEncounterIds } from '@/lib/map-grid/encounter-dedupe'
 import { computeReachabilityAutoFix, findUnreachablePlacements, type UnreachablePlacement } from '@/lib/map-grid/reachability-validation'
 
 // Same re-run-to-convergence rationale as auto-fix-pass.ts's own identical
@@ -209,10 +210,14 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
           reachabilityFixCount += reachability.deletions.length + reachability.relocations.length
         }
 
+        // The relocations above can stack two encounters on one tile, which the game cannot load; also repairs a map that already has some.
+        const duplicateEncounters = duplicateEncounterIds(extractMapContext(containerToRawBlocks(get().container ?? current)).placedObjects)
+        for (const id of duplicateEncounters) get().applyEdit({ kind: 'deleteObject', entityType: 0, entityId: id })
+
         const finalCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
         const remainingIssues = findMapValidationIssues(finalCtx, catalog)
         const remainingUnreachable = findUnreachablePlacements(finalCtx, catalog)
-        const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount
+        const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount + duplicateEncounters.length
         return { fixedCount, remainingIssues, remainingUnreachable }
       },
 
