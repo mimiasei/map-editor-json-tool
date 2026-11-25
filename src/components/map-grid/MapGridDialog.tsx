@@ -1404,8 +1404,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [sizeX, sizeZ, paintBiome, levelBrush, paintZone, applyEdit, spreadWaterOver, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
 
   // True while an elevation (Level or Ramp) stroke is down. The cliff pieces are heavy to draw and every pointer move changes the staged
-  // elevation, so the cliff layer is hidden for the stroke and drawn once when the button is released; the flat elevation shading shows
-  // the stroke meanwhile, whatever the shading setting is.
+  // elevation, so the cliff layer is left as it was (not redrawn) for the stroke and redrawn once when the button is released; the tiles being
+  // painted show the flat elevation shading meanwhile, whatever the shading setting is.
   const [elevationStroke, setElevationStroke] = useState(false)
   const stopLevelPainting = () => {
     setElevationStroke(false)
@@ -2963,7 +2963,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // category color underneath stays legible) but before the blocked-tile
     // pass below.
     if (settings.showElevationShading || elevationStroke) {
-      for (const [node, tint] of elevationTintMap) {
+      // Mid-stroke with shading off, only the tiles being painted get it; the rest of the map keeps its cliffs as they were.
+      const tinted = settings.showElevationShading
+        ? elevationTintMap.entries()
+        : [...paintLevelStaged.keys()].flatMap((node) => { const tint = elevationTintMap.get(node); return tint ? [[node, tint] as const] : [] })
+      for (const [node, tint] of tinted) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
         ctx.fillStyle = tint === 'lighter' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
@@ -2972,7 +2976,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, textureStrength,
-    settings.showElevationShading, elevationStroke, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
+    settings.showElevationShading, elevationStroke, paintLevelStaged, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
   ])
 
   // ── Road/river line-feature canvas — a SEPARATE, higher-internal-
@@ -5829,7 +5833,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <canvas
                   ref={setCliffCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
-                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming || elevationStroke ? 'hidden' : 'visible' }}
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX, visibility: wheelZooming ? 'hidden' : 'visible' }}
                 />
 
                 {/* Water surface — see waterCanvasEl above. After the cliff canvas, before the icon layer. */}
