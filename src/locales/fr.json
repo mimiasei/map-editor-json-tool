@@ -2628,13 +2628,9 @@
     "clearMap": {
       "title": "Vider la carte",
       "noMap": "Aucune carte n’est ouverte.",
-      "intro": "Vide toute la carte et conserve son nom et ses paramètres.",
-      "removes": "Supprimés : objets {{objects}} · escouades {{squads}} · marqueurs {{markers}}.",
-      "resets": "Le terrain, l’eau, le relief, les routes, les rivières et les zones des joueurs sont remis à zéro, comme sur une carte vierge.",
-      "keeps": "Le nom, la description, la taille et tous les paramètres de la carte sont conservés. Les quêtes et les dialogues restent, mais ceux qui pointent vers des objets supprimés apparaîtront dans Valider.",
-      "undo": "Cela modifie la carte en mémoire ; Ctrl+Z l’annule, et rien n’est écrit sur le disque avant l’enregistrement.",
-      "typeToConfirm": "Saisissez {{word}} pour confirmer",
-      "button": "Vider la carte"
+      "button": "Vider la carte",
+      "intro": "Vide toute la carte. Le nom et les paramètres restent. Ctrl+Z l’annule.",
+      "removes": "Supprimés : objets {{objects}} · escouades {{squads}} · marqueurs {{markers}}."
     }
   },
   "editors": {

@@ -2584,13 +2584,9 @@
     "clearMap": {
       "title": "Karte leeren",
       "noMap": "Es ist keine Karte geöffnet.",
-      "intro": "Leert die gesamte Karte und behält Namen und Einstellungen.",
-      "removes": "Entfernt: Objekte {{objects}} · Trupps {{squads}} · Markierungen {{markers}}.",
-      "resets": "Gelände, Wasser, Höhen, Straßen, Flüsse und Spielerbereiche werden wie bei einer leeren Karte zurückgesetzt.",
-      "keeps": "Name, Beschreibung, Größe und alle Karteneinstellungen bleiben erhalten. Quests und Dialoge bleiben, aber solche, die auf entfernte Objekte verweisen, erscheinen unter Prüfen.",
-      "undo": "Das ändert die Karte im Speicher; Strg+Z macht es rückgängig, und erst beim Speichern wird etwas auf die Festplatte geschrieben.",
-      "typeToConfirm": "Zur Bestätigung {{word}} eingeben",
-      "button": "Karte leeren"
+      "button": "Karte leeren",
+      "intro": "Leert die ganze Karte. Name und Einstellungen bleiben. Strg+Z macht es rückgängig.",
+      "removes": "Entfernt: Objekte {{objects}} · Trupps {{squads}} · Markierungen {{markers}}."
     }
   },
   "editors": {

@@ -2592,13 +2592,9 @@
     "clearMap": {
       "title": "Clear map",
       "noMap": "No map is open.",
-      "intro": "Empties the whole map and keeps its name and settings.",
-      "removes": "Removes: objects {{objects}} · squads {{squads}} · markers {{markers}}.",
-      "resets": "Terrain, water, elevation, roads, rivers and player areas are reset to a blank map.",
-      "keeps": "Name, description, size and every map setting stay. Quests and dialogs are kept, but those that point at removed objects will show up in Validate.",
-      "undo": "This changes the map in memory; Ctrl+Z undoes it, and nothing is written to disk until you save.",
-      "typeToConfirm": "Type {{word}} to confirm",
-      "button": "Clear map"
+      "button": "Clear map",
+      "intro": "Clears the whole map. The name and settings stay. Ctrl+Z undoes it.",
+      "removes": "Removes: objects {{objects}} · squads {{squads}} · markers {{markers}}."
     }
   },
   "editors": {
