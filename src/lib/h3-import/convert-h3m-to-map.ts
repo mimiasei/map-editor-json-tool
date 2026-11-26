@@ -59,7 +59,8 @@ import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJEC
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
 import { dedupeSid, generateDisplayNameSid } from '@/lib/slugify'
-import { mapNameSnakeCase } from '@/lib/zip-export'
+import { mapNameSnakeCase, mintCustomSid } from '@/lib/zip-export'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import { buildGlobalEventQuest, type GlobalEventQuest } from './global-events'
 import type { DialogFlow } from '@/types/dialog'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
@@ -208,6 +209,8 @@ export interface H3ImportResult {
    *  running standalone the way this project's own verification scripts
    *  already rely on. */
   localizationTokens: Record<string, string>
+  /** Map-local clones of real objects that ship in the publish zip (the subterranean gates, named "Subterranean Gate"); the caller registers them. */
+  customMapObjects: CustomMapObjectDefinition[]
   /** Dialog flows built for H3 global timed events (the "day 1" map-opening
    *  message, or similar) — see `localizationTokens`' own doc comment for
    *  why this can't be written into the map container directly; the
@@ -1090,11 +1093,6 @@ export async function convertH3mToMap(
   // flagging every underground object on every 2-layer map as stranded.
   await stage('reachability', 58)
   const portalLinks = linkH3Portals(h3Portals)
-  // Every subterranean gate shares one name token (propsName's nameTitle is a localization sid, as for city names), so they read "Subterranean Gate"
-  // instead of the generic portal name.
-  const gateIds = h3Portals.filter((p) => p.kind === 'gate').map((p) => p.id)
-  const gateNameSid = gateIds.length > 0 ? generateTownNameSid('Subterranean Gate') : ''
-  const gatePropsName = gateIds.map((id) => ({ type: 0, id, nameTitle: gateNameSid, tagTitle: '', description: '' }))
   for (const [a, b] of waterPortals.links) {
     portalLinks.propPortals.push({ type: 0, id: a, targetIdx: b, isActive: true }, { type: 0, id: b, targetIdx: a, isActive: true })
     portalLinks.adjacencyByObjectId.set(a, b)
@@ -1108,7 +1106,29 @@ export async function convertH3mToMap(
     undefined, undefined, sealIds, undefined, forbiddenNodes,
   )
 
-  const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
+  // The game takes an object's name from its sid (Core.zip's `portal_name` for every portal), so the subterranean gates ship as a map-local clone of
+  // `portal_5` with its own name, description and narrative (the custom map object mechanism: the clone's template goes into the publish zip). The
+  // gates stay `portal_5` until here so every pass above and the auto-fix after see a real catalog template. Every placed `portal_5` is a gate:
+  // monoliths use portal_1 to portal_3 and the shipyard portals portal_4.
+  const gateGroup = objectGroups.get('portal_5')
+  const gateSource = catalogById.get('portal_5')
+  const customMapObjects: CustomMapObjectDefinition[] = []
+  let gateSid: string | null = null
+  if (gateGroup && gateGroup.ids.length > 0 && gateSource) {
+    gateSid = mintCustomSid(mapName || title || '', 'subterranean_gate', catalog.mapObjects.map((o) => o.id))
+    localizationTokens[`${gateSid}_name`] = 'Subterranean Gate'
+    localizationTokens[`${gateSid}_description`] = 'Teleports the visiting hero to the gate on the other level.'
+    localizationTokens[`${gateSid}_narrativeDescription`] = 'A passage between the surface and the dark below.'
+    customMapObjects.push({
+      id: gateSid,
+      sourceObjectId: 'portal_5',
+      template: { ...gateSource.raw, id: gateSid, name: `${gateSid}_name`, description: `${gateSid}_description`, narrativeDescription: `${gateSid}_narrativeDescription` },
+      // Portals' logic is just `{id, goodsValue}` under objects_logic/portals (Core.zip), cloned into the same folder like every custom object.
+      logic: { id: gateSid, goodsValue: 0 },
+      logicSourcePath: 'portals',
+    })
+  }
+  const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid: sid === 'portal_5' && gateSid ? gateSid : sid, ...g }))
   const squads = Array.from(squadGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
 
   const decoder = new TextDecoder('utf-8')
@@ -1224,7 +1244,7 @@ export async function convertH3mToMap(
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propsName: [...(((templateB2.objectsProperties as Record<string, unknown> | undefined)?.propsName as unknown[] | undefined) ?? []), ...gatePropsName], propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
+      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
       propCitiesHold: cityHoldId === null ? [] : [{ type: 0, id: cityHoldId, isCityHold: true }],
       propPortals: portalLinks.propPortals,
     },
@@ -1296,6 +1316,7 @@ export async function convertH3mToMap(
       detailRows,
     },
     localizationTokens,
+    customMapObjects,
     dialogFlows,
     sealIds: [...sealIds],
     forbiddenNodes,

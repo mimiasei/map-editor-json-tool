@@ -80,13 +80,22 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report, localizationTokens, dialogFlows, sealIds, forbiddenNodes } = await convertH3mToMap(data, catalog, templateContainer, undefined, onProgress, file.name.replace(/.h3m$/i, ''))
+  const { container, report, localizationTokens, customMapObjects, dialogFlows, sealIds, forbiddenNodes } = await convertH3mToMap(data, catalog, templateContainer, undefined, onProgress, file.name.replace(/.h3m$/i, ''))
+  // The converter's custom map objects (the subterranean gates) are clones of real ones under a new sid the game's catalog does not list, so the
+  // passes below and the Map Grid get the catalog with those clones added: same footprint as the source, the clone's own name.
+  const importCatalog = customMapObjects.length === 0 ? catalog : {
+    ...catalog,
+    mapObjects: [...catalog.mapObjects, ...customMapObjects.flatMap((custom) => {
+      const source = catalog.mapObjects.find((o) => o.id === custom.sourceObjectId)
+      return source ? [{ ...source, id: custom.id, name: 'Subterranean Gate', raw: custom.template }] : []
+    })],
+  }
   // The cave rocks that close thin H3 walls stay (deleting or moving one opens a hole H3 does not have), and no elevation repaint: the
   // converter's levels are H3's rock and floor, and a lone rock tile is real H3 data (the spike fix would raise the floor tile it encloses).
   const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
   await stage('fixing', 78)
   const sealed = new Set(sealIds)
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, {
+  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, importCatalog, {
     mayChange: (entityType, id) => !(entityType === 0 && sealed.has(id)),
     fixElevation: false,
     forbiddenNodes,
@@ -94,8 +103,8 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
 
   await stage('validating', 90)
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
-  const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
-  const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, catalog)
+  const unreachablePlacements = findUnreachablePlacements(finalContext, importCatalog)
+  const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, importCatalog)
 
   const decoder = new TextDecoder('utf-8')
   const b1 = JSON.parse(decoder.decode(fixed.chunks[0])) as Record<string, unknown>
@@ -108,6 +117,7 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   const stem = file.name.replace(/\.h3m$/i, '')
   const name = `${stem}.map`
   await stage('loading', 96)
+  if (importCatalog !== catalog) useCatalogStore.setState({ catalog: importCatalog })
   await loadParsedMapFile(name, null, buffer)
   // A converted map has nowhere on disk yet — same reasoning as
   // create-map.ts's own createNewMap(): the dirty-dot/exit-guard must
@@ -121,6 +131,8 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   if (Object.keys(localizationTokens).length > 0) {
     useScenarioStore.getState().setLocalizationBatch(localizationTokens)
   }
+  // The custom map objects ship in the publish zip (zip-export.ts); loading the map above reset the scenario, so they are registered after it.
+  for (const custom of customMapObjects) useScenarioStore.getState().setCustomMapObject(custom.id, custom)
   // Same for dialog flows built from H3 global timed events (the "day 1"
   // map-opening message, etc.) — no bulk setter exists for these, so loop.
   for (const flow of Object.values(dialogFlows)) {
