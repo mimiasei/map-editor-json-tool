@@ -6557,6 +6557,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}
                   onSetHighlightedNode={setHighlightedNode}
+                  onJumpToPortal={selectSpawner}
                   onSetGuardSquad={canEditEntities ? handleSetGuardSquad : undefined}
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
                   onSetRandomSquadValue={canEditEntities ? handleSetRandomSquadValue : undefined}

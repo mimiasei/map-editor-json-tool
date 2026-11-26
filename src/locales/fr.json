@@ -1365,7 +1365,6 @@
       "unlink": "Délier",
       "active": "Actif",
       "anInactivePortalOnlyReceives": "Un portail inactif ne fait que recevoir : marcher dessus ne vous envoie nulle part (un « portail de sortie »).",
-      "highlightConnectedPortalOnGrid": "Surligner le portail relié sur la grille",
       "rewards": "Récompenses",
       "zone": "Zone",
       "zoneSize": "Taille",
@@ -1407,7 +1406,9 @@
       },
       "addUnit": "Ajouter une unité",
       "addSquad": "Ajouter un peloton",
-      "itemCountStacked": "{{count}} éléments · le haut de la liste est dessiné devant"
+      "itemCountStacked": "{{count}} éléments · le haut de la liste est dessiné devant",
+      "jumpToConnected": "Aller au portail relié",
+      "highlightPortal": "Surligner"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Paramètres de la Grille de carte",

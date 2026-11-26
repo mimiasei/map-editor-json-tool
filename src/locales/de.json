@@ -1336,7 +1336,6 @@
       "unlink": "Trennen",
       "active": "Aktiv",
       "anInactivePortalOnlyReceives": "Ein inaktives Portal empfängt nur — wer darauf tritt, wird nirgendwohin gebracht (ein „Ausgangsportal“).",
-      "highlightConnectedPortalOnGrid": "Verbundenes Portal im Raster hervorheben",
       "rewards": "Belohnungen",
       "zone": "Zone",
       "zoneSize": "Größe",
@@ -1376,7 +1375,9 @@
       },
       "addUnit": "Einheit hinzufügen",
       "addSquad": "Trupp hinzufügen",
-      "itemCountStacked": "{{count}} Einträge · der Listenanfang wird im Vordergrund gezeichnet"
+      "itemCountStacked": "{{count}} Einträge · der Listenanfang wird im Vordergrund gezeichnet",
+      "jumpToConnected": "Zum verbundenen Portal",
+      "highlightPortal": "Hervorheben"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Kartenraster-Einstellungen",

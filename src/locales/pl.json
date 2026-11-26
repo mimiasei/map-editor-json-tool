@@ -1394,7 +1394,6 @@
       "unlink": "Rozłącz",
       "active": "Aktywny",
       "anInactivePortalOnlyReceives": "Nieaktywny portal tylko przyjmuje — wejście na niego nigdzie nie przeniesie (to „portal wyjściowy”).",
-      "highlightConnectedPortalOnGrid": "Podświetl połączony portal na siatce",
       "rewards": "Nagrody",
       "zone": "Strefa",
       "zoneSize": "Rozmiar",
@@ -1438,7 +1437,9 @@
       },
       "addUnit": "Dodaj jednostkę",
       "addSquad": "Dodaj oddział",
-      "itemCountStacked": "{{count}} elementów · początek listy jest rysowany na wierzchu"
+      "itemCountStacked": "{{count}} elementów · początek listy jest rysowany na wierzchu",
+      "jumpToConnected": "Przejdź do połączonego",
+      "highlightPortal": "Podświetl"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Ustawienia siatki mapy",

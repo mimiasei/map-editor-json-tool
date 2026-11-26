@@ -1336,7 +1336,6 @@
       "unlink": "Koble fra",
       "active": "Aktiv",
       "anInactivePortalOnlyReceives": "En inaktiv portal bare mottar — å gå inn på den sender deg ikke noe sted (en «utgangsportal»).",
-      "highlightConnectedPortalOnGrid": "Fremhev tilkoblet portal i rutenettet",
       "rewards": "Belønninger",
       "zone": "Sone",
       "zoneSize": "Størrelse",
@@ -1376,7 +1375,9 @@
       },
       "addUnit": "Legg til enhet",
       "addSquad": "Legg til tropp",
-      "itemCountStacked": "{{count}} elementer · øverst i listen tegnes foran"
+      "itemCountStacked": "{{count}} elementer · øverst i listen tegnes foran",
+      "jumpToConnected": "Gå til tilkoblet",
+      "highlightPortal": "Fremhev"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Kartrutenett-innstillinger",

@@ -142,6 +142,8 @@ export interface MapGridCellContentProps {
   highlightedNode?: number | null
   /** Docked-only — the undocked mirror can't drive the main window's grid overlay. */
   onSetHighlightedNode?: (node: number | null) => void
+  /** Docked-only — pans and zooms the main grid to a portal (the connected one). */
+  onJumpToPortal?: (item: PlacedObject) => void
   /** Set a guard squad's units on a plain object (issue #143) — docked-only,
    *  like the above. Confirmed on interactables in real shipped maps; never
    *  observed on a mine specifically, though nothing in the schema prevents it. */
@@ -248,6 +250,7 @@ export default function MapGridCellContent({
   onUnlinkPortal,
   highlightedNode = null,
   onSetHighlightedNode,
+  onJumpToPortal,
   onSetGuardSquad,
   onSetCityGarrison,
   onSetRandomSquadValue,
@@ -1195,16 +1198,23 @@ export default function MapGridCellContent({
                 <p className="text-xs text-muted-foreground">{t(`mapGrid.mapGridCellContent.linkKind.${portalInfo.linkKind}.explanation`)}</p>
               </div>
 
-              {portalInfo.targetNode !== undefined && onSetHighlightedNode && (
-                <div className="flex items-center gap-2 pt-1">
-                  <Checkbox
-                    id="mgc-portal-highlight"
-                    checked={isHighlightingConnected}
-                    onCheckedChange={(c) => onSetHighlightedNode(c === true ? portalInfo.targetNode! : null)}
-                  />
-                  <Label htmlFor="mgc-portal-highlight" className="text-xs cursor-pointer">
-                    {t('mapGrid.mapGridCellContent.highlightConnectedPortalOnGrid')}
-                  </Label>
+              {connectedPortal && (onJumpToPortal || onSetHighlightedNode) && (
+                <div className="flex items-center gap-3 pt-1">
+                  {onJumpToPortal && (
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onJumpToPortal(connectedPortal)}>
+                      {t('mapGrid.mapGridCellContent.jumpToConnected')}
+                    </Button>
+                  )}
+                  {onSetHighlightedNode && (
+                    <div className="flex items-center gap-1.5">
+                      <Switch
+                        id="mgc-portal-highlight"
+                        checked={isHighlightingConnected}
+                        onCheckedChange={(c) => onSetHighlightedNode(c ? connectedPortal.node : null)}
+                      />
+                      <Label htmlFor="mgc-portal-highlight" className="text-xs cursor-pointer">{t('mapGrid.mapGridCellContent.highlightPortal')}</Label>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

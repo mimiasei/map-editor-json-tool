@@ -1394,7 +1394,6 @@
       "unlink": "Роз'єднати",
       "active": "Активний",
       "anInactivePortalOnlyReceives": "Неактивний портал лише приймає — ступивши на нього, нікуди не потрапите («портал виходу»).",
-      "highlightConnectedPortalOnGrid": "Підсвічувати з'єднаний портал на сітці",
       "rewards": "Нагороди",
       "zone": "Зона",
       "zoneSize": "Розмір",
@@ -1438,7 +1437,9 @@
       },
       "addUnit": "Додати бійця",
       "addSquad": "Додати загін",
-      "itemCountStacked": "Предметів: {{count}} · верхній малюється спереду"
+      "itemCountStacked": "Предметів: {{count}} · верхній малюється спереду",
+      "jumpToConnected": "До з'єднаного",
+      "highlightPortal": "Підсвітити"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Параметри Сітки мапи",

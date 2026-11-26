@@ -1394,7 +1394,6 @@
       "unlink": "Разорвать связь",
       "active": "Активен",
       "anInactivePortalOnlyReceives": "Неактивный портал только принимает — ступив на него, вы никуда не попадёте («портал-выход»).",
-      "highlightConnectedPortalOnGrid": "Подсветить соединённый портал на сетке",
       "rewards": "Награды",
       "zone": "Зона",
       "zoneSize": "Размер",
@@ -1438,7 +1437,9 @@
       },
       "addUnit": "Добавить существо",
       "addSquad": "Добавить отряд",
-      "itemCountStacked": "Элементов: {{count}} · верх списка рисуется спереди"
+      "itemCountStacked": "Элементов: {{count}} · верх списка рисуется спереди",
+      "jumpToConnected": "К соединённому",
+      "highlightPortal": "Подсветить"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Настройки сетки карты",

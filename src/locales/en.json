@@ -1344,7 +1344,6 @@
       "unlink": "Unlink",
       "active": "Active",
       "anInactivePortalOnlyReceives": "An inactive portal only receives — stepping on it won't send you anywhere (an \"exit portal\").",
-      "highlightConnectedPortalOnGrid": "Highlight connected portal on grid",
       "rewards": "Rewards",
       "zone": "Zone",
       "zoneSize": "Size",
@@ -1384,7 +1383,9 @@
       },
       "addUnit": "Add unit",
       "addSquad": "Add squad",
-      "itemCountStacked": "{{count}} items · top of the list is drawn in front"
+      "itemCountStacked": "{{count}} items · top of the list is drawn in front",
+      "jumpToConnected": "Jump to connected",
+      "highlightPortal": "Highlight"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Map Grid settings",
