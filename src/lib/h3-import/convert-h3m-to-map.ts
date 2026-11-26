@@ -1090,6 +1090,11 @@ export async function convertH3mToMap(
   // flagging every underground object on every 2-layer map as stranded.
   await stage('reachability', 58)
   const portalLinks = linkH3Portals(h3Portals)
+  // Every subterranean gate shares one name token (propsName's nameTitle is a localization sid, as for city names), so they read "Subterranean Gate"
+  // instead of the generic portal name.
+  const gateIds = h3Portals.filter((p) => p.kind === 'gate').map((p) => p.id)
+  const gateNameSid = gateIds.length > 0 ? generateTownNameSid('Subterranean Gate') : ''
+  const gatePropsName = gateIds.map((id) => ({ type: 0, id, nameTitle: gateNameSid, tagTitle: '', description: '' }))
   for (const [a, b] of waterPortals.links) {
     portalLinks.propPortals.push({ type: 0, id: a, targetIdx: b, isActive: true }, { type: 0, id: b, targetIdx: a, isActive: true })
     portalLinks.adjacencyByObjectId.set(a, b)
@@ -1219,7 +1224,7 @@ export async function convertH3mToMap(
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
+      propCities, propsName: [...(((templateB2.objectsProperties as Record<string, unknown> | undefined)?.propsName as unknown[] | undefined) ?? []), ...gatePropsName], propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
       propCitiesHold: cityHoldId === null ? [] : [{ type: 0, id: cityHoldId, isCityHold: true }],
       propPortals: portalLinks.propPortals,
     },
