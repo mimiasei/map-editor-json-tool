@@ -87,6 +87,10 @@ export function buildGlobalEventQuest(event: H3mGlobalTimedEvent, existingSids: 
 
   const dialogTextSid = message ? generateDisplayNameSid(message, existingSids, 'dialog_text_sid') : ''
   if (dialogTextSid) localizationTokens[dialogTextSid] = message
+  // Quest and sub-quest names are localization token ids too, never the text itself (the validator flags the raw text as a missing token).
+  const nameText = event.name.trim() || 'H3 event'
+  const nameSid = generateDisplayNameSid(nameText, [...existingSids, dialogTextSid])
+  localizationTokens[nameSid] = nameText
 
   const dialogFlow: DialogFlow = {
     id: dialogId,
@@ -99,14 +103,14 @@ export function buildGlobalEventQuest(event: H3mGlobalTimedEvent, existingSids: 
     comment: `H3 import: global timed event "${event.name}" (day ${event.triggerDay})`,
     main: false,
     hidden: true,
-    name: event.name || 'H3 event',
+    name: nameSid,
     desc: '',
     sharing: 'Clone',
     subQuests: [{
       sid: `${questSid}_sub`,
       activeOnStart: true,
       hidden: true,
-      name: event.name || 'H3 event',
+      name: nameSid,
       desc: '',
       comment: '',
       triggers: [{
