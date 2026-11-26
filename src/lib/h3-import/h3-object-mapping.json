@@ -97,8 +97,8 @@
     {
       "h3Id": 14,
       "h3Name": "Swan Pond",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_14"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 15,
@@ -1204,8 +1204,8 @@
     {
       "h3Id": 121,
       "h3Name": "Frozen Lake",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_121"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 122,
@@ -1414,8 +1414,8 @@
     {
       "h3Id": 154,
       "h3Name": "Wasteland Lake",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_154"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 155,
@@ -1558,8 +1558,8 @@
     {
       "h3Id": 177,
       "h3Name": "Lake",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_177"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 178,
@@ -2059,8 +2059,8 @@
     {
       "h3Id": 228,
       "h3Name": "Lucid Pools",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_228"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 229,

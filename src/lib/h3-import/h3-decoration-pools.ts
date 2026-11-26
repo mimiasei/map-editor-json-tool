@@ -42,6 +42,11 @@ export interface H3DecorationPicker {
   walkableBiomeOf(baseSid: string): BiomeId | null
   /** Walkable ground cover (grass tufts, flowers, mushrooms) for `biome`, with the same biome mixing as the rest. */
   pickWalkable(biome: BiomeId, rng: () => number): string
+  /** The catalog biome of any decoration sid, or null. */
+  biomeIdOf(sid: string): BiomeId | null
+  hasTrees(biome: BiomeId): boolean
+  /** A small bush-like plant for `biome` (OE has no bush model: stumps, logs, thorns, pumpkins, strange plants), or null when it has none. */
+  pickBush(biome: BiomeId, rng: () => number): string | null
 }
 
 const BIOME_ID_BY_CATALOG_NAME = new Map<string, BiomeId>(
@@ -67,11 +72,13 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
   const walkables = new Map<BiomeId, string[]>(Object.entries(walkMixed.pools).map(([key, pool]) => [Number(key) as BiomeId, pool.obstacles]))
 
   const trees = new Map<BiomeId, string[]>()
+  const bushes = new Map<BiomeId, string[]>()
   interface Piece { sid: string; weight: number }
   const mountains = new Map<BiomeId, Map<number, Piece[]>>()
   for (const [key, pool] of Object.entries(mixed.pools)) {
     const biome = Number(key) as BiomeId
     trees.set(biome, pool.obstacles.filter((sid) => isTreeDecoration(sid) && squareSize(byId.get(sid) as CatalogMapObject) === 1))
+    bushes.set(biome, pool.obstacles.filter((sid) => !isTreeDecoration(sid) && /stump|log_|thorn|pumpkin|strange|tropical|plants/.test(sid) && squareSize(byId.get(sid) as CatalogMapObject) === 1))
     const bySize = new Map<number, Piece[]>()
     const add = (sid: string, weight: number) => {
       const size = squareSize(byId.get(sid) as CatalogMapObject)
@@ -90,6 +97,17 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
       if (biome === undefined) return null
       if (role === 'tree') return isTreeDecoration(baseSid) && (trees.get(biome)?.length ?? 0) > 0 ? biome : null
       return baseSid.startsWith('mountain_') && (mountains.get(biome)?.get(1)?.length ?? 0) > 0 ? biome : null
+    },
+    biomeIdOf(sid) {
+      const biome = byId.get(sid)?.biome
+      return biome ? (BIOME_ID_BY_CATALOG_NAME.get(biome) ?? null) : null
+    },
+    hasTrees(biome) {
+      return (trees.get(biome)?.length ?? 0) > 0
+    },
+    pickBush(biome, rng) {
+      const list = bushes.get(biome) ?? []
+      return list.length > 0 ? list[Math.floor(rng() * list.length)] : null
     },
     walkableBiomeOf(baseSid) {
       const obj = byId.get(baseSid)

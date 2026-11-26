@@ -635,7 +635,13 @@ export async function convertH3mToMap(
         // water_decoration): unchanged single-object-at-anchor placement, but
         // still randomly rotated — the "always randomize decorative rotation"
         // hard rule applies to every decorative placement, not just clusters.
-        const variantSid = pickVariant(resolution.sid, families, rng)
+        // H3 has small and large pools: eight or more blocked tiles make a large one, whatever size the table's row names.
+        let baseSid = resolution.sid
+        if (resolution.role === 'pool' || resolution.role === 'pool_big') {
+          const poolBiome = H3_TERRAIN_BIOME[h3Terrain] ?? 'grass'
+          baseSid = BIOME_ROLE_REPLACEMENTS[blockMaskOffsets(record.templateBlockMask).length >= 8 ? 'pool_big' : 'pool'][poolBiome]
+        }
+        const variantSid = pickVariant(baseSid, families, rng)
         const placed = placeScenery(variantSid, node, null)
         sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
         sceneryPlaced += placed
@@ -936,6 +942,104 @@ export async function convertH3mToMap(
     sceneryVariantCounts['mountain (merged ranges)'] = (sceneryVariantCounts['mountain (merged ranges)'] ?? 0) + placed
     sceneryPlaced += placed
   }
+
+  // ── Last two decoration passes (they need every object and the mountains in place) ──
+  // Tiles an object stands on (or, for a walk-onto placeholder, its own tile): nothing is added there.
+  const occupiedTiles = new Set<number>()
+  for (const [sid, group] of objectGroups) {
+    const template = catalogById.get(sid)
+    for (let i = 0; i < group.nodes.length; i++) {
+      occupiedTiles.add(group.nodes[i])
+      if (!template || NON_BLOCKING_SPAWNER_SIDS.has(sid)) continue
+      for (const c of computeFootprintTiles(template, group.nodes[i] % atlas.atlasWidth, Math.floor(group.nodes[i] / atlas.atlasWidth), group.rotations[i])) {
+        if (c.value >= 1 && c.x >= 0 && c.z >= 0 && c.x < atlas.atlasWidth && c.z < atlas.atlasHeight) occupiedTiles.add(c.z * atlas.atlasWidth + c.x)
+      }
+    }
+  }
+  const oeBiomeOfNode = (node: number): keyof typeof BIOME_ROLE_REPLACEMENTS.ground | null => {
+    const nx = node % atlas.atlasWidth
+    const nz = Math.floor(node / atlas.atlasWidth)
+    for (const [layerKey, spec] of Object.entries(atlas.layers)) {
+      const x = nx - spec.offsetX
+      const y = size - 1 - (nz - spec.offsetY)
+      if (x < 0 || y < 0 || x >= size || y >= size) continue
+      const terrain = parsed.layers[Number(layerKey)]?.[y * size + x]?.terrain
+      return terrain === undefined || terrain === 8 || terrain === 9 ? null : (H3_TERRAIN_BIOME[terrain] ?? null)
+    }
+    return null
+  }
+  /** Open ground a decoration can be added on: H3 floor, dry, level 0, no road or river, nothing standing there. */
+  const isOpenGround = (node: number): boolean =>
+    floorNodes.has(node) && out.waterMap[node] === 0 && out.levelsMap[node] === 0 && out.roadsMap[node] === 0
+    && !out.riverNodes.has(node) && !rockNodes.has(node) && !occupiedTiles.has(node)
+  const walkableAt = (node: number): string | null => {
+    const oe = oeBiomeOfNode(node)
+    const biome = oe ? decorationPicker.walkableBiomeOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+    return biome === null ? null : decorationPicker.pickWalkable(biome, rng)
+  }
+
+  // In front of a mountain (the tiles with the lower tile number, toward the bottom of the map) a bare tile looks odd: a mountain or a range
+  // with nothing near it stands out. Where the tiles in front of a range are empty, add a tree, a bush or a walkable at random: each tile
+  // gets one with this chance, and every range gets at least one where there is room.
+  const MOUNTAIN_FRONT_CHANCE = 0.5
+  const mountainCells = new Set<number>()
+  for (const [sid, group] of objectGroups) {
+    const template = catalogById.get(sid)
+    if (!sid.startsWith('mountain_') || !template) continue
+    for (let i = 0; i < group.ids.length; i++) {
+      if (!decorativeIds.has(group.ids[i])) continue
+      for (const c of computeFootprintTiles(template, group.nodes[i] % atlas.atlasWidth, Math.floor(group.nodes[i] / atlas.atlasWidth), group.rotations[i])) {
+        if (c.value === 1) mountainCells.add(c.z * atlas.atlasWidth + c.x)
+      }
+    }
+  }
+  let frontPlaced = 0
+  const rangeSeen = new Set<number>()
+  for (const start of mountainCells) {
+    if (rangeSeen.has(start)) continue
+    const range: number[] = []
+    const queue = [start]
+    rangeSeen.add(start)
+    while (queue.length > 0) {
+      const n = queue.pop() as number
+      range.push(n)
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+        const m = n + dz * atlas.atlasWidth + dx
+        if (!rangeSeen.has(m) && mountainCells.has(m) && Math.abs((m % atlas.atlasWidth) - (n % atlas.atlasWidth)) <= 1) { rangeSeen.add(m); queue.push(m) }
+      }
+    }
+    const fronts = [...new Set(range.map((n) => n - atlas.atlasWidth))].filter((n) => n >= 0 && !mountainCells.has(n) && isOpenGround(n))
+    if (fronts.length === 0) continue
+    const chosen = fronts.filter(() => rng() < MOUNTAIN_FRONT_CHANCE)
+    if (chosen.length === 0) chosen.push(fronts[Math.floor(rng() * fronts.length)])
+    for (const node of chosen) {
+      if (!isOpenGround(node)) continue
+      const oe = oeBiomeOfNode(node)
+      const biome = oe ? decorationPicker.biomeIdOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+      const kind = Math.floor(rng() * 3)
+      let sid: string | null = null
+      if (biome !== null && kind === 0 && decorationPicker.hasTrees(biome) && !entranceAvoid.has(node)) sid = decorationPicker.pickTree(biome, rng)
+      else if (biome !== null && kind === 1 && !entranceAvoid.has(node)) sid = decorationPicker.pickBush(biome, rng)
+      sid ??= walkableAt(node)
+      if (sid === null) continue
+      const placed = placeScenery(sid, node, null)
+      if (placed > 0) { occupiedTiles.add(node); frontPlaced += placed }
+    }
+  }
+  sceneryVariantCounts['mountain fronts'] = frontPlaced
+  sceneryPlaced += frontPlaced
+
+  // The last pass: more walkable decoration. Every open tile gets a random walkable of its biome with this chance.
+  const WALKABLE_FILL_CHANCE = 0.33
+  let fillPlaced = 0
+  for (const node of floorNodes) {
+    if (!isOpenGround(node) || rng() >= WALKABLE_FILL_CHANCE) continue
+    const sid = walkableAt(node)
+    if (sid === null) continue
+    fillPlaced += placeScenery(sid, node, null)
+  }
+  sceneryVariantCounts['walkable fill'] = fillPlaced
+  sceneryPlaced += fillPlaced
 
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint
