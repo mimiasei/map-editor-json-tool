@@ -23,7 +23,7 @@
 // those are always converted rather than silently dropped).
 
 import type { H3mGlobalTimedEvent } from './h3m-global-events'
-import { generateDisplayNameSid } from '@/lib/slugify'
+import { dedupeSid } from '@/lib/slugify'
 import type { DialogFlow } from '@/types/dialog'
 
 interface QuestCondition { comment: string; p: string[]; counter: number; c: string }
@@ -65,14 +65,16 @@ export interface GlobalEventConversion {
 
 /** `null` when there's nothing to show or give (no message, no resources) —
  *  or when SoD+ data positively confirms the human player isn't affected. */
-export function buildGlobalEventQuest(event: H3mGlobalTimedEvent, existingSids: string[]): GlobalEventConversion | null {
+/** `idPrefix` is the map name in snake case plus `_`: quest, dialog and text ids are shared by every map and zip in the game, so a repeated id
+ *  overwrites another map's (CLAUDE.md, "Zip files in StreamingAssets"). */
+export function buildGlobalEventQuest(event: H3mGlobalTimedEvent, existingSids: string[], idPrefix: string): GlobalEventConversion | null {
   if (event.humanAffected === 0) return null
   const message = event.message.trim()
   const hasResources = event.resources.some((amount) => amount !== 0)
   if (!message && !hasResources) return null
 
-  const questSid = `global_event_${event.index}`
-  const dialogId = `global_event_${event.index}_dialog`
+  const questSid = `${idPrefix}global_event_${event.index}`
+  const dialogId = `${questSid}_dialog`
   const localizationTokens: Record<string, string> = {}
 
   const actions: QuestAction[] = []
@@ -85,11 +87,11 @@ export function buildGlobalEventQuest(event: H3mGlobalTimedEvent, existingSids: 
   })
   actions.push({ comment: '', p: [], a: 'CurrentSubQuestDone' })
 
-  const dialogTextSid = message ? generateDisplayNameSid(message, existingSids, 'dialog_text_sid') : ''
+  const dialogTextSid = message ? dedupeSid(`${questSid}_text_sid`, existingSids) : ''
   if (dialogTextSid) localizationTokens[dialogTextSid] = message
   // Quest and sub-quest names are localization token ids too, never the text itself (the validator flags the raw text as a missing token).
   const nameText = event.name.trim() || 'H3 event'
-  const nameSid = generateDisplayNameSid(nameText, [...existingSids, dialogTextSid])
+  const nameSid = dedupeSid(`${questSid}_name_sid`, [...existingSids, dialogTextSid])
   localizationTokens[nameSid] = nameText
 
   const dialogFlow: DialogFlow = {

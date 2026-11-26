@@ -59,7 +59,8 @@ import { createH3DecorationPicker } from './h3-decoration-pools'
 import { resolveObjectSid, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD } from './h3m-object-registry'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
-import { generateDisplayNameSid } from '@/lib/slugify'
+import { dedupeSid, generateDisplayNameSid } from '@/lib/slugify'
+import { mapNameSnakeCase } from '@/lib/zip-export'
 import { buildGlobalEventQuest, type GlobalEventQuest } from './global-events'
 import type { DialogFlow } from '@/types/dialog'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
@@ -262,6 +263,8 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  reproducible. */
 export async function convertH3mToMap(
   data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number, onProgress?: H3ImportProgress,
+  /** The name the map will have in the editor (the .h3m file name): prefixes every dialog and text id the import writes. */
+  mapName?: string,
 ): Promise<H3ImportResult> {
   const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
   await stage('readingMap', 0)
@@ -458,8 +461,9 @@ export async function convertH3mToMap(
   // shape doc comment for why this stays out of this pure function).
   const generatedNameSids: string[] = []
   const localizationTokens: Record<string, string> = {}
+  const idPrefix = `${mapNameSnakeCase(mapName || title || '')}_`
   const generateTownNameSid = (name: string): string => {
-    const sid = generateDisplayNameSid(name, generatedNameSids)
+    const sid = dedupeSid(idPrefix + generateDisplayNameSid(name, []), generatedNameSids)
     generatedNameSids.push(sid)
     localizationTokens[sid] = name
     return sid
@@ -749,7 +753,7 @@ export async function convertH3mToMap(
   const globalEventQuests: GlobalEventQuest[] = []
   const dialogFlows: Record<string, DialogFlow> = {}
   for (const event of parsed.globalTimedEvents) {
-    const conversion = buildGlobalEventQuest(event, generatedNameSids)
+    const conversion = buildGlobalEventQuest(event, generatedNameSids, idPrefix)
     if (!conversion) continue
     globalEventQuests.push(conversion.quest)
     dialogFlows[conversion.dialogFlow.id] = conversion.dialogFlow
