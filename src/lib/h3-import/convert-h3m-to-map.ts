@@ -50,6 +50,8 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyRockSkirt, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
+import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
+import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
 import { generateDisplayNameSid } from '@/lib/slugify'
@@ -115,6 +117,8 @@ export interface H3ImportReport {
   /** Portal instances placed alone, with no same-sid sibling to link to —
    *  left unlinked, likely inert in-game; a real, disclosed gap. */
   portalsUnpaired: number
+  /** Objects whose entrance could not be put on the H3 entrance tile without standing on rock; they were placed at the H3 anchor instead. */
+  anchorFallbacks: number
   /** Post-placement reachability pass (`accessibility-pass.ts`): placed
    *  instances that must be walkable-to (pickable items/resources,
    *  interactable entrances, player starts) that this importer's own object
@@ -211,6 +215,7 @@ export interface H3ImportResult {
 interface TownEntry {
   index: number
   node: number
+  visit?: VisitCell
   /** The direct stock city sid `resolveObjectSid` chose (e.g. `human_city`,
    *  or `random-city` for an unmapped H3 subtype) — used only for the
    *  neutral/unowned outcome; a player-owned town always becomes
@@ -229,6 +234,7 @@ interface TownEntry {
 interface HeroEntry {
   index: number
   node: number
+  visit?: VisitCell
 }
 
 /** Human-readable label for a `detailRows` group's `note`, by `ObjectKind` —
@@ -262,6 +268,14 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     for (const node of skirt.floorNodes) floorNodes.add(node)
     sealNodes.push(...skirt.sealNodes)
   }
+  const rockNodes = new Set<number>()
+  for (let layer = 0; layer < layerCount; layer++) {
+    const tiles = parsed.layers[layer]
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i].terrain === H3_UNDERGROUND_ROCK_TERRAIN_ID) rockNodes.add(atlas.targetNode(layer, i % size, Math.floor(i / size)))
+    }
+  }
+  let anchorFallbacks = 0
   // The elevated/unclimbable Dirt "wall" for the sector-alignment margin
   // around the real source rectangle is painted at the very end of this
   // function (`paintEnvelopePadding`), not here — every object placed via
@@ -290,8 +304,15 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
 
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
   let nextId = 0
-  const placeObject = (sid: string, node: number, rotation = 0): number => {
-    const clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
+  const placeObject = (sid: string, node: number, rotation = 0, visit?: VisitCell): number => {
+    let clampedNode: number
+    if (visit) {
+      const anchored = anchorByVisitCell(sid, node, visit, { atlas, catalogById, waterMap: out.waterMap, rockNodes })
+      if (anchored.fallback) anchorFallbacks += 1
+      clampedNode = anchored.node
+    } else {
+      clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
+    }
     let group = objectGroups.get(sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(sid, group) }
     const id = nextId
@@ -444,7 +465,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       const node = atlas.targetNode(record.layer, record.x, record.y)
       const index = heroCandidates.length
       heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
-      heroEntries.push({ index, node })
+      heroEntries.push({ index, node, visit: visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas) })
       const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending hero start resolution' }
       detailInstances.push(heroDetail)
       heroDetailByIndex.push(heroDetail)
@@ -459,6 +480,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     }
 
     const node = atlas.targetNode(record.layer, record.x, record.y)
+    const visit = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
 
     if (resolution.kind === 'scenery') {
       // Trees and mountains: H3's own multi-cell footprint often represents
@@ -578,7 +600,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       const index = cityCandidates.length
       cityCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
       townEntries.push({
-        index, node, sid: resolution.sid,
+        index, node, visit, sid: resolution.sid,
         factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
         customCityName: typeof record.name === 'string' && record.name.trim() ? generateTownNameSid(record.name.trim()) : '',
       })
@@ -599,11 +621,11 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // (real H3 random-artifact-class ids 65-69, or no equivalent found).
       const equivSid = oid === OBJECT_ARTIFACT ? h3ArtifactEquivalent(subId) : null
       if (equivSid) {
-        placeObject(equivSid, node)
+        placeObject(equivSid, node, 0, visit)
         objectsPlaced += 1
         detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: equivSid, note: 'Specific artifact' })
       } else {
-        const objectId = placeObject(resolution.sid, node)
+        const objectId = placeObject(resolution.sid, node, 0, visit)
         objectsPlaced += 1
         // Real H3 random-artifact-class ids (65-69) carry genuine rarity
         // info; a specific named H3 artifact with no sourced equivalent
@@ -617,7 +639,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       continue
     }
 
-    placeObject(resolution.sid, node)
+    placeObject(resolution.sid, node, 0, visit)
     objectsPlaced += 1
     detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
   }
@@ -667,7 +689,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // than `random-city` — CLAUDE.md confirms city-spawner is fine
       // starting unconfigured, unlike random-city (which needs a real
       // faction to function and has no Block 1 spawn involvement at all).
-      const objectId = placeObject('city-spawner', town.node)
+      const objectId = placeObject('city-spawner', town.node, 0, town.visit)
       objectsPlaced += 1
       const spawnType = ownership.spawnTypeByFinalOwner.get(finalOwner) ?? 1
       const isDefined = !town.freeChoice
@@ -717,7 +739,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     } else {
       // Neutral/unowned: unchanged from before this fix — a real,
       // capturable town building, not a player start.
-      const objectId = placeObject(town.sid, town.node)
+      const objectId = placeObject(town.sid, town.node, 0, town.visit)
       objectsPlaced += 1
       propCities.push({
         type: 0, id: objectId, isDefined: !town.freeChoice, factionSid: town.factionSid,
@@ -738,7 +760,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       heroDetailByIndex[hero.index].note = 'Not carried over (player start already covered by a town)'
       continue
     }
-    const objectId = placeObject('hero-spawner', hero.node)
+    const objectId = placeObject('hero-spawner', hero.node, 0, hero.visit)
     objectsPlaced += 1
     heroOnlyPlayers += 1
     const heroDetail = heroDetailByIndex[hero.index]
@@ -926,6 +948,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, sourceObjectCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
       outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
+      anchorFallbacks,
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
       accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
