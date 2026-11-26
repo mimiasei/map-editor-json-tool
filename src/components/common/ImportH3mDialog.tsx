@@ -80,6 +80,7 @@ function buildReportText(result: ImportH3mResult): string {
   lines.push(`River tiles: ${report.riverTilesConverted}`)
   lines.push(`Victory quest: ${report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}`)
   lines.push(`Portals linked: ${report.portalsLinked}`)
+  if (report.anchorFallbacks > 0) lines.push(`Objects placed at the H3 anchor because their entrance could not be put on the H3 entrance tile without standing on rock: ${report.anchorFallbacks}`)
   if (report.shipyardsFound > 0) lines.push(`Shipyards: ${report.shipyardsFound} (portals placed: ${report.shipyardPortals}, islands joined: ${report.shipyardIslands})`)
   lines.push(`Accessibility fixes: ${report.accessibilityDecorRemoved} removed, ${report.accessibilityTargetsNudged} nudged`)
   lines.push(`Ground-truth floor fixes: ${report.groundTruthDecorRemoved} removed (of ${report.groundTruthTilesChecked} floor tiles checked against the source map's own passability)`)
