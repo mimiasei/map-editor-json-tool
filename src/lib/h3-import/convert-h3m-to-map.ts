@@ -55,7 +55,8 @@ import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
+import { createH3DecorationPicker } from './h3-decoration-pools'
+import { resolveObjectSid, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD } from './h3m-object-registry'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
 import { generateDisplayNameSid } from '@/lib/slugify'
@@ -63,7 +64,7 @@ import { buildGlobalEventQuest, type GlobalEventQuest } from './global-events'
 import type { DialogFlow } from '@/types/dialog'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
-  footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
+  footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster, pickTreeClusterVaried, packMountainClusterVaried,
   buildOakTreePool, mountainBigSid, randomDecorRotation,
 } from './scenery-clusters'
 import { assignOwnership, type CityCandidate, type HeroCandidate } from './ownership'
@@ -304,6 +305,7 @@ export async function convertH3mToMap(
 
   await stage('terrain', 8)
   const families = buildVariantFamilies(catalog.mapObjects)
+  const decorationPicker = createH3DecorationPicker(catalog)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
   // guard if it appears in at least one real squad template — real-data
@@ -561,12 +563,24 @@ export async function convertH3mToMap(
         if (resolution.role === 'tree' || resolution.role === 'mountain') {
           const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
           clusterCellsClipped += clippedCount
-          const placements = resolution.role === 'tree'
-            ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
-                oid === H3_OAK_TREES_OBJECT_ID
-                  ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
-                  : undefined)
-            : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
+          // Each cell takes its biome from its own H3 tile (the table's sid for that tile, then that sid's catalog biome), so a grove that
+          // crosses a biome border changes at the border. Oak Trees keep their fixed Grass+Dirt mix.
+          const role = resolution.role
+          const anchorBiome = decorationPicker.biomeOf(resolution.sid, role)
+          const layerTilesHere = parsed.layers[record.layer]
+          const biomeAt = (cell: { x: number; z: number }) => {
+            const terrain = layerTilesHere?.[cell.z * size + cell.x]?.terrain
+            const h3Biome = terrain !== undefined && terrain !== 8 && terrain !== 9 ? H3_TERRAIN_BIOME[terrain] : undefined
+            return (h3Biome ? decorationPicker.biomeOf(BIOME_ROLE_REPLACEMENTS[role][h3Biome], role) : null) ?? (anchorBiome as NonNullable<typeof anchorBiome>)
+          }
+          const placements = anchorBiome !== null && !(role === 'tree' && oid === H3_OAK_TREES_OBJECT_ID)
+            ? (role === 'tree' ? pickTreeClusterVaried(cells, biomeAt, decorationPicker, rng) : packMountainClusterVaried(cells, biomeAt, decorationPicker, rng))
+            : role === 'tree'
+              ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
+                  oid === H3_OAK_TREES_OBJECT_ID
+                    ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
+                    : undefined)
+              : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
           let placed = 0
           for (const p of placements) {
             const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)

@@ -28,6 +28,8 @@
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { blockMaskOffsets } from './h3m-object-registry'
 import { pickVariant } from './scenery-variants'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import type { H3DecorationPicker } from './h3-decoration-pools'
 
 /** One of the 4 base OE rotation quadrants (0/90/180/270°) — deliberately
  *  never a mirrored (+10) variant, a distinct visual flip this feature
@@ -155,6 +157,49 @@ export function packMountainCluster(
     }
     claimed.add(key)
     placements.push({ sid: pickVariant(smallSid, families, rng), anchor: cell })
+  }
+  return placements
+}
+
+/** Like `pickTreeClusterPlacements`, but each cell draws from the whole tree set of its own biome (h3-decoration-pools.ts), and a cell
+ *  never repeats the tree before it. One tree per H3 blocked cell, so what blocks is exactly what H3 blocked. */
+export function pickTreeClusterVaried(
+  cells: FootprintCell[], biomeAt: (cell: FootprintCell) => BiomeId, picker: H3DecorationPicker, rng: () => number,
+): ClusterPlacement[] {
+  let last: string | undefined
+  return cells.map((cell) => {
+    const sid = picker.pickTree(biomeAt(cell), rng, last)
+    last = sid
+    return { sid, anchor: cell }
+  })
+}
+
+/** Like `packMountainCluster`, but fills the footprint with every square size the biome has (3x3, 2x2, 1x1), biggest first with a random
+ *  skip so no two ranges are packed alike, and picks the model from the whole mountain set of the cell's biome. A 3x3 stands on its centre
+ *  cell, a 2x2 on its corner cell (the catalog pivots, see h3-decoration-pools.ts). */
+export function packMountainClusterVaried(
+  cells: FootprintCell[], biomeAt: (cell: FootprintCell) => BiomeId, picker: H3DecorationPicker, rng: () => number,
+): ClusterPlacement[] {
+  const occupied = new Set(cells.map((c) => `${c.x},${c.z}`))
+  const claimed = new Set<string>()
+  const placements: ClusterPlacement[] = []
+  for (const cell of [...cells].sort((a, b) => (a.z - b.z) || (a.x - b.x))) {
+    if (claimed.has(`${cell.x},${cell.z}`)) continue
+    const biome = biomeAt(cell)
+    let placed = false
+    for (const size of picker.mountainSizes(biome)) {
+      if (size === 1 || rng() >= (size === 3 ? 0.4 : 0.5)) continue
+      const block: string[] = []
+      for (let dz = 0; dz < size; dz++) for (let dx = 0; dx < size; dx++) block.push(`${cell.x + dx},${cell.z + dz}`)
+      if (!block.every((k) => occupied.has(k) && !claimed.has(k))) continue
+      for (const k of block) claimed.add(k)
+      placements.push({ sid: picker.pickMountain(biome, size, rng), anchor: size === 3 ? { x: cell.x + 1, z: cell.z + 1 } : cell })
+      placed = true
+      break
+    }
+    if (placed) continue
+    claimed.add(`${cell.x},${cell.z}`)
+    placements.push({ sid: picker.pickMountain(biome, 1, rng), anchor: cell })
   }
   return placements
 }
