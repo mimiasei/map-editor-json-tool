@@ -67,12 +67,15 @@ export interface PlacementAutoFixOptions {
   mayChange?: (entityType: number, id: number) => boolean
   /** Whether the elevation spike fix may repaint levels. Default true. */
   fixElevation?: boolean
+  /** Tiles nothing may be moved onto (the H3 import: rock and the border, where a footprint can lie on one level yet be sealed inside a mountain). */
+  forbiddenNodes?: Set<number>
 }
 
 export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null, options: PlacementAutoFixOptions = {}): PlacementAutoFixResult {
   const may = options.mayChange ?? (() => true)
+  const readContext = (c: MapContainer) => ({ ...extractMapContext(containerToRawBlocks(c)), forbiddenNodes: options.forbiddenNodes })
   let fixed = container
-  const boundsCtx = extractMapContext(containerToRawBlocks(fixed))
+  const boundsCtx = readContext(fixed)
   const bounds = computeBoundsAutoFix(boundsCtx, catalog)
   const boundsFixes = bounds.fixes.filter((fix) => may(0, fix.id))
   for (const fix of boundsFixes) {
@@ -81,7 +84,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
 
   let entranceFixCount = 0
   for (let pass = 0; pass < MAX_ENTRANCE_AUTOFIX_PASSES; pass++) {
-    const entranceCtx = extractMapContext(containerToRawBlocks(fixed))
+    const entranceCtx = readContext(fixed)
     const entranceAll = computeEntranceAutoFix(entranceCtx, catalog)
     const entrance = { deletions: entranceAll.deletions.filter((d) => may(0, d.id)), relocations: entranceAll.relocations.filter((r) => may(0, r.id)) }
     if (entrance.deletions.length === 0 && entrance.relocations.length === 0) break
@@ -96,7 +99,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
 
   let reachabilityFixCount = 0
   for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
-    const reachabilityCtx = extractMapContext(containerToRawBlocks(fixed))
+    const reachabilityCtx = readContext(fixed)
     const reachabilityAll = computeReachabilityAutoFix(reachabilityCtx, catalog)
     const reachability = { deletions: reachabilityAll.deletions.filter((d) => may(d.entityType, d.id)), relocations: reachabilityAll.relocations.filter((r) => may(r.entityType, r.id)) }
     if (reachability.deletions.length === 0 && reachability.relocations.length === 0) break
@@ -111,7 +114,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
 
   let overlapFixCount = 0
   for (let pass = 0; pass < MAX_OVERLAP_AUTOFIX_PASSES; pass++) {
-    const overlapCtx = extractMapContext(containerToRawBlocks(fixed))
+    const overlapCtx = readContext(fixed)
     const overlap = { relocations: computeOverlapAutoFix(overlapCtx, catalog).relocations.filter((r) => may(r.entityType, r.id)) }
     if (overlap.relocations.length === 0) break
     for (const rel of overlap.relocations) {
@@ -121,11 +124,11 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
   }
 
   // The relocations above can stack two encounters on one tile, which the game cannot load.
-  for (const id of duplicateEncounterIds(extractMapContext(containerToRawBlocks(fixed)).placedObjects, may)) {
+  for (const id of duplicateEncounterIds(readContext(fixed).placedObjects, may)) {
     fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: id }).container
   }
 
-  const spikeCtx = extractMapContext(containerToRawBlocks(fixed))
+  const spikeCtx = readContext(fixed)
   const spike = options.fixElevation === false ? { levelChanges: [], climbClears: [] } : computeElevationSpikeAutoFix(spikeCtx)
   if (spike.levelChanges.length > 0) {
     fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: spike.levelChanges }).container
@@ -136,14 +139,14 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
 
   let guaranteeFixCount = 0
   if (options.guaranteeReachability) {
-    const rampCtx = extractMapContext(containerToRawBlocks(fixed))
+    const rampCtx = readContext(fixed)
     const ramps = computeElevationRampGuarantee(rampCtx, catalog)
     if (ramps.levelChanges.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: ramps.levelChanges }).container
     if (ramps.climbClears.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: ramps.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
     if (ramps.climbAdds.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: ramps.climbAdds.map((node) => ({ node, climb: 1 as const })) }).container
     guaranteeFixCount += ramps.climbAdds.length + ramps.levelChanges.length
 
-    const connectivity = computeConnectivityGuarantee(extractMapContext(containerToRawBlocks(fixed)), catalog)
+    const connectivity = computeConnectivityGuarantee(readContext(fixed), catalog)
     for (const del of connectivity.decorationDeletions) {
       fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: del.id }).container
     }
@@ -154,7 +157,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     guaranteeFixCount += connectivity.decorationDeletions.length + connectivity.waterReclaims.length + connectivity.climbAdds.length + connectivity.levelChanges.length
 
     for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
-      const guaranteeCtx = extractMapContext(containerToRawBlocks(fixed))
+      const guaranteeCtx = readContext(fixed)
       const guarantee = computeReachabilityGuarantee(guaranteeCtx, catalog)
       if (guarantee.relocations.length === 0 && guarantee.deletions.length === 0) break
       for (const rel of guarantee.relocations) {
@@ -170,13 +173,13 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
   if (options.guaranteeReachability) {
     // The relocation loop above can bury a ramp's tile under a moved object
     // — re-run the ramp guarantee on the finished placements.
-    const finalRamps = computeElevationRampGuarantee(extractMapContext(containerToRawBlocks(fixed)), catalog)
+    const finalRamps = computeElevationRampGuarantee(readContext(fixed), catalog)
     if (finalRamps.levelChanges.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: finalRamps.levelChanges }).container
     if (finalRamps.climbClears.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: finalRamps.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
     if (finalRamps.climbAdds.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: finalRamps.climbAdds.map((node) => ({ node, climb: 1 as const })) }).container
     guaranteeFixCount += finalRamps.climbAdds.length + finalRamps.levelChanges.length
 
-    const specks = computeWaterSpeckGuarantee(extractMapContext(containerToRawBlocks(fixed)), catalog)
+    const specks = computeWaterSpeckGuarantee(readContext(fixed), catalog)
     for (const id of specks.decorationDeletions) {
       fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: id }).container
     }
@@ -186,7 +189,7 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     }
   }
 
-  const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
+  const remaining = findMapValidationIssues(readContext(fixed), catalog)
   const warnings: string[] = []
   const fixedCount = boundsFixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length + guaranteeFixCount
   if (fixedCount > 0) warnings.push(i18n.t('validate.map.autoFixed', { count: fixedCount }))

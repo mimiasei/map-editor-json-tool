@@ -80,7 +80,7 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report, localizationTokens, dialogFlows, sealIds } = await convertH3mToMap(data, catalog, templateContainer, undefined, onProgress)
+  const { container, report, localizationTokens, dialogFlows, sealIds, forbiddenNodes } = await convertH3mToMap(data, catalog, templateContainer, undefined, onProgress)
   // The cave rocks that close thin H3 walls stay (deleting or moving one opens a hole H3 does not have), and no elevation repaint: the
   // converter's levels are H3's rock and floor, and a lone rock tile is real H3 data (the spike fix would raise the floor tile it encloses).
   const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
@@ -89,6 +89,7 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, {
     mayChange: (entityType, id) => !(entityType === 0 && sealed.has(id)),
     fixElevation: false,
+    forbiddenNodes,
   })
 
   await stage('validating', 90)

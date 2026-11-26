@@ -208,6 +208,8 @@ export interface H3ImportResult {
   dialogFlows: Record<string, DialogFlow>
   /** objects[] ids of the cave rocks that close thin H3 walls; later passes must not delete them. */
   sealIds: number[]
+  /** Atlas nodes of H3 rock and the border: the auto-fix must not move anything onto them. */
+  forbiddenNodes: Set<number>
 }
 
 // Towns (and townless-hero players) are placed AFTER ownership is resolved,
@@ -832,7 +834,9 @@ export async function convertH3mToMap(
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint
   // the wall now.
-  paintEnvelopePadding(out, atlas, floorNodes)
+  const paddingNodes = paintEnvelopePadding(out, atlas, floorNodes)
+  // Nothing may stand on H3 rock or in the border, even when its whole footprint lies on one level there.
+  const forbiddenNodes = new Set<number>([...rockNodes, ...paddingNodes])
 
   // Real portal linkage (propPortals was previously never emitted at all —
   // see portal-links.ts's own header) must exist before the accessibility
@@ -844,7 +848,7 @@ export async function convertH3mToMap(
   const accessibility = applyAccessibilityPass(
     objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
     decorativeIds, portalLinks.adjacencyByObjectId, groundTruthWalkable,
-    undefined, undefined, sealIds,
+    undefined, undefined, sealIds, undefined, forbiddenNodes,
   )
 
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
@@ -1011,5 +1015,6 @@ export async function convertH3mToMap(
     localizationTokens,
     dialogFlows,
     sealIds: [...sealIds],
+    forbiddenNodes,
   }
 }

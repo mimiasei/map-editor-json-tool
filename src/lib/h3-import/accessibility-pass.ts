@@ -166,6 +166,8 @@ export function applyAccessibilityPass(
   forbiddenIds: Set<number> = new Set(),
   /** Anchors of things that are not in `objectGroups` (the RMG's concrete guard squads): a nudge must not land on one, or two guards share a tile and the game fails to load the map. */
   fixedAnchors: Set<number> = new Set(),
+  /** Nodes no object may be nudged onto, whatever the level (see MapContext.forbiddenNodes). */
+  forbiddenNodes?: Set<number>,
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -246,7 +248,7 @@ export function applyAccessibilityPass(
   if (seeds.length === 0) return report
   if (targets.length === 0 && mustBeReachable.size === 0) return report
 
-  const passContext = { sizeX: atlasWidth, sizeZ: atlasHeight, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap }
+  const passContext = { sizeX: atlasWidth, sizeZ: atlasHeight, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap, forbiddenNodes }
   let blocked = buildBlockedTileSet({ ...passContext, placedObjects: buildFlatPlaced() }, catalog)
   let reachable = new Set<number>()
   floodFill(seeds, blocked, atlasWidth, atlasHeight, portalNodeAdjacency, reachable)

@@ -257,7 +257,7 @@ export function buildRiverNodesTable(
  *  sitting on elevated Dirt could become partly unreachable). The real fix
  *  is the clamp, not removing the wall — every object is now guaranteed
  *  clear of this region by the time this paints it. */
-export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout, floorNodes: Set<number>): void {
+export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout, floorNodes: Set<number>): number[] {
   const total = atlas.atlasWidth * atlas.atlasHeight
   const sourceNodes = new Set<number>()
   for (const layer of Object.keys(atlas.layers).map(Number)) {
@@ -267,8 +267,10 @@ export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout, 
       }
     }
   }
+  const padding: number[] = []
   for (let node = 0; node < total; node++) {
     if (sourceNodes.has(node)) continue
+    padding.push(node)
     out.tilesMap[node] = STOCK_ROCK_TILE_ID
     // The ring beside floor stays level 0 like the rock skirt (applyRockSkirt): a level-1 wall right against floor would block the floor's edge row.
     out.levelsMap[node] = nearFloor(node) ? 0 : UNDERGROUND_ROCK_LEVEL
@@ -276,6 +278,7 @@ export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout, 
     out.waterMap[node] = 0
     out.roadsMap[node] = 0
   }
+  return padding
   function nearFloor(node: number): boolean {
     const x = node % atlas.atlasWidth
     const z = Math.floor(node / atlas.atlasWidth)

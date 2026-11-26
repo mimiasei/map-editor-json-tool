@@ -99,14 +99,15 @@ function wallTiles(sizeX: number, sizeZ: number, levelsMap: number[], climbsMap:
  */
 export function footprintOnFlatGround(
   cells: { x: number; z: number; value: number }[],
-  context: Pick<MapContext, 'sizeX' | 'sizeZ' | 'levelsMap' | 'climbsMap' | 'waterMap'>,
+  context: Pick<MapContext, 'sizeX' | 'sizeZ' | 'levelsMap' | 'climbsMap' | 'waterMap' | 'forbiddenNodes'>,
 ): boolean {
-  const { sizeX, sizeZ, levelsMap, climbsMap, waterMap } = context
+  const { sizeX, sizeZ, levelsMap, climbsMap, waterMap, forbiddenNodes } = context
   let level: number | undefined
   const walls = wallTiles(sizeX, sizeZ, levelsMap, climbsMap)
   for (const cell of cells) {
     if (cell.value < 1) continue
     const node = cell.z * sizeX + cell.x
+    if (forbiddenNodes?.has(node)) return false
     const own = levelsMap[node] ?? 0
     if (level === undefined) level = own
     else if (own !== level) return false
