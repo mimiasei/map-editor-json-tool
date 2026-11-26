@@ -372,7 +372,9 @@
         "validating": "Validation du résultat…",
         "loading": "Ouverture de la carte…",
         "done": "Terminé"
-      }
+      },
+      "shipyardPortals": "Portails des chantiers navals",
+      "shipyardPortalsValue": "Chantiers navals : {{shipyards}} · Portails : {{portals}} · Îles : {{islands}}"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Objets interactifs RMG",

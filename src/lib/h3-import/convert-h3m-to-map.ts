@@ -56,7 +56,8 @@ import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
-import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
+import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD } from './h3m-object-registry'
+import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
 import { generateDisplayNameSid } from '@/lib/slugify'
 import { buildGlobalEventQuest, type GlobalEventQuest } from './global-events'
 import type { DialogFlow } from '@/types/dialog'
@@ -120,6 +121,10 @@ export interface H3ImportReport {
   /** Portal instances placed alone, with no same-sid sibling to link to —
    *  left unlinked, likely inert in-game; a real, disclosed gap. */
   portalsUnpaired: number
+  /** Shipyards in the H3 map (OE has no ships), the portals that replaced them plus the ones added on island shores, and the islands joined. */
+  shipyardsFound: number
+  shipyardPortals: number
+  shipyardIslands: number
   /** Objects whose entrance could not be put on the H3 entrance tile without standing on rock; they were placed at the H3 anchor instead. */
   anchorFallbacks: number
   /** Post-placement reachability pass (`accessibility-pass.ts`): placed
@@ -425,6 +430,9 @@ export async function convertH3mToMap(
   const sceneryVariantCounts: Record<string, number> = {}
   interface DetailInstance { h3Id: number; subId: number; h3Name: string; defName: string; category: string | null; mappedSid: string | null; note: string }
   const detailInstances: DetailInstance[] = []
+  // OE has no ships: every shipyard is collected here (by its visit tile) and becomes a portal once the terrain is final (water-portals.ts).
+  const shipyardNodes: number[] = []
+  const shipyardDetails: DetailInstance[] = []
   // Parallel to townEntries/heroCandidates below — a town/hero's final
   // outcome (city-spawner vs. a neutral town's own sid; hero-spawner vs.
   // "not carried over") is only known once `assignOwnership` runs, well
@@ -490,6 +498,21 @@ export async function convertH3mToMap(
     const layerTiles = parsed.layers[record.layer]
     const tileIndex = record.y * size + record.x
     const h3Terrain = layerTiles?.[tileIndex]?.terrain ?? 0
+
+    if (oid === OBJECT_SHIPYARD) {
+      const visitCell = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+      shipyardNodes.push(visitCell ? visitCell.z * atlas.atlasWidth + visitCell.x : atlas.targetNode(record.layer, record.x, record.y))
+      const shipyardDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending shipyard portal' }
+      detailInstances.push(shipyardDetail)
+      shipyardDetails.push(shipyardDetail)
+      continue
+    }
+    // Anything standing on water (a boat, a sea monster, a sea chest...) has no counterpart: OE has no ships and nothing to reach on the sea.
+    if (h3Terrain === 8) {
+      omittedReasonCounts.water_object_omit = (omittedReasonCounts.water_object_omit ?? 0) + 1
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'water_object_omit' })
+      continue
+    }
 
     // A placed Hero (or Random Hero) — never resolved via resolveObjectSid
     // (it has no scenery/town/etc. sid of its own to give); captured here
@@ -828,6 +851,32 @@ export async function convertH3mToMap(
     })
   }
 
+  // Shipyards become portals, and the islands get portals to each other (the stand-in for ships), before the decoration so nothing grows on them.
+  const entranceCells = new Set<number>()
+  const entranceAvoid = new Set<number>()
+  for (const [sid, group] of objectGroups) {
+    const template = catalogById.get(sid)
+    // The walk-onto placeholders (random-res/-squad/-item) mark their whole 3x3 as entrance and block nothing.
+    if (!template || NON_BLOCKING_SPAWNER_SIDS.has(sid)) continue
+    for (let i = 0; i < group.nodes.length; i++) {
+      for (const c of computeFootprintTiles(template, group.nodes[i] % atlas.atlasWidth, Math.floor(group.nodes[i] / atlas.atlasWidth), group.rotations[i])) {
+        if (c.value !== 2) continue
+        entranceCells.add(c.z * atlas.atlasWidth + c.x)
+        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) entranceAvoid.add((c.z + dz) * atlas.atlasWidth + c.x + dx)
+      }
+    }
+  }
+  const waterPortals = buildWaterPortals({
+    width: atlas.atlasWidth, height: atlas.atlasHeight, catalogById, waterMap: out.waterMap, levelsMap: out.levelsMap,
+    landNodes: floorNodes, solidClaimed, entranceNodes: entranceCells, avoidNodes: entranceAvoid, rng,
+    objectNodes: [...objectGroups.entries()].flatMap(([, group]) => group.nodes),
+    place: (node) => placeObject(WATER_PORTAL_SID, node),
+  }, shipyardNodes)
+  for (const detail of shipyardDetails) {
+    detail.mappedSid = waterPortals.shipyardsConverted > 0 ? WATER_PORTAL_SID : null
+    detail.note = waterPortals.shipyardsConverted > 0 ? 'Shipyard (replaced by a portal)' : 'shipyard_without_island_omit'
+  }
+  if (waterPortals.shipyardsConverted === 0 && shipyardDetails.length > 0) omittedReasonCounts.shipyard_without_island_omit = shipyardDetails.length
   await stage('decoration', 42)
   for (const place of deferredScenery) place()
 
@@ -843,7 +892,13 @@ export async function convertH3mToMap(
   // pass can treat underground-via-portal paths as reachable, rather than
   // flagging every underground object on every 2-layer map as stranded.
   await stage('reachability', 58)
-  const portalLinks = linkPortalPairs(objectGroups)
+  const portalLinks = linkPortalPairs(objectGroups, new Set([WATER_PORTAL_SID]))
+  for (const [a, b] of waterPortals.links) {
+    portalLinks.propPortals.push({ type: 0, id: a, targetIdx: b, isActive: true }, { type: 0, id: b, targetIdx: a, isActive: true })
+    portalLinks.adjacencyByObjectId.set(a, b)
+    portalLinks.adjacencyByObjectId.set(b, a)
+    portalLinks.linkedCount += 2
+  }
   const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
   const accessibility = applyAccessibilityPass(
     objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
@@ -1003,6 +1058,7 @@ export async function convertH3mToMap(
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, sourceObjectCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
       outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
+      shipyardsFound: shipyardNodes.length, shipyardPortals: waterPortals.portals, shipyardIslands: waterPortals.islands,
       anchorFallbacks,
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,

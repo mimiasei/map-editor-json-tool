@@ -385,7 +385,9 @@
         "validating": "Sprawdzanie wyniku…",
         "loading": "Otwieranie mapy…",
         "done": "Gotowe"
-      }
+      },
+      "shipyardPortals": "Portale stoczni",
+      "shipyardPortalsValue": "Stocznie: {{shipyards}} · Portale: {{portals}} · Wyspy: {{islands}}"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Obiekty interaktywne RMG",

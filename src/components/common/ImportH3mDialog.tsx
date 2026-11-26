@@ -80,6 +80,7 @@ function buildReportText(result: ImportH3mResult): string {
   lines.push(`River tiles: ${report.riverTilesConverted}`)
   lines.push(`Victory quest: ${report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}`)
   lines.push(`Portals linked: ${report.portalsLinked}`)
+  if (report.shipyardsFound > 0) lines.push(`Shipyards: ${report.shipyardsFound} (portals placed: ${report.shipyardPortals}, islands joined: ${report.shipyardIslands})`)
   lines.push(`Accessibility fixes: ${report.accessibilityDecorRemoved} removed, ${report.accessibilityTargetsNudged} nudged`)
   lines.push(`Ground-truth floor fixes: ${report.groundTruthDecorRemoved} removed (of ${report.groundTruthTilesChecked} floor tiles checked against the source map's own passability)`)
 
@@ -322,6 +323,12 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <div className="text-foreground">{report.hasVictoryQuest ? t('common.importH3mDialog.yesDefeatAllEnemies') : t('common.importH3mDialog.noneUnsupportedWinCondition')}</div>
               <div>{t('common.importH3mDialog.portalsLinked')}</div>
               <div className="text-foreground">{report.portalsLinked}</div>
+              {report.shipyardsFound > 0 && (
+                <>
+                  <div>{t('common.importH3mDialog.shipyardPortals')}</div>
+                  <div className="text-foreground">{t('common.importH3mDialog.shipyardPortalsValue', { shipyards: report.shipyardsFound, portals: report.shipyardPortals, islands: report.shipyardIslands })}</div>
+                </>
+              )}
               <div>{t('common.importH3mDialog.accessibilityFixes')}</div>
               <div className="text-foreground">{t('common.importH3mDialog.removedNudged', { accessibilityDecorRemoved: report.accessibilityDecorRemoved, accessibilityTargetsNudged: report.accessibilityTargetsNudged })}</div>
               <div>{t('common.importH3mDialog.groundTruthFloorFixes')}</div>

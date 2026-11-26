@@ -77,10 +77,8 @@
     {
       "h3Id": 11,
       "h3Name": "Buoy",
-      "outcome": "emit",
-      "sid": "quixs_path",
-      "kind": "interactable",
-      "reason": "direct_template_sid"
+      "outcome": "omit",
+      "reason": "buoy_water_travel_omit"
     },
     {
       "h3Id": 12,
@@ -532,10 +530,8 @@
     {
       "h3Id": 42,
       "h3Name": "Lighthouse",
-      "outcome": "emit",
-      "sid": "watchtower",
-      "kind": "interactable",
-      "reason": "direct_template_sid"
+      "outcome": "omit",
+      "reason": "lighthouse_water_travel_omit"
     },
     {
       "h3Id": 43,
@@ -944,7 +940,7 @@
       "h3Id": 87,
       "h3Name": "Shipyard",
       "outcome": "omit",
-      "reason": "shipyard_requires_boat_omit"
+      "reason": "shipyard_without_island_omit"
     },
     {
       "h3Id": 88,
@@ -1146,10 +1142,8 @@
     {
       "h3Id": 111,
       "h3Name": "Whirlpool",
-      "outcome": "emit",
-      "sid": "portal_magic",
-      "kind": "portal",
-      "reason": "direct_template_sid"
+      "outcome": "omit",
+      "reason": "whirlpool_water_travel_omit"
     },
     {
       "h3Id": 112,
@@ -1462,8 +1456,8 @@
     {
       "h3Id": 161,
       "h3Name": "Reef",
-      "outcome": "scenery",
-      "role": "rock"
+      "outcome": "omit",
+      "reason": "reef_water_omit"
     },
     {
       "h3Id": 162,

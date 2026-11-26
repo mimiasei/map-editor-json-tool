@@ -309,12 +309,14 @@ function findRelocationTarget(
     catalog,
   )
   const isBlocked = (n: number) => blocked.has(n) || claimedDestinations.has(n)
+  // Not onto another object's entrance or approach ring either: that frees this entrance by closing someone else's (a portal moved onto a city's entrance).
+  const approach = entranceApproachNodes(context, catalog, `0:${violation.id}`)
 
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, violation.rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     for (const cell of cells) {
-      if (cell.value === 1 && isBlocked(cell.z * sizeX + cell.x)) return false
+      if (cell.value === 1 && (isBlocked(cell.z * sizeX + cell.x) || approach.has(cell.z * sizeX + cell.x))) return false
     }
     return entranceGroups(cells, sizeX, sizeZ).some((g) => !isBlocked(g.entranceNode) && ![...g.protectedNodes].some((n) => isBlocked(n)))
   }

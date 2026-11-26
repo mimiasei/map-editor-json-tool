@@ -385,7 +385,9 @@
         "validating": "Перевірка результату…",
         "loading": "Відкриття мапи…",
         "done": "Готово"
-      }
+      },
+      "shipyardPortals": "Портали верфей",
+      "shipyardPortalsValue": "Верфі: {{shipyards}} · Портали: {{portals}} · Острови: {{islands}}"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Інтерактивні об'єкти RMG",

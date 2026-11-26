@@ -359,7 +359,9 @@
         "validating": "Ergebnis wird geprüft…",
         "loading": "Karte wird geöffnet…",
         "done": "Fertig"
-      }
+      },
+      "shipyardPortals": "Werft-Portale",
+      "shipyardPortalsValue": "Werften: {{shipyards}} · Portale: {{portals}} · Inseln: {{islands}}"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG-Interaktive-Objekte",

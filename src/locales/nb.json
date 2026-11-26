@@ -359,7 +359,9 @@
         "validating": "Validerer resultatet…",
         "loading": "Åpner kartet…",
         "done": "Ferdig"
-      }
+      },
+      "shipyardPortals": "Verftsportaler",
+      "shipyardPortalsValue": "Verft: {{shipyards}} · Portaler: {{portals}} · Øyer: {{islands}}"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG-interaktive objekter",

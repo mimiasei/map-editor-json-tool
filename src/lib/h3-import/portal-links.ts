@@ -46,14 +46,14 @@ export interface PortalLinkResult {
  *  `convert-h3m-to-map.ts`) — only sids starting with `portal` (this
  *  project's own existing convention for portal kind detection, see
  *  `h3-object-mapping.ts`'s `resolveObjectSid`) are considered. */
-export function linkPortalPairs(objectGroups: Map<string, ObjectPlacementGroup>): PortalLinkResult {
+export function linkPortalPairs(objectGroups: Map<string, ObjectPlacementGroup>, skipSids: Set<string> = new Set()): PortalLinkResult {
   const propPortals: PortalLinkResult['propPortals'] = []
   const adjacencyByObjectId = new Map<number, number>()
   let unpairedCount = 0
   let linkedCount = 0
 
   for (const [sid, group] of objectGroups) {
-    if (!sid.startsWith('portal')) continue
+    if (!sid.startsWith('portal') || skipSids.has(sid)) continue
     const ids = group.ids
     if (ids.length < 2) {
       unpairedCount += ids.length

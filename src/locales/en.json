@@ -367,7 +367,9 @@
         "validating": "Validating the result…",
         "loading": "Opening the map…",
         "done": "Done"
-      }
+      },
+      "shipyardPortals": "Shipyard portals",
+      "shipyardPortalsValue": "Shipyards: {{shipyards}} · Portals: {{portals}} · Islands: {{islands}}"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG interactables",
