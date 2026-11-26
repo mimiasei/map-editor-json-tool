@@ -72,7 +72,7 @@ import { stockRandomSquadRequestedValue, NOMINAL_STACK_COUNT_BY_LEVEL, CREATURE_
 import { rarityForRandomArtifactObjectId } from './random-items'
 import { planH3WinConditions, finishH3WinPlan, H3_WIN_OPTIONS } from './win-conditions'
 import { winEntryOptions, type WinConditionId } from '@/lib/rmg/win-conditions'
-import { linkPortalPairs } from './portal-links'
+import { linkH3Portals, type H3PortalPlacement } from './portal-links'
 import { applyAccessibilityPass } from './accessibility-pass'
 import { buildGroundTruthWalkableSet } from './ground-truth-passability'
 
@@ -264,6 +264,10 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  reproducible. */
 // Sand trees, told apart by sprite (checked on a real map, sand_trees.h3m): the table sends them to a plain Grass/Dirt/Sand pick, which has no cactus,
 // palm or dune on sand.
+const OBJECT_MONOLITH_ONE_WAY_ENTRANCE = 43
+const OBJECT_MONOLITH_ONE_WAY_EXIT = 44
+const OBJECT_SUBTERRANEAN_GATE = 103
+
 const H3_CACTUS_DEF = /^av(lca[0-9]|cact)/i // cacti: object 116 and 138
 const H3_LUSH_TREE_DEF = /^avlspl0[1-4]/i // named palms, but lush like willows
 const H3_PALM_DEF = /^avlspl0[5-9]/i
@@ -350,6 +354,7 @@ export async function convertH3mToMap(
     return cells
   }
   let nextId = 0
+  const h3Portals: H3PortalPlacement[] = []
   const placeObject = (sid: string, node: number, rotation = 0, visit?: VisitCell): number => {
     let clampedNode: number
     if (visit) {
@@ -807,9 +812,19 @@ export async function convertH3mToMap(
       continue
     }
 
-    placeObject(resolution.sid, node, 0, visit)
+    // One-way monoliths: the table's sid is a placeholder; the colour (subtype) picks one of the three portal looks, the same for a colour's entrance and exit.
+    const placedSid = oid === OBJECT_MONOLITH_ONE_WAY_ENTRANCE || oid === OBJECT_MONOLITH_ONE_WAY_EXIT ? `portal_${1 + (subId % 3)}` : resolution.sid
+    const placedId = placeObject(placedSid, node, 0, visit)
     objectsPlaced += 1
-    detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
+    if (resolution.kind === 'portal') {
+      // H3 connects monoliths by colour (the subtype), not by look: several colours share one OE look, so the network is kept here.
+      h3Portals.push({
+        id: placedId, layer: record.layer, x: record.x, y: record.y,
+        kind: oid === OBJECT_MONOLITH_ONE_WAY_ENTRANCE ? 'entrance' : oid === OBJECT_MONOLITH_ONE_WAY_EXIT ? 'exit' : oid === OBJECT_SUBTERRANEAN_GATE ? 'gate' : 'two-way',
+        network: oid === OBJECT_SUBTERRANEAN_GATE ? 0 : subId,
+      })
+    }
+    detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: placedSid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
   }
 
   await stage('players', 30)
@@ -1074,7 +1089,7 @@ export async function convertH3mToMap(
   // pass can treat underground-via-portal paths as reachable, rather than
   // flagging every underground object on every 2-layer map as stranded.
   await stage('reachability', 58)
-  const portalLinks = linkPortalPairs(objectGroups, new Set([WATER_PORTAL_SID]))
+  const portalLinks = linkH3Portals(h3Portals)
   for (const [a, b] of waterPortals.links) {
     portalLinks.propPortals.push({ type: 0, id: a, targetIdx: b, isActive: true }, { type: 0, id: b, targetIdx: a, isActive: true })
     portalLinks.adjacencyByObjectId.set(a, b)

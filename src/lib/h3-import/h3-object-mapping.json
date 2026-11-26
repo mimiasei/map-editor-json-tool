@@ -536,14 +536,18 @@
     {
       "h3Id": 43,
       "h3Name": "Monolith One Way Entrance",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_43"
+      "outcome": "emit",
+      "sid": "portal_1",
+      "kind": "portal",
+      "reason": "one_way_monolith"
     },
     {
       "h3Id": 44,
       "h3Name": "Monolith One Way Exit",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_44"
+      "outcome": "emit",
+      "sid": "portal_1",
+      "kind": "portal",
+      "reason": "one_way_monolith"
     },
     {
       "h3Id": 45,
