@@ -55,7 +55,8 @@ import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { createH3DecorationPicker } from './h3-decoration-pools'
 import { resolveObjectSid, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
-import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD } from './h3m-object-registry'
+import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
 import { dedupeSid, generateDisplayNameSid } from '@/lib/slugify'
 import { mapNameSnakeCase } from '@/lib/zip-export'
@@ -402,14 +403,22 @@ export async function convertH3mToMap(
 
   // Solid 1x1 cave rock on every thin-wall skirt tile. Never decorative-removable: deleting one would open a hole the H3 map does not have.
   const sealIds = new Set<number>()
+  const sealModelAt = new Map<number, string>()
   for (const node of sealNodes) {
-    sealIds.add(placeObject(pickVariant(BIOME_ROLE_REPLACEMENTS.mountain.dirt, families, rng), node, randomDecorRotation(rng)))
+    // Dirt mountains (the rock is Dirt), a different model from the ones beside it.
+    const beside = [node - 1, node + 1, node - atlas.atlasWidth, node + atlas.atlasWidth].map((n) => sealModelAt.get(n)).filter((sid): sid is string => !!sid)
+    const sid = decorationPicker.pickMountain(7, 1, rng, beside)
+    sealModelAt.set(node, sid)
+    sealIds.add(placeObject(sid, node, randomDecorRotation(rng)))
   }
 
   const deferredScenery: (() => void)[] = []
+  // Every H3 mountain tile of the map, per layer, with its biome: the mountains are packed once over all of them (not object by object), so
+  // squares can span neighbouring H3 objects. The tiles blocked stay exactly the ones H3 blocked.
+  const mountainField = new Map<number, Map<string, { cell: { x: number; z: number }; biome: BiomeId }>>()
   /** Places one decoration unless a blocking object already stands on its tiles. A big mountain that only partly collides is replaced by
    *  `smallSid` on its free tiles, so every tile H3 blocked stays blocked. Returns how many objects were placed. */
-  const placeScenery = (sid: string, node: number, smallSid: string | null): number => {
+  const placeScenery = (sid: string, node: number, smallSid: string | ((avoid: string[]) => string) | null): number => {
     const rotation = randomDecorRotation(rng)
     const cells = solidCells(sid, node, rotation)
     if (cells.every((cell) => !solidClaimed.has(cell))) {
@@ -418,9 +427,14 @@ export async function convertH3mToMap(
     }
     if (!smallSid || smallSid === sid) return 0
     let placed = 0
+    // A function picks each small piece itself, avoiding the models just placed beside it; a sid picks among its siblings.
+    const modelAt = new Map<number, string>()
     for (const cell of cells) {
       if (solidClaimed.has(cell)) continue
-      decorativeIds.add(placeObject(pickVariant(smallSid, families, rng), cell, randomDecorRotation(rng)))
+      const beside = [cell - 1, cell + 1, cell - atlas.atlasWidth, cell + atlas.atlasWidth].map((n) => modelAt.get(n)).filter((m): m is string => !!m)
+      const model = typeof smallSid === 'function' ? smallSid(beside) : pickVariant(smallSid, families, rng)
+      modelAt.set(cell, model)
+      decorativeIds.add(placeObject(model, cell, randomDecorRotation(rng)))
       placed += 1
     }
     return placed
@@ -560,6 +574,18 @@ export async function convertH3mToMap(
     if (resolution.kind === 'scenery') {
       // Decoration goes down after everything that blocks (see `solidClaimed`), so it is queued here and placed after the main loop.
       deferredScenery.push(() => {
+        // An object that blocks no tile (its block mask is empty) is walkable decoration: it becomes random walkable ground cover of its biome
+        // (grass tufts, flowers, mushrooms), mixed the same way as the trees and mountains.
+        if (resolution.role !== 'water_decoration' && blockMaskOffsets(record.templateBlockMask).length === 0) {
+          const walkBiome = decorationPicker.walkableBiomeOf(resolution.sid)
+          if (walkBiome !== null) {
+            const placed = placeScenery(decorationPicker.pickWalkable(walkBiome, rng), node, null)
+            sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
+            sceneryPlaced += placed
+            detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: 'Scenery (walkable)' })
+            return
+          }
+        }
         // Trees and mountains: H3's own multi-cell footprint often represents
         // a cluster (a grove of trees, a mountain range) rather than one
         // object — OE has no literal cluster sid for either, so simulate one
@@ -578,6 +604,13 @@ export async function convertH3mToMap(
             const terrain = layerTilesHere?.[cell.z * size + cell.x]?.terrain
             const h3Biome = terrain !== undefined && terrain !== 8 && terrain !== 9 ? H3_TERRAIN_BIOME[terrain] : undefined
             return (h3Biome ? decorationPicker.biomeOf(BIOME_ROLE_REPLACEMENTS[role][h3Biome], role) : null) ?? (anchorBiome as NonNullable<typeof anchorBiome>)
+          }
+          if (role === 'mountain' && anchorBiome !== null) {
+            const field = mountainField.get(record.layer) ?? new Map<string, { cell: { x: number; z: number }; biome: BiomeId }>()
+            mountainField.set(record.layer, field)
+            for (const cell of cells) field.set(`${cell.x},${cell.z}`, { cell, biome: biomeAt(cell) })
+            detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: 'Scenery (mountain range, merged across objects)' })
+            return
           }
           const placements = anchorBiome !== null && !(role === 'tree' && oid === H3_OAK_TREES_OBJECT_ID)
             ? (role === 'tree' ? pickTreeClusterVaried(cells, biomeAt, decorationPicker, rng) : packMountainClusterVaried(cells, biomeAt, decorationPicker, rng))
@@ -893,6 +926,16 @@ export async function convertH3mToMap(
   if (waterPortals.shipyardsConverted === 0 && shipyardDetails.length > 0) omittedReasonCounts.shipyard_without_island_omit = shipyardDetails.length
   await stage('decoration', 42)
   for (const place of deferredScenery) place()
+  for (const [layer, field] of mountainField) {
+    const biomeAt = (cell: { x: number; z: number }) => (field.get(`${cell.x},${cell.z}`) as { biome: BiomeId }).biome
+    let placed = 0
+    for (const p of packMountainClusterVaried([...field.values()].map((v) => v.cell), biomeAt, decorationPicker, rng)) {
+      const biome = biomeAt(p.anchor)
+      placed += placeScenery(p.sid, atlas.targetNode(layer, p.anchor.x, p.anchor.z), (avoid) => decorationPicker.pickMountain(biome, 1, rng, avoid))
+    }
+    sceneryVariantCounts['mountain (merged ranges)'] = (sceneryVariantCounts['mountain (merged ranges)'] ?? 0) + placed
+    sceneryPlaced += placed
+  }
 
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint

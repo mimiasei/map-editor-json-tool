@@ -183,23 +183,45 @@ export function packMountainClusterVaried(
   const occupied = new Set(cells.map((c) => `${c.x},${c.z}`))
   const claimed = new Set<string>()
   const placements: ClusterPlacement[] = []
+  // The model standing on every tile placed so far: a new piece avoids the models beside it (left and above, where scanning has been), so a
+  // band of small mountains is not one model repeated.
+  const modelAt = new Map<string, string>()
+  const neighbourModels = (cell: FootprintCell, size: number): string[] => {
+    const found: string[] = []
+    // Only the edge tiles to the left and above: with two models in a biome that is still possible everywhere (a checkerboard), and every
+    // pair of neighbours is covered by whichever of them comes second.
+    for (let i = 0; i < size; i++) {
+      for (const key of [`${cell.x - 1},${cell.z + i}`, `${cell.x + i},${cell.z - 1}`]) {
+        const sid = modelAt.get(key)
+        if (sid && !found.includes(sid)) found.push(sid)
+      }
+    }
+    return found
+  }
+  const remember = (cell: FootprintCell, size: number, sid: string) => {
+    for (let dz = 0; dz < size; dz++) for (let dx = 0; dx < size; dx++) modelAt.set(`${cell.x + dx},${cell.z + dz}`, sid)
+  }
   for (const cell of [...cells].sort((a, b) => (a.z - b.z) || (a.x - b.x))) {
     if (claimed.has(`${cell.x},${cell.z}`)) continue
     const biome = biomeAt(cell)
     let placed = false
     for (const size of picker.mountainSizes(biome)) {
-      if (size === 1 || rng() >= (size === 3 ? 0.4 : 0.5)) continue
+      if (size === 1 || rng() >= (size === 3 ? 0.55 : 0.6)) continue
       const block: string[] = []
       for (let dz = 0; dz < size; dz++) for (let dx = 0; dx < size; dx++) block.push(`${cell.x + dx},${cell.z + dz}`)
       if (!block.every((k) => occupied.has(k) && !claimed.has(k))) continue
       for (const k of block) claimed.add(k)
-      placements.push({ sid: picker.pickMountain(biome, size, rng), anchor: size === 3 ? { x: cell.x + 1, z: cell.z + 1 } : cell })
+      const big = picker.pickMountain(biome, size, rng, neighbourModels(cell, size))
+      remember(cell, size, big)
+      placements.push({ sid: big, anchor: size === 3 ? { x: cell.x + 1, z: cell.z + 1 } : cell })
       placed = true
       break
     }
     if (placed) continue
     claimed.add(`${cell.x},${cell.z}`)
-    placements.push({ sid: picker.pickMountain(biome, 1, rng), anchor: cell })
+    const small = picker.pickMountain(biome, 1, rng, neighbourModels(cell, 1))
+    remember(cell, 1, small)
+    placements.push({ sid: small, anchor: cell })
   }
   return placements
 }

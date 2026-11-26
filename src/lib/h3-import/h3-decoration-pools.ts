@@ -8,7 +8,7 @@
 // borrow Grass and Dirt decorations; nothing flows back, and Snow, Lava and Sand keep their own.
 
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
-import { BIOME_ID_TO_CATALOG_BIOME, buildFuzzyObstaclePools, isTreeDecoration, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
+import { BIOME_ID_TO_CATALOG_BIOME, buildFuzzyObstaclePools, buildWalkablePools, isTreeDecoration, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { applyBiomeDecorationMix, type DecorationRule } from '@/lib/rmg/biome-decoration-mix'
 
@@ -19,6 +19,14 @@ export const H3_DECORATION_RULES: DecorationRule[] = [
   { into: 'Autumn', from: 'Dirt', chance: 0.2 },
   { into: 'Deathland', from: 'Grass', chance: 0.15 },
   { into: 'Deathland', from: 'Dirt', chance: 0.15 },
+  // Mountains mix more than the rest, so a range is not one repeated model: Deathland's are used on Grass, Dirt and Autumn too.
+  { into: 'Grass', from: 'Dirt', type: 'mountain', chance: 0.3 },
+  { into: 'Dirt', from: 'Grass', type: 'mountain', chance: 0.3 },
+  { into: 'Autumn', from: 'Grass', type: 'mountain', chance: 0.25 },
+  { into: 'Autumn', from: 'Dirt', type: 'mountain', chance: 0.25 },
+  { into: 'Grass', from: 'Deathland', type: 'mountain', chance: 0.25 },
+  { into: 'Dirt', from: 'Deathland', type: 'mountain', chance: 0.25 },
+  { into: 'Autumn', from: 'Deathland', type: 'mountain', chance: 0.2 },
 ]
 
 export interface H3DecorationPicker {
@@ -28,7 +36,12 @@ export interface H3DecorationPicker {
   pickTree(biome: BiomeId, rng: () => number, not?: string): string
   /** Square mountain sizes available in `biome`, biggest first (3, 2, 1). */
   mountainSizes(biome: BiomeId): number[]
-  pickMountain(biome: BiomeId, size: number, rng: () => number): string
+  /** A mountain-like model of `size` in `biome`, not one of `avoid` (the last ones picked) while there is a choice. */
+  pickMountain(biome: BiomeId, size: number, rng: () => number, avoid?: string[]): string
+  /** The catalog biome of a table-resolved decoration sid, when that biome has walkable ground cover to pick from; else null. */
+  walkableBiomeOf(baseSid: string): BiomeId | null
+  /** Walkable ground cover (grass tufts, flowers, mushrooms) for `biome`, with the same biome mixing as the rest. */
+  pickWalkable(biome: BiomeId, rng: () => number): string
 }
 
 const BIOME_ID_BY_CATALOG_NAME = new Map<string, BiomeId>(
@@ -50,16 +63,23 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
   // No RMG pick weights: they leave some real variants out (never picked), and variety is the point here.
   const mixed = applyBiomeDecorationMix(buildFuzzyObstaclePools(catalog.mapObjects), undefined, H3_DECORATION_RULES)
 
+  const walkMixed = applyBiomeDecorationMix(buildWalkablePools(catalog), undefined, H3_DECORATION_RULES)
+  const walkables = new Map<BiomeId, string[]>(Object.entries(walkMixed.pools).map(([key, pool]) => [Number(key) as BiomeId, pool.obstacles]))
+
   const trees = new Map<BiomeId, string[]>()
-  const mountains = new Map<BiomeId, Map<number, string[]>>()
+  interface Piece { sid: string; weight: number }
+  const mountains = new Map<BiomeId, Map<number, Piece[]>>()
   for (const [key, pool] of Object.entries(mixed.pools)) {
     const biome = Number(key) as BiomeId
     trees.set(biome, pool.obstacles.filter((sid) => isTreeDecoration(sid) && squareSize(byId.get(sid) as CatalogMapObject) === 1))
-    const bySize = new Map<number, string[]>()
-    for (const sid of pool.mountains) {
+    const bySize = new Map<number, Piece[]>()
+    const add = (sid: string, weight: number) => {
       const size = squareSize(byId.get(sid) as CatalogMapObject)
-      if (size !== null) bySize.set(size, [...(bySize.get(size) ?? []), sid])
+      if (size !== null) bySize.set(size, [...(bySize.get(size) ?? []), { sid, weight }])
     }
+    // The mountains of the biome and of the biomes it borrows from (their weight is the rule's share). The catalog lists "mountain_water"
+    // models under Grass; they rise out of water, so they are left out of a land range.
+    for (const sid of pool.mountains) if (!sid.startsWith('mountain_water')) add(sid, mixed.weights?.[biome]?.[sid] ?? 1)
     mountains.set(biome, bySize)
   }
 
@@ -70,6 +90,14 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
       if (biome === undefined) return null
       if (role === 'tree') return isTreeDecoration(baseSid) && (trees.get(biome)?.length ?? 0) > 0 ? biome : null
       return baseSid.startsWith('mountain_') && (mountains.get(biome)?.get(1)?.length ?? 0) > 0 ? biome : null
+    },
+    walkableBiomeOf(baseSid) {
+      const obj = byId.get(baseSid)
+      const biome = obj?.biome ? BIOME_ID_BY_CATALOG_NAME.get(obj.biome) : undefined
+      return biome !== undefined && (walkables.get(biome)?.length ?? 0) > 0 ? biome : null
+    },
+    pickWalkable(biome, rng) {
+      return pickWeighted(walkables.get(biome) as string[], rng, walkMixed.weights?.[biome])
     },
     pickTree(biome, rng, not) {
       const list = trees.get(biome) as string[]
@@ -82,8 +110,17 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
     mountainSizes(biome) {
       return [...(mountains.get(biome)?.keys() ?? [])].sort((a, b) => b - a)
     },
-    pickMountain(biome, size, rng) {
-      return pickWeighted(mountains.get(biome)?.get(size) as string[], rng, mixed.weights?.[biome])
+    pickMountain(biome, size, rng, avoid = []) {
+      const list = mountains.get(biome)?.get(size) as Piece[]
+      let pick = list[0].sid
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const total = list.reduce((sum, p) => sum + p.weight, 0)
+        let roll = rng() * total
+        pick = list[list.length - 1].sid
+        for (const p of list) { if (roll < p.weight) { pick = p.sid; break } roll -= p.weight }
+        if (!avoid.includes(pick)) break
+      }
+      return pick
     },
   }
 }
