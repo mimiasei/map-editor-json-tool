@@ -336,8 +336,9 @@ export async function convertH3mToMap(
   const placeObject = (sid: string, node: number, rotation = 0, visit?: VisitCell): number => {
     let clampedNode: number
     if (visit) {
-      const anchored = anchorByVisitCell(sid, node, visit, { atlas, catalogById, waterMap: out.waterMap, rockNodes })
+      const anchored = anchorByVisitCell(sid, node, visit, { atlas, catalogById, waterMap: out.waterMap, levelsMap: out.levelsMap, rockNodes })
       if (anchored.fallback) anchorFallbacks += 1
+      for (const node of anchored.carve ?? []) out.levelsMap[node] = 0
       clampedNode = anchored.node
     } else {
       clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
@@ -534,7 +535,8 @@ export async function convertH3mToMap(
       const node = atlas.targetNode(record.layer, record.x, record.y)
       const index = heroCandidates.length
       heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
-      heroEntries.push({ index, node, visit: visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas) })
+      // A hero has no visit mask: the tile it stands on is where its start's entrance must be (its 3x3 spawner would otherwise reach into rock).
+      heroEntries.push({ index, node, visit: { x: node % atlas.atlasWidth, z: Math.floor(node / atlas.atlasWidth) } })
       const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending hero start resolution' }
       detailInstances.push(heroDetail)
       heroDetailByIndex.push(heroDetail)
