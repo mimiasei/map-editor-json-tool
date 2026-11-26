@@ -18,6 +18,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { gunzipH3mIfNeeded } from './parse-h3m'
 import { convertH3mToMap, type H3ImportReport } from './convert-h3m-to-map'
+import { reportH3Stage, type H3ImportProgress, type H3ImportStage } from './import-progress'
 import { validateMapStructure } from '@/lib/map-grid/validate-map'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
@@ -59,7 +60,7 @@ export interface ImportH3mResult {
  * unsupported/malformed H3M, or no Game Data catalog loaded yet) — the
  * caller (ImportH3mDialog) is expected to catch and display this.
  */
-export async function importH3mFile(): Promise<ImportH3mResult | null> {
+export async function importH3mFile(onProgress?: H3ImportProgress): Promise<ImportH3mResult | null> {
   if (!isTauri()) return null
 
   const catalog = useCatalogStore.getState().catalog
@@ -79,15 +80,18 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report, localizationTokens, dialogFlows, sealIds } = convertH3mToMap(data, catalog, templateContainer)
+  const { container, report, localizationTokens, dialogFlows, sealIds } = await convertH3mToMap(data, catalog, templateContainer, undefined, onProgress)
   // The cave rocks that close thin H3 walls stay (deleting or moving one opens a hole H3 does not have), and no elevation repaint: the
   // converter's levels are H3's rock and floor, and a lone rock tile is real H3 data (the spike fix would raise the floor tile it encloses).
+  const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
+  await stage('fixing', 78)
   const sealed = new Set(sealIds)
   const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, {
     mayChange: (entityType, id) => !(entityType === 0 && sealed.has(id)),
     fixElevation: false,
   })
 
+  await stage('validating', 90)
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
   const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
   const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, catalog)
@@ -102,6 +106,7 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
 
   const stem = file.name.replace(/\.h3m$/i, '')
   const name = `${stem}.map`
+  await stage('loading', 96)
   await loadParsedMapFile(name, null, buffer)
   // A converted map has nowhere on disk yet — same reasoning as
   // create-map.ts's own createNewMap(): the dirty-dot/exit-guard must
@@ -121,5 +126,6 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
     useScenarioStore.getState().setDialogFlow(flow.id, flow)
   }
 
+  await stage('done', 100)
   return { name, report, validationErrors, autoFixWarnings, unreachablePlacements, isolatedPlayerStarts }
 }

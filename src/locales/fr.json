@@ -360,7 +360,19 @@
       "sourceObjects_other": "Objets sources ({{count}} types trouvés dans la carte H3)",
       "yesDefeatAllEnemies": "Oui (vaincre tous les ennemis)",
       "noneUnsupportedWinCondition": "Aucune (condition de victoire non prise en charge)",
-      "credit": "<credit>Merci à <author>Levi Ritchie</author> pour son travail sur <repo>homm3-olden-stock-translator</repo>, qui a été une excellente référence et une grande source d'inspiration pour cet outil.</credit><thanks>Merci ! 🙏</thanks>"
+      "credit": "<credit>Merci à <author>Levi Ritchie</author> pour son travail sur <repo>homm3-olden-stock-translator</repo>, qui a été une excellente référence et une grande source d'inspiration pour cet outil.</credit><thanks>Merci ! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Lecture de la carte…",
+        "terrain": "Conversion du terrain et des tunnels…",
+        "objects": "Placement des objets…",
+        "decoration": "Placement des arbres, montagnes et décors…",
+        "players": "Préparation des joueurs et des quêtes…",
+        "reachability": "Vérification de l’accessibilité de tout…",
+        "fixing": "Correction des placements…",
+        "validating": "Validation du résultat…",
+        "loading": "Ouverture de la carte…",
+        "done": "Terminé"
+      }
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Objets interactifs RMG",

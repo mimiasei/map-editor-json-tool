@@ -44,6 +44,7 @@
 // dropped): map events, global timed events, and the structural validator
 // (Phase 5).
 
+import { reportH3Stage, type H3ImportProgress, type H3ImportStage } from './import-progress'
 import { generateMapHash, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
@@ -251,7 +252,11 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  to detect a gzip-wrapped `.h3m` before calling this). `seed` defaults to a
  *  hash of the map's own title, so re-converting the same source map is
  *  reproducible. */
-export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number): H3ImportResult {
+export async function convertH3mToMap(
+  data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number, onProgress?: H3ImportProgress,
+): Promise<H3ImportResult> {
+  const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
+  await stage('readingMap', 0)
   const parsed = parseH3mFile(data)
   const { size, layers: layerCount, title } = parsed.shape
 
@@ -290,6 +295,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // landing partly under the wall) — the clamp is the actual fix; the wall
   // itself was never the problem.
 
+  await stage('terrain', 8)
   const families = buildVariantFamilies(catalog.mapObjects)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
@@ -450,6 +456,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   let outOfEnvelopeCount = 0
   let clusterCellsClipped = 0
 
+  await stage('objects', 18)
   for (const record of parsed.records) {
     const oid = record.templateObjectId
     const sourceKey = describeH3ObjectId(oid)
@@ -683,6 +690,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
   }
 
+  await stage('players', 30)
   const ownership = assignOwnership(parsed.header, cityCandidates, heroCandidates)
 
   // Phase 4: only H3's WINSTANDARD ("defeat all enemies") victory condition
@@ -818,6 +826,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     })
   }
 
+  await stage('decoration', 42)
   for (const place of deferredScenery) place()
 
   // Every object (scenery, towns/spawners, everything else) has been placed
@@ -829,6 +838,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // see portal-links.ts's own header) must exist before the accessibility
   // pass can treat underground-via-portal paths as reachable, rather than
   // flagging every underground object on every 2-layer map as stranded.
+  await stage('reachability', 58)
   const portalLinks = linkPortalPairs(objectGroups)
   const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
   const accessibility = applyAccessibilityPass(

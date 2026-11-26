@@ -355,7 +355,19 @@
       "sourceObjects_other": "Source objects ({{count}} kinds found in the H3 map)",
       "yesDefeatAllEnemies": "Yes (defeat all enemies)",
       "noneUnsupportedWinCondition": "None (unsupported win condition)",
-      "credit": "<credit>Credit goes to <author>Levi Ritchie</author> for his work on the <repo>homm3-olden-stock-translator</repo>, which has been a great reference and inspiration for this tool.</credit><thanks>Thank you! 🙏</thanks>"
+      "credit": "<credit>Credit goes to <author>Levi Ritchie</author> for his work on the <repo>homm3-olden-stock-translator</repo>, which has been a great reference and inspiration for this tool.</credit><thanks>Thank you! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Reading the map…",
+        "terrain": "Converting terrain and tunnels…",
+        "objects": "Placing objects…",
+        "decoration": "Placing trees, mountains and decoration…",
+        "players": "Setting up players and quests…",
+        "reachability": "Checking that everything can be reached…",
+        "fixing": "Fixing placements…",
+        "validating": "Validating the result…",
+        "loading": "Opening the map…",
+        "done": "Done"
+      }
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG interactables",

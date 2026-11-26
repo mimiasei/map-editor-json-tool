@@ -373,7 +373,19 @@
       "sourceObjects_many": "Вихідні об'єкти (видів у мапі H3: {{count}})",
       "yesDefeatAllEnemies": "Так (здолати всіх ворогів)",
       "noneUnsupportedWinCondition": "Немає (непідтримувана умова перемоги)",
-      "credit": "<credit>Подяка <author>Levi Ritchie</author> за його роботу над <repo>homm3-olden-stock-translator</repo> — це був чудовий взірець і джерело натхнення для цього інструмента.</credit><thanks>Дякуємо! 🙏</thanks>"
+      "credit": "<credit>Подяка <author>Levi Ritchie</author> за його роботу над <repo>homm3-olden-stock-translator</repo> — це був чудовий взірець і джерело натхнення для цього інструмента.</credit><thanks>Дякуємо! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Читання мапи…",
+        "terrain": "Перетворення ландшафту й тунелів…",
+        "objects": "Розміщення об’єктів…",
+        "decoration": "Розміщення дерев, гір і декорацій…",
+        "players": "Налаштування гравців і завдань…",
+        "reachability": "Перевірка досяжності всього…",
+        "fixing": "Виправлення розміщення…",
+        "validating": "Перевірка результату…",
+        "loading": "Відкриття мапи…",
+        "done": "Готово"
+      }
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Інтерактивні об'єкти RMG",

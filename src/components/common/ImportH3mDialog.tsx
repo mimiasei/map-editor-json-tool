@@ -21,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertTriangle, CheckCircle2 } from '@/components/ui/icons'
+import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { importH3mFile, type ImportH3mResult } from '@/lib/h3-import/import-h3m-file'
 import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
@@ -198,6 +199,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
 
   const [phase, setPhase] = useState<Phase>('idle')
+  const [progress, setProgress] = useState<{ pct: number; label: string } | null>(null)
   const [result, setResult] = useState<ImportH3mResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [dontShowAgain, setDontShowAgain] = useState(false)
@@ -215,10 +217,11 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
   const handleImport = async () => {
     if (dontShowAgain) localStorage.setItem(INTRO_SHOWN_KEY, '1')
+    setProgress(null)
     setPhase('running')
     setErrorMsg('')
     try {
-      const outcome = await importH3mFile()
+      const outcome = await importH3mFile((label, pct) => setProgress({ label, pct }))
       if (!outcome) { setPhase('idle'); return } // cancelled file picker
       logInfo(`Imported H3 map: ${outcome.name}`)
       setResult(outcome)
@@ -291,9 +294,8 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
         {/* ── Running ── */}
         {phase === 'running' && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-            <span>{t('common.importH3mDialog.converting')}</span>
+          <div className="py-2">
+            <ProgressStatus value={progress?.pct ?? 0} label={progress?.label ?? t('common.importH3mDialog.converting')} />
           </div>
         )}
 

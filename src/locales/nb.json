@@ -347,7 +347,19 @@
       "sourceObjects_other": "Kildeobjekter ({{count}} typer funnet i H3-kartet)",
       "yesDefeatAllEnemies": "Ja (beseir alle fiender)",
       "noneUnsupportedWinCondition": "Ingen (ikke-støttet seiersbetingelse)",
-      "credit": "<credit>Takk til <author>Levi Ritchie</author> for arbeidet hans på <repo>homm3-olden-stock-translator</repo>, som har vært en flott referanse og inspirasjon for dette verktøyet.</credit><thanks>Tusen takk! 🙏</thanks>"
+      "credit": "<credit>Takk til <author>Levi Ritchie</author> for arbeidet hans på <repo>homm3-olden-stock-translator</repo>, som har vært en flott referanse og inspirasjon for dette verktøyet.</credit><thanks>Tusen takk! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Leser kartet…",
+        "terrain": "Konverterer terreng og tunneler…",
+        "objects": "Plasserer objekter…",
+        "decoration": "Plasserer trær, fjell og dekor…",
+        "players": "Setter opp spillere og oppdrag…",
+        "reachability": "Sjekker at alt kan nås…",
+        "fixing": "Retter opp plasseringer…",
+        "validating": "Validerer resultatet…",
+        "loading": "Åpner kartet…",
+        "done": "Ferdig"
+      }
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG-interaktive objekter",
