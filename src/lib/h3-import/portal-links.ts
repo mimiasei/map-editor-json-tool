@@ -8,7 +8,8 @@
 //   two-way monoliths (object 45), same subtype  -> a pair gets a two-way link; more than two get a ring (every one still reaches every other
 //                                                    by walking it, not always in one hop: OE has one target per portal)
 //   one-way entrance (43) -> exit (44), same subtype -> each entrance points at an exit (round robin); the exit has no target of its own
-//   subterranean gates (103)                          -> each surface gate is paired with the nearest unused underground gate
+//   subterranean gates (103)                          -> each surface gate is paired with an underground gate of the same kind first, then the
+//                                                        nearest unused one
 // Whether OE lets a portal without a target still be arrived at is an assumption, not tested in the game.
 
 export interface H3PortalPlacement {
@@ -19,6 +20,8 @@ export interface H3PortalPlacement {
   kind: 'two-way' | 'entrance' | 'exit' | 'gate'
   /** The H3 colour (monolith subtype); gates share one network. */
   network: number
+  /** The H3 sprite, so gates of one kind (cave gate, HotA exit) pair with each other before any other. */
+  look?: string
 }
 
 export interface PortalLinkResult {
@@ -68,7 +71,9 @@ export function linkH3Portals(portals: H3PortalPlacement[]): PortalLinkResult {
         const pb = group.find((g) => g.id === b) as H3PortalPlacement
         return Math.hypot(pa.x - pb.x, pa.y - pb.y)
       }
-      pairs.sort((l, r) => dist(l[0], l[1]) - dist(r[0], r[1]))
+      const lookOf = (id: number) => (group.find((g) => g.id === id) as H3PortalPlacement).look
+      const mismatch = (l: [number, number]) => (lookOf(l[0]) === lookOf(l[1]) ? 0 : 1)
+      pairs.sort((l, r) => mismatch(l) - mismatch(r) || dist(l[0], l[1]) - dist(r[0], r[1]))
       const used = new Set<number>()
       for (const [a, b] of pairs) {
         if (used.has(a) || used.has(b)) continue

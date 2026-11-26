@@ -821,7 +821,7 @@ export async function convertH3mToMap(
       h3Portals.push({
         id: placedId, layer: record.layer, x: record.x, y: record.y,
         kind: oid === OBJECT_MONOLITH_ONE_WAY_ENTRANCE ? 'entrance' : oid === OBJECT_MONOLITH_ONE_WAY_EXIT ? 'exit' : oid === OBJECT_SUBTERRANEAN_GATE ? 'gate' : 'two-way',
-        network: oid === OBJECT_SUBTERRANEAN_GATE ? 0 : subId,
+        network: oid === OBJECT_SUBTERRANEAN_GATE ? 0 : subId, look: defName.toLowerCase(),
       })
     }
     detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: placedSid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
