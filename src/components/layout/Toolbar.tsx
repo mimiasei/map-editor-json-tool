@@ -106,7 +106,7 @@ import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-
 import { hasPlayerAreas, planPlayerAreas, playerCities } from '@/lib/map-grid/auto-player-areas'
 import { planRebalance, type RebalanceSuggestion } from '@/lib/map-grid/player-rebalance'
 import RebalanceDialog from '@/components/common/RebalanceDialog'
-import { Eraser, ImageIcon, X } from '@/components/ui/icons'
+import { Eraser, ImageIcon, Import, X } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { useTranslation } from 'react-i18next'
@@ -872,6 +872,29 @@ export default function Toolbar({
     }
   }
 
+  // In the map view the validate button sits next to Generate on map; in the quest view it stays among the shared tools.
+  const validateButton = (
+    <ToolButton
+      icon={
+        <span className="relative">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {/* Sits on the icon's corner, so it adds no width. */}
+          {(validation.errors.length > 0 || validation.warnings.length > 0) && (
+            <Badge
+              variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
+              className="absolute -right-3 -top-2 h-4 min-w-4 justify-center px-1 text-[10px] leading-none"
+            >
+              {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
+            </Badge>
+          )}
+        </span>
+      }
+      label={t('layout.toolbar.validate')}
+      title={t('layout.toolbar.validateScenario')}
+      onClick={handleOpenValidate}
+    />
+  )
+
   return (
     <>
       <header className="flex h-11 items-center gap-1 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
@@ -928,6 +951,13 @@ export default function Toolbar({
             label={t('common.generateRandomMapDialog.generateRandomMap')}
             onClick={handleGenerateMapClick}
           />
+          {isTauri() && (
+            <ToolButton
+              icon={<Import className="h-3.5 w-3.5" />}
+              label={t('layout.toolbar.menu.importH3Map')}
+              onClick={handleImportH3mClick}
+            />
+          )}
           {hasMap && (
             <ToolButton
               icon={<BalanceScale className="h-3.5 w-3.5" />}
@@ -944,6 +974,7 @@ export default function Toolbar({
               onClick={() => setGenerateOnMapOpen(true)}
             />
           )}
+          {validateButton}
           </>
           ) : (
             <>
@@ -1029,25 +1060,7 @@ export default function Toolbar({
             onClick={handleRedo}
             disabled={!canRedo}
           />
-          <ToolButton
-            icon={
-              <span className="relative">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {/* Sits on the icon's corner, so it adds no width. */}
-                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
-                  <Badge
-                    variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
-                    className="absolute -right-3 -top-2 h-4 min-w-4 justify-center px-1 text-[10px] leading-none"
-                  >
-                    {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
-                  </Badge>
-                )}
-              </span>
-            }
-            label={t('layout.toolbar.validate')}
-            title={t('layout.toolbar.validateScenario')}
-            onClick={handleOpenValidate}
-          />
+          {!mapView && validateButton}
           {!isTauri() && (
             <ToolButton
               icon={<Save className="h-3.5 w-3.5" />}

@@ -42,6 +42,7 @@ import {
   ClockIcon,
   CloudFogIcon,
   CloudUploadIcon,
+  ImportIcon,
   CoinsIcon,
   CopyIcon,
   CornerDownRightIcon,
@@ -278,6 +279,7 @@ export const Trophy = make(TrophyIcon, 'Trophy')
 export const Undo2 = make(UndoIcon, 'Undo2')
 export const Upload = make(UploadIcon, 'Upload')
 export const UploadCloud = make(CloudUploadIcon, 'UploadCloud')
+export const Import = make(ImportIcon, 'Import')
 export const UserCog = make(UserCogIcon, 'UserCog')
 export const UserRound = make(UserRoundIcon, 'UserRound')
 export const Users = make(UsersIcon, 'Users')

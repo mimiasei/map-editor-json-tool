@@ -5,7 +5,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Clock, Dices, FilePlus, FolderOpen, Keyboard, Upload, X } from '@/components/ui/icons'
+import { Clock, Dices, FilePlus, FolderOpen, Import, Keyboard, Upload, X } from '@/components/ui/icons'
 import { isTauri } from '@/lib/native-fs'
 import { getRecentFiles, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import { cn } from '@/lib/utils'
@@ -80,7 +80,7 @@ export default function StartScreen() {
             onClick={() => fire('oe:open-map')}
           />
           <Cell icon={<Dices />} label={t('common.generateRandomMapDialog.generateRandomMap')} onClick={() => fire('oe:random-map')} />
-          {desktop && <Cell icon={<Upload />} label={t('startScreen.importH3')} onClick={() => fire('oe:import-h3m')} />}
+          {desktop && <Cell icon={<Import />} label={t('startScreen.importH3')} onClick={() => fire('oe:import-h3m')} />}
           {desktop && <Cell icon={<Clock />} label={t('startScreen.recent')} active={recentOpen} onClick={() => { setRecent(getRecentFiles()); setRecentOpen((v) => !v) }} />}
         </div>
 
