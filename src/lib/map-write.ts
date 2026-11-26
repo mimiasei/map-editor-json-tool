@@ -2460,23 +2460,53 @@ export function patchGameRules(
   return { block1Chunk: new TextEncoder().encode(text1), block2Chunk: new TextEncoder().encode(text2) }
 }
 
-// ─── Win conditions (generated maps) ─────────────────────────────────────────
+// ─── Win conditions ──────────────────────────────────────────────────────────
 // `settings.mapWinConditions`: one entry per active condition. A fresh map
-// ships `0,2,1` (Classic, Hero Lighting, Desertion); this keeps those entries
-// as they are, drops Classic when it isn't wanted, and appends the extra
-// conditions given as `{ type, fields }` (fields override the entry defaults).
-export function patchWinConditions(
-  block2Chunk: Uint8Array,
-  options: { classic: boolean; extras: { type: number; fields?: Record<string, unknown> }[] },
-): Uint8Array {
+// ships `0,2,1` (Classic, Hero Lighting, Desertion); those two extra entries stay
+// as they are, Classic is dropped when it isn't wanted, and the extra
+// conditions given as `{ type, fields }` are appended (fields override the entry
+// defaults). `removeTypes` lists the types an editor manages: any of them not in
+// `extras` is removed, so switching a condition off takes it out of the map.
+export interface WinConditionEntryOptions {
+  classic: boolean
+  extras: { type: number; fields?: Record<string, unknown> }[]
+  removeTypes?: number[]
+}
+
+/** One `mapWinConditions` entry with the game editor's defaults (the first entry of the blank-map template), for a map that has none to copy. */
+const DEFAULT_WIN_ENTRY: Record<string, unknown> = {
+  typeWinCondition: 0, valueDesertion: 0, dayAdditionWinCondition: 0, heroSids: [], indexSideCampaign: 0, indexOtherPlayers: [], sidBuildWinCondition: '',
+  isRegistrationStartWork: false, isRegistrationStartFight: true, daysDelayStart: 0, countDayGladiatorArena: 3, countDayLostStartCity: 0, countDayCityHold: 3,
+  isResetColdownCityHold: true, daysAnounceTournament: [], daysDelayStartFightTournament: [], countPointsTournament: 0, isSaveArmyTournament: true, autoSelectRule: 0,
+}
+
+/** The entries `mapWinConditions` should hold after applying `options` to `entries` (the same logic for the editor, the generator and the H3 import).
+ *  Classic is controlled by `options.classic` alone and is added when wanted and missing. */
+export function applyWinConditionEntries(entries: Record<string, unknown>[], options: WinConditionEntryOptions): Record<string, unknown>[] {
+  const template = entries[0] ?? DEFAULT_WIN_ENTRY
+  const removed = new Set(options.removeTypes ?? [])
+  let next = entries.filter((e) => options.classic || e.typeWinCondition !== 0)
+  next = next.filter((e) => !removed.has(e.typeWinCondition as number) && !options.extras.some((x) => x.type === e.typeWinCondition))
+  if (options.classic && !next.some((e) => e.typeWinCondition === 0)) next.unshift({ ...template, ...DEFAULT_WIN_ENTRY, typeWinCondition: 0 })
+  for (const extra of options.extras) next.push({ ...template, typeWinCondition: extra.type, ...extra.fields })
+  return next
+}
+
+export function patchWinConditions(block2Chunk: Uint8Array, options: WinConditionEntryOptions): Uint8Array {
   const text = new TextDecoder('utf-8').decode(block2Chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'mapWinConditions')
-  const entries = JSON.parse(span) as Record<string, unknown>[]
-  const template = entries[0] ?? {}
-  let next = entries.filter((e) => options.classic || e.typeWinCondition !== 0)
-  next = next.filter((e) => !options.extras.some((x) => x.type === e.typeWinCondition))
-  for (const extra of options.extras) next.push({ ...template, typeWinCondition: extra.type, ...extra.fields })
+  const next = applyWinConditionEntries(JSON.parse(span) as Record<string, unknown>[], options)
   return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(next) + text.slice(arrayClose + 1))
+}
+
+/** The raw `mapWinConditions` entries and the City Hold city of a map, for an editor to show. */
+export function readWinConditionData(block2Chunk: Uint8Array): { entries: Record<string, unknown>[]; cityHoldId: number | null } {
+  const block2 = JSON.parse(new TextDecoder('utf-8').decode(block2Chunk)) as {
+    settings?: { mapWinConditions?: Record<string, unknown>[] }
+    objectsProperties?: { propCitiesHold?: { type: number; id: number; isCityHold: boolean }[] }
+  }
+  const hold = (block2.objectsProperties?.propCitiesHold ?? []).find((e) => e.type === 0 && e.isCityHold)
+  return { entries: block2.settings?.mapWinConditions ?? [], cityHoldId: hold ? hold.id : null }
 }
 
 /** Marks an object as the City Hold city (`objectsProperties.propCitiesHold`). */
@@ -2485,6 +2515,14 @@ export function markCityHold(block2Chunk: Uint8Array, objectId: number): Uint8Ar
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propCitiesHold')
   const entries = JSON.parse(span) as { type: number; id: number; isCityHold: boolean }[]
   if (!entries.some((e) => e.type === 0 && e.id === objectId)) entries.push({ type: 0, id: objectId, isCityHold: true })
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
+/** Makes `objectId` the only City Hold city, or none when null. */
+export function setCityHold(block2Chunk: Uint8Array, objectId: number | null): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose } = findJsonArraySpan(text, 'propCitiesHold')
+  const entries = objectId === null ? [] : [{ type: 0, id: objectId, isCityHold: true }]
   return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 

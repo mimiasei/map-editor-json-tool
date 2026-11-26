@@ -1213,7 +1213,16 @@
         "enableCustomAI": {
           "label": "Benutzerdefinierte KI"
         }
-      }
+      },
+      "tabs": {
+        "general": "Allgemein",
+        "rules": "Regeln",
+        "win": "Siegbedingungen"
+      },
+      "winDescription": "Auf welche Arten diese Karte gewonnen werden kann. Mehrere können gleichzeitig aktiv sein; mindestens eine bleibt aktiv.",
+      "noNeutralCity": "Diese Karte hat keine neutrale Stadt zum Halten",
+      "cityToHold": "Zu haltende Stadt",
+      "cityOption": "{{sid}} bei ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Auf dieser Karte generieren",

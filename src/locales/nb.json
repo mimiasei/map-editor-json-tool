@@ -1213,7 +1213,16 @@
         "enableCustomAI": {
           "label": "Egendefinert AI"
         }
-      }
+      },
+      "tabs": {
+        "general": "Generelt",
+        "rules": "Regler",
+        "win": "Seierskrav"
+      },
+      "winDescription": "Hvordan dette kartet kan vinnes. Flere kan være på samtidig; minst ett er alltid på.",
+      "noNeutralCity": "Dette kartet har ingen nøytral by å holde",
+      "cityToHold": "By å holde",
+      "cityOption": "{{sid}} ved ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Generer på dette kartet",

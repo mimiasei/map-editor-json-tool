@@ -1271,7 +1271,16 @@
         "enableCustomAI": {
           "label": "Własne SI"
         }
-      }
+      },
+      "tabs": {
+        "general": "Ogólne",
+        "rules": "Zasady",
+        "win": "Warunki zwycięstwa"
+      },
+      "winDescription": "Na jakie sposoby można wygrać tę mapę. Można włączyć kilka naraz; co najmniej jeden pozostaje włączony.",
+      "noNeutralCity": "Na tej mapie nie ma neutralnego miasta do utrzymania",
+      "cityToHold": "Miasto do utrzymania",
+      "cityOption": "{{sid}} w ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Generuj na tej mapie",

@@ -1221,7 +1221,16 @@
         "enableCustomAI": {
           "label": "Custom AI"
         }
-      }
+      },
+      "tabs": {
+        "general": "General",
+        "rules": "Rules",
+        "win": "Win conditions"
+      },
+      "winDescription": "Which ways this map can be won. Several can be on at once; at least one stays on.",
+      "noNeutralCity": "This map has no neutral city to hold",
+      "cityToHold": "City to hold",
+      "cityOption": "{{sid}} at ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Generate on this map",

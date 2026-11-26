@@ -1242,7 +1242,16 @@
         "enableCustomAI": {
           "label": "IA personnalisée"
         }
-      }
+      },
+      "tabs": {
+        "general": "Général",
+        "rules": "Règles",
+        "win": "Conditions de victoire"
+      },
+      "winDescription": "Les façons de gagner cette carte. Plusieurs peuvent être actives ; au moins une reste active.",
+      "noNeutralCity": "Cette carte n’a aucune ville neutre à tenir",
+      "cityToHold": "Ville à tenir",
+      "cityOption": "{{sid}} en ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Générer sur cette carte",
