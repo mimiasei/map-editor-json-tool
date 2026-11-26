@@ -251,6 +251,11 @@
   background: var(--skin-tab-glow) center bottom / 100% 100% no-repeat;
 }
 
+/* The marker below a tab belongs to a horizontal tab row; a vertical list of tabs (Map settings) opts out. */
+.skin-game [role="tab"][data-no-tab-marker]::after {
+  display: none;
+}
+
 .skin-game [role="tab"][aria-selected="true"]::after {
   content: "";
   position: absolute;

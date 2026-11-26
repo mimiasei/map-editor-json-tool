@@ -114,19 +114,21 @@ export default function MapGameSettingsDialog() {
     <>
       <ToolButton icon={<MapIcon />} label={t('mapGrid.mapGameSettingsDialog.mapSettings')} onClick={() => setOpen(true)} data-nodrag />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-[42rem] max-w-[calc(100vw-2rem)]" onInteractOutside={(e) => e.preventDefault()} data-nodrag>
+        <DialogContent className="w-[58rem] max-w-[calc(100vw-2rem)]" onInteractOutside={(e) => e.preventDefault()} data-nodrag>
           <DialogHeader>
             <DialogTitle>{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</DialogTitle>
             <DialogDescription className="sr-only">{t('mapGrid.mapGameSettingsDialog.mapSettings2')}</DialogDescription>
           </DialogHeader>
 
-          <div className="flex min-h-[24rem] flex-col gap-4 sm:flex-row">
-            <div role="tablist" aria-orientation="vertical" className="flex shrink-0 gap-1 sm:w-40 sm:flex-col">
+          {/* A fixed height, so the dialog keeps its size from tab to tab; only the panel scrolls, and only vertically. */}
+          <div className="flex h-[min(26rem,calc(100vh-14rem))] flex-col gap-4 sm:flex-row">
+            <div role="tablist" aria-orientation="vertical" className="flex shrink-0 gap-1 sm:w-48 sm:flex-col">
               {TABS.map((id) => (
                 <button
                   key={id}
                   type="button"
                   role="tab"
+                  data-no-tab-marker
                   aria-selected={tab === id}
                   onClick={() => setTab(id)}
                   className={cn(
@@ -139,7 +141,7 @@ export default function MapGameSettingsDialog() {
               ))}
             </div>
 
-            <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto pr-1 sm:max-h-[26rem]">
+            <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden pr-2">
               {tab === 'general' && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
