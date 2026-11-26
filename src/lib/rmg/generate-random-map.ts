@@ -2155,6 +2155,15 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     for (const node of tilesByZoneFull.get(zone.id) ?? []) zoneAreaPaint.push({ node, zoneId: zone.id + 1 })
   }
   finalBlock2 = paintZoneTiles(finalBlock2, zoneAreaPaint)
+  // Logged so a map without player areas can be told apart from one whose areas were painted but not shown (the paint is silent otherwise).
+  {
+    const perZone = new Map<number, number>()
+    for (const { zoneId } of zoneAreaPaint) perZone.set(zoneId, (perZone.get(zoneId) ?? 0) + 1)
+    const summary = [...perZone].map(([area, tiles]) => `area ${area}: ${tiles} tiles`).join(', ')
+    const players = graph.zones.filter((z) => z.kind === 'player').length
+    if (zoneAreaPaint.length === 0) logWarn(`Random map generation: no player areas painted (${players} player zone(s) in the ${gameTemplateJson ? 'game template' : 'layout'}, ${graph.zones.length} zones in all)`)
+    else logInfo(`Random map generation: painted ${perZone.size} player area(s) (${summary}) of ${graph.zones.length} zones${gameTemplateJson ? ', game template' : ''}`)
+  }
 
   // Stage 4 (issue #210) — a game-template import's own gameRules/
   // globalBans, mapped onto Block2's `settings`/both blocks' `banInfoData`
