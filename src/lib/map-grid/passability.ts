@@ -78,6 +78,44 @@ export function isElevationWallTile(
   return true
 }
 
+/** The elevation wall tiles of one map, found once: a relocation search asks about thousands of candidate cells, and testing each against
+ *  its 8 neighbours every time made an import minutes long. Keyed by the levels array, which a context never mutates after it is built. */
+const wallTilesByLevels = new WeakMap<number[], Uint8Array>()
+
+function wallTiles(sizeX: number, sizeZ: number, levelsMap: number[], climbsMap: number[]): Uint8Array {
+  let walls = wallTilesByLevels.get(levelsMap)
+  if (!walls || walls.length !== sizeX * sizeZ) {
+    walls = new Uint8Array(sizeX * sizeZ)
+    for (let node = 0; node < walls.length; node++) if (isElevationWallTile(node, sizeX, sizeZ, levelsMap, climbsMap)) walls[node] = 1
+    wallTilesByLevels.set(levelsMap, walls)
+  }
+  return walls
+}
+
+/**
+ * Whether an object's footprint stands on one level and its entrance on open ground: every occupied cell (value 1 or 2) on the same
+ * level, none in water, and no entrance cell (value 2) on an elevation wall tile. A relocated object that fails this ends up half in a
+ * rock face or on a cliff, where the game either blocks its entrance or draws it inside the mountain. Cells must be in bounds already.
+ */
+export function footprintOnFlatGround(
+  cells: { x: number; z: number; value: number }[],
+  context: Pick<MapContext, 'sizeX' | 'sizeZ' | 'levelsMap' | 'climbsMap' | 'waterMap'>,
+): boolean {
+  const { sizeX, sizeZ, levelsMap, climbsMap, waterMap } = context
+  let level: number | undefined
+  const walls = wallTiles(sizeX, sizeZ, levelsMap, climbsMap)
+  for (const cell of cells) {
+    if (cell.value < 1) continue
+    const node = cell.z * sizeX + cell.x
+    const own = levelsMap[node] ?? 0
+    if (level === undefined) level = own
+    else if (own !== level) return false
+    if ((waterMap[node] ?? 0) !== 0) return false
+    if (cell.value === 2 && walls[node] === 1) return false
+  }
+  return true
+}
+
 type PassabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
 type EntranceContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects'>
 

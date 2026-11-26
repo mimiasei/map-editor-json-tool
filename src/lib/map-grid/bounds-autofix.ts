@@ -18,7 +18,7 @@
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, isFootprintInBounds, clampAnchorToFootprintBounds } from './footprint'
-import { buildBlockedTileSet } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround } from './passability'
 import { findOutOfBoundsPlacements, type OutOfBoundsPlacement } from './bounds-validation'
 
 export interface BoundsAutoFix {
@@ -141,7 +141,7 @@ export function computeBoundsAutoFix(
 
   const isValidCandidate = (template: ReturnType<typeof catalogById.get>, x: number, z: number, rotation?: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     let anyReachable = false
     for (const cell of cells) {
       const n = cell.z * sizeX + cell.x

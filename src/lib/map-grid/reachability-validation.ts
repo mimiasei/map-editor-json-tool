@@ -89,7 +89,7 @@ import i18n from '@/lib/i18n'
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, entranceGroups, isFootprintInBounds } from './footprint'
-import { buildBlockedTileSet, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from './passability'
 import { groupOf } from './tile-index'
 import { groupPlayerStartsByZone } from './zone-ownership'
 import { findNearestValidPosition } from './relocate'
@@ -541,7 +541,7 @@ function findFreeTileForBlocker(
   )
   const isValid = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, obj.rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     const anchorNode = z * sizeX + x
     if (occupiedAnchors.has(anchorNode) && anchorNode !== obj.node) return false
     for (const cell of cells) {
@@ -769,7 +769,7 @@ export function computeReachabilityGuarantee(context: ReachabilityContext, catal
       const reach = reachFor(node)
       if (mover.type !== 0) return reach.has(node) && !blocked.has(node)
       const cells = computeFootprintTiles(template, x, z, mover.rotation)
-      if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+      if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
       const solid: number[] = []
       for (const c of cells) {
         const n = c.z * sizeX + c.x

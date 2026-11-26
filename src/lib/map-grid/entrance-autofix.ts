@@ -28,7 +28,7 @@ import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import {computeFootprintTiles, entranceGroups, isFootprintInBounds} from './footprint'
 import { groupOf } from './tile-index'
-import { buildBlockedTileSet } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround } from './passability'
 import { entranceApproachNodes, findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
 
 export interface EntranceAutoFixDeletion {
@@ -264,7 +264,7 @@ function findNearbyFreeTile(
   const approach = entranceApproachNodes(context, catalog, obj.key)
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, obj.rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x) && !approach.has(cell.z * sizeX + cell.x)))
   }
 
@@ -312,7 +312,7 @@ function findRelocationTarget(
 
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, violation.rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     for (const cell of cells) {
       if (cell.value === 1 && isBlocked(cell.z * sizeX + cell.x)) return false
     }

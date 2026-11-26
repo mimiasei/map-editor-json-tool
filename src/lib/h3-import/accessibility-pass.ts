@@ -34,7 +34,7 @@
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
-import { buildBlockedTileSet, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, footprintOnFlatGround, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 
 export interface ObjectPlacementGroup {
   ids: number[]
@@ -456,7 +456,8 @@ export function applyAccessibilityPass(
           if (cell.value === 1 && nudgeBlocked.has(n) && !ownNodes.has(n)) { valid = false; break }
           if (cell.value === 1 && avoidNodes.has(n)) { valid = false; break }
         }
-        if (!valid) continue
+        // Never onto rock, a cliff tile or across a level step: such a spot reads as reachable here but is not where the object belongs.
+        if (!valid || !footprintOnFlatGround(candidateCells, passContext)) continue
         const candidateAccess = NON_BLOCKING_SPAWNER_SIDS.has(sid)
           ? candidateCells.map((c) => nodeAt(c.x, c.z, atlasWidth, atlasHeight)).filter((n): n is number => n !== null)
           : candidateCells.filter((c) => c.value === 2).map((c) => nodeAt(c.x, c.z, atlasWidth, atlasHeight)).filter((n): n is number => n !== null)

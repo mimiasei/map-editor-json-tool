@@ -50,6 +50,8 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyRockSkirt, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
@@ -303,6 +305,18 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const rng = createSeededRng(seed ?? seedFromString(title || 'h3-import'))
 
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
+  // Tiles a blocking object already stands on. Everything that blocks is placed first and the decoration after (see deferredScenery), so a
+  // tree or rock never overlaps an interactable or another decoration: the tile is blocked either way, and the auto-fix has nothing to move.
+  const solidClaimed = new Set<number>()
+  const solidCells = (sid: string, node: number, rotation: number): number[] => {
+    const template = catalogById.get(sid)
+    if (!template || NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
+    const cells: number[] = []
+    for (const c of computeFootprintTiles(template, node % atlas.atlasWidth, Math.floor(node / atlas.atlasWidth), rotation)) {
+      if (c.value === 1 && c.x >= 0 && c.z >= 0 && c.x < atlas.atlasWidth && c.z < atlas.atlasHeight) cells.push(c.z * atlas.atlasWidth + c.x)
+    }
+    return cells
+  }
   let nextId = 0
   const placeObject = (sid: string, node: number, rotation = 0, visit?: VisitCell): number => {
     let clampedNode: number
@@ -313,6 +327,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     } else {
       clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
     }
+    for (const cell of solidCells(sid, clampedNode, rotation)) solidClaimed.add(cell)
     let group = objectGroups.get(sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(sid, group) }
     const id = nextId
@@ -370,6 +385,26 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const sealIds = new Set<number>()
   for (const node of sealNodes) {
     sealIds.add(placeObject(pickVariant(BIOME_ROLE_REPLACEMENTS.mountain.dirt, families, rng), node, randomDecorRotation(rng)))
+  }
+
+  const deferredScenery: (() => void)[] = []
+  /** Places one decoration unless a blocking object already stands on its tiles. A big mountain that only partly collides is replaced by
+   *  `smallSid` on its free tiles, so every tile H3 blocked stays blocked. Returns how many objects were placed. */
+  const placeScenery = (sid: string, node: number, smallSid: string | null): number => {
+    const rotation = randomDecorRotation(rng)
+    const cells = solidCells(sid, node, rotation)
+    if (cells.every((cell) => !solidClaimed.has(cell))) {
+      decorativeIds.add(placeObject(sid, node, rotation))
+      return 1
+    }
+    if (!smallSid || smallSid === sid) return 0
+    let placed = 0
+    for (const cell of cells) {
+      if (solidClaimed.has(cell)) continue
+      decorativeIds.add(placeObject(pickVariant(smallSid, families, rng), cell, randomDecorRotation(rng)))
+      placed += 1
+    }
+    return placed
   }
 
   const omittedReasonCounts: Record<string, number> = {}
@@ -483,40 +518,44 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const visit = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
 
     if (resolution.kind === 'scenery') {
-      // Trees and mountains: H3's own multi-cell footprint often represents
-      // a cluster (a grove of trees, a mountain range) rather than one
-      // object — OE has no literal cluster sid for either, so simulate one
-      // by placing several small OE objects across the H3 footprint (see
-      // scenery-clusters.ts's own doc comment for why this is a genuine new
-      // feature, not a reference-project port).
-      if (resolution.role === 'tree' || resolution.role === 'mountain') {
-        const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
-        clusterCellsClipped += clippedCount
-        const placements = resolution.role === 'tree'
-          ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
-              oid === H3_OAK_TREES_OBJECT_ID
-                ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
-                : undefined)
-          : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
-        for (const p of placements) {
-          const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
-          decorativeIds.add(placeObject(p.sid, cellNode, randomDecorRotation(rng)))
+      // Decoration goes down after everything that blocks (see `solidClaimed`), so it is queued here and placed after the main loop.
+      deferredScenery.push(() => {
+        // Trees and mountains: H3's own multi-cell footprint often represents
+        // a cluster (a grove of trees, a mountain range) rather than one
+        // object — OE has no literal cluster sid for either, so simulate one
+        // by placing several small OE objects across the H3 footprint (see
+        // scenery-clusters.ts's own doc comment for why this is a genuine new
+        // feature, not a reference-project port).
+        if (resolution.role === 'tree' || resolution.role === 'mountain') {
+          const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+          clusterCellsClipped += clippedCount
+          const placements = resolution.role === 'tree'
+            ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
+                oid === H3_OAK_TREES_OBJECT_ID
+                  ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
+                  : undefined)
+            : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
+          let placed = 0
+          for (const p of placements) {
+            const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
+            placed += placeScenery(p.sid, cellNode, resolution.role === 'mountain' ? resolution.sid : null)
+          }
+          sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
+          sceneryPlaced += placed
+          detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placed} placed)` })
+          return
         }
-        sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placements.length
-        sceneryPlaced += placements.length
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placements.length} placed)` })
-        continue
-      }
 
-      // Every other scenery role (shrub/rock/pool/ruin/ground/
-      // water_decoration): unchanged single-object-at-anchor placement, but
-      // still randomly rotated — the "always randomize decorative rotation"
-      // hard rule applies to every decorative placement, not just clusters.
-      const variantSid = pickVariant(resolution.sid, families, rng)
-      sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + 1
-      decorativeIds.add(placeObject(variantSid, node, randomDecorRotation(rng)))
-      sceneryPlaced += 1
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
+        // Every other scenery role (shrub/rock/pool/ruin/ground/
+        // water_decoration): unchanged single-object-at-anchor placement, but
+        // still randomly rotated — the "always randomize decorative rotation"
+        // hard rule applies to every decorative placement, not just clusters.
+        const variantSid = pickVariant(resolution.sid, families, rng)
+        const placed = placeScenery(variantSid, node, null)
+        sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
+        sceneryPlaced += placed
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
+      })
       continue
     }
 
@@ -778,6 +817,8 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       colorId: -1, isAlive: true, isLocked: false,
     })
   }
+
+  for (const place of deferredScenery) place()
 
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint

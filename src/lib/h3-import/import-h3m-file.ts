@@ -79,8 +79,14 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report, localizationTokens, dialogFlows } = convertH3mToMap(data, catalog, templateContainer)
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog)
+  const { container, report, localizationTokens, dialogFlows, sealIds } = convertH3mToMap(data, catalog, templateContainer)
+  // The cave rocks that close thin H3 walls stay (deleting or moving one opens a hole H3 does not have), and no elevation repaint: the
+  // converter's levels are H3's rock and floor, and a lone rock tile is real H3 data (the spike fix would raise the floor tile it encloses).
+  const sealed = new Set(sealIds)
+  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, {
+    mayChange: (entityType, id) => !(entityType === 0 && sealed.has(id)),
+    fixElevation: false,
+  })
 
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
   const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)

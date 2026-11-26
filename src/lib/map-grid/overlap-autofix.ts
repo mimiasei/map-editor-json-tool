@@ -7,7 +7,7 @@ import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, isFootprintInBounds } from './footprint'
 import { entranceApproachNodes } from './entrance-validation'
-import { buildBlockedTileSet } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround } from './passability'
 import { groupOf } from './tile-index'
 import { findOverlappingPlacements, type OverlappingPlacement } from './overlap-validation'
 import { findNearestValidPosition, floodFillReachable } from './relocate'
@@ -116,7 +116,7 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
         return !reachable || reachable.has(node)
       }
       const cells = computeFootprintTiles(template, x, z, mover.rotation)
-      if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+      if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
       let anyReachable = !reachable
       for (const cell of cells) {
         const n = cell.z * sizeX + cell.x
