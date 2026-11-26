@@ -48,7 +48,7 @@ import { generateMapHash, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
-import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
+import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyRockSkirt, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
@@ -199,6 +199,8 @@ export interface H3ImportResult {
    *  caller must also register these into the live scenario's dialog
    *  store (`useScenarioStore`'s `setDialogFlow`). */
   dialogFlows: Record<string, DialogFlow>
+  /** objects[] ids of the cave rocks that close thin H3 walls; later passes must not delete them. */
+  sealIds: number[]
 }
 
 // Towns (and townless-hero players) are placed AFTER ownership is resolved,
@@ -250,6 +252,15 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const out = buildEmptyAtlasArrays(atlas)
   for (let layer = 0; layer < layerCount; layer++) {
     projectLayerIntoAtlas(parsed.layers[layer], layer, atlas, out, size)
+  }
+  // Rock beside floor drops to level 0 so the floor keeps its H3 width (see applyRockSkirt); `sealNodes` are the skirt tiles that
+  // would otherwise be open ground where H3 had a thin wall.
+  const floorNodes = new Set<number>()
+  const sealNodes: number[] = []
+  for (let layer = 0; layer < layerCount; layer++) {
+    const skirt = applyRockSkirt(parsed.layers[layer], layer, atlas, out, size)
+    for (const node of skirt.floorNodes) floorNodes.add(node)
+    sealNodes.push(...skirt.sealNodes)
   }
   // The elevated/unclimbable Dirt "wall" for the sector-alignment margin
   // around the real source rectangle is painted at the very end of this
@@ -333,6 +344,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // `objectsProperties.*` row), so `accessibility-pass.ts` can safely delete
   // one to unseal a pocket without orphaning any table entry.
   const decorativeIds = new Set<number>()
+
+  // Solid 1x1 cave rock on every thin-wall skirt tile. Never decorative-removable: deleting one would open a hole the H3 map does not have.
+  const sealIds = new Set<number>()
+  for (const node of sealNodes) {
+    sealIds.add(placeObject(pickVariant(BIOME_ROLE_REPLACEMENTS.mountain.dirt, families, rng), node, randomDecorRotation(rng)))
+  }
 
   const omittedReasonCounts: Record<string, number> = {}
   // Every walked record's H3 object type, named via the mapping table's own
@@ -743,7 +760,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint
   // the wall now.
-  paintEnvelopePadding(out, atlas)
+  paintEnvelopePadding(out, atlas, floorNodes)
 
   // Real portal linkage (propPortals was previously never emitted at all —
   // see portal-links.ts's own header) must exist before the accessibility
@@ -754,6 +771,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const accessibility = applyAccessibilityPass(
     objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
     decorativeIds, portalLinks.adjacencyByObjectId, groundTruthWalkable,
+    undefined, undefined, sealIds,
   )
 
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
@@ -918,5 +936,6 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     },
     localizationTokens,
     dialogFlows,
+    sealIds: [...sealIds],
   }
 }

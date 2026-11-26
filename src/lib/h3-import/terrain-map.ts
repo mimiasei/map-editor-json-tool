@@ -144,6 +144,59 @@ export function projectLayerIntoAtlas(
   }
 }
 
+export interface RockSkirtResult {
+  /** Atlas nodes of the layer's H3 floor (not rock, not water): the envelope skirt is measured from these. */
+  floorNodes: Set<number>
+  /** Skirt nodes no level-1 tile borders: the game does not block them (it blocks only the LOW side of a level step), so they need a
+   *  solid object to be as closed as the H3 rock was. */
+  sealNodes: number[]
+}
+
+/** H3 rock is level 1 and floor level 0, and the game blocks the low side of every level step (`isElevationWallTile`, verified in-game):
+ *  every floor tile beside rock was blocked, so a 1-2 wide H3 tunnel had no walkable tile left. The rock ring (8 neighbours) around
+ *  floor drops to level 0 instead, so the floor keeps its H3 width and the step lies one tile further out, on the ring itself.
+ *  Call after `projectLayerIntoAtlas` for the same layer. */
+export function applyRockSkirt(
+  layerTiles: H3mTile[], layerIndex: number, atlas: LayerAtlasLayout, out: AtlasArrays, size: number,
+): RockSkirtResult {
+  const floorNodes = new Set<number>()
+  const isFloor = (x: number, y: number): boolean => {
+    if (x < 0 || y < 0 || x >= size || y >= size) return false
+    const terrain = layerTiles[y * size + x].terrain
+    return terrain !== H3_UNDERGROUND_ROCK_TERRAIN_ID && terrain !== 8
+  }
+  const skirt: number[] = []
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const node = atlas.targetNode(layerIndex, x, y)
+      if (isFloor(x, y)) { floorNodes.add(node); continue }
+      if (layerTiles[y * size + x].terrain !== H3_UNDERGROUND_ROCK_TERRAIN_ID) continue
+      let nearFloor = false
+      for (let dy = -1; dy <= 1 && !nearFloor; dy++) for (let dx = -1; dx <= 1; dx++) if (isFloor(x + dx, y + dy)) { nearFloor = true; break }
+      if (nearFloor) skirt.push(node)
+    }
+  }
+  for (const node of skirt) out.levelsMap[node] = 0
+
+  // The padding beyond the layer is level 1 except the ring next to floor (see paintEnvelopePadding).
+  const levelAt = (x: number, y: number): number => {
+    if (x >= 0 && y >= 0 && x < size && y < size) return out.levelsMap[atlas.targetNode(layerIndex, x, y)]
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (isFloor(x + dx, y + dy)) return 0
+    return 1
+  }
+  const width = atlas.atlasWidth
+  const sealNodes: number[] = []
+  for (const node of skirt) {
+    const spec = atlas.layers[layerIndex]
+    const x = (node % width) - spec.offsetX
+    const y = size - 1 - (Math.floor(node / width) - spec.offsetY)
+    let hasHigher = false
+    for (let dy = -1; dy <= 1 && !hasHigher; dy++) for (let dx = -1; dx <= 1; dx++) if (levelAt(x + dx, y + dy) > 0) { hasHigher = true; break }
+    if (!hasHigher) sealNodes.push(node)
+  }
+  return { floorNodes, sealNodes }
+}
+
 /** Every H3 river tile becomes one `{n, s, isWaterfall}` entry in OE's real
  *  `rivers[0].nodes[]` table (previously this importer instead stamped H3
  *  river tiles into `waterMap` — a real, user-reported bug: it made rivers
@@ -204,7 +257,7 @@ export function buildRiverNodesTable(
  *  sitting on elevated Dirt could become partly unreachable). The real fix
  *  is the clamp, not removing the wall — every object is now guaranteed
  *  clear of this region by the time this paints it. */
-export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout): void {
+export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout, floorNodes: Set<number>): void {
   const total = atlas.atlasWidth * atlas.atlasHeight
   const sourceNodes = new Set<number>()
   for (const layer of Object.keys(atlas.layers).map(Number)) {
@@ -217,9 +270,21 @@ export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout):
   for (let node = 0; node < total; node++) {
     if (sourceNodes.has(node)) continue
     out.tilesMap[node] = STOCK_ROCK_TILE_ID
-    out.levelsMap[node] = UNDERGROUND_ROCK_LEVEL
+    // The ring beside floor stays level 0 like the rock skirt (applyRockSkirt): a level-1 wall right against floor would block the floor's edge row.
+    out.levelsMap[node] = nearFloor(node) ? 0 : UNDERGROUND_ROCK_LEVEL
     out.climbsMap[node] = UNDERGROUND_ROCK_CLIMB
     out.waterMap[node] = 0
     out.roadsMap[node] = 0
+  }
+  function nearFloor(node: number): boolean {
+    const x = node % atlas.atlasWidth
+    const z = Math.floor(node / atlas.atlasWidth)
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx, nz = z + dz
+        if (nx >= 0 && nz >= 0 && nx < atlas.atlasWidth && nz < atlas.atlasHeight && floorNodes.has(nz * atlas.atlasWidth + nx)) return true
+      }
+    }
+    return false
   }
 }
