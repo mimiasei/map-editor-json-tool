@@ -262,6 +262,13 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  to detect a gzip-wrapped `.h3m` before calling this). `seed` defaults to a
  *  hash of the map's own title, so re-converting the same source map is
  *  reproducible. */
+// Sand trees, told apart by sprite (checked on a real map, sand_trees.h3m): the table sends them to a plain Grass/Dirt/Sand pick, which has no cactus,
+// palm or dune on sand.
+const H3_CACTUS_DEF = /^av(lca[0-9]|cact)/i // cacti: object 116 and 138
+const H3_LUSH_TREE_DEF = /^avlspl0[1-4]/i // named palms, but lush like willows
+const H3_PALM_DEF = /^avlspl0[5-9]/i
+const H3_PALM_DUNE_DEF = /^avlxds/i // a small sand hill with a palm on top (object 206)
+
 export async function convertH3mToMap(
   data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number, onProgress?: H3ImportProgress,
   /** The name the map will have in the editor (the .h3m file name): prefixes every dialog and text id the import writes. */
@@ -311,6 +318,12 @@ export async function convertH3mToMap(
   const families = buildVariantFamilies(catalog.mapObjects)
   const decorationPicker = createH3DecorationPicker(catalog)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
+  const sidsWithPrefix = (prefix: string) => catalog.mapObjects.filter((o) => o.id.startsWith(prefix) && (o.sizeX ?? 1) === 1 && (o.sizeZ ?? 1) === 1).map((o) => o.id)
+  const palmSids = sidsWithPrefix('palms_')
+  const cactusSids = sidsWithPrefix('cactus_')
+  const dunePalmHillSids = sidsWithPrefix('hill_desert_small_')
+  const lushTreeBiomes = [decorationPicker.biomeOf('pinetree_1', 'tree'), decorationPicker.biomeOf('tree_dirt_1', 'tree')].filter((b): b is BiomeId => b !== null)
+  const pickOf = (list: string[]) => list[Math.floor(rng() * list.length)]
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
   // guard if it appears in at least one real squad template — real-data
   // confirmed gap: a roster-only sid with zero squad-template references
@@ -558,6 +571,31 @@ export async function convertH3mToMap(
       const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending hero start resolution' }
       detailInstances.push(heroDetail)
       heroDetailByIndex.push(heroDetail)
+      continue
+    }
+
+    // Palms, cacti and the lush "palms" stay what they are in every biome, each cell a random model of its kind (the variation rule); a palm dune is
+    // a sand hill with a palm on one cell. Placed with the other decoration, after everything that blocks.
+    const sandKind = H3_CACTUS_DEF.test(defName) && cactusSids.length > 0 ? 'cactus'
+      : H3_PALM_DEF.test(defName) && palmSids.length > 0 ? 'palm'
+      : H3_LUSH_TREE_DEF.test(defName) && lushTreeBiomes.length > 0 ? 'lush'
+      : H3_PALM_DUNE_DEF.test(defName) && palmSids.length > 0 && dunePalmHillSids.length > 0 ? 'dune' : null
+    if (sandKind !== null) {
+      deferredScenery.push(() => {
+        const { cells } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+        const palmCell = sandKind === 'dune' ? Math.floor(rng() * cells.length) : -1
+        let placed = 0
+        cells.forEach((cell, i) => {
+          const sid = sandKind === 'cactus' ? pickOf(cactusSids)
+            : sandKind === 'palm' || i === palmCell ? pickOf(palmSids)
+            : sandKind === 'dune' ? pickOf(dunePalmHillSids)
+            : decorationPicker.pickTree(lushTreeBiomes[Math.floor(rng() * lushTreeBiomes.length)], rng)
+          placed += placeScenery(sid, atlas.targetNode(record.layer, cell.x, cell.z), null)
+        })
+        sceneryVariantCounts[`sand ${sandKind}`] = (sceneryVariantCounts[`sand ${sandKind}`] ?? 0) + placed
+        sceneryPlaced += placed
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: sandKind, note: `Scenery (sand ${sandKind}, ${placed} placed)` })
+      })
       continue
     }
 
