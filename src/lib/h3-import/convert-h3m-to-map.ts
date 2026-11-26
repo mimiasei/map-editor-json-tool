@@ -1017,9 +1017,9 @@ export async function convertH3mToMap(
   }
 
   // In front of a mountain (the tiles with the lower tile number, toward the bottom of the map) a bare tile looks odd: a mountain or a range
-  // with nothing near it stands out. Where the tiles in front of a range are empty, add a tree, a bush or a walkable at random: each tile
-  // gets one with this chance, and every range gets at least one where there is room.
-  const MOUNTAIN_FRONT_CHANCE = 0.5
+  // with nothing near it stands out. Each blocking tile on the bottom edge of a mountain has this chance of getting a tree, a bush or a walkable
+  // on the empty tile in front of it.
+  const MOUNTAIN_FRONT_CHANCE = 0.67
   const mountainCells = new Set<number>()
   for (const [sid, group] of objectGroups) {
     const template = catalogById.get(sid)
@@ -1032,37 +1032,20 @@ export async function convertH3mToMap(
     }
   }
   let frontPlaced = 0
-  const rangeSeen = new Set<number>()
-  for (const start of mountainCells) {
-    if (rangeSeen.has(start)) continue
-    const range: number[] = []
-    const queue = [start]
-    rangeSeen.add(start)
-    while (queue.length > 0) {
-      const n = queue.pop() as number
-      range.push(n)
-      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
-        const m = n + dz * atlas.atlasWidth + dx
-        if (!rangeSeen.has(m) && mountainCells.has(m) && Math.abs((m % atlas.atlasWidth) - (n % atlas.atlasWidth)) <= 1) { rangeSeen.add(m); queue.push(m) }
-      }
-    }
-    const fronts = [...new Set(range.map((n) => n - atlas.atlasWidth))].filter((n) => n >= 0 && !mountainCells.has(n) && isOpenGround(n))
-    if (fronts.length === 0) continue
-    const chosen = fronts.filter(() => rng() < MOUNTAIN_FRONT_CHANCE)
-    if (chosen.length === 0) chosen.push(fronts[Math.floor(rng() * fronts.length)])
-    for (const node of chosen) {
-      if (!isOpenGround(node)) continue
-      const oe = oeBiomeOfNode(node)
-      const biome = oe ? decorationPicker.biomeIdOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
-      const kind = Math.floor(rng() * 3)
-      let sid: string | null = null
-      if (biome !== null && kind === 0 && decorationPicker.hasTrees(biome) && !entranceAvoid.has(node)) sid = decorationPicker.pickTree(biome, rng)
-      else if (biome !== null && kind === 1 && !entranceAvoid.has(node)) sid = decorationPicker.pickBush(biome, rng)
-      sid ??= walkableAt(node)
-      if (sid === null) continue
-      const placed = placeScenery(sid, node, null)
-      if (placed > 0) { occupiedTiles.add(node); frontPlaced += placed }
-    }
+  for (const cell of mountainCells) {
+    const node = cell - atlas.atlasWidth
+    if (node < 0 || mountainCells.has(node) || rng() >= MOUNTAIN_FRONT_CHANCE) continue
+    if (!isOpenGround(node)) continue
+    const oe = oeBiomeOfNode(node)
+    const biome = oe ? decorationPicker.biomeIdOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+    const kind = Math.floor(rng() * 3)
+    let sid: string | null = null
+    if (biome !== null && kind === 0 && decorationPicker.hasTrees(biome) && !entranceAvoid.has(node)) sid = decorationPicker.pickTree(biome, rng)
+    else if (biome !== null && kind === 1 && !entranceAvoid.has(node)) sid = decorationPicker.pickBush(biome, rng)
+    sid ??= walkableAt(node)
+    if (sid === null) continue
+    const placed = placeScenery(sid, node, null)
+    if (placed > 0) { occupiedTiles.add(node); frontPlaced += placed }
   }
   sceneryVariantCounts['mountain fronts'] = frontPlaced
   sceneryPlaced += frontPlaced
