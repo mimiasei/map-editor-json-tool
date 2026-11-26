@@ -253,7 +253,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[35.2rem]">
         <DialogHeader>
           <DialogTitle>{t('common.importH3mDialog.importHeroesOfMightMagic')}</DialogTitle>
         </DialogHeader>
