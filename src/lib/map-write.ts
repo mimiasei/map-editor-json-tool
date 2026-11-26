@@ -2394,13 +2394,9 @@ export function paintZoneTiles(chunk: Uint8Array, changes: { node: number; zoneI
 // real `.map` files (`Stormlight.map`'s own Block2 `settings.heroCountMin:
 // 5, heroCountMax: 10, factionLawsExpModifier/astrologyExpModifier` are
 // exactly the same field names the real `.rmg.json` schema's own
-// `gameRules` uses). Deliberately does NOT touch `settings.
-// mapWinConditions` — that field's own `typeWinCondition` int-to-condition
-// enum isn't confirmed (real sample maps show inconsistent entry counts/
-// types with no reliable cross-reference available — this project's own
-// standing rule is to never guess a game-format fact), so a template's own
-// `gameRules.winConditions` is silently not applied rather than risk
-// writing a wrong/broken win-condition into a generated map.
+// `gameRules` uses). Win conditions are not part of this patch: they have
+// their own writer, `patchWinConditions` below, with the type numbers from
+// rmg/win-conditions.ts.
 export interface GameRulesPatch {
   heroCountMin?: number
   heroCountMax?: number
@@ -2532,10 +2528,8 @@ export function setCityHold(block2Chunk: Uint8Array, objectId: number | null): U
 // exposes purely for SID-prefix/export naming — see MapContext's own doc
 // comments). The 10 booleans are every boolean Block 2 `settings` field
 // confirmed real (varies across at least one real sample map surveyed this
-// session) and understood well enough to expose directly, deliberately
-// excluding `mapWinConditions` (real `typeWinCondition` enum unconfirmed —
-// this project's own standing rule is to never guess a game-format fact,
-// same reasoning `patchGameRules` above already documents) and every
+// session) and understood well enough to expose directly. The win conditions
+// are edited through the `setWinConditions` edit, not this patch, and every
 // `startSettings.*` lobby/turn-timer field (near-constant across all 18 real
 // samples checked — a lobby-time concern, not a per-map authoring one).
 export interface MapSettingsPatch {

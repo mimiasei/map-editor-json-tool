@@ -19,11 +19,9 @@
 // requestedValue (neutral-strength.ts) and random-item rarity binning
 // (random-items.ts) — a monster with no known creature type/level is now
 // omitted rather than placed uncalibrated.
-// Phase 4 (issue #207): H3's WINSTANDARD ("defeat all enemies") victory
-// condition, emitted as a real QuestScript `MainQuest` (victory.ts) — the
-// one victory type common enough to be worth this round's effort; any
-// other H3 victory type (TAKEMINES, GATHERTROOP, ...) leaves no victory
-// quest at all (see `report.hasVictoryQuest`), a real gap, not a guess.
+// Phase 4 (issue #207): the H3 victory condition becomes the map's win conditions (win-conditions.ts): standard victory -> Classic, capture a
+// town -> Capital Hold or City Hold, defeat a hero -> Guardian's Demise; any other H3 type falls back to Classic and is named in the report
+// (`report.unsupportedVictory`).
 //
 // Player starts (user-reported real bug, fixed this round): every H3 town
 // owned by a playable player becomes OE's own real player-start object,
@@ -45,7 +43,7 @@
 // (Phase 5).
 
 import { reportH3Stage, type H3ImportProgress, type H3ImportStage } from './import-progress'
-import { generateMapHash, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
+import { generateMapHash, applyWinConditionEntries, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
@@ -71,8 +69,8 @@ import {
 import { assignOwnership, type CityCandidate, type HeroCandidate } from './ownership'
 import { stockRandomSquadRequestedValue, NOMINAL_STACK_COUNT_BY_LEVEL, CREATURE_TYPE_SQUAD_VALUE } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
-import { buildWinstandardQuest } from './victory'
-import { VICTORY_WINSTANDARD } from './h3m-format'
+import { planH3WinConditions, finishH3WinPlan, H3_WIN_OPTIONS } from './win-conditions'
+import { winEntryOptions, type WinConditionId } from '@/lib/rmg/win-conditions'
 import { linkPortalPairs } from './portal-links'
 import { applyAccessibilityPass } from './accessibility-pass'
 import { buildGroundTruthWalkableSet } from './ground-truth-passability'
@@ -116,7 +114,9 @@ export interface H3ImportReport {
    *  real "defeat all enemies" quest was emitted; `false` for any other H3
    *  victory type (TAKEMINES, GATHERTROOP, ...) or too few players — the
    *  map has no working win condition this round (Phase 4 gap). */
-  hasVictoryQuest: boolean
+  winConditions: WinConditionId[]
+  /** An H3 victory type OE has nothing like (so Classic is used instead), by name; null when the whole condition carried over. */
+  unsupportedVictory: string | null
   /** Two-way-monolith/subterranean-gate/whirlpool instances that received a
    *  real `objectsProperties.propPortals` link (see `portal-links.ts`). */
   portalsLinked: number
@@ -738,14 +738,6 @@ export async function convertH3mToMap(
   await stage('players', 30)
   const ownership = assignOwnership(parsed.header, cityCandidates, heroCandidates)
 
-  // Phase 4: only H3's WINSTANDARD ("defeat all enemies") victory condition
-  // is supported this round — any other type leaves no victory quest at all
-  // (see victory.ts's own doc comment for why "no quest" is the honest
-  // choice for an unsupported type, rather than a guessed fallback).
-  const mainQuest = parsed.header.victory.type === VICTORY_WINSTANDARD && ownership.finalOwners.length >= 2
-    ? buildWinstandardQuest(title, ownership.humanFinalOwner, ownership.finalOwners)
-    : null
-
   // H3's "Specify Timed Events" — the mechanism behind the message many
   // maps open with on day 1 (see global-events.ts's own doc comment for
   // the full conversion — one quest+dialog per event, first occurrence
@@ -761,6 +753,7 @@ export async function convertH3mToMap(
     generatedNameSids.push(...Object.keys(conversion.localizationTokens))
   }
 
+  const neutralTownIds = new Map<number, number>()
   const propCities: Record<string, unknown>[] = []
   const propOwners: Record<string, unknown>[] = []
   const propSpawns: Record<string, unknown>[] = []
@@ -838,6 +831,7 @@ export async function convertH3mToMap(
         spawnHero: false, customCityName: town.customCityName,
       })
       propOwners.push({ type: 0, id: objectId })
+      neutralTownIds.set(town.index, objectId)
       const townDetail = townDetailByIndex[town.index]
       townDetail.mappedSid = town.sid
       townDetail.note = 'Town (neutral, unclaimed)'
@@ -944,15 +938,39 @@ export async function convertH3mToMap(
   // any map imported this way.
   const mapHash = generateMapHash()
 
+  // The H3 victory condition as win conditions. The town a capture-the-town victory names is found by its source position: a player's start
+  // city gives Capital Hold, a neutral town City Hold (and that town is marked).
+  let winPlan = planH3WinConditions(parsed.header.victory)
+  let cityHoldId: number | null = null
+  if (winPlan.captureCity) {
+    const target = winPlan.captureCity
+    let best: { index: number; dist: number } | null = null
+    for (const city of cityCandidates) {
+      if (city.sourceZ !== target.z) continue
+      const dist = Math.max(Math.abs(city.sourceX - target.x), Math.abs(city.sourceY - target.y))
+      if (dist <= 3 && (best === null || dist < best.dist)) best = { index: city.index, dist }
+    }
+    const neutralId = best ? neutralTownIds.get(best.index) : undefined
+    winPlan = finishH3WinPlan(winPlan, !best ? 'missing' : neutralId !== undefined ? 'neutral' : ownership.finalOwnerByCityIndex.has(best.index) ? 'player' : 'missing')
+    if (neutralId !== undefined && winPlan.ids.includes('city-hold')) cityHoldId = neutralId
+  }
+  const winEntries = applyWinConditionEntries(
+    (templateB2.settings as { mapWinConditions?: Record<string, unknown>[] } | undefined)?.mapWinConditions ?? [],
+    winEntryOptions(winPlan.ids, H3_WIN_OPTIONS),
+  )
+
   const b1 = {
     ...templateB1,
+    // The H3 map's own name and description are the in-game title and description (the file name when the H3 map has no title).
+    title: title.trim() || (mapName ?? ''),
+    desc: parsed.header.description,
     hashSum: mapHash,
     sizeX: atlas.atlasWidth,
     sizeZ: atlas.atlasHeight,
     spawns: { playersCount: ownership.finalOwners.length, spawns: block1Spawns, takenHeroes: [] as string[] },
     startSettings: {
       ...((templateB1.startSettings as Record<string, unknown>) ?? {}),
-      DefeatAllEnemiesEnabled: mainQuest !== null,
+      DefeatAllEnemiesEnabled: winPlan.ids.includes('classic'),
     },
     economicDifficulties: FULL_DIFFICULTIES,
     aiDifficulties: FULL_DIFFICULTIES,
@@ -1001,7 +1019,7 @@ export async function convertH3mToMap(
     areas,
     settings: {
       ...((templateB2.settings as Record<string, unknown>) ?? {}),
-      mapWinConditions: [] as unknown[],
+      mapWinConditions: winEntries,
       // Pairs with every propRandomSquads row's own isAutobatle:true —
       // auto-battle is allowed against neutral/guard stacks, not against a
       // real enemy hero's army (a real OE-format fact, not H3-specific —
@@ -1019,6 +1037,7 @@ export async function convertH3mToMap(
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
       propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
+      propCitiesHold: cityHoldId === null ? [] : [{ type: 0, id: cityHoldId, isCityHold: true }],
       propPortals: portalLinks.propPortals,
     },
   }
@@ -1029,7 +1048,7 @@ export async function convertH3mToMap(
     aiRolesId: templateB4.aiRolesId ?? '',
     counters: [] as unknown[],
     interruptions: [] as unknown[],
-    quests: [...(mainQuest ? [mainQuest] : []), ...globalEventQuests],
+    quests: [...globalEventQuests],
   }
   // Real editors never emit a 4th chunk when it would be entirely default —
   // see buildBlankMap's own doc comment (map-write.ts) for the real-map
@@ -1077,7 +1096,7 @@ export async function convertH3mToMap(
       atlasWidth: atlas.atlasWidth, atlasHeight: atlas.atlasHeight, sourceSize: size, sourceLayers: layerCount,
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, sourceObjectCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
-      outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
+      outOfEnvelopeCount, clusterCellsClipped, winConditions: winPlan.ids, unsupportedVictory: winPlan.unsupported,
       shipyardsFound: shipyardNodes.length, shipyardPortals: waterPortals.portals, shipyardIslands: waterPortals.islands,
       anchorFallbacks,
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,

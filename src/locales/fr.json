@@ -306,7 +306,6 @@
       "sceneryPlaced": "Décor placé",
       "otherObjectsPlaced": "Autres objets placés",
       "riverTiles": "Cases de rivière",
-      "victoryQuest": "Quête de victoire",
       "portalsLinked": "Portails reliés",
       "accessibilityFixes": "Corrections d'accessibilité",
       "removedNudged": "{{accessibilityDecorRemoved}} supprimés, {{accessibilityTargetsNudged}} déplacés",
@@ -358,8 +357,6 @@
       "sourceObjects_one": "Objets sources ({{count}} type trouvé dans la carte H3)",
       "sourceObjects_many": "Objets sources ({{count}} types trouvés dans la carte H3)",
       "sourceObjects_other": "Objets sources ({{count}} types trouvés dans la carte H3)",
-      "yesDefeatAllEnemies": "Oui (vaincre tous les ennemis)",
-      "noneUnsupportedWinCondition": "Aucune (condition de victoire non prise en charge)",
       "credit": "<credit>Merci à <author>Levi Ritchie</author> pour son travail sur <repo>homm3-olden-stock-translator</repo>, qui a été une excellente référence et une grande source d'inspiration pour cet outil.</credit><thanks>Merci ! 🙏</thanks>",
       "progress": {
         "readingMap": "Lecture de la carte…",
@@ -374,7 +371,9 @@
         "done": "Terminé"
       },
       "shipyardPortals": "Portails des chantiers navals",
-      "shipyardPortalsValue": "Chantiers navals : {{shipyards}} · Portails : {{portals}} · Îles : {{islands}}"
+      "shipyardPortalsValue": "Chantiers navals : {{shipyards}} · Portails : {{portals}} · Îles : {{islands}}",
+      "winConditionsRow": "Conditions de victoire",
+      "droppedVictory": "Condition de victoire non convertie"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Objets interactifs RMG",

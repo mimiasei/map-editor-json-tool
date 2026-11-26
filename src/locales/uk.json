@@ -306,7 +306,6 @@
       "sceneryPlaced": "Розміщено краєвидів",
       "otherObjectsPlaced": "Розміщено інших об'єктів",
       "riverTiles": "Тайли річок",
-      "victoryQuest": "Завдання перемоги",
       "portalsLinked": "Пов'язано порталів",
       "accessibilityFixes": "Виправлення доступності",
       "removedNudged": "вилучено: {{accessibilityDecorRemoved}}, зсунуто: {{accessibilityTargetsNudged}}",
@@ -371,8 +370,6 @@
       "sourceObjects_other": "Вихідні об'єкти (видів у мапі H3: {{count}})",
       "sourceObjects_few": "Вихідні об'єкти (видів у мапі H3: {{count}})",
       "sourceObjects_many": "Вихідні об'єкти (видів у мапі H3: {{count}})",
-      "yesDefeatAllEnemies": "Так (здолати всіх ворогів)",
-      "noneUnsupportedWinCondition": "Немає (непідтримувана умова перемоги)",
       "credit": "<credit>Подяка <author>Levi Ritchie</author> за його роботу над <repo>homm3-olden-stock-translator</repo> — це був чудовий взірець і джерело натхнення для цього інструмента.</credit><thanks>Дякуємо! 🙏</thanks>",
       "progress": {
         "readingMap": "Читання мапи…",
@@ -387,7 +384,9 @@
         "done": "Готово"
       },
       "shipyardPortals": "Портали верфей",
-      "shipyardPortalsValue": "Верфі: {{shipyards}} · Портали: {{portals}} · Острови: {{islands}}"
+      "shipyardPortalsValue": "Верфі: {{shipyards}} · Портали: {{portals}} · Острови: {{islands}}",
+      "winConditionsRow": "Умови перемоги",
+      "droppedVictory": "Неперетворена умова перемоги"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Інтерактивні об'єкти RMG",

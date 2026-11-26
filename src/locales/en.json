@@ -314,7 +314,6 @@
       "sceneryPlaced": "Scenery placed",
       "otherObjectsPlaced": "Other objects placed",
       "riverTiles": "River tiles",
-      "victoryQuest": "Victory quest",
       "portalsLinked": "Portals linked",
       "accessibilityFixes": "Accessibility fixes",
       "removedNudged": "{{accessibilityDecorRemoved}} removed, {{accessibilityTargetsNudged}} nudged",
@@ -353,8 +352,6 @@
       "reasonCount_other": "{{count}} reasons",
       "sourceObjects_one": "Source objects ({{count}} kind found in the H3 map)",
       "sourceObjects_other": "Source objects ({{count}} kinds found in the H3 map)",
-      "yesDefeatAllEnemies": "Yes (defeat all enemies)",
-      "noneUnsupportedWinCondition": "None (unsupported win condition)",
       "credit": "<credit>Credit goes to <author>Levi Ritchie</author> for his work on the <repo>homm3-olden-stock-translator</repo>, which has been a great reference and inspiration for this tool.</credit><thanks>Thank you! 🙏</thanks>",
       "progress": {
         "readingMap": "Reading the map…",
@@ -369,7 +366,9 @@
         "done": "Done"
       },
       "shipyardPortals": "Shipyard portals",
-      "shipyardPortalsValue": "Shipyards: {{shipyards}} · Portals: {{portals}} · Islands: {{islands}}"
+      "shipyardPortalsValue": "Shipyards: {{shipyards}} · Portals: {{portals}} · Islands: {{islands}}",
+      "winConditionsRow": "Win conditions",
+      "droppedVictory": "Victory condition not converted"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG interactables",

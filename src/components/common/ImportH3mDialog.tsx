@@ -78,7 +78,8 @@ function buildReportText(result: ImportH3mResult): string {
   lines.push(`Scenery placed: ${report.sceneryPlaced}`)
   lines.push(`Other objects placed: ${report.objectsPlaced}`)
   lines.push(`River tiles: ${report.riverTilesConverted}`)
-  lines.push(`Victory quest: ${report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}`)
+  lines.push(`Win conditions: ${report.winConditions.join(', ')}`)
+  if (report.unsupportedVictory) lines.push(`H3 victory condition not converted (Classic is used instead): ${report.unsupportedVictory}`)
   lines.push(`Portals linked: ${report.portalsLinked}`)
   if (report.anchorFallbacks > 0) lines.push(`Objects placed at the H3 anchor because their entrance could not be put on the H3 entrance tile without standing on rock: ${report.anchorFallbacks}`)
   if (report.shipyardsFound > 0) lines.push(`Shipyards: ${report.shipyardsFound} (portals placed: ${report.shipyardPortals}, islands joined: ${report.shipyardIslands})`)
@@ -320,8 +321,14 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <div className="text-foreground">{report.objectsPlaced}</div>
               <div>{t('common.importH3mDialog.riverTiles')}</div>
               <div className="text-foreground">{report.riverTilesConverted}</div>
-              <div>{t('common.importH3mDialog.victoryQuest')}</div>
-              <div className="text-foreground">{report.hasVictoryQuest ? t('common.importH3mDialog.yesDefeatAllEnemies') : t('common.importH3mDialog.noneUnsupportedWinCondition')}</div>
+              <div>{t('common.importH3mDialog.winConditionsRow')}</div>
+              <div className="text-foreground">{report.winConditions.map((id) => t(`common.winConditionsPanel.conditions.${id}.label`)).join(', ')}</div>
+              {report.unsupportedVictory && (
+                <>
+                  <div>{t('common.importH3mDialog.droppedVictory')}</div>
+                  <div className="text-foreground">{report.unsupportedVictory}</div>
+                </>
+              )}
               <div>{t('common.importH3mDialog.portalsLinked')}</div>
               <div className="text-foreground">{report.portalsLinked}</div>
               {report.shipyardsFound > 0 && (

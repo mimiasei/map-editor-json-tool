@@ -306,7 +306,6 @@
       "sceneryPlaced": "Размещено объектов пейзажа",
       "otherObjectsPlaced": "Размещено прочих объектов",
       "riverTiles": "Клетки рек",
-      "victoryQuest": "Задание победы",
       "portalsLinked": "Связано порталов",
       "accessibilityFixes": "Исправления доступности",
       "removedNudged": "Удалено: {{accessibilityDecorRemoved}}, сдвинуто: {{accessibilityTargetsNudged}}",
@@ -371,8 +370,6 @@
       "sourceObjects_other": "Исходных объектов (видов в карте H3: {{count}})",
       "sourceObjects_few": "Исходных объектов (видов в карте H3: {{count}})",
       "sourceObjects_many": "Исходных объектов (видов в карте H3: {{count}})",
-      "yesDefeatAllEnemies": "Да (победить всех врагов)",
-      "noneUnsupportedWinCondition": "Нет (условие победы не поддерживается)",
       "credit": "<credit>Благодарим <author>Levi Ritchie</author> за работу над <repo>homm3-olden-stock-translator</repo>, ставшим прекрасным образцом и источником вдохновения для этого инструмента.</credit><thanks>Спасибо! 🙏</thanks>",
       "progress": {
         "readingMap": "Чтение карты…",
@@ -387,7 +384,9 @@
         "done": "Готово"
       },
       "shipyardPortals": "Порталы верфей",
-      "shipyardPortalsValue": "Верфи: {{shipyards}} · Порталы: {{portals}} · Острова: {{islands}}"
+      "shipyardPortalsValue": "Верфи: {{shipyards}} · Порталы: {{portals}} · Острова: {{islands}}",
+      "winConditionsRow": "Условия победы",
+      "droppedVictory": "Непреобразованное условие победы"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Интерактивные объекты RMG",

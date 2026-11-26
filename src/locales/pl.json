@@ -306,7 +306,6 @@
       "sceneryPlaced": "Umieszczona sceneria",
       "otherObjectsPlaced": "Umieszczone pozostałe obiekty",
       "riverTiles": "Pola rzeki",
-      "victoryQuest": "Zadanie zwycięstwa",
       "portalsLinked": "Połączone portale",
       "accessibilityFixes": "Poprawki dostępności",
       "removedNudged": "usunięto: {{accessibilityDecorRemoved}}, przesunięto: {{accessibilityTargetsNudged}}",
@@ -371,8 +370,6 @@
       "sourceObjects_few": "Obiekty źródłowe ({{count}} rodzaje znalezione na mapie H3)",
       "sourceObjects_many": "Obiekty źródłowe ({{count}} rodzajów znalezionych na mapie H3)",
       "sourceObjects_other": "Obiekty źródłowe ({{count}} rodzaju znalezionego na mapie H3)",
-      "yesDefeatAllEnemies": "Tak (pokonaj wszystkich wrogów)",
-      "noneUnsupportedWinCondition": "Brak (nieobsługiwany warunek zwycięstwa)",
       "credit": "<credit>Podziękowania dla <author>Levi Ritchie</author> za jego pracę nad <repo>homm3-olden-stock-translator</repo>, który był świetnym punktem odniesienia i inspiracją dla tego narzędzia.</credit><thanks>Dziękuję! 🙏</thanks>",
       "progress": {
         "readingMap": "Odczytywanie mapy…",
@@ -387,7 +384,9 @@
         "done": "Gotowe"
       },
       "shipyardPortals": "Portale stoczni",
-      "shipyardPortalsValue": "Stocznie: {{shipyards}} · Portale: {{portals}} · Wyspy: {{islands}}"
+      "shipyardPortalsValue": "Stocznie: {{shipyards}} · Portale: {{portals}} · Wyspy: {{islands}}",
+      "winConditionsRow": "Warunki zwycięstwa",
+      "droppedVictory": "Nieprzekonwertowany warunek zwycięstwa"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Obiekty interaktywne RMG",
