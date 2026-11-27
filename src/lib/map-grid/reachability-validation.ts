@@ -391,6 +391,7 @@ function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog 
   // behind chests in corridors, and sent the fixer moving pickups around that were never in the way.
   const walls = placedObjects.filter((o) => {
     if (o.type !== 0) return true
+    if (NON_BLOCKING_SPAWNER_SIDS.has(o.sid)) return false
     const group = groupOf(o, catalog)
     return group !== 'artifacts' && group !== 'resources'
   })

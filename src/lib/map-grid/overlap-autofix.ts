@@ -46,6 +46,12 @@ function pickMover(a: PlacedObject, b: PlacedObject, catalog: GameCatalog | null
   const groupB = groupOf(b, catalog)
   if (groupA === 'decorations' && groupB !== 'decorations') return b
   if (groupB === 'decorations' && groupA !== 'decorations') return a
+  // A pickup always yields: it is the small thing a larger object can bury, and a buried pickup is unreachable (the id tiebreak below would
+  // otherwise move the interactable, or leave the pickup under it when the pickup has the lower id).
+  const aIsPickup = groupA === 'artifacts' || groupA === 'resources'
+  const bIsPickup = groupB === 'artifacts' || groupB === 'resources'
+  if (aIsPickup && !bIsPickup) return a
+  if (bIsPickup && !aIsPickup) return b
   const aIsStart = a.type === 0 && PLAYER_START_SIDS.has(a.sid)
   const bIsStart = b.type === 0 && PLAYER_START_SIDS.has(b.sid)
   if (aIsStart && !bIsStart) return b

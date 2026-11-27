@@ -16,6 +16,7 @@ import { validateMapStructure } from '@/lib/map-grid/validate-map'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
+import { unburyPickups } from '@/lib/map-grid/pickup-unbury'
 import { separateEncountersFromInteractables } from '@/lib/map-grid/encounter-separation'
 import { repositionStrandedPortals } from './portal-reposition'
 import { WATER_PORTAL_SID } from './water-portals'
@@ -88,7 +89,9 @@ export async function runH3ImportJob(input: H3ImportJobInput, onProgress?: H3Imp
   }
 
   // H3 lets a monster stand on an object's own tile; in OE that leaves an interactable with an encounter on top of it (encounter-separation.ts).
-  const { container: fixed } = separateEncountersFromInteractables(autoFixed, importCatalog)
+  const separated = separateEncountersFromInteractables(autoFixed, importCatalog).container
+  // The steps above move things after the auto-fix, so a pickup can have ended up under something again.
+  const { container: fixed } = unburyPickups(separated, importCatalog, (entityType, id) => !(entityType === 0 && sealed.has(id)))
 
   await reportH3Stage(onProgress, 'validating', 90)
   const finalContext = extractMapContext(containerToRawBlocks(fixed))

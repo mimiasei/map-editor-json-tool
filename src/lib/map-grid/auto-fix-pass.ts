@@ -17,6 +17,7 @@ import { computeElevationRampGuarantee } from './elevation-ramp-guarantee'
 import { computeConnectivityGuarantee } from './connectivity-guarantee'
 import { computeWaterSpeckGuarantee } from './water-specks'
 import { computeOverlapAutoFix } from './overlap-autofix'
+import { unburyPickups } from './pickup-unbury'
 import { duplicateEncounterIds } from './encounter-dedupe'
 import { computeElevationSpikeAutoFix } from './elevation-spike-autofix'
 import { findMapValidationIssues, describeMapValidationIssue } from './map-validation'
@@ -145,6 +146,9 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     }
     overlapFixCount += overlap.relocations.length
   }
+
+  // A larger object can still stand on a pickup after the passes above (the overlap pass gives up when it finds no place): move it out.
+  if (catalog) fixed = unburyPickups(fixed, catalog, may).container
 
   progress(0.99)
   // The relocations above can stack two encounters on one tile, which the game cannot load.
