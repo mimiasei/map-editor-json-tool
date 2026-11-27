@@ -278,7 +278,9 @@ const OBJECT_SUBTERRANEAN_GATE = 103
 
 const H3_CACTUS_DEF = /^av(lca[0-9]|cact)/i // cacti: object 116 and 138
 const H3_LUSH_TREE_DEF = /^(avlspl0[1-4]|tpmtree)/i // named palms, but lush like willows; tpmtree1-6 are the HotA swamp trees (object 140, subtype 11)
-const H3_PALM_DEF = /^avlspl0[5-9]/i
+// Palms from the swamp set (checked by rendering the sprites): avlplm/avlswmp/avlswt are single palms, often with undergrowth, avlswtr/avlswn are
+// premade clusters of palms and plants. They stand on sand and swamp alike and are all palms.
+const H3_PALM_DEF = /^(avlspl0[5-9]|avlplm|avlswmp|avlswt|avlswn)/i
 const H3_GROVE_DEF = /^avlspl1[0-4]/i // groves of 4-7 cells that mix palms and lush trees (checked by rendering the sprites)
 const H3_PALM_DUNE_DEF = /^avlxds/i // a small sand hill with a palm on top (object 206)
 
@@ -625,9 +627,18 @@ export async function convertH3mToMap(
         const { cells } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
         const palmCell = sandKind === 'dune' ? Math.floor(rng() * cells.length) : -1
         let placed = 0
+        // OE has three palm models: a cluster mixes them, so no palm stands beside one of its own model while there is a choice.
+        const palmAt = new Map<string, string>()
+        const pickPalm = (cell: { x: number; z: number }): string => {
+          const beside = [[-1, 0], [1, 0], [0, -1], [0, 1]].map(([dx, dz]) => palmAt.get(`${cell.x + dx},${cell.z + dz}`))
+          const free = palmSids.filter((sid) => !beside.includes(sid))
+          const sid = pickOf(free.length > 0 ? free : palmSids)
+          palmAt.set(`${cell.x},${cell.z}`, sid)
+          return sid
+        }
         cells.forEach((cell, i) => {
           const sid = sandKind === 'cactus' ? pickOf(cactusSids)
-            : sandKind === 'palm' || i === palmCell || (sandKind === 'grove' && rng() < 0.5) ? pickOf(palmSids)
+            : sandKind === 'palm' || i === palmCell || (sandKind === 'grove' && rng() < 0.5) ? pickPalm(cell)
             : sandKind === 'dune' ? pickOf(dunePalmHillSids)
             : decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
           placed += placeScenery(sid, atlas.targetNode(record.layer, cell.x, cell.z), null)
