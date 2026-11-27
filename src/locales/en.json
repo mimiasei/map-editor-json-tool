@@ -1695,6 +1695,7 @@
       "tier": "Tier {{tier}}",
       "searchBySidOrName": "Search by sid or name",
       "searchSidName": "Search sid / name",
+      "clearSearch": "Clear search",
       "noObjectsMatchTheseFilters": "No objects match these filters.",
       "noCreaturesMatchTheseFilters": "No creatures match these filters.",
       "objectValue": "Value: {{value}}",

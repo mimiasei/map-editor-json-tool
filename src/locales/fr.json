@@ -1720,6 +1720,7 @@
       "tier": "Rang {{tier}}",
       "searchBySidOrName": "Rechercher par sid ou nom",
       "searchSidName": "Rechercher par sid / nom",
+      "clearSearch": "Effacer la recherche",
       "noObjectsMatchTheseFilters": "Aucun objet ne correspond à ces filtres.",
       "noCreaturesMatchTheseFilters": "Aucune créature ne correspond à ces filtres.",
       "objectValue": "Valeur : {{value}}",

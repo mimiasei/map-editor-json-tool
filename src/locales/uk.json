@@ -1753,6 +1753,7 @@
       "tier": "Рівень {{tier}}",
       "searchBySidOrName": "Шукати за sid або назвою",
       "searchSidName": "Шукати sid / назву",
+      "clearSearch": "Очистити пошук",
       "noObjectsMatchTheseFilters": "Жоден об'єкт не відповідає цим фільтрам.",
       "noCreaturesMatchTheseFilters": "Жодна істота не відповідає цим фільтрам.",
       "objectValue": "Вартість: {{value}}",

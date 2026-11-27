@@ -1687,6 +1687,7 @@
       "tier": "Klasse {{tier}}",
       "searchBySidOrName": "Nach SID oder Name suchen",
       "searchSidName": "SID / Name suchen",
+      "clearSearch": "Suche löschen",
       "noObjectsMatchTheseFilters": "Keine Objekte entsprechen diesen Filtern.",
       "noCreaturesMatchTheseFilters": "Keine Kreaturen entsprechen diesen Filtern.",
       "objectValue": "Wert: {{value}}",

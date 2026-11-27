@@ -1753,6 +1753,7 @@
       "tier": "Poziom {{tier}}",
       "searchBySidOrName": "Szukaj po sid lub nazwie",
       "searchSidName": "Szukaj sid / nazwy",
+      "clearSearch": "Wyczyść wyszukiwanie",
       "noObjectsMatchTheseFilters": "Żadne obiekty nie pasują do tych filtrów.",
       "noCreaturesMatchTheseFilters": "Żadne stworzenia nie pasują do tych filtrów.",
       "objectValue": "Wartość: {{value}}",

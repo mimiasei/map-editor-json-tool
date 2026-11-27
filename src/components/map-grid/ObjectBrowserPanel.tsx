@@ -770,20 +770,35 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               <Button
                 variant={query ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-6 w-6 shrink-0"
-                title={t('mapGrid.objectBrowserPanel.searchBySidOrName')}
+                className="relative h-6 w-6 shrink-0"
+                title={query ? `${t('mapGrid.objectBrowserPanel.searchBySidOrName')}: ${query}` : t('mapGrid.objectBrowserPanel.searchBySidOrName')}
               >
                 <Search className="h-3.5 w-3.5" />
+                {/* A search is filtering the list: the closed popover would otherwise hide it. */}
+                {query && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" aria-hidden />}
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-56 p-1.5" data-nodrag>
-              <Input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t('mapGrid.objectBrowserPanel.searchSidName')}
-                className="h-7 text-xs"
-              />
+              <div className="relative">
+                <Input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('mapGrid.objectBrowserPanel.searchSidName')}
+                  className="h-7 pr-7 text-xs"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    title={t('mapGrid.objectBrowserPanel.clearSearch')}
+                    aria-label={t('mapGrid.objectBrowserPanel.clearSearch')}
+                    onClick={() => setQuery('')}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </PopoverContent>
           </Popover>
         </div>

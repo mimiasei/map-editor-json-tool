@@ -1687,6 +1687,7 @@
       "tier": "Nivå {{tier}}",
       "searchBySidOrName": "Søk etter sid eller navn",
       "searchSidName": "Søk sid / navn",
+      "clearSearch": "Tøm søket",
       "noObjectsMatchTheseFilters": "Ingen objekter samsvarer med disse filtrene.",
       "noCreaturesMatchTheseFilters": "Ingen skapninger samsvarer med disse filtrene.",
       "objectValue": "Verdi: {{value}}",

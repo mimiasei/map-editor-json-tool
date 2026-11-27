@@ -1753,6 +1753,7 @@
       "tier": "Ранг {{tier}}",
       "searchBySidOrName": "Поиск по sid или названию",
       "searchSidName": "Поиск по sid / названию",
+      "clearSearch": "Очистить поиск",
       "noObjectsMatchTheseFilters": "Нет объектов, соответствующих этим фильтрам.",
       "noCreaturesMatchTheseFilters": "Нет существ, соответствующих этим фильтрам.",
       "objectValue": "Стоимость: {{value}}",
