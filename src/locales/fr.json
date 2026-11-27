@@ -1076,6 +1076,8 @@
       "Neutral": "Neutre"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Banques de créatures",
+      "heroBoosts": "Bonus de héros",
       "dwellings": "Habitations",
       "portals": "Portails",
       "resourceStorage": "Stocks de ressources",
@@ -2821,12 +2823,18 @@
       "kind": "Genre"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Banques de créatures seulement",
+        "heroBoosts": "Bonus de héros seulement"
+      },
       "filterMapObjects": "Filtrer les objets de la carte",
       "interactableOnly": "Interactifs uniquement",
       "categories": "Catégories",
       "showingApproximatelyOfObjects": "Affichage d'environ {{filteredCount}} objets sur {{totalCount}}"
     },
     "mapCategories": {
+      "creatureBanks": "Banques de créatures",
+      "heroBoosts": "Bonus de héros",
       "interactables": "Objets interactifs",
       "resources": "Ressources",
       "environments": "Environnements",

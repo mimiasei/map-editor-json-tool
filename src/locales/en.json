@@ -1055,6 +1055,8 @@
       "Neutral": "Neutral"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Creature banks",
+      "heroBoosts": "Hero boosts",
       "dwellings": "Dwellings",
       "portals": "Portals",
       "resourceStorage": "Resource Storage",
@@ -2784,12 +2786,18 @@
       "kind": "Kind"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Creature banks only",
+        "heroBoosts": "Hero boosts only"
+      },
       "filterMapObjects": "Filter Map Objects",
       "interactableOnly": "Interactable only",
       "categories": "Categories",
       "showingApproximatelyOfObjects": "Showing approximately {{filteredCount}} of {{totalCount}} objects"
     },
     "mapCategories": {
+      "creatureBanks": "Creature banks",
+      "heroBoosts": "Hero boosts",
       "interactables": "Interactables",
       "resources": "Resources",
       "environments": "Environments",

@@ -6,6 +6,8 @@ import i18n from '@/lib/i18n'
 // grouped here in the order they should appear in the sub-category picker.
 
 export type InteractableSubcategory =
+  | 'creatureBanks'
+  | 'heroBoosts'
   | 'dwellings'
   | 'portals'
   | 'resourceStorage'
@@ -22,6 +24,8 @@ export type InteractableSubcategory =
   | 'other'
 
 export const INTERACTABLE_SUBCATEGORY_ORDER: InteractableSubcategory[] = [
+  'creatureBanks',
+  'heroBoosts',
   'dwellings',
   'portals',
   'resourceStorage',
@@ -41,6 +45,36 @@ export const INTERACTABLE_SUBCATEGORY_ORDER: InteractableSubcategory[] = [
 /** Display name of a subcategory in the UI language. */
 export function interactableSubcategoryName(sub: InteractableSubcategory): string {
   return i18n.t(`shared.interactableSubcategories.${sub}`)
+}
+
+// The two groups below come from Core.zip's DB/objects_logic/event_banks/ folders, which split the interactables by what a visit does:
+// guarded_res_banks (20) and guarded_unit_banks (9) are the objects whose variants carry guardUnits (a fight for resources, items or troops);
+// stats_banks (9), skill_banks (4) and exp_banks (3) give the visiting hero stats, skills or experience. The other folders (buff, magic, vision,
+// resource and hero_res banks) are not in either group. The editor's custom_<sid> copies belong with their original.
+
+/** Creature banks: the player fights guards for a reward. */
+export const CREATURE_BANK_SIDS = new Set([
+    'abandoned_mansion', 'abnormal_structure', 'alvars_eye', 'black_tower', 'circle_of_life', 'cursed_old_house', 'dragon_utopia',
+    'iridescent_abbey', 'legions_memorial', 'mereas_shrine', 'overgrown_grave', 'prismatic_lair', 'raiders_camp', 'research_laboratory',
+    'shady_den', 'testing_grounds', 'troglodyte_throne', 'twilight_bloom', 'uncanny_rite', 'unstable_ruins',
+    'boreal_call', 'jousting_range', 'petrified_memorial', 'point_of_balance', 'ritual_pyre', 'the_gorge', 'underground_lair',
+    'unforgotten_grave', 'vanguard',
+])
+
+/** Objects that give the visiting hero stats, skills or experience, with no fight. */
+export const HERO_BOOST_SIDS = new Set([
+    'armory_automaton', 'college_of_wonder', 'fort', 'knowledge_garden', 'magic_wheel', 'maze', 'orb_observatory', 'stinging_sword', 'trial_scales',
+    'circus', 'infernal_cirque', 'university', 'wise_owl',
+    'learning_stone', 'lost_library', 'tree_of_knowledge',
+])
+
+/** The group of a visitable object that has a filter of its own (creature banks, hero boosts), or null. Campaign objects are left out. */
+export function interactableGroupOf(sid: string): 'creatureBanks' | 'heroBoosts' | null {
+  if (sid.startsWith('campaign_') || sid.endsWith('_campaign')) return null
+  const base = sid.startsWith('custom_') ? sid.slice('custom_'.length) : sid
+  if (CREATURE_BANK_SIDS.has(base)) return 'creatureBanks'
+  if (HERO_BOOST_SIDS.has(base)) return 'heroBoosts'
+  return null
 }
 
 export const ADVENTURE_SITE_SIDS = new Set([
@@ -78,6 +112,8 @@ export const SPECIAL_SIDS = new Set([
  *  convention. Order matters — checked top to bottom, first match wins. */
 export function resolveInteractableSubcategory(sid: string): InteractableSubcategory {
   if (sid.startsWith('campaign_') || sid.endsWith('_campaign')) return 'campaignOnly'
+  const group = interactableGroupOf(sid)
+  if (group) return group
   if (sid.startsWith('barracks_')) return 'dwellings'
   if (sid.startsWith('portal_')) return 'portals'
   if (sid.startsWith('storage_') || sid.startsWith('custom_storage_')) return 'resourceStorage'

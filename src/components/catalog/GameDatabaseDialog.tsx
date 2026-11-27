@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Copy, Check, Filter, Sparkles } from '@/components/ui/icons'
+import { interactableGroupOf } from '@/lib/map-grid/interactable-subcategories'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
@@ -615,7 +616,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       if (activeTab === 'mapObjects') {
         const { category, biome } = item as CatalogItem & { category?: string; biome?: string }
         // Campaign and custom objects belong to their own switch, not to their category's.
-        const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : mapCategoryKey(category ?? '')
+        const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : (interactableGroupOf(item.id) ?? mapCategoryKey(category ?? ''))
         if (fs.mapCategories.enabled[key] === false) return false
         if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }

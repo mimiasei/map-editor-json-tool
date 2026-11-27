@@ -1105,6 +1105,8 @@
       "Neutral": "Neutralna"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Banki stworzeń",
+      "heroBoosts": "Bonusy bohatera",
       "dwellings": "Siedziby",
       "portals": "Portale",
       "resourceStorage": "Magazyny zasobów",
@@ -2867,12 +2869,18 @@
       "kind": "Rodzaj"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Tylko banki stworzeń",
+        "heroBoosts": "Tylko bonusy bohatera"
+      },
       "filterMapObjects": "Filtruj obiekty mapy",
       "interactableOnly": "Tylko interaktywne",
       "categories": "Kategorie",
       "showingApproximatelyOfObjects": "Wyświetlono około {{filteredCount}} z {{totalCount}} obiektów"
     },
     "mapCategories": {
+      "creatureBanks": "Banki stworzeń",
+      "heroBoosts": "Bonusy bohatera",
       "interactables": "Obiekty interaktywne",
       "resources": "Zasoby",
       "environments": "Otoczenie",

@@ -1105,6 +1105,8 @@
       "Neutral": "Нейтральная"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Банки существ",
+      "heroBoosts": "Бонусы героя",
       "dwellings": "Жилища",
       "portals": "Порталы",
       "resourceStorage": "Хранилища ресурсов",
@@ -2867,12 +2869,18 @@
       "kind": "Вид"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Только банки существ",
+        "heroBoosts": "Только бонусы героя"
+      },
       "filterMapObjects": "Фильтр объектов карты",
       "interactableOnly": "Только интерактивные",
       "categories": "Категории",
       "showingApproximatelyOfObjects": "Показано примерно {{filteredCount}} из {{totalCount}} объектов"
     },
     "mapCategories": {
+      "creatureBanks": "Банки существ",
+      "heroBoosts": "Бонусы героя",
       "interactables": "Интерактивные",
       "resources": "Ресурсы",
       "environments": "Окружение",

@@ -1047,6 +1047,8 @@
       "Neutral": "Nøytral"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Skapningsbanker",
+      "heroBoosts": "Heltebonuser",
       "dwellings": "Boliger",
       "portals": "Portaler",
       "resourceStorage": "Ressurslager",
@@ -2776,12 +2778,18 @@
       "kind": "Slag"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Bare skapningsbanker",
+        "heroBoosts": "Bare heltebonuser"
+      },
       "filterMapObjects": "Filtrer kartobjekter",
       "interactableOnly": "Bare interaktive",
       "categories": "Kategorier",
       "showingApproximatelyOfObjects": "Viser omtrent {{filteredCount}} av {{totalCount}} objekter"
     },
     "mapCategories": {
+      "creatureBanks": "Skapningsbanker",
+      "heroBoosts": "Heltebonuser",
       "interactables": "Interaktive objekter",
       "resources": "Ressurser",
       "environments": "Omgivelser",

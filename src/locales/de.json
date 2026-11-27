@@ -1047,6 +1047,8 @@
       "Neutral": "Neutral"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Kreaturenbanken",
+      "heroBoosts": "Helden-Boni",
       "dwellings": "Behausungen",
       "portals": "Portale",
       "resourceStorage": "Ressourcenlager",
@@ -2776,12 +2778,18 @@
       "kind": "Art"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Nur Kreaturenbanken",
+        "heroBoosts": "Nur Helden-Boni"
+      },
       "filterMapObjects": "Kartenobjekte filtern",
       "interactableOnly": "Nur interaktive Objekte",
       "categories": "Kategorien",
       "showingApproximatelyOfObjects": "Es werden etwa {{filteredCount}} von {{totalCount}} Objekten angezeigt"
     },
     "mapCategories": {
+      "creatureBanks": "Kreaturenbanken",
+      "heroBoosts": "Helden-Boni",
       "interactables": "Interaktive Objekte",
       "resources": "Ressourcen",
       "environments": "Umgebungen",

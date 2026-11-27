@@ -1105,6 +1105,8 @@
       "Neutral": "Нейтральна"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Банки істот",
+      "heroBoosts": "Бонуси героя",
       "dwellings": "Житла",
       "portals": "Портали",
       "resourceStorage": "Сховища ресурсів",
@@ -2867,12 +2869,18 @@
       "kind": "Вид"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Лише банки істот",
+        "heroBoosts": "Лише бонуси героя"
+      },
       "filterMapObjects": "Фільтр об'єктів мапи",
       "interactableOnly": "Лише інтерактивні",
       "categories": "Категорії",
       "showingApproximatelyOfObjects": "Показано приблизно {{filteredCount}} із {{totalCount}} об'єктів"
     },
     "mapCategories": {
+      "creatureBanks": "Банки істот",
+      "heroBoosts": "Бонуси героя",
       "interactables": "Інтерактивні об'єкти",
       "resources": "Ресурси",
       "environments": "Середовища",

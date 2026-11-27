@@ -16,18 +16,31 @@ import { Separator } from '@/components/ui/separator'
 import { useState, useEffect } from 'react'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
+import { interactableGroupOf } from '@/lib/map-grid/interactable-subcategories'
 
 // ─── Filter state ─────────────────────────────────────────────────────────────
 
 export type MapObjectCategory = CatalogMapObject['category']
+export type MapObjectGroup = 'creatureBanks' | 'heroBoosts'
+const GROUPS: MapObjectGroup[] = ['creatureBanks', 'heroBoosts']
+
+/** Does this object pass the groups switches: no switch on, or it belongs to a group that is on. */
+export function passesGroupFilter(sid: string, onlyGroups: Record<MapObjectGroup, boolean>): boolean {
+  if (!GROUPS.some((g) => onlyGroups[g])) return true
+  const group = interactableGroupOf(sid)
+  return group !== null && onlyGroups[group]
+}
 
 export interface MapObjectFilterState {
   interactableOnly: boolean
+  /** When any is on, only objects of the groups that are on are listed. */
+  onlyGroups: Record<MapObjectGroup, boolean>
   categories: Record<MapObjectCategory, boolean>
 }
 
 export const DEFAULT_FILTER: MapObjectFilterState = {
   interactableOnly: false,
+  onlyGroups: { creatureBanks: false, heroBoosts: false },
   categories: {
     interactables: true,
     resources: true,
@@ -48,7 +61,10 @@ const STORAGE_KEY = 'oe-map-object-filter'
 export function loadSavedFilter(): MapObjectFilterState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return { ...DEFAULT_FILTER, ...JSON.parse(raw) }
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<MapObjectFilterState>
+      return { ...DEFAULT_FILTER, ...saved, onlyGroups: { ...DEFAULT_FILTER.onlyGroups, ...saved.onlyGroups } }
+    }
   } catch { /* ignore */ }
   return DEFAULT_FILTER
 }
@@ -124,6 +140,20 @@ export default function MapObjectFilter({
               {t('catalog.mapObjectFilter.interactableOnly')}
             </Label>
           </div>
+
+          {/* Groups of interactables */}
+          {GROUPS.map((group) => (
+            <div key={group} className="flex items-center gap-2">
+              <Checkbox
+                id={`filter-group-${group}`}
+                checked={draft.onlyGroups[group]}
+                onCheckedChange={(v) => setDraft((prev) => ({ ...prev, onlyGroups: { ...prev.onlyGroups, [group]: Boolean(v) } }))}
+              />
+              <Label htmlFor={`filter-group-${group}`} className="cursor-pointer">
+                {t(`catalog.mapObjectFilter.only.${group}`)}
+              </Label>
+            </div>
+          ))}
 
           <Separator />
 
