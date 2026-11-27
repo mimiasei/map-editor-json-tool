@@ -16,6 +16,8 @@ import { validateMapStructure } from '@/lib/map-grid/validate-map'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
+import { repositionStrandedPortals } from './portal-reposition'
+import { WATER_PORTAL_SID } from './water-portals'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 
 export interface H3ImportJobInput {
@@ -67,6 +69,22 @@ export async function runH3ImportJob(input: H3ImportJobInput, onProgress?: H3Imp
     // The auto-fix is the longest stretch (about a minute on a large map): its own progress fills the 78-90 range of the bar.
     onProgress: (fraction) => onProgress?.(stageLabel('fixing'), 78 + 12 * fraction, 'fixing'),
   })
+
+  // The auto-fix moves objects too, so a shipyard portal is judged by where it ended up: one standing in a pocket cut off from its island moves into
+  // the island's biggest open region (portal-reposition.ts). Done on the final map, so nothing after it can close the portal in again.
+  {
+    const decoderPortals = new TextDecoder('utf-8')
+    const placedBlocks = extractMapContext(containerToRawBlocks(fixed))
+    const b2Portals = JSON.parse(decoderPortals.decode(fixed.chunks[1])) as { objects: { sid: string; ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }[] }
+    const moved = repositionStrandedPortals(
+      new Map(b2Portals.objects.map((group) => [group.sid, group])), WATER_PORTAL_SID, placedBlocks.sizeX, placedBlocks.sizeZ,
+      { levelsMap: placedBlocks.levelsMap, climbsMap: placedBlocks.climbsMap, waterMap: placedBlocks.waterMap },
+      importCatalog, new Map(importCatalog.mapObjects.map((o) => [o.id, o])), forbiddenNodes,
+    )
+    report.shipyardPortalsMoved = moved.moved
+    report.shipyardPortalsStranded = moved.stranded
+    if (moved.moved > 0) fixed.chunks[1] = new TextEncoder().encode(JSON.stringify(b2Portals))
+  }
 
   await reportH3Stage(onProgress, 'validating', 90)
   const finalContext = extractMapContext(containerToRawBlocks(fixed))

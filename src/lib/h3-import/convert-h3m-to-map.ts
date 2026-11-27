@@ -134,6 +134,9 @@ export interface H3ImportReport {
   /** Shipyards in the H3 map (OE has no ships), the portals that replaced them plus the ones added on island shores, and the islands joined. */
   shipyardsFound: number
   shipyardPortals: number
+  /** Shipyard portals moved out of a sealed pocket, and ones that stayed in one because nothing fit elsewhere on their island (set by the import job, after the auto-fix). */
+  shipyardPortalsMoved: number
+  shipyardPortalsStranded: number
   shipyardIslands: number
   /** Objects whose entrance could not be put on the H3 entrance tile without standing on rock; they were placed at the H3 anchor instead. */
   anchorFallbacks: number
@@ -1509,7 +1512,7 @@ export async function convertH3mToMap(
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, sourceObjectCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
       outOfEnvelopeCount, clusterCellsClipped, winConditions: winPlan.ids, unsupportedVictory: winPlan.unsupported,
-      shipyardsFound: shipyardNodes.length, shipyardPortals: waterPortals.portals, shipyardIslands: waterPortals.islands,
+      shipyardsFound: shipyardNodes.length, shipyardPortals: waterPortals.portals, shipyardPortalsMoved: 0, shipyardPortalsStranded: 0, shipyardIslands: waterPortals.islands,
       anchorFallbacks,
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
