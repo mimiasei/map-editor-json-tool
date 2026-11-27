@@ -51,6 +51,10 @@ JSON validation alone doesn't prove the mapping is *correct* — import an `.h3m
 
 A `scenery` or `omit` row can carry `"onWater": "mountain"`. When that object stands on H3 water (a Rock or a Reef in the sea), the importer places OE water mountains instead of dropping it: `mountain_water_big_1..3` (2x2) and `mountain_water_small_1..3` (1x1), packed over the object's blocked cells with the same rules as a land mountain range (biggest first with a random skip, models varied). The catalog files them under Grass, but the land ranges never use them. The same object on land keeps its normal row.
 
+## Landmarks
+
+A `landmark` row builds one H3 sprite (matched by its `.def`) from a blocking OE object plus an optional effect on its centre tile. The big volcano (`avlvol50.def`) is `mountain_lava_big_4` with `fx_map_smoke` on top; `smallSid` fills the tiles that are already taken when the 3x3 does not fit. A sprite with no entry (the small volcano) is omitted. Landmarks go down before any other decoration.
+
 ## Other outcome shapes
 
 `scenery`, `dispatch`, `scenery-dispatch`, and `scenery-dispatch-subtype` exist for objects that resolve differently depending on subtype/animation/terrain (see the doc comments in `h3-object-mapping-schema.ts`) — but for a plain "this H3 object is always this one OE object," `emit` is all you need, same shape as Tavern above.

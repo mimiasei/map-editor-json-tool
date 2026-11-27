@@ -103,6 +103,14 @@ export const H3_OAK_TREES_OBJECT_ID = 135
 const mapping = H3ObjectMappingSchema.parse(mappingData)
 const objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
 
+export interface LandmarkResolution { sid: string; effectSid?: string; smallSid?: string }
+
+/** The OE objects an H3 landmark sprite is built from (see `LandmarkRowSchema`), or null when the object is not a landmark or its sprite has no entry. */
+export function resolveLandmark(templateObjectId: number, templateAnimation: string): LandmarkResolution | null {
+  const row = objectsById.get(templateObjectId)
+  return row?.outcome === 'landmark' ? (row.exact[(templateAnimation || '').toLowerCase()] ?? null) : null
+}
+
 /** H3 objects (rocks, reefs) that become OE water mountains when they stand on water: the rows with `onWater: 'mountain'`. */
 export const WATER_MOUNTAIN_OBJECT_IDS = new Set<number>(mapping.objects.filter((row) => 'onWater' in row && row.onWater === 'mountain').map((row) => row.h3Id))
 
@@ -181,6 +189,7 @@ export function h3ObjectCategory(id: number): string | null {
     case 'scenery':
     case 'scenery-dispatch':
     case 'scenery-dispatch-subtype':
+    case 'landmark':
       return 'scenery'
     case 'omit':
       return null
@@ -241,6 +250,10 @@ export function resolveObjectSid(
       const sid = BIOME_ROLE_REPLACEMENTS[role][biome]
       return { action: 'emit', sid, kind: 'scenery', role, reason: 'scenery_role_or_animation' }
     }
+
+    // Landmarks are intercepted by the converter (`resolveLandmark`) before this runs; reaching here means the sprite has no entry.
+    case 'landmark':
+      return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
 
     case 'dispatch': {
       if (row.freeChoice && row.freeChoice.subtypes.includes(subtype)) {

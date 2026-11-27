@@ -74,8 +74,16 @@ const DispatchRowSchema = z.object({
   unmatchedReason: z.string().optional(),
 })
 
+/** A landmark: one H3 sprite (matched by its `.def`, case-insensitive) that has no OE twin but can be built from one blocking OE object plus an
+ *  optional effect on its centre tile (the H3 volcano: a lava mountain with smoke). `smallSid` replaces the blocking object on the tiles that are
+ *  already taken when the whole footprint does not fit. A sprite with no entry omits. Placed before any other decoration. */
+const LandmarkRowSchema = z.object({
+  ...BaseRow, outcome: z.literal('landmark'),
+  exact: z.record(z.string(), z.object({ sid: z.string(), effectSid: z.string().optional(), smallSid: z.string().optional() })),
+})
+
 export const ObjectRowSchema = z.discriminatedUnion('outcome', [
-  OmitRowSchema, EmitRowSchema, SceneryRowSchema, SceneryDispatchRowSchema, SceneryDispatchSubtypeRowSchema, DispatchRowSchema,
+  OmitRowSchema, EmitRowSchema, SceneryRowSchema, SceneryDispatchRowSchema, SceneryDispatchSubtypeRowSchema, DispatchRowSchema, LandmarkRowSchema,
 ])
 
 export const H3ObjectMappingSchema = z.object({

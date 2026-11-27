@@ -1445,8 +1445,10 @@
     {
       "h3Id": 158,
       "h3Name": "Volcano",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_158"
+      "outcome": "landmark",
+      "exact": {
+        "avlvol50.def": { "sid": "mountain_lava_big_4", "effectSid": "fx_map_smoke", "smallSid": "mountain_lava_small_1" }
+      }
     },
     {
       "h3Id": 159,
