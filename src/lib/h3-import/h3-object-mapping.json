@@ -876,8 +876,10 @@
     {
       "h3Id": 78,
       "h3Name": "Refugee Camp",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_78"
+      "outcome": "emit",
+      "sid": "mercenary_guild",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 79,
