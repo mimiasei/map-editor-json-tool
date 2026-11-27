@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useApplyThemeSettings } from '@/hooks/useApplyThemeSettings'
+import { useSuggestedMapPrefix } from '@/hooks/useSuggestedMapPrefix'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -200,6 +201,7 @@ export default function AppShell() {
 
   // Apply user-customized theme settings (CSS vars + font-size) on light theme.
   useApplyThemeSettings()
+  useSuggestedMapPrefix()
 
   // ── Background catalog load + thumbnail manifest on startup ──────────────────
   useEffect(() => {
