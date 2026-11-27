@@ -16,6 +16,7 @@ import { validateMapStructure } from '@/lib/map-grid/validate-map'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
+import { separateEncountersFromInteractables } from '@/lib/map-grid/encounter-separation'
 import { repositionStrandedPortals } from './portal-reposition'
 import { WATER_PORTAL_SID } from './water-portals'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
@@ -62,7 +63,7 @@ export async function runH3ImportJob(input: H3ImportJobInput, onProgress?: H3Imp
   // converter's levels are H3's rock and floor, and a lone rock tile is real H3 data (the spike fix would raise the floor tile it encloses).
   await reportH3Stage(onProgress, 'fixing', 78)
   const sealed = new Set(sealIds)
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, importCatalog, {
+  const { fixed: autoFixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, importCatalog, {
     mayChange: (entityType, id) => !(entityType === 0 && sealed.has(id)),
     fixElevation: false,
     forbiddenNodes,
@@ -74,8 +75,8 @@ export async function runH3ImportJob(input: H3ImportJobInput, onProgress?: H3Imp
   // the island's biggest open region (portal-reposition.ts). Done on the final map, so nothing after it can close the portal in again.
   {
     const decoderPortals = new TextDecoder('utf-8')
-    const placedBlocks = extractMapContext(containerToRawBlocks(fixed))
-    const b2Portals = JSON.parse(decoderPortals.decode(fixed.chunks[1])) as { objects: { sid: string; ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }[] }
+    const placedBlocks = extractMapContext(containerToRawBlocks(autoFixed))
+    const b2Portals = JSON.parse(decoderPortals.decode(autoFixed.chunks[1])) as { objects: { sid: string; ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }[] }
     const moved = repositionStrandedPortals(
       new Map(b2Portals.objects.map((group) => [group.sid, group])), WATER_PORTAL_SID, placedBlocks.sizeX, placedBlocks.sizeZ,
       { levelsMap: placedBlocks.levelsMap, climbsMap: placedBlocks.climbsMap, waterMap: placedBlocks.waterMap },
@@ -83,8 +84,11 @@ export async function runH3ImportJob(input: H3ImportJobInput, onProgress?: H3Imp
     )
     report.shipyardPortalsMoved = moved.moved
     report.shipyardPortalsStranded = moved.stranded
-    if (moved.moved > 0) fixed.chunks[1] = new TextEncoder().encode(JSON.stringify(b2Portals))
+    if (moved.moved > 0) autoFixed.chunks[1] = new TextEncoder().encode(JSON.stringify(b2Portals))
   }
+
+  // H3 lets a monster stand on an object's own tile; in OE that leaves an interactable with an encounter on top of it (encounter-separation.ts).
+  const { container: fixed } = separateEncountersFromInteractables(autoFixed, importCatalog)
 
   await reportH3Stage(onProgress, 'validating', 90)
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
