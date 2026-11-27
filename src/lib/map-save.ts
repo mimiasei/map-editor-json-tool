@@ -62,10 +62,14 @@ import {
   paintObjects,
   clearAllObjects,
   patchMapSettings,
+  patchWinConditions,
+  readWinConditionData,
+  setCityHold,
   bytesEqual,
   type MapContainer,
   type MapSettingsPatch,
 } from '@/lib/map-write'
+import { winEntryOptions, readWinState, type WinConditionId, type WinOptions } from '@/lib/rmg/win-conditions'
 import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
@@ -97,6 +101,8 @@ export type MapSaveEdit =
   /** A free-standing `random-city`: propCities only, no Block 1 spawns entry. */
   | { kind: 'setRandomCityFaction'; entityType: number; entityId: number; factionSid: string }
   | { kind: 'setMapSettings'; patch: MapSettingsPatch }
+  /** Block 2 only: which win conditions the map has and their settings (the City Hold city is ignored unless 'city-hold' is on). */
+  | { kind: 'setWinConditions'; active: WinConditionId[]; options: WinOptions; cityHoldId: number | null }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadFraction'; entityType: number; entityId: number; fraction: string }
@@ -333,6 +339,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const result = patchMapSettings(newChunks[0], newChunks[1], edit.patch)
     newChunks[0] = result.block1Chunk
     newChunks[1] = result.block2Chunk
+  } else if (edit?.kind === 'setWinConditions') {
+    newChunks[1] = setCityHold(patchWinConditions(newChunks[1], winEntryOptions(edit.active, edit.options)), edit.active.includes('city-hold') ? edit.cityHoldId : null)
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -927,6 +935,16 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
         throw new Error(`Verification failed: ${field} not reflected in the rebuilt Block 2 settings`)
       }
     }
+  }
+
+  else if (edit?.kind === 'setWinConditions') {
+    const { entries, cityHoldId } = readWinConditionData(reparsed.chunks[1])
+    const state = readWinState(entries)
+    if (state.active.length !== edit.active.length || edit.active.some((id) => !state.active.includes(id))) {
+      throw new Error('Verification failed: win conditions not reflected in the rebuilt Block 2')
+    }
+    const wanted = edit.active.includes('city-hold') ? edit.cityHoldId : null
+    if (cityHoldId !== wanted) throw new Error('Verification failed: City Hold city not reflected in the rebuilt Block 2')
   }
 
   return { container: reparsed, newId: addedId }

@@ -42,7 +42,7 @@
 // 11/13 aren't in EdObjts.txt's own id-140 listing at all — real, disclosed
 // gaps, not guesses).
 
-import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind } from './h3-object-mapping-schema'
+import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind, type MixEntry, type SpriteRule, type H3Settings, type DecorationRuleData } from './h3-object-mapping-schema'
 import mappingData from './h3-object-mapping.json'
 
 export type { SceneryRole, OeBiome, ObjectKind }
@@ -101,9 +101,96 @@ export const H3_TERRAIN_BIOME: Record<number, OeBiome> = {
 export const H3_OAK_TREES_OBJECT_ID = 135
 
 const mapping = H3ObjectMappingSchema.parse(mappingData)
-const objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
 
-export const BIOME_ROLE_REPLACEMENTS: Record<SceneryRole, Record<OeBiome, string>> = mapping.sceneryRoleSids as Record<SceneryRole, Record<OeBiome, string>>
+/** The shipped table, one row per H3 object id (what the mapping tool shows as the default). */
+export const DEFAULT_MAPPING_ROWS: readonly ObjectRow[] = mapping.objects
+/** The `sceneryRoleSids` table: the OE sid each scenery role uses per terrain biome. */
+export const SCENERY_ROLE_SIDS: Readonly<Record<string, Record<string, string>>> = mapping.sceneryRoleSids
+/** The shipped decoration borrowing rules and Scenery-group ids (the tool's defaults). */
+export const DEFAULT_DECORATION_RULES: readonly DecorationRuleData[] = mapping.decorationRules
+export const SCENERY_GROUP_IDS: ReadonlySet<number> = new Set(mapping.sceneryGroupIds)
+let decorationRules: DecorationRuleData[] = [...mapping.decorationRules]
+
+/** The biome borrowing rules in use (shipped, or the user's list). */
+export function getDecorationRules(): readonly DecorationRuleData[] {
+  return decorationRules
+}
+
+/** The table in use: the shipped rows, with the user's edits (the mapping tool, `useH3MappingStore`) on top. */
+let objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
+
+/** The shipped sprite rules and numbers (what the mapping tool shows as the default). */
+export const DEFAULT_SPRITE_RULES: readonly SpriteRule[] = mapping.spriteRules
+export const DEFAULT_SETTINGS: Readonly<H3Settings> = mapping.settings
+let spriteRules: SpriteRule[] = [...mapping.spriteRules]
+let compiledRules: { rule: SpriteRule; regex: RegExp | null }[] = compile(spriteRules)
+let settings: H3Settings = { ...mapping.settings }
+
+function compile(rules: SpriteRule[]) {
+  return rules.map((rule) => {
+    try {
+      return { rule, regex: new RegExp(rule.pattern, 'i') }
+    } catch {
+      return { rule, regex: null }
+    }
+  })
+}
+
+/** What the user changed in the mapping tool (useH3MappingStore): rows by H3 id, the whole sprite rule list (null: the shipped one) and numbers. Every
+ *  resolver below reads the result, in the main thread and (passed along with the job) in the import worker. */
+export interface MappingEdits {
+  rows: Record<string, ObjectRow>
+  spriteRules: SpriteRule[] | null
+  settings: Partial<H3Settings>
+  /** Only the changed cells: scenery role → OE biome → sid. */
+  sceneryRoleSids: Record<string, Record<string, string>>
+  /** The whole biome borrowing rule list; null: the shipped one. */
+  decorationRules: DecorationRuleData[] | null
+}
+
+export const NO_MAPPING_EDITS: MappingEdits = { rows: {}, spriteRules: null, settings: {}, sceneryRoleSids: {}, decorationRules: null }
+
+export function applyMappingEdits(edits: MappingEdits): void {
+  objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, edits.rows[String(row.h3Id)] ?? row]))
+  WATER_MOUNTAIN_OBJECT_IDS.clear()
+  for (const row of objectsById.values()) if ('onWater' in row && row.onWater === 'mountain') WATER_MOUNTAIN_OBJECT_IDS.add(row.h3Id)
+  spriteRules = edits.spriteRules ? [...edits.spriteRules] : [...mapping.spriteRules]
+  compiledRules = compile(spriteRules)
+  settings = { ...mapping.settings, ...edits.settings }
+  decorationRules = edits.decorationRules ? [...edits.decorationRules] : [...mapping.decorationRules]
+  // BIOME_ROLE_REPLACEMENTS is read by reference all over the converter, so it is rewritten in place.
+  for (const [role, byBiome] of Object.entries(mapping.sceneryRoleSids)) Object.assign(BIOME_ROLE_REPLACEMENTS[role as SceneryRole], byBiome, edits.sceneryRoleSids?.[role])
+}
+
+/** The first sprite rule whose pattern matches this sprite's file name, or null. A rule with an invalid pattern never matches. */
+export function matchSpriteRule(spriteName: string): SpriteRule | null {
+  return compiledRules.find((entry) => entry.regex?.test(spriteName))?.rule ?? null
+}
+
+export function getSetting<K extends keyof H3Settings>(key: K): H3Settings[K] {
+  return settings[key]
+}
+
+/** The random mix an H3 object id converts to (rows with `outcome: 'mix'`), or null. */
+export function resolveMix(templateObjectId: number): MixEntry[] | null {
+  const row = objectsById.get(templateObjectId)
+  return row?.outcome === 'mix' ? row.entries : null
+}
+
+export interface LandmarkResolution { sid?: string; effectSid?: string; smallSid?: string; pieces?: { size: number; sids: string[] }[] }
+
+/** The OE objects an H3 landmark sprite is built from (see `LandmarkRowSchema`), or null when the object is not a landmark or its sprite has no entry. */
+export function resolveLandmark(templateObjectId: number, templateAnimation: string): LandmarkResolution | null {
+  const row = objectsById.get(templateObjectId)
+  return row?.outcome === 'landmark' ? (row.exact[(templateAnimation || '').toLowerCase()] ?? row.default ?? null) : null
+}
+
+/** H3 objects (rocks, reefs) that become OE water mountains when they stand on water: the rows with `onWater: 'mountain'`. */
+export const WATER_MOUNTAIN_OBJECT_IDS = new Set<number>(mapping.objects.filter((row) => 'onWater' in row && row.onWater === 'mountain').map((row) => row.h3Id))
+
+
+/** The OE sid each scenery role uses per biome: the shipped table with the user's edits on top (see applyMappingEdits). */
+export const BIOME_ROLE_REPLACEMENTS = structuredClone(mapping.sceneryRoleSids) as Record<SceneryRole, Record<OeBiome, string>>
 
 /** `"<Name> (id N)"`, or `"H3 object id N (unidentified)"` when this id has
  *  no entry in VCMI's own registry — used by the import report so a raw
@@ -178,6 +265,8 @@ export function h3ObjectCategory(id: number): string | null {
     case 'scenery':
     case 'scenery-dispatch':
     case 'scenery-dispatch-subtype':
+    case 'landmark':
+    case 'mix':
       return 'scenery'
     case 'omit':
       return null
@@ -193,7 +282,7 @@ function animationTokenMatch(animation: string, table: Record<string, string>): 
 
 export type ObjectResolution =
   | { action: 'omit'; reason: string }
-  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; role?: SceneryRole }
+  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; fraction?: string; tier?: number; role?: SceneryRole; treeBiomes?: string[]; pair?: boolean }
 
 /** Resolve any H3 object to a stock OE sid — table-driven, reading
  *  `h3-object-mapping.json`'s row for `templateObjectId` and dispatching on
@@ -217,7 +306,7 @@ export function resolveObjectSid(
       return { action: 'omit', reason: row.reason }
 
     case 'emit':
-      return { action: 'emit', sid: row.sid, kind: row.kind, reason: row.reason, factionSid: row.factionSid, freeChoice: row.freeChoice }
+      return { action: 'emit', sid: row.sid, kind: row.kind, reason: row.reason, factionSid: row.factionSid, freeChoice: row.freeChoice, fraction: row.fractionBySubtype?.[String(subtype)] ?? row.fraction, tier: row.tier }
 
     case 'scenery': {
       const biome = H3_TERRAIN_BIOME[h3TerrainAtTile] ?? 'grass'
@@ -228,7 +317,7 @@ export function resolveObjectSid(
     case 'scenery-dispatch': {
       const hit = row.exact[anim]
       if (!hit) return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
-      return { action: 'emit', sid: hit.sid, kind: 'scenery', role: hit.role, reason: 'scenery_role_or_animation' }
+      return { action: 'emit', sid: hit.sid, kind: 'scenery', role: hit.role, treeBiomes: hit.treeBiomes, pair: hit.pair, reason: 'scenery_role_or_animation' }
     }
 
     case 'scenery-dispatch-subtype': {
@@ -238,6 +327,11 @@ export function resolveObjectSid(
       const sid = BIOME_ROLE_REPLACEMENTS[role][biome]
       return { action: 'emit', sid, kind: 'scenery', role, reason: 'scenery_role_or_animation' }
     }
+
+    // Landmarks are intercepted by the converter (`resolveLandmark`) before this runs; reaching here means the sprite has no entry.
+    case 'mix':
+    case 'landmark':
+      return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
 
     case 'dispatch': {
       if (row.freeChoice && row.freeChoice.subtypes.includes(subtype)) {

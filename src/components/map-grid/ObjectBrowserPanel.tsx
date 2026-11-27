@@ -49,7 +49,7 @@ import {
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
-import { computeFootprintTiles, footprintIconBounds } from '@/lib/map-grid/footprint'
+import { SIZE_ORDER, objectSizeLabel, type SizeKey } from '@/lib/map-grid/object-size'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
 import { factionLabel } from '@/lib/factions'
@@ -88,16 +88,6 @@ type BrowseMode = 'objects' | 'creatures'
 // Core/DB/squads/squads_neutral/*) but there's no real "neutral" playable
 // faction entry in Core/DB/fractions, so it isn't part of `catalog.factions`.
 const NEUTRAL_FRACTION_ID = 'neutral'
-
-// Footprint size buckets for the Size filter; anything else (non-square, 4x4 and up) is "other".
-const SIZE_ORDER = ['1x1', '2x2', '3x3', 'other'] as const
-type SizeKey = (typeof SIZE_ORDER)[number]
-
-/** Visual footprint ("1" cells only, as the grid draws it) as "WxH"; objects with no footprint count as 1x1. */
-function objectSizeLabel(o: CatalogMapObject): string {
-  const b = footprintIconBounds(computeFootprintTiles(o, 0, 0))
-  return b ? `${b.maxX - b.minX + 1}x${b.maxZ - b.minZ + 1}` : '1x1'
-}
 
 const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 // Object catalog entries use their own biome string ("Desert") where tiles
@@ -770,20 +760,35 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               <Button
                 variant={query ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-6 w-6 shrink-0"
-                title={t('mapGrid.objectBrowserPanel.searchBySidOrName')}
+                className="relative h-6 w-6 shrink-0"
+                title={query ? `${t('mapGrid.objectBrowserPanel.searchBySidOrName')}: ${query}` : t('mapGrid.objectBrowserPanel.searchBySidOrName')}
               >
-                <Search className="h-3.5 w-3.5" />
+                <Search className="h-3.5 w-3.5" {...(query ? { strokeWidth: 3.5 } : {})} />
+                {/* A search is filtering the list: the closed popover would otherwise hide it. */}
+                {query && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" aria-hidden />}
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-56 p-1.5" data-nodrag>
-              <Input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t('mapGrid.objectBrowserPanel.searchSidName')}
-                className="h-7 text-xs"
-              />
+              <div className="relative">
+                <Input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('mapGrid.objectBrowserPanel.searchSidName')}
+                  className="h-7 pr-7 text-xs"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    title={t('mapGrid.objectBrowserPanel.clearSearch')}
+                    aria-label={t('mapGrid.objectBrowserPanel.clearSearch')}
+                    onClick={() => setQuery('')}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </PopoverContent>
           </Popover>
         </div>

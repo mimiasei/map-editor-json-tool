@@ -19,11 +19,9 @@
 // requestedValue (neutral-strength.ts) and random-item rarity binning
 // (random-items.ts) — a monster with no known creature type/level is now
 // omitted rather than placed uncalibrated.
-// Phase 4 (issue #207): H3's WINSTANDARD ("defeat all enemies") victory
-// condition, emitted as a real QuestScript `MainQuest` (victory.ts) — the
-// one victory type common enough to be worth this round's effort; any
-// other H3 victory type (TAKEMINES, GATHERTROOP, ...) leaves no victory
-// quest at all (see `report.hasVictoryQuest`), a real gap, not a guess.
+// Phase 4 (issue #207): the H3 victory condition becomes the map's win conditions (win-conditions.ts): standard victory -> Classic, capture a
+// town -> Capital Hold or City Hold, defeat a hero -> Guardian's Demise; any other H3 type falls back to Classic and is named in the report
+// (`report.unsupportedVictory`).
 //
 // Player starts (user-reported real bug, fixed this round): every H3 town
 // owned by a playable player becomes OE's own real player-start object,
@@ -44,30 +42,46 @@
 // dropped): map events, global timed events, and the structural validator
 // (Phase 5).
 
-import { generateMapHash, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
+import { reportH3Stage, type H3ImportProgress, type H3ImportStage } from './import-progress'
+import { generateMapHash, applyWinConditionEntries, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
-import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
+import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyRockSkirt, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
-import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
-import { generateDisplayNameSid } from '@/lib/slugify'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import { NON_BLOCKING_SPAWNER_SIDS, buildBlockedTileSet } from '@/lib/map-grid/passability'
+import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
+import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
+import { createH3DecorationPicker, type H3DecorationPicker } from './h3-decoration-pools'
+import { resolveObjectSid, resolveLandmark, resolveMix, matchSpriteRule, getSetting, WATER_MOUNTAIN_OBJECT_IDS, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
+import { RANDOM_HIRE_BIOME_FRACTION, RANDOM_HIRE_FRACTION_BY_FACTION, RANDOM_HIRE_TIER_RANDOM } from '@/lib/map-grid/random-hire'
+import { HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
+import { dedupeSid, generateDisplayNameSid } from '@/lib/slugify'
+import { mapNameSnakeCase, mintCustomSid } from '@/lib/zip-export'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import { buildGlobalEventQuest, type GlobalEventQuest } from './global-events'
 import type { DialogFlow } from '@/types/dialog'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
-  footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
+  footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster, pickTreeClusterVaried, packMountainClusterVaried,
   buildOakTreePool, mountainBigSid, randomDecorRotation,
 } from './scenery-clusters'
 import { assignOwnership, type CityCandidate, type HeroCandidate } from './ownership'
 import { stockRandomSquadRequestedValue, NOMINAL_STACK_COUNT_BY_LEVEL, CREATURE_TYPE_SQUAD_VALUE } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
-import { buildWinstandardQuest } from './victory'
-import { VICTORY_WINSTANDARD } from './h3m-format'
-import { linkPortalPairs } from './portal-links'
+import { planH3WinConditions, finishH3WinPlan, H3_WIN_OPTIONS } from './win-conditions'
+import { winEntryOptions, type WinConditionId } from '@/lib/rmg/win-conditions'
+import { linkH3Portals, type H3PortalPlacement } from './portal-links'
 import { applyAccessibilityPass } from './accessibility-pass'
 import { buildGroundTruthWalkableSet } from './ground-truth-passability'
+import { findStartPockets, pickSpawnerEntrance } from './start-pockets'
+import { coverCells } from './piece-cover'
+import { createMixCover } from './mix-cover'
+import type { MixEntry } from './h3-object-mapping-schema'
+import type { PlacedObject } from '@/types/map-context'
 
 
 export interface H3ImportReport {
@@ -108,13 +122,24 @@ export interface H3ImportReport {
    *  real "defeat all enemies" quest was emitted; `false` for any other H3
    *  victory type (TAKEMINES, GATHERTROOP, ...) or too few players — the
    *  map has no working win condition this round (Phase 4 gap). */
-  hasVictoryQuest: boolean
+  winConditions: WinConditionId[]
+  /** An H3 victory type OE has nothing like (so Classic is used instead), by name; null when the whole condition carried over. */
+  unsupportedVictory: string | null
   /** Two-way-monolith/subterranean-gate/whirlpool instances that received a
    *  real `objectsProperties.propPortals` link (see `portal-links.ts`). */
   portalsLinked: number
   /** Portal instances placed alone, with no same-sid sibling to link to —
    *  left unlinked, likely inert in-game; a real, disclosed gap. */
   portalsUnpaired: number
+  /** Shipyards in the H3 map (OE has no ships), the portals that replaced them plus the ones added on island shores, and the islands joined. */
+  shipyardsFound: number
+  shipyardPortals: number
+  /** Shipyard portals moved out of a sealed pocket, and ones that stayed in one because nothing fit elsewhere on their island (set by the import job, after the auto-fix). */
+  shipyardPortalsMoved: number
+  shipyardPortalsStranded: number
+  shipyardIslands: number
+  /** Objects whose entrance could not be put on the H3 entrance tile without standing on rock; they were placed at the H3 anchor instead. */
+  anchorFallbacks: number
   /** Post-placement reachability pass (`accessibility-pass.ts`): placed
    *  instances that must be walkable-to (pickable items/resources,
    *  interactable entrances, player starts) that this importer's own object
@@ -139,6 +164,9 @@ export interface H3ImportReport {
   /** Ground-truth-walkable tiles still unreached after decor removal — a
    *  real, disclosed gap (see accessibility-pass.ts's own doc comment). */
   groundTruthStillBlocked: number
+  /** Walled-in player starts (see start-pockets.ts) and the solid pieces added to keep their walls closed. */
+  startPockets: number
+  startPocketSeals: number
   /** H3 river tiles converted to OE's own `rivers[0].nodes` data (real river
    *  art, not impassable — previously these were wrongly stamped into
    *  waterMap, making them look and behave like lake/ocean water). */
@@ -193,12 +221,18 @@ export interface H3ImportResult {
    *  running standalone the way this project's own verification scripts
    *  already rely on. */
   localizationTokens: Record<string, string>
+  /** Map-local clones of real objects that ship in the publish zip (the subterranean gates, named "Subterranean Gate"); the caller registers them. */
+  customMapObjects: CustomMapObjectDefinition[]
   /** Dialog flows built for H3 global timed events (the "day 1" map-opening
    *  message, or similar) — see `localizationTokens`' own doc comment for
    *  why this can't be written into the map container directly; the
    *  caller must also register these into the live scenario's dialog
    *  store (`useScenarioStore`'s `setDialogFlow`). */
   dialogFlows: Record<string, DialogFlow>
+  /** objects[] ids of the cave rocks that close thin H3 walls; later passes must not delete them. */
+  sealIds: number[]
+  /** Atlas nodes of H3 rock and the border: the auto-fix must not move anything onto them. */
+  forbiddenNodes: Set<number>
 }
 
 // Towns (and townless-hero players) are placed AFTER ownership is resolved,
@@ -209,6 +243,7 @@ export interface H3ImportResult {
 interface TownEntry {
   index: number
   node: number
+  visit?: VisitCell
   /** The direct stock city sid `resolveObjectSid` chose (e.g. `human_city`,
    *  or `random-city` for an unmapped H3 subtype) — used only for the
    *  neutral/unowned outcome; a player-owned town always becomes
@@ -227,6 +262,7 @@ interface TownEntry {
 interface HeroEntry {
   index: number
   node: number
+  visit?: VisitCell
 }
 
 /** Human-readable label for a `detailRows` group's `note`, by `ObjectKind` —
@@ -241,7 +277,19 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  to detect a gzip-wrapped `.h3m` before calling this). `seed` defaults to a
  *  hash of the map's own title, so re-converting the same source map is
  *  reproducible. */
-export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number): H3ImportResult {
+// Random Dwelling Lvl: the subtype is the dwelling level minus one (sprites avrcgen1..avrcgen7 are subtypes 0..6 in the H3 maps sampled).
+const OBJECT_RANDOM_DWELLING_LVL = 217
+const OBJECT_MONOLITH_ONE_WAY_ENTRANCE = 43
+const OBJECT_MONOLITH_ONE_WAY_EXIT = 44
+const OBJECT_SUBTERRANEAN_GATE = 103
+
+export async function convertH3mToMap(
+  data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number, onProgress?: H3ImportProgress,
+  /** The name the map will have in the editor (the .h3m file name): prefixes every dialog and text id the import writes. */
+  mapName?: string,
+): Promise<H3ImportResult> {
+  const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
+  await stage('readingMap', 0)
   const parsed = parseH3mFile(data)
   const { size, layers: layerCount, title } = parsed.shape
 
@@ -251,6 +299,23 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   for (let layer = 0; layer < layerCount; layer++) {
     projectLayerIntoAtlas(parsed.layers[layer], layer, atlas, out, size)
   }
+  // Rock beside floor drops to level 0 so the floor keeps its H3 width (see applyRockSkirt); `sealNodes` are the skirt tiles that
+  // would otherwise be open ground where H3 had a thin wall.
+  const floorNodes = new Set<number>()
+  const sealNodes: number[] = []
+  for (let layer = 0; layer < layerCount; layer++) {
+    const skirt = applyRockSkirt(parsed.layers[layer], layer, atlas, out, size)
+    for (const node of skirt.floorNodes) floorNodes.add(node)
+    sealNodes.push(...skirt.sealNodes)
+  }
+  const rockNodes = new Set<number>()
+  for (let layer = 0; layer < layerCount; layer++) {
+    const tiles = parsed.layers[layer]
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i].terrain === H3_UNDERGROUND_ROCK_TERRAIN_ID) rockNodes.add(atlas.targetNode(layer, i % size, Math.floor(i / size)))
+    }
+  }
+  let anchorFallbacks = 0
   // The elevated/unclimbable Dirt "wall" for the sector-alignment margin
   // around the real source rectangle is painted at the very end of this
   // function (`paintEnvelopePadding`), not here — every object placed via
@@ -263,7 +328,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // landing partly under the wall) — the clamp is the actual fix; the wall
   // itself was never the problem.
 
+  await stage('terrain', 8)
   const families = buildVariantFamilies(catalog.mapObjects)
+  const decorationPicker = createH3DecorationPicker(catalog)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
   // guard if it appears in at least one real squad template — real-data
@@ -276,11 +343,34 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // silently emitting an unplaceable guard.
   const placeableCreatureSids = new Set(catalog.squadTemplates.flatMap((t) => t.unitSids))
   const rng = createSeededRng(seed ?? seedFromString(title || 'h3-import'))
+  const mixCover = createMixCover(catalog, decorationPicker, rng)
 
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
+  // Tiles a blocking object already stands on. Everything that blocks is placed first and the decoration after (see deferredScenery), so a
+  // tree or rock never overlaps an interactable or another decoration: the tile is blocked either way, and the auto-fix has nothing to move.
+  const solidClaimed = new Set<number>()
+  const solidCells = (sid: string, node: number, rotation: number): number[] => {
+    const template = catalogById.get(sid)
+    if (!template || NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
+    const cells: number[] = []
+    for (const c of computeFootprintTiles(template, node % atlas.atlasWidth, Math.floor(node / atlas.atlasWidth), rotation)) {
+      if (c.value === 1 && c.x >= 0 && c.z >= 0 && c.x < atlas.atlasWidth && c.z < atlas.atlasHeight) cells.push(c.z * atlas.atlasWidth + c.x)
+    }
+    return cells
+  }
   let nextId = 0
-  const placeObject = (sid: string, node: number, rotation = 0): number => {
-    const clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
+  const h3Portals: H3PortalPlacement[] = []
+  const placeObject = (sid: string, node: number, rotation = 0, visit?: VisitCell): number => {
+    let clampedNode: number
+    if (visit) {
+      const anchored = anchorByVisitCell(sid, node, visit, { atlas, catalogById, waterMap: out.waterMap, levelsMap: out.levelsMap, rockNodes })
+      if (anchored.fallback) anchorFallbacks += 1
+      for (const node of anchored.carve ?? []) out.levelsMap[node] = 0
+      clampedNode = anchored.node
+    } else {
+      clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
+    }
+    for (const cell of solidCells(sid, clampedNode, rotation)) solidClaimed.add(cell)
     let group = objectGroups.get(sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(sid, group) }
     const id = nextId
@@ -334,6 +424,50 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // one to unseal a pocket without orphaning any table entry.
   const decorativeIds = new Set<number>()
 
+  // Solid 1x1 cave rock on every thin-wall skirt tile. Never decorative-removable: deleting one would open a hole the H3 map does not have.
+  const sealIds = new Set<number>()
+  const sealModelAt = new Map<number, string>()
+  for (const node of sealNodes) {
+    // Dirt mountains (the rock is Dirt), a different model from the ones beside it.
+    const beside = [node - 1, node + 1, node - atlas.atlasWidth, node + atlas.atlasWidth].map((n) => sealModelAt.get(n)).filter((sid): sid is string => !!sid)
+    const sid = decorationPicker.pickMountain(7, 1, rng, beside)
+    sealModelAt.set(node, sid)
+    sealIds.add(placeObject(sid, node, randomDecorRotation(rng)))
+  }
+
+  const deferredScenery: (() => void)[] = []
+  const waterMountainField = new Map<number, Map<string, { x: number; z: number }>>()
+  // Landmarks (the volcano) go down before any other decoration, so the trees and mountains around one cannot take its footprint.
+  const landmarkScenery: (() => void)[] = []
+  // The tiles landmark pieces stand on: a piece can hang over H3 floor, so these are not "must stay walkable" for the accessibility pass.
+  const landmarkCells = new Set<number>()
+  // Every H3 mountain tile of the map, per layer, with its biome: the mountains are packed once over all of them (not object by object), so
+  // squares can span neighbouring H3 objects. The tiles blocked stay exactly the ones H3 blocked.
+  const mountainField = new Map<number, Map<string, { cell: { x: number; z: number }; biome: BiomeId }>>()
+  /** Places one decoration unless a blocking object already stands on its tiles. A big mountain that only partly collides is replaced by
+   *  `smallSid` on its free tiles, so every tile H3 blocked stays blocked. Returns how many objects were placed. */
+  const placeScenery = (sid: string, node: number, smallSid: string | ((avoid: string[]) => string) | null): number => {
+    const rotation = randomDecorRotation(rng)
+    const cells = solidCells(sid, node, rotation)
+    if (cells.every((cell) => !solidClaimed.has(cell))) {
+      decorativeIds.add(placeObject(sid, node, rotation))
+      return 1
+    }
+    if (!smallSid || smallSid === sid) return 0
+    let placed = 0
+    // A function picks each small piece itself, avoiding the models just placed beside it; a sid picks among its siblings.
+    const modelAt = new Map<number, string>()
+    for (const cell of cells) {
+      if (solidClaimed.has(cell)) continue
+      const beside = [cell - 1, cell + 1, cell - atlas.atlasWidth, cell + atlas.atlasWidth].map((n) => modelAt.get(n)).filter((m): m is string => !!m)
+      const model = typeof smallSid === 'function' ? smallSid(beside) : pickVariant(smallSid, families, rng)
+      modelAt.set(cell, model)
+      decorativeIds.add(placeObject(model, cell, randomDecorRotation(rng)))
+      placed += 1
+    }
+    return placed
+  }
+
   const omittedReasonCounts: Record<string, number> = {}
   // Every walked record's H3 object type, named via the mapping table's own
   // VCMI-sourced names, regardless of emit/omit outcome — lets the report
@@ -344,6 +478,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const sceneryVariantCounts: Record<string, number> = {}
   interface DetailInstance { h3Id: number; subId: number; h3Name: string; defName: string; category: string | null; mappedSid: string | null; note: string }
   const detailInstances: DetailInstance[] = []
+  // OE has no ships: every shipyard is collected here (by its visit tile) and becomes a portal once the terrain is final (water-portals.ts).
+  const shipyardNodes: number[] = []
+  const shipyardDetails: DetailInstance[] = []
   // Parallel to townEntries/heroCandidates below — a town/hero's final
   // outcome (city-spawner vs. a neutral town's own sid; hero-spawner vs.
   // "not carried over") is only known once `assignOwnership` runs, well
@@ -358,6 +495,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const heroEntries: HeroEntry[] = []
   const propRandomSquads: Record<string, unknown>[] = []
   const propRandomItems: Record<string, unknown>[] = []
+  const propRandomHires: Record<string, unknown>[] = []
   const propSquads: Record<string, unknown>[] = []
   // Every generated display-name SID so far in this import (so two
   // custom-named H3 towns never collide), and the real text each one
@@ -366,8 +504,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // shape doc comment for why this stays out of this pure function).
   const generatedNameSids: string[] = []
   const localizationTokens: Record<string, string> = {}
+  const idPrefix = `${mapNameSnakeCase(mapName || title || '')}_`
   const generateTownNameSid = (name: string): string => {
-    const sid = generateDisplayNameSid(name, generatedNameSids)
+    const sid = dedupeSid(idPrefix + generateDisplayNameSid(name, []), generatedNameSids)
     generatedNameSids.push(sid)
     localizationTokens[sid] = name
     return sid
@@ -377,6 +516,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   let outOfEnvelopeCount = 0
   let clusterCellsClipped = 0
 
+  await stage('objects', 18)
   for (const record of parsed.records) {
     const oid = record.templateObjectId
     const sourceKey = describeH3ObjectId(oid)
@@ -409,6 +549,38 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const tileIndex = record.y * size + record.x
     const h3Terrain = layerTiles?.[tileIndex]?.terrain ?? 0
 
+    if (oid === OBJECT_SHIPYARD) {
+      const visitCell = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+      shipyardNodes.push(visitCell ? visitCell.z * atlas.atlasWidth + visitCell.x : atlas.targetNode(record.layer, record.x, record.y))
+      const shipyardDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending shipyard portal' }
+      detailInstances.push(shipyardDetail)
+      shipyardDetails.push(shipyardDetail)
+      continue
+    }
+    // Rocks and reefs standing on water become OE water mountains: their blocked water tiles are collected per layer and packed after the loop
+    // like a land range (the table rows carry `onWater: 'mountain'`).
+    if (h3Terrain === 8 && WATER_MOUNTAIN_OBJECT_IDS.has(oid)) {
+      const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+      clusterCellsClipped += clippedCount
+      const field = waterMountainField.get(record.layer) ?? new Map<string, { x: number; z: number }>()
+      waterMountainField.set(record.layer, field)
+      const layerTilesHere = parsed.layers[record.layer]
+      let onWater = 0
+      for (const cell of cells) {
+        if (layerTilesHere?.[cell.z * size + cell.x]?.terrain !== 8) continue
+        field.set(`${cell.x},${cell.z}`, cell)
+        onWater += 1
+      }
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: 'mountain_water', note: `Water mountain (${onWater} water tiles, packed after the loop)` })
+      continue
+    }
+    // Anything else standing on water (a boat, a sea monster, a sea chest...) has no counterpart: OE has no ships and nothing to reach on the sea.
+    if (h3Terrain === 8) {
+      omittedReasonCounts.water_object_omit = (omittedReasonCounts.water_object_omit ?? 0) + 1
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'water_object_omit' })
+      continue
+    }
+
     // A placed Hero (or Random Hero) — never resolved via resolveObjectSid
     // (it has no scenery/town/etc. sid of its own to give); captured here
     // as a candidate `hero-spawner` for whichever owner ends up with no
@@ -424,13 +596,72 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'No owner (skipped)' })
         continue
       }
-      const node = atlas.targetNode(record.layer, record.x, record.y)
+      // The tile a hero stands on is its visit cell (checked on [HotA] Barren Lands: the record's own x,y is a tree tile in 4 of the 8 starts, the
+      // cell one to the left is where the hero is), and that is where its start's entrance must be (the 3x3 spawner would otherwise reach into rock).
+      const anchorNode = atlas.targetNode(record.layer, record.x, record.y)
+      const standing = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+      const visit = standing ?? { x: anchorNode % atlas.atlasWidth, z: Math.floor(anchorNode / atlas.atlasWidth) }
+      const node = visit.z * atlas.atlasWidth + visit.x
       const index = heroCandidates.length
       heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
-      heroEntries.push({ index, node })
+      heroEntries.push({ index, node, visit })
       const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending hero start resolution' }
       detailInstances.push(heroDetail)
       heroDetailByIndex.push(heroDetail)
+      continue
+    }
+
+    // A sprite rule of the table (cacti, palms, sand dunes, ...) or a `mix` row: every blocked tile is a random pick from a mix of OE objects. Placed with
+    // the other decoration, after everything that blocks.
+    const spriteRule = matchSpriteRule(defName)
+    const mixEntries = spriteRule ? null : resolveMix(oid)
+    if (spriteRule || mixEntries) {
+      const entries = (spriteRule?.entries ?? mixEntries) as MixEntry[]
+      const mixLabel = spriteRule?.id ?? 'mix'
+      deferredScenery.push(() => {
+        const { cells } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+        const placements = mixCover.cover(cells, entries, spriteRule?.accent)
+        let placed = 0
+        for (const p of placements ?? []) placed += placeScenery(p.sid, atlas.targetNode(record.layer, p.cell.x, p.cell.z), null)
+        sceneryVariantCounts[`${mixLabel} mix`] = (sceneryVariantCounts[`${mixLabel} mix`] ?? 0) + placed
+        sceneryPlaced += placed
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: mixLabel, note: `Scenery (${mixLabel} mix, ${placed} placed)` })
+      })
+      continue
+    }
+
+    // A landmark (the big volcano: a 3x3 lava mountain with smoke on top, since OE has no volcano object) is built from the table's objects.
+    const landmark = resolveLandmark(oid, record.templateAnimation)
+    if (landmark) {
+      landmarkScenery.push(() => {
+        const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+        clusterCellsClipped += clippedCount
+        if (cells.length === 0) return
+        const minX = Math.min(...cells.map((c) => c.x)), maxX = Math.max(...cells.map((c) => c.x))
+        const minZ = Math.min(...cells.map((c) => c.z)), maxZ = Math.max(...cells.map((c) => c.z))
+        // The mountain's centre: the middle column, and for the two rows H3 blocks the northern one, so the extra row of the 3x3 lies behind it.
+        const centre = atlas.targetNode(record.layer, Math.round((minX + maxX) / 2), maxZ - minZ >= 2 ? Math.round((minZ + maxZ) / 2) : minZ)
+        let placed = 0
+        const firstId = nextId
+        if (landmark.pieces) {
+          for (const p of coverCells(cells, landmark.pieces.filter((piece) => piece.sids.every((sid) => catalogById.has(sid))), rng)) {
+            const node = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
+            const count = placeScenery(p.sid, node, null)
+            if (count > 0) for (const cell of solidCells(p.sid, node, 0)) landmarkCells.add(cell)
+            placed += count
+          }
+        } else if (landmark.sid) {
+          placed = placeScenery(landmark.sid, centre, landmark.smallSid ?? null)
+          if (placed > 0) for (const cell of solidCells(landmark.sid, centre, 0)) landmarkCells.add(cell)
+        }
+        // Landmarks are not decoration the accessibility pass may delete to open a path: the volcano, the vent or the lake is where H3 put it.
+        for (let id = firstId; id < nextId; id++) sealIds.add(id)
+        if (placed > 0 && landmark.effectSid && catalogById.has(landmark.effectSid)) placeObject(landmark.effectSid, centre, 0)
+        const landmarkLabel = landmark.sid ?? landmark.pieces?.map((piece) => piece.sids[0]).join('/') ?? 'pieces'
+        sceneryVariantCounts[landmarkLabel] = (sceneryVariantCounts[landmarkLabel] ?? 0) + placed
+        sceneryPlaced += placed
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: landmark.sid ?? landmark.pieces?.[0]?.sids[0] ?? null, note: `Landmark (${landmark.sid ?? 'pieces'}${landmark.effectSid ? ` + ${landmark.effectSid}` : ''})` })
+      })
       continue
     }
 
@@ -442,42 +673,106 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     }
 
     const node = atlas.targetNode(record.layer, record.x, record.y)
+    const visit = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
 
     if (resolution.kind === 'scenery') {
-      // Trees and mountains: H3's own multi-cell footprint often represents
-      // a cluster (a grove of trees, a mountain range) rather than one
-      // object — OE has no literal cluster sid for either, so simulate one
-      // by placing several small OE objects across the H3 footprint (see
-      // scenery-clusters.ts's own doc comment for why this is a genuine new
-      // feature, not a reference-project port).
-      if (resolution.role === 'tree' || resolution.role === 'mountain') {
-        const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
-        clusterCellsClipped += clippedCount
-        const placements = resolution.role === 'tree'
-          ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
-              oid === H3_OAK_TREES_OBJECT_ID
-                ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
-                : undefined)
-          : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
-        for (const p of placements) {
-          const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
-          decorativeIds.add(placeObject(p.sid, cellNode, randomDecorRotation(rng)))
+      // Decoration goes down after everything that blocks (see `solidClaimed`), so it is queued here and placed after the main loop.
+      deferredScenery.push(() => {
+        // An object that blocks no tile (its block mask is empty) is walkable decoration: it becomes random walkable ground cover of its biome
+        // (grass tufts, flowers, mushrooms), mixed the same way as the trees and mountains.
+        if (resolution.role !== 'water_decoration' && blockMaskOffsets(record.templateBlockMask).length === 0) {
+          const walkBiome = decorationPicker.walkableBiomeOf(resolution.sid)
+          if (walkBiome !== null) {
+            const placed = placeScenery(decorationPicker.pickWalkable(walkBiome, rng), node, null)
+            sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
+            sceneryPlaced += placed
+            detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: 'Scenery (walkable)' })
+            return
+          }
         }
-        sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placements.length
-        sceneryPlaced += placements.length
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placements.length} placed)` })
-        continue
-      }
+        // Trees and mountains: H3's own multi-cell footprint often represents
+        // a cluster (a grove of trees, a mountain range) rather than one
+        // object — OE has no literal cluster sid for either, so simulate one
+        // by placing several small OE objects across the H3 footprint (see
+        // scenery-clusters.ts's own doc comment for why this is a genuine new
+        // feature, not a reference-project port).
+        if (resolution.role === 'tree' || resolution.role === 'mountain') {
+          const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+          clusterCellsClipped += clippedCount
+          // Each cell takes its biome from its own H3 tile (the table's sid for that tile, then that sid's catalog biome), so a grove that
+          // crosses a biome border changes at the border. Oak Trees keep their fixed Grass+Dirt mix.
+          const role = resolution.role
+          const anchorBiome = decorationPicker.biomeOf(resolution.sid, role)
+          const layerTilesHere = parsed.layers[record.layer]
+          // A table entry can name its own tree biomes (rough trees: dirt, deathland, pine, or a mix): each cell draws one at random.
+          const fixedBiomes = role === 'tree' && resolution.treeBiomes ? resolution.treeBiomes.map((sid) => decorationPicker.biomeIdOf(sid)).filter((b): b is BiomeId => b !== null) : []
+          const fixedBiomeAt = new Map<string, BiomeId>(cells.map((cell) => [`${cell.x},${cell.z}`, fixedBiomes[Math.floor(rng() * fixedBiomes.length)]]))
+          const biomeAt = (cell: { x: number; z: number }) => {
+            const fixed = fixedBiomeAt.get(`${cell.x},${cell.z}`)
+            if (fixed !== undefined) return fixed
+            const terrain = layerTilesHere?.[cell.z * size + cell.x]?.terrain
+            const h3Biome = terrain !== undefined && terrain !== 8 && terrain !== 9 ? H3_TERRAIN_BIOME[terrain] : undefined
+            return (h3Biome ? decorationPicker.biomeOf(BIOME_ROLE_REPLACEMENTS[role][h3Biome], role) : null) ?? (anchorBiome as NonNullable<typeof anchorBiome>)
+          }
+          if (role === 'mountain' && anchorBiome !== null) {
+            const field = mountainField.get(record.layer) ?? new Map<string, { cell: { x: number; z: number }; biome: BiomeId }>()
+            mountainField.set(record.layer, field)
+            for (const cell of cells) field.set(`${cell.x},${cell.z}`, { cell, biome: biomeAt(cell) })
+            detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: 'Scenery (mountain range, merged across objects)' })
+            return
+          }
+          if (role === 'tree' && resolution.pair && fixedBiomes.length === 2 && cells.length === 1) {
+            // Two trees in one sprite: the first biome's on the cell, the second's on a free open tile beside it.
+            const cell = cells[0]
+            const usable = (x: number, z: number) => {
+              const terrain = layerTilesHere?.[z * size + x]?.terrain
+              const node = atlas.targetNode(record.layer, x, z)
+              return x >= 0 && z >= 0 && x < size && z < size && terrain !== undefined && terrain !== 8 && terrain !== 9 && floorNodes.has(node) && !rockNodes.has(node) && out.waterMap[node] === 0 && !solidClaimed.has(node)
+            }
+            const first = decorationPicker.pickTree(fixedBiomes[0], rng)
+            let placedPair = placeScenery(first, atlas.targetNode(record.layer, cell.x, cell.z), null)
+            const beside = [[-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]].find(([dx, dz]) => usable(cell.x + dx, cell.z + dz))
+            if (beside) placedPair += placeScenery(decorationPicker.pickTree(fixedBiomes[1], rng), atlas.targetNode(record.layer, cell.x + beside[0], cell.z + beside[1]), null)
+            sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placedPair
+            sceneryPlaced += placedPair
+            detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (tree pair, ${placedPair} placed)` })
+            return
+          }
+          const placements = anchorBiome !== null && !(role === 'tree' && oid === H3_OAK_TREES_OBJECT_ID)
+            ? (role === 'tree' ? pickTreeClusterVaried(cells, biomeAt, decorationPicker, rng) : packMountainClusterVaried(cells, biomeAt, decorationPicker, rng))
+            : role === 'tree'
+              ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
+                  oid === H3_OAK_TREES_OBJECT_ID
+                    ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
+                    : undefined)
+              : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
+          let placed = 0
+          for (const p of placements) {
+            const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
+            placed += placeScenery(p.sid, cellNode, resolution.role === 'mountain' ? resolution.sid : null)
+          }
+          sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
+          sceneryPlaced += placed
+          detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placed} placed)` })
+          return
+        }
 
-      // Every other scenery role (shrub/rock/pool/ruin/ground/
-      // water_decoration): unchanged single-object-at-anchor placement, but
-      // still randomly rotated — the "always randomize decorative rotation"
-      // hard rule applies to every decorative placement, not just clusters.
-      const variantSid = pickVariant(resolution.sid, families, rng)
-      sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + 1
-      decorativeIds.add(placeObject(variantSid, node, randomDecorRotation(rng)))
-      sceneryPlaced += 1
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
+        // Every other scenery role (shrub/rock/pool/ruin/ground/
+        // water_decoration): unchanged single-object-at-anchor placement, but
+        // still randomly rotated — the "always randomize decorative rotation"
+        // hard rule applies to every decorative placement, not just clusters.
+        // H3 has small and large pools: eight or more blocked tiles make a large one, whatever size the table's row names.
+        let baseSid = resolution.sid
+        if (resolution.role === 'pool' || resolution.role === 'pool_big') {
+          const poolBiome = H3_TERRAIN_BIOME[h3Terrain] ?? 'grass'
+          baseSid = BIOME_ROLE_REPLACEMENTS[blockMaskOffsets(record.templateBlockMask).length >= 8 ? 'pool_big' : 'pool'][poolBiome]
+        }
+        const variantSid = pickVariant(baseSid, families, rng)
+        const placed = placeScenery(variantSid, node, null)
+        sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placed
+        sceneryPlaced += placed
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
+      })
       continue
     }
 
@@ -544,7 +839,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // facts from this project's own history, not reference-project
       // guesses (see CLAUDE.md's random-squad "Hard-won lessons").
       propRandomSquads.push({
-        type: 0, id: objectId, sids: [], requestedValue, fraction: '', tier: 0, isMainGuard: false,
+        type: 0, id: objectId, sids: [], requestedValue, fraction: resolution.fraction ?? '', tier: resolution.tier ?? 0, isMainGuard: false,
         reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
         isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
         isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
@@ -561,7 +856,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       const index = cityCandidates.length
       cityCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
       townEntries.push({
-        index, node, sid: resolution.sid,
+        index, node, visit, sid: resolution.sid,
         factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
         customCityName: typeof record.name === 'string' && record.name.trim() ? generateTownNameSid(record.name.trim()) : '',
       })
@@ -582,11 +877,11 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // (real H3 random-artifact-class ids 65-69, or no equivalent found).
       const equivSid = oid === OBJECT_ARTIFACT ? h3ArtifactEquivalent(subId) : null
       if (equivSid) {
-        placeObject(equivSid, node)
+        placeObject(equivSid, node, 0, visit)
         objectsPlaced += 1
         detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: equivSid, note: 'Specific artifact' })
       } else {
-        const objectId = placeObject(resolution.sid, node)
+        const objectId = placeObject(resolution.sid, node, 0, visit)
         objectsPlaced += 1
         // Real H3 random-artifact-class ids (65-69) carry genuine rarity
         // info; a specific named H3 artifact with no sourced equivalent
@@ -600,20 +895,28 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       continue
     }
 
-    placeObject(resolution.sid, node)
+    // One-way monoliths: the table's sid is a placeholder; the colour (subtype) picks one of the three portal looks, the same for a colour's entrance and exit.
+    const placedSid = oid === OBJECT_MONOLITH_ONE_WAY_ENTRANCE || oid === OBJECT_MONOLITH_ONE_WAY_EXIT ? `portal_${1 + (subId % 3)}` : resolution.sid
+    const placedId = placeObject(placedSid, node, 0, visit)
     objectsPlaced += 1
-    detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
+    if (placedSid === 'random-hire') {
+      // The faction and tier come from the mapping row; without a tier, a level-specific H3 dwelling keeps its level. Tier 0 is "not set" (untested in the game).
+      const tier = resolution.tier || (oid === OBJECT_RANDOM_DWELLING_LVL ? subId + 1 : RANDOM_HIRE_TIER_RANDOM)
+      propRandomHires.push({ type: 0, id: placedId, tier, fraction: RANDOM_HIRE_FRACTION_BY_FACTION[resolution.fraction ?? ''] ?? RANDOM_HIRE_BIOME_FRACTION })
+    }
+    if (resolution.kind === 'portal') {
+      // H3 connects monoliths by colour (the subtype), not by look: several colours share one OE look, so the network is kept here.
+      h3Portals.push({
+        id: placedId, layer: record.layer, x: record.x, y: record.y,
+        kind: oid === OBJECT_MONOLITH_ONE_WAY_ENTRANCE ? 'entrance' : oid === OBJECT_MONOLITH_ONE_WAY_EXIT ? 'exit' : oid === OBJECT_SUBTERRANEAN_GATE ? 'gate' : 'two-way',
+        network: oid === OBJECT_SUBTERRANEAN_GATE ? 0 : subId, look: defName.toLowerCase(),
+      })
+    }
+    detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: placedSid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
   }
 
+  await stage('players', 30)
   const ownership = assignOwnership(parsed.header, cityCandidates, heroCandidates)
-
-  // Phase 4: only H3's WINSTANDARD ("defeat all enemies") victory condition
-  // is supported this round — any other type leaves no victory quest at all
-  // (see victory.ts's own doc comment for why "no quest" is the honest
-  // choice for an unsupported type, rather than a guessed fallback).
-  const mainQuest = parsed.header.victory.type === VICTORY_WINSTANDARD && ownership.finalOwners.length >= 2
-    ? buildWinstandardQuest(title, ownership.humanFinalOwner, ownership.finalOwners)
-    : null
 
   // H3's "Specify Timed Events" — the mechanism behind the message many
   // maps open with on day 1 (see global-events.ts's own doc comment for
@@ -622,7 +925,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const globalEventQuests: GlobalEventQuest[] = []
   const dialogFlows: Record<string, DialogFlow> = {}
   for (const event of parsed.globalTimedEvents) {
-    const conversion = buildGlobalEventQuest(event, generatedNameSids)
+    const conversion = buildGlobalEventQuest(event, generatedNameSids, idPrefix)
     if (!conversion) continue
     globalEventQuests.push(conversion.quest)
     dialogFlows[conversion.dialogFlow.id] = conversion.dialogFlow
@@ -630,6 +933,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     generatedNameSids.push(...Object.keys(conversion.localizationTokens))
   }
 
+  const neutralTownIds = new Map<number, number>()
   const propCities: Record<string, unknown>[] = []
   const propOwners: Record<string, unknown>[] = []
   const propSpawns: Record<string, unknown>[] = []
@@ -650,7 +954,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // than `random-city` — CLAUDE.md confirms city-spawner is fine
       // starting unconfigured, unlike random-city (which needs a real
       // faction to function and has no Block 1 spawn involvement at all).
-      const objectId = placeObject('city-spawner', town.node)
+      const objectId = placeObject('city-spawner', town.node, 0, town.visit)
       objectsPlaced += 1
       const spawnType = ownership.spawnTypeByFinalOwner.get(finalOwner) ?? 1
       const isDefined = !town.freeChoice
@@ -700,13 +1004,14 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     } else {
       // Neutral/unowned: unchanged from before this fix — a real,
       // capturable town building, not a player start.
-      const objectId = placeObject(town.sid, town.node)
+      const objectId = placeObject(town.sid, town.node, 0, town.visit)
       objectsPlaced += 1
       propCities.push({
         type: 0, id: objectId, isDefined: !town.freeChoice, factionSid: town.factionSid,
         spawnHero: false, customCityName: town.customCityName,
       })
       propOwners.push({ type: 0, id: objectId })
+      neutralTownIds.set(town.index, objectId)
       const townDetail = townDetailByIndex[town.index]
       townDetail.mappedSid = town.sid
       townDetail.note = 'Town (neutral, unclaimed)'
@@ -721,7 +1026,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       heroDetailByIndex[hero.index].note = 'Not carried over (player start already covered by a town)'
       continue
     }
-    const objectId = placeObject('hero-spawner', hero.node)
+    const objectId = placeObject('hero-spawner', hero.node, 0, hero.visit)
     objectsPlaced += 1
     heroOnlyPlayers += 1
     const heroDetail = heroDetailByIndex[hero.index]
@@ -740,23 +1045,297 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     })
   }
 
+  // Shipyards become portals, and the islands get portals to each other (the stand-in for ships), before the decoration so nothing grows on them.
+  const entranceCells = new Set<number>()
+  const entranceAvoid = new Set<number>()
+  for (const [sid, group] of objectGroups) {
+    const template = catalogById.get(sid)
+    // The walk-onto placeholders (random-res/-squad/-item) mark their whole 3x3 as entrance and block nothing.
+    if (!template || NON_BLOCKING_SPAWNER_SIDS.has(sid)) continue
+    for (let i = 0; i < group.nodes.length; i++) {
+      for (const c of computeFootprintTiles(template, group.nodes[i] % atlas.atlasWidth, Math.floor(group.nodes[i] / atlas.atlasWidth), group.rotations[i])) {
+        if (c.value !== 2) continue
+        entranceCells.add(c.z * atlas.atlasWidth + c.x)
+        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) entranceAvoid.add((c.z + dz) * atlas.atlasWidth + c.x + dx)
+      }
+    }
+  }
+  const waterPortals = buildWaterPortals({
+    width: atlas.atlasWidth, height: atlas.atlasHeight, catalogById, waterMap: out.waterMap, levelsMap: out.levelsMap,
+    landNodes: floorNodes, solidClaimed, entranceNodes: entranceCells, avoidNodes: entranceAvoid, rng,
+    objectNodes: [...objectGroups.entries()].flatMap(([, group]) => group.nodes),
+    place: (node) => placeObject(WATER_PORTAL_SID, node),
+  }, shipyardNodes)
+  for (const detail of shipyardDetails) {
+    detail.mappedSid = waterPortals.shipyardsConverted > 0 ? WATER_PORTAL_SID : null
+    detail.note = waterPortals.shipyardsConverted > 0 ? 'Shipyard (replaced by a portal)' : 'shipyard_without_island_omit'
+  }
+  if (waterPortals.shipyardsConverted === 0 && shipyardDetails.length > 0) omittedReasonCounts.shipyard_without_island_omit = shipyardDetails.length
+  await stage('decoration', 42)
+  for (const place of landmarkScenery) place()
+  for (const place of deferredScenery) place()
+  for (const [layer, field] of mountainField) {
+    const biomeAt = (cell: { x: number; z: number }) => (field.get(`${cell.x},${cell.z}`) as { biome: BiomeId }).biome
+    let placed = 0
+    for (const p of packMountainClusterVaried([...field.values()].map((v) => v.cell), biomeAt, decorationPicker, rng)) {
+      const biome = biomeAt(p.anchor)
+      placed += placeScenery(p.sid, atlas.targetNode(layer, p.anchor.x, p.anchor.z), (avoid) => decorationPicker.pickMountain(biome, 1, rng, avoid))
+    }
+    sceneryVariantCounts['mountain (merged ranges)'] = (sceneryVariantCounts['mountain (merged ranges)'] ?? 0) + placed
+    sceneryPlaced += placed
+  }
+
+  // Water mountains: the same packing as a land range, from the water mountain models only.
+  const waterPicker: H3DecorationPicker = {
+    ...decorationPicker,
+    mountainSizes: () => decorationPicker.waterMountainSizes(),
+    pickMountain: (_biome, pieceSize, pickRng, avoid) => decorationPicker.pickWaterMountain(pieceSize, pickRng, avoid),
+  }
+  for (const [layer, field] of waterMountainField) {
+    let placed = 0
+    for (const p of packMountainClusterVaried([...field.values()], () => 1 as BiomeId, waterPicker, rng)) {
+      placed += placeScenery(p.sid, atlas.targetNode(layer, p.anchor.x, p.anchor.z), (avoid) => decorationPicker.pickWaterMountain(1, rng, avoid))
+    }
+    sceneryVariantCounts['water mountains'] = (sceneryVariantCounts['water mountains'] ?? 0) + placed
+    sceneryPlaced += placed
+  }
+
+  // ── Last two decoration passes (they need every object and the mountains in place) ──
+  // Tiles an object stands on (or, for a walk-onto placeholder, its own tile): nothing is added there.
+  const occupiedTiles = new Set<number>()
+  for (const [sid, group] of objectGroups) {
+    const template = catalogById.get(sid)
+    for (let i = 0; i < group.nodes.length; i++) {
+      occupiedTiles.add(group.nodes[i])
+      if (!template || NON_BLOCKING_SPAWNER_SIDS.has(sid)) continue
+      for (const c of computeFootprintTiles(template, group.nodes[i] % atlas.atlasWidth, Math.floor(group.nodes[i] / atlas.atlasWidth), group.rotations[i])) {
+        if (c.value >= 1 && c.x >= 0 && c.z >= 0 && c.x < atlas.atlasWidth && c.z < atlas.atlasHeight) occupiedTiles.add(c.z * atlas.atlasWidth + c.x)
+      }
+    }
+  }
+  const oeBiomeOfNode = (node: number): keyof typeof BIOME_ROLE_REPLACEMENTS.ground | null => {
+    const nx = node % atlas.atlasWidth
+    const nz = Math.floor(node / atlas.atlasWidth)
+    for (const [layerKey, spec] of Object.entries(atlas.layers)) {
+      const x = nx - spec.offsetX
+      const y = size - 1 - (nz - spec.offsetY)
+      if (x < 0 || y < 0 || x >= size || y >= size) continue
+      const terrain = parsed.layers[Number(layerKey)]?.[y * size + x]?.terrain
+      return terrain === undefined || terrain === 8 || terrain === 9 ? null : (H3_TERRAIN_BIOME[terrain] ?? null)
+    }
+    return null
+  }
+  /** Open ground a decoration can be added on: H3 floor, dry, level 0, no road or river, nothing standing there. */
+  const isOpenGround = (node: number): boolean =>
+    floorNodes.has(node) && out.waterMap[node] === 0 && out.levelsMap[node] === 0 && out.roadsMap[node] === 0
+    && !out.riverNodes.has(node) && !rockNodes.has(node) && !occupiedTiles.has(node)
+  const walkableAt = (node: number): string | null => {
+    const oe = oeBiomeOfNode(node)
+    const biome = oe ? decorationPicker.walkableBiomeOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+    return biome === null ? null : decorationPicker.pickWalkable(biome, rng)
+  }
+
+  // In front of a mountain (the tiles with the lower tile number, toward the bottom of the map) a bare tile looks odd: a mountain or a range
+  // with nothing near it stands out. Each blocking tile on the bottom edge of a mountain has this chance of getting a tree, a bush or a walkable
+  // on the empty tile in front of it.
+  const MOUNTAIN_FRONT_CHANCE = getSetting('mountainFrontChance')
+  const mountainCells = new Set<number>()
+  for (const [sid, group] of objectGroups) {
+    const template = catalogById.get(sid)
+    if (!sid.startsWith('mountain_') || !template) continue
+    for (let i = 0; i < group.ids.length; i++) {
+      if (!decorativeIds.has(group.ids[i])) continue
+      for (const c of computeFootprintTiles(template, group.nodes[i] % atlas.atlasWidth, Math.floor(group.nodes[i] / atlas.atlasWidth), group.rotations[i])) {
+        if (c.value === 1) mountainCells.add(c.z * atlas.atlasWidth + c.x)
+      }
+    }
+  }
+  let frontPlaced = 0
+  for (const cell of mountainCells) {
+    const node = cell - atlas.atlasWidth
+    if (node < 0 || mountainCells.has(node) || rng() >= MOUNTAIN_FRONT_CHANCE) continue
+    if (!isOpenGround(node)) continue
+    const oe = oeBiomeOfNode(node)
+    const biome = oe ? decorationPicker.biomeIdOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+    const kind = Math.floor(rng() * 3)
+    let sid: string | null = null
+    if (biome !== null && kind === 0 && decorationPicker.hasTrees(biome) && !entranceAvoid.has(node)) sid = decorationPicker.pickTree(biome, rng)
+    else if (biome !== null && kind === 1 && !entranceAvoid.has(node)) sid = decorationPicker.pickBush(biome, rng)
+    sid ??= walkableAt(node)
+    if (sid === null) continue
+    const placed = placeScenery(sid, node, null)
+    if (placed > 0) { occupiedTiles.add(node); frontPlaced += placed }
+  }
+  sceneryVariantCounts['mountain fronts'] = frontPlaced
+  sceneryPlaced += frontPlaced
+
+  // The last pass: more walkable decoration. Every open tile gets a random walkable of its biome with this chance.
+  const WALKABLE_FILL_CHANCE = getSetting('walkableFillChance')
+  let fillPlaced = 0
+  for (const node of floorNodes) {
+    if (!isOpenGround(node) || rng() >= WALKABLE_FILL_CHANCE) continue
+    const sid = walkableAt(node)
+    if (sid === null) continue
+    fillPlaced += placeScenery(sid, node, null)
+  }
+  sceneryVariantCounts['walkable fill'] = fillPlaced
+  sceneryPlaced += fillPlaced
+
+  // Start pockets (see start-pockets.ts): every tile H3 blocks around a walled-in start is blocked here too, with pieces the accessibility pass
+  // may not delete. Placed before the pass so its flood fill starts from the sealed pocket.
+  const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
+  for (const cell of landmarkCells) groundTruthWalkable.delete(cell)
+  // The tile an H3 hero stands on (or a town is entered from) is its visit cell, not the object's anchor: the anchor can be a blocked tile.
+  const startNodes: number[] = []
+  for (const record of parsed.records) {
+    if (!HERO_OBJECT_IDS.has(record.templateObjectId) && record.templateObjectId !== OBJECT_TOWN && record.templateObjectId !== OBJECT_RANDOM_TOWN) continue
+    if (typeof record.owner !== 'number' || record.owner >= 8) continue
+    const cell = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+    if (cell) startNodes.push(cell.z * atlas.atlasWidth + cell.x)
+  }
+  const pocketWalkable = new Set<number>([...groundTruthWalkable, ...startNodes])
+  for (const record of parsed.records) {
+    const cell = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+    if (cell) pocketWalkable.add(cell.z * atlas.atlasWidth + cell.x)
+  }
+  const startPockets = findStartPockets(startNodes, pocketWalkable, atlas.atlasWidth, atlas.atlasHeight)
+  let pocketSealsPlaced = 0
+  if (startPockets.length > 0) {
+    // The 3x3 hero-spawner blocks all but its entrance cell, which in a pocket a few tiles wide can wall the hero in from its own portal. Each
+    // spawner is moved to the pocket tile that keeps the most portal entrances reachable.
+    const spawnerTemplate = catalogById.get('hero-spawner')
+    const spawnerGroup = objectGroups.get('hero-spawner')
+    if (spawnerTemplate && spawnerGroup) {
+      const probe = computeFootprintTiles(spawnerTemplate, 1000, 1000, 0)
+      const probeEntrance = probe.find((c) => c.value === 2)
+      if (probeEntrance) {
+        const relSolid = probe.filter((c) => c.value === 1).map((c) => ({ dx: c.x - probeEntrance.x, dz: c.z - probeEntrance.z }))
+        const entranceOf = (sid: string, node: number, rotation: number) =>
+          computeFootprintTiles(catalogById.get(sid), node % atlas.atlasWidth, Math.floor(node / atlas.atlasWidth), rotation).filter((c) => c.value === 2).map((c) => c.z * atlas.atlasWidth + c.x)
+        // Everything that blocks and is not decoration (a portal's own solid cell, a real object) stays where it is; decoration gives way.
+        const hardBlocked = new Set<number>()
+        const goals: number[] = []
+        for (const [sid, group] of objectGroups) {
+          for (let i = 0; i < group.ids.length; i++) {
+            if (decorativeIds.has(group.ids[i]) || sealIds.has(group.ids[i])) continue
+            if (sid !== 'hero-spawner') for (const cell of solidCells(sid, group.nodes[i], group.rotations[i] ?? 0)) hardBlocked.add(cell)
+            if (/^portal_/.test(sid)) goals.push(...entranceOf(sid, group.nodes[i], group.rotations[i] ?? 0))
+          }
+        }
+        for (let i = 0; i < spawnerGroup.ids.length; i++) {
+          const current = entranceOf('hero-spawner', spawnerGroup.nodes[i], spawnerGroup.rotations[i] ?? 0)[0]
+          const pocket = startPockets.find((candidate) => candidate.nodes.has(current))
+          if (!pocket) continue
+          const entrance = pickSpawnerEntrance(pocket.nodes, hardBlocked, goals.filter((g) => pocket.nodes.has(g)), relSolid, atlas.atlasWidth, atlas.atlasHeight, current)
+          if (entrance !== null && entrance !== current) {
+            spawnerGroup.nodes[i] = (Math.floor(entrance / atlas.atlasWidth) - (probeEntrance.z - 1000)) * atlas.atlasWidth + (entrance % atlas.atlasWidth) - (probeEntrance.x - 1000)
+          }
+          const placed = spawnerGroup.nodes[i]
+          for (const cell of solidCells('hero-spawner', placed, spawnerGroup.rotations[i] ?? 0)) hardBlocked.add(cell)
+          hardBlocked.add(entranceOf('hero-spawner', placed, spawnerGroup.rotations[i] ?? 0)[0])
+          // Decoration under the new footprint goes: the tile blocks either way.
+          const footprint = new Set(solidCells('hero-spawner', placed, spawnerGroup.rotations[i] ?? 0))
+          for (const [sid, group] of objectGroups) {
+            for (let j = group.ids.length - 1; j >= 0; j--) {
+              if (!decorativeIds.has(group.ids[j]) || !solidCells(sid, group.nodes[j], group.rotations[j] ?? 0).some((cell) => footprint.has(cell))) continue
+              decorativeIds.delete(group.ids[j])
+              group.ids.splice(j, 1); group.nodes.splice(j, 1); group.rotations.splice(j, 1); group.levels.splice(j, 1)
+            }
+          }
+        }
+      }
+    }
+    // Decoration whose solid footprint reaches into a pocket is taken out: it would wall the start in from the inside. The ring tiles it covered
+    // are closed again below with 1x1 pieces.
+    const interior = new Set<number>(startPockets.flatMap((pocket) => [...pocket.nodes]))
+    for (const [sid, group] of objectGroups) {
+      for (let i = group.ids.length - 1; i >= 0; i--) {
+        if (!decorativeIds.has(group.ids[i]) || !solidCells(sid, group.nodes[i], group.rotations[i] ?? 0).some((cell) => interior.has(cell))) continue
+        decorativeIds.delete(group.ids[i])
+        group.ids.splice(i, 1); group.nodes.splice(i, 1); group.rotations.splice(i, 1); group.levels.splice(i, 1)
+      }
+    }
+    const placedNow: PlacedObject[] = []
+    // The entrance cell of an interactable is never sealed (the object would become unreachable); a walk-onto placeholder can sit under a seal.
+    const entrancesNow = new Set<number>()
+    for (const [sid, group] of objectGroups) {
+      for (let i = 0; i < group.ids.length; i++) {
+        const node = group.nodes[i]
+        if (!NON_BLOCKING_SPAWNER_SIDS.has(sid)) {
+          for (const c of computeFootprintTiles(catalogById.get(sid), node % atlas.atlasWidth, Math.floor(node / atlas.atlasWidth), group.rotations[i] ?? 0)) if (c.value === 2) entrancesNow.add(c.z * atlas.atlasWidth + c.x)
+        }
+        placedNow.push({ key: `0:${group.ids[i]}`, type: 0, id: group.ids[i], sid, x: node % atlas.atlasWidth, z: Math.floor(node / atlas.atlasWidth), node, rotation: group.rotations[i] ?? 0 })
+      }
+    }
+    const blockedNow = buildBlockedTileSet({ sizeX: atlas.atlasWidth, sizeZ: atlas.atlasHeight, placedObjects: placedNow, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap }, catalog)
+    // A tree or rock already standing on the ring is part of the wall too: neither the accessibility pass nor the auto-fix may delete or move it.
+    const ringNodes = new Set<number>(startPockets.flatMap((pocket) => pocket.ring))
+    for (const [sid, group] of objectGroups) {
+      for (let i = 0; i < group.ids.length; i++) {
+        if (!decorativeIds.has(group.ids[i])) continue
+        if (solidCells(sid, group.nodes[i], group.rotations[i] ?? 0).some((cell) => ringNodes.has(cell))) sealIds.add(group.ids[i])
+      }
+    }
+    for (const pocket of startPockets) {
+      for (const node of pocket.ring) {
+        if (blockedNow.has(node) || entrancesNow.has(node)) continue
+        const oe = oeBiomeOfNode(node)
+        const biome = oe ? decorationPicker.biomeIdOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+        sealIds.add(placeObject(decorationPicker.pickMountain(biome ?? 7, 1, rng), node, randomDecorRotation(rng)))
+        blockedNow.add(node)
+        pocketSealsPlaced += 1
+      }
+    }
+  }
+
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint
   // the wall now.
-  paintEnvelopePadding(out, atlas)
+  const paddingNodes = paintEnvelopePadding(out, atlas, floorNodes)
+  // Nothing may stand on H3 rock or in the border, even when its whole footprint lies on one level there.
+  const forbiddenNodes = new Set<number>([...rockNodes, ...paddingNodes])
 
   // Real portal linkage (propPortals was previously never emitted at all —
   // see portal-links.ts's own header) must exist before the accessibility
   // pass can treat underground-via-portal paths as reachable, rather than
   // flagging every underground object on every 2-layer map as stranded.
-  const portalLinks = linkPortalPairs(objectGroups)
-  const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
+  await stage('reachability', 58)
+  const portalLinks = linkH3Portals(h3Portals)
+  for (const [a, b] of waterPortals.links) {
+    portalLinks.propPortals.push({ type: 0, id: a, targetIdx: b, isActive: true }, { type: 0, id: b, targetIdx: a, isActive: true })
+    portalLinks.adjacencyByObjectId.set(a, b)
+    portalLinks.adjacencyByObjectId.set(b, a)
+    portalLinks.linkedCount += 2
+  }
   const accessibility = applyAccessibilityPass(
     objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
     decorativeIds, portalLinks.adjacencyByObjectId, groundTruthWalkable,
+    undefined, undefined, sealIds, undefined, forbiddenNodes, true,
   )
 
-  const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
+  // The game takes an object's name from its sid (Core.zip's `portal_name` for every portal), so the subterranean gates ship as a map-local clone of
+  // `portal_5` with its own name, description and narrative (the custom map object mechanism: the clone's template goes into the publish zip). The
+  // gates stay `portal_5` until here so every pass above and the auto-fix after see a real catalog template. Every placed `portal_5` is a gate:
+  // monoliths use portal_1 to portal_3 and the shipyard portals portal_4.
+  const gateGroup = objectGroups.get('portal_5')
+  const gateSource = catalogById.get('portal_5')
+  const customMapObjects: CustomMapObjectDefinition[] = []
+  let gateSid: string | null = null
+  if (gateGroup && gateGroup.ids.length > 0 && gateSource) {
+    gateSid = mintCustomSid(mapName || title || '', 'subterranean_gate', catalog.mapObjects.map((o) => o.id))
+    localizationTokens[`${gateSid}_name`] = 'Subterranean Gate'
+    localizationTokens[`${gateSid}_description`] = 'Teleports the visiting hero to the gate on the other level.'
+    localizationTokens[`${gateSid}_narrativeDescription`] = 'A passage between the surface and the dark below.'
+    customMapObjects.push({
+      id: gateSid,
+      sourceObjectId: 'portal_5',
+      template: { ...gateSource.raw, id: gateSid, name: `${gateSid}_name`, description: `${gateSid}_description`, narrativeDescription: `${gateSid}_narrativeDescription` },
+      // Portals' logic is just `{id, goodsValue}` under objects_logic/portals (Core.zip), cloned into the same folder like every custom object.
+      logic: { id: gateSid, goodsValue: 0 },
+      logicSourcePath: 'portals',
+    })
+  }
+  const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid: sid === 'portal_5' && gateSid ? gateSid : sid, ...g }))
   const squads = Array.from(squadGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
 
   const decoder = new TextDecoder('utf-8')
@@ -774,15 +1353,39 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // any map imported this way.
   const mapHash = generateMapHash()
 
+  // The H3 victory condition as win conditions. The town a capture-the-town victory names is found by its source position: a player's start
+  // city gives Capital Hold, a neutral town City Hold (and that town is marked).
+  let winPlan = planH3WinConditions(parsed.header.victory)
+  let cityHoldId: number | null = null
+  if (winPlan.captureCity) {
+    const target = winPlan.captureCity
+    let best: { index: number; dist: number } | null = null
+    for (const city of cityCandidates) {
+      if (city.sourceZ !== target.z) continue
+      const dist = Math.max(Math.abs(city.sourceX - target.x), Math.abs(city.sourceY - target.y))
+      if (dist <= 3 && (best === null || dist < best.dist)) best = { index: city.index, dist }
+    }
+    const neutralId = best ? neutralTownIds.get(best.index) : undefined
+    winPlan = finishH3WinPlan(winPlan, !best ? 'missing' : neutralId !== undefined ? 'neutral' : ownership.finalOwnerByCityIndex.has(best.index) ? 'player' : 'missing')
+    if (neutralId !== undefined && winPlan.ids.includes('city-hold')) cityHoldId = neutralId
+  }
+  const winEntries = applyWinConditionEntries(
+    (templateB2.settings as { mapWinConditions?: Record<string, unknown>[] } | undefined)?.mapWinConditions ?? [],
+    winEntryOptions(winPlan.ids, H3_WIN_OPTIONS),
+  )
+
   const b1 = {
     ...templateB1,
+    // The H3 map's own name and description are the in-game title and description (the file name when the H3 map has no title).
+    title: title.trim() || (mapName ?? ''),
+    desc: parsed.header.description,
     hashSum: mapHash,
     sizeX: atlas.atlasWidth,
     sizeZ: atlas.atlasHeight,
     spawns: { playersCount: ownership.finalOwners.length, spawns: block1Spawns, takenHeroes: [] as string[] },
     startSettings: {
       ...((templateB1.startSettings as Record<string, unknown>) ?? {}),
-      DefeatAllEnemiesEnabled: mainQuest !== null,
+      DefeatAllEnemiesEnabled: winPlan.ids.includes('classic'),
     },
     economicDifficulties: FULL_DIFFICULTIES,
     aiDifficulties: FULL_DIFFICULTIES,
@@ -831,7 +1434,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     areas,
     settings: {
       ...((templateB2.settings as Record<string, unknown>) ?? {}),
-      mapWinConditions: [] as unknown[],
+      mapWinConditions: winEntries,
       // Pairs with every propRandomSquads row's own isAutobatle:true —
       // auto-battle is allowed against neutral/guard stacks, not against a
       // real enemy hero's army (a real OE-format fact, not H3-specific —
@@ -848,7 +1451,8 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
+      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propRandomHires, propGrowthUnits, propHeroes, propSquads,
+      propCitiesHold: cityHoldId === null ? [] : [{ type: 0, id: cityHoldId, isCityHold: true }],
       propPortals: portalLinks.propPortals,
     },
   }
@@ -859,7 +1463,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     aiRolesId: templateB4.aiRolesId ?? '',
     counters: [] as unknown[],
     interruptions: [] as unknown[],
-    quests: [...(mainQuest ? [mainQuest] : []), ...globalEventQuests],
+    quests: [...globalEventQuests],
   }
   // Real editors never emit a 4th chunk when it would be entirely default —
   // see buildBlankMap's own doc comment (map-write.ts) for the real-map
@@ -907,16 +1511,22 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       atlasWidth: atlas.atlasWidth, atlasHeight: atlas.atlasHeight, sourceSize: size, sourceLayers: layerCount,
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, sourceObjectCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
-      outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
+      outOfEnvelopeCount, clusterCellsClipped, winConditions: winPlan.ids, unsupportedVictory: winPlan.unsupported,
+      shipyardsFound: shipyardNodes.length, shipyardPortals: waterPortals.portals, shipyardPortalsMoved: 0, shipyardPortalsStranded: 0, shipyardIslands: waterPortals.islands,
+      anchorFallbacks,
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
       accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
       groundTruthTilesChecked: accessibility.groundTruthTilesChecked, groundTruthDecorRemoved: accessibility.groundTruthDecorRemoved,
       groundTruthStillBlocked: accessibility.groundTruthStillBlocked,
+      startPockets: startPockets.length, startPocketSeals: pocketSealsPlaced,
       riverTilesConverted: out.riverNodes.size,
       detailRows,
     },
     localizationTokens,
+    customMapObjects,
     dialogFlows,
+    sealIds: [...sealIds],
+    forbiddenNodes,
   }
 }

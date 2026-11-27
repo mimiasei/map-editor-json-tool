@@ -28,8 +28,9 @@ import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import {computeFootprintTiles, entranceGroups, isFootprintInBounds} from './footprint'
 import { groupOf } from './tile-index'
-import { buildBlockedTileSet } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround } from './passability'
 import { entranceApproachNodes, findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
+import { wouldCutPassage } from './relocate'
 
 export interface EntranceAutoFixDeletion {
   /** The object being removed — always type 0 (a footprint template is what
@@ -264,8 +265,10 @@ function findNearbyFreeTile(
   const approach = entranceApproachNodes(context, catalog, obj.key)
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, obj.rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
-    return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x) && !approach.has(cell.z * sizeX + cell.x)))
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
+    if (!cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x) && !approach.has(cell.z * sizeX + cell.x)))) return false
+    // Not into a corridor (relocate.ts wouldCutPassage).
+    return !wouldCutPassage(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x), (n) => blocked.has(n) || claimedDestinations.has(n), sizeX, sizeZ)
   }
 
   const maxRadius = Math.max(sizeX, sizeZ)
@@ -309,14 +312,17 @@ function findRelocationTarget(
     catalog,
   )
   const isBlocked = (n: number) => blocked.has(n) || claimedDestinations.has(n)
+  // Not onto another object's entrance or approach ring either: that frees this entrance by closing someone else's (a portal moved onto a city's entrance).
+  const approach = entranceApproachNodes(context, catalog, `0:${violation.id}`)
 
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, violation.rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     for (const cell of cells) {
-      if (cell.value === 1 && isBlocked(cell.z * sizeX + cell.x)) return false
+      if (cell.value === 1 && (isBlocked(cell.z * sizeX + cell.x) || approach.has(cell.z * sizeX + cell.x))) return false
     }
-    return entranceGroups(cells, sizeX, sizeZ).some((g) => !isBlocked(g.entranceNode) && ![...g.protectedNodes].some((n) => isBlocked(n)))
+    if (!entranceGroups(cells, sizeX, sizeZ).some((g) => !isBlocked(g.entranceNode) && ![...g.protectedNodes].some((n) => isBlocked(n)))) return false
+    return !wouldCutPassage(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x), isBlocked, sizeX, sizeZ)
   }
 
   if (isValidCandidate(violation.x, violation.z)) return violation.z * sizeX + violation.x

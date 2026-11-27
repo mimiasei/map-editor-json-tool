@@ -1,0 +1,447 @@
+{
+  "2": {
+    "name": "Altar of Sacrifice",
+    "wikiTitle": "Altar of Sacrifice",
+    "description": "Altar of Sacrifice is an adventure map location, which has different function depending on the hero's alignment. Castle, Tower and Rampart heroes, who are considered to be good alignment, can only sacrifice artifacts on the altar for experience. Inferno, Necropolis and Dungeon heroes, who are considered to be evil alignment, can only sacrifice creatures on the altar. Heroes from neutral alignment factions Stronghold, Fortress, Conflux, Cove Horn of the Abyss and Factory Horn of the Abyss can sacrifice either artifacts or creatures."
+  },
+  "4": {
+    "name": "Arena",
+    "wikiTitle": "Arena",
+    "description": "Arena is an adventure map location, that will give every visiting hero a choice to either increase attack skill +2 or defense skill +2 upon their first visit. It is not possible to leave the arena without accepting one of these bonuses."
+  },
+  "5": {
+    "name": "Artifact",
+    "wikiTitle": "Artifact",
+    "description": "Artifacts are items that can be found on the Adventure Map, obtained from objects on the map, defeated enemy heroes, from previously dismissed, retreated, defeated in battles with neutrals or disappeared after losing the last town heroes in a tavern, gifted by an allied hero, bought from the artifact merchants or got as a starting bonus. Special artifacts, such as Spell book, War machines and Grail have their ways to be obtained. When a hero picks up an artifact, it disappears from the map and takes its place in an appropriate slot."
+  },
+  "6": {
+    "name": "Pandora Box",
+    "wikiTitle": "Pandora's Box",
+    "description": "Pandora's Box is a special adventure map object that can be picked up by a hero. The content is a mystery until a hero opens it. When the hero tries to pick up Pandora's Box, the player is asked if they want to open the box. If the player selects \"yes\", the box opens and combat ensues if there are guardians. If there are no guardians, or when the hero defeats the guardians, the content is revealed."
+  },
+  "7": {
+    "name": "Black Market",
+    "wikiTitle": "Black Market",
+    "description": "Black Market is an adventure map location, where heroes can buy Artifacts. The available artifacts contain three treasure artifacts, three minor artifacts, and one major artifact. Unlike Artifact Merchants, the Black Market is never restocked. The prices of artifacts are derived from their basic costs and are the same as in Artifact Merchants with five Marketplaces (basic price x 2.5)."
+  },
+  "8": {
+    "name": "Boat",
+    "wikiTitle": "Boat",
+    "description": "Boat is an Adventure Map object that allows heroes to move over water tiles. A boat can carry only one hero and their army at a time. If a hero on a boat is defeated in a combat, the boat disappears. Boats can be built on shipyards, which are always located next to a shoreline. Additionally, Castle, Necropolis, Fortress, Conflux, Cove Horn of the Abyss, and Bulwark Horn of the Abyss and Conflux towns can build shipyards if the town is next to a shoreline. Boats cost 10 Wood and 1000 Gold when built in shipyards."
+  },
+  "9": {
+    "name": "Border Guard",
+    "wikiTitle": "Border Guard",
+    "description": "Border guard is an adventure map object, that cannot be passed until one of any player's heroes has visited a Keymaster's Tent of the corresponding color. There are eight possible colors for the border guard: red, green, light blue, dark blue, brown, purple, white and black. When any player's hero has visited a Keymaster's Tent and one of his heroes passes the associated border guard, it disappears from the map and any hero of any player can pass after that."
+  },
+  "10": {
+    "name": "Keymaster Tent",
+    "wikiTitle": "Keymaster's Tent",
+    "description": "Keymaster's Tent is an adventure map location, that after visiting allows player's heroes to pass through Border Guards and Border Gates with associated colors. There are eight different colors: red, green, light blue, dark blue, brown, purple, white and black."
+  },
+  "11": {
+    "name": "Buoy",
+    "wikiTitle": "Buoy",
+    "description": "Buoy is an adventure map location, that can only be found on water tiles, and thus be visited only with a hero in a boat. It gives the visiting hero +1 to morale until next battle."
+  },
+  "12": {
+    "name": "Campfire",
+    "wikiTitle": "Campfire",
+    "description": "Campfire is an adventure map object that can be gathered with a hero. It gives the player between 400–600 Gold and 4–6 other resources. Campfire disappears after the first visit. Undiscovered Campfires does not appear with View Earth. (It might be a bug?)"
+  },
+  "13": {
+    "name": "Cartographer",
+    "wikiTitle": "Cartographer",
+    "description": "Cartographer is an adventure map location, that can be visited by a hero. There are three different types of cartographers, which have different effects: The tower cartographer reveals all tiles, except water and subterranean; The water cartographer will reveal all water tiles; The stalagmite cartographer will reveal all subterranean tiles (not to be mixed with the whole underground layer)"
+  },
+  "15": {
+    "name": "Cover of Darkness",
+    "wikiTitle": "Cover of Darkness (Adventure Map)",
+    "description": "Cover of Darkness is an adventure map location that creates shroud for non-allied players when visited. Like the Necropolis building of the same name, its effect has a radius of 20 tiles. A Tower town with a Lookout Tower can (partially) cancel the effect for tower's owner. However, a Skyship does not cancel the effect."
+  },
+  "16": {
+    "name": "Creature Bank",
+    "wikiTitle": "Creature Bank",
+    "description": "Creature Bank is a collective term for the Adventure Map locations where a hero may fight against guards in order to receive a reward. The reward typically consists of gold and resources, but may also contain creatures or artifacts. The combat against the guards is a unique arrangement, where the hero's troops are located in the middle of the battlefield surrounded by enemies and war machines are not present on the battlefield (though they still provide passive bonuses). Tactics also does not work in creature banks."
+  },
+  "23": {
+    "name": "Marletto Tower",
+    "wikiTitle": "Marletto Tower",
+    "description": "Marletto Tower is an adventure map location, that gives a visiting hero +1 to defense upon the first visit. Curiously enough, the name of the Marletto Tower shows a remarkable similarity with 19th-century British fortification named Martello tower (see wikipedia). Whether the name in Heroes of Might and Magic III is just a misspelling or intentional, that remains unknown."
+  },
+  "24": {
+    "name": "Derelict Ship",
+    "wikiTitle": "Derelict Ship",
+    "description": "Derelict Ship is a Creature Bank located on the Adventure Map. The guards are divided into five stacks (red hexes). All the guard stacks of the same speed attack in alphabetic order of these hexes. The hero's troops are located in blue hexes 1-7 (a tail hex for two-hexed creatures) according to stack positioning in the army slots 1-7. If the hero has less than 7 stacks, e.g. 3, they will be placed in hexes 1-3 no matter how they were placed in the army slots."
+  },
+  "25": {
+    "name": "Dragon Utopia",
+    "wikiTitle": "Dragon Utopia",
+    "description": "Dragon Utopia is a Creature Bank located on the Adventure Map. The guards are divided into five stacks (red hexes). All the guard stacks of the same speed attack in alphabetic order of these hexes. The hero's troops are located in blue hexes 1-7 (a tail hex for two-hexed creatures) according to stack positioning in the army slots 1-7. If the hero has less than 7 stacks, e.g. 3, they will be placed in hexes 1-3 no matter how they were placed in the army slots."
+  },
+  "26": {
+    "name": "Event",
+    "wikiTitle": "Event",
+    "description": "Event is an invisible adventure map object, that is triggered when a hero enters the square. The map-maker can set the event to be triggered only by computer players, only by human players, or by both of them. It can also be set, that only a certain player may trigger it. Additionally, the event can be canceled after a hero first time triggers it, or it can be triggered unlimited times. However, if the event contains any guardians, they will not be reset."
+  },
+  "27": {
+    "name": "Eye of the Magi",
+    "wikiTitle": "Eye of the Magi",
+    "description": "Eye of the Magi is an adventure map object, that illuminates shrouded areas for players whose heroes visit a Hut of the Magi. It reveals a ten square radius area around the eye. The effect is similar to Redwood Observatory or Pillar of Fire. The eye has no other function."
+  },
+  "28": {
+    "name": "Faerie Ring",
+    "wikiTitle": "Faerie Ring",
+    "description": "Faerie Ring is an adventure map location, that gives a visiting hero +1 to luck for the next battle."
+  },
+  "29": {
+    "name": "Flotsam",
+    "wikiTitle": "Flotsam",
+    "description": "Flotsam is an adventure map object that can be gathered by a hero sailing in a boat. Flotsams can only be found on water, and they disappear after a hero has picked them up."
+  },
+  "30": {
+    "name": "Fountain of Fortune",
+    "wikiTitle": "Fountain of Fortune",
+    "description": "This article refers to the Rampart building. For the Adventure Map location, see Fountain of Fortune (adventure map)."
+  },
+  "31": {
+    "name": "Fountain of Youth",
+    "wikiTitle": "Fountain of Youth",
+    "description": "Fountain of Youth is an adventure map location, that gives visiting heroes +400 movement points until the end of the day, and +1 to morale until next battle. Fountain of Youth can be visited again on the same day after a battle, allowing you to stack bonus movement points from the same fountain."
+  },
+  "32": {
+    "name": "Garden of Revelation",
+    "wikiTitle": "Garden of Revelation",
+    "description": "Garden of Revelation is an adventure map location, that gives all visiting heroes +1 to knowledge upon their first visit."
+  },
+  "33": {
+    "name": "Garrison Horizontal",
+    "wikiTitle": "Garrison",
+    "description": "Garrison is a defensive location on the Adventure Map that is typically used to guard a bottleneck on a map."
+  },
+  "34": {
+    "name": "Hero",
+    "wikiTitle": "Hero",
+    "description": "Heroes are the leaders of armies in Heroes of Might and Magic III. Each town type is associated with might type hero class and magic type hero class. Heroes travel with their armies that consist of creatures arranged in groups called troops. Each troop can hold one or more creatures, but all the creatures in the troop must be of the same creature type. A hero's army must have at least one troop and can include up to seven. In battle, a hero leads the battle by commanding their army rather than fighting directly. A player may have up to eight heroes on the adventure map at any given time."
+  },
+  "35": {
+    "name": "Hill Fort",
+    "wikiTitle": "Hill Fort",
+    "description": "Hill Fort is an adventure map location that enables a visiting hero to upgrade any non-upgraded creatures. The upgrade cost for creature levels 1 to 4 is less expensive than upgrading them in associated town."
+  },
+  "36": {
+    "name": "Grail",
+    "wikiTitle": "Grail",
+    "description": "The Grail is an item similar to an artifact in the sense that heroes can carry it and exchange it between them in the same way as artifacts. Also it can be sold for 1 unit of any resource. In fact, the Grail is sometimes unofficially referred to as the ultimate artifact. The Grail is typically hidden somewhere in the ground of adventure map, and finding it requires digging it with a hero. Recovering the Grail artifact and taking it to any town enables the player to build town specific Grail Building."
+  },
+  "37": {
+    "name": "Hut of the Magi",
+    "wikiTitle": "Hut of the Magi",
+    "description": "Hut of the Magi is an adventure map location, that reveals the areas around each Eye of the Magi when visited."
+  },
+  "38": {
+    "name": "Idol of Fortune",
+    "wikiTitle": "Idol of Fortune",
+    "description": "Idol of Fortune is an adventure map location, that gives a visiting hero bonus to his morale and/or luck until next combat. The idol gives +1 to morale on even days and +1 to luck on odd days. On day seven, it gives +1 to both."
+  },
+  "39": {
+    "name": "Lean To",
+    "wikiTitle": "Lean To",
+    "description": "Lean To is an adventure map location, that is typically found on Snow. It gives the first visiting hero 1–5 units of resources other than gold."
+  },
+  "41": {
+    "name": "Library of Enlightenment",
+    "wikiTitle": "Library of Enlightenment",
+    "description": "Library of enlightenment increases all four primary skills by +2 once for each visiting hero. The hero must be at least at level 10 to receive the bonus. However, with Diplomacy, it is possible to acquire the bonus earlier: basic level gives the bonus at level 8, advanced level gives it at level 6, and expert level gives it at level 4."
+  },
+  "42": {
+    "name": "Lighthouse",
+    "wikiTitle": "Lighthouse",
+    "description": "The Lighthouse is a building and an adventure map object which increases all ones heroes' movement speed using boats by +500 movement points. The effect is cumulative (meaning that owning two Lighthouses increases all heroes' movement points by a total of +1000 on water, and so on)"
+  },
+  "43": {
+    "name": "Monolith One Way Entrance",
+    "wikiTitle": "Monolith",
+    "description": "Monolith is a common term for adventure map locations, that visually resemble gates. They can be used to instantly travel between similar, visually associated monoliths. There are two functionally different monolith types: one-way and two-way."
+  },
+  "44": {
+    "name": "Monolith One Way Exit",
+    "wikiTitle": "Monolith",
+    "description": "Monolith is a common term for adventure map locations, that visually resemble gates. They can be used to instantly travel between similar, visually associated monoliths. There are two functionally different monolith types: one-way and two-way."
+  },
+  "45": {
+    "name": "Monolith Two Way",
+    "wikiTitle": "Monolith",
+    "description": "Monolith is a common term for adventure map locations, that visually resemble gates. They can be used to instantly travel between similar, visually associated monoliths. There are two functionally different monolith types: one-way and two-way."
+  },
+  "47": {
+    "name": "School of Magic",
+    "wikiTitle": "School of Magic",
+    "description": "School of Magic is an adventure map location, where hero may learn either +1 to spell power or +1 to knowledge for a cost of 1000 Gold."
+  },
+  "48": {
+    "name": "Magic Spring",
+    "wikiTitle": "Magic Spring",
+    "description": "Magic spring is an adventure map location, which both refills and doubles a hero's maximum spell points. For example, a hero with maximum spell points of 40 (Knowledge skill 4) and 14 points remaining will have 80 spell points after visiting a magic spring. There are two drinking points on a magic spring. Each magic spring may be used only once a week, but the two points function independently."
+  },
+  "49": {
+    "name": "Magic Well",
+    "wikiTitle": "Magic Well",
+    "description": "Magic Well is an adventure map location, that replenishes all spell points of the visiting hero. A hero may use any Magic Well only once each day. Attempting to use the same or any other Magic Well in the same day will make a message appear that says \"A second drink at the well in one day will not help you.\""
+  },
+  "50": {
+    "name": "Market of Time",
+    "wikiTitle": "Market of Time",
+    "description": "Market of Time is an adventure map location that can be found in Titan's Winter, a map made with an early version of The Restoration of Erathia. It is functionally useless."
+  },
+  "51": {
+    "name": "Mercenary Camp",
+    "wikiTitle": "Mercenary Camp",
+    "description": "Mercenary Camp in an adventure map location, that gives +1 to all hero's attack skill upon their first visit. The appearance of mercenary camp is similar to a Refugee Camp, both have four tents around a campfire."
+  },
+  "52": {
+    "name": "Mermaids",
+    "wikiTitle": "Mermaids",
+    "description": "Mermaids is an adventure map location, that can be found on the water squares and therefore can only be visited with heroes in boats. It gives +1 luck until next battle."
+  },
+  "53": {
+    "name": "Mine",
+    "wikiTitle": "Mine",
+    "description": "Mines are adventure map locations, that can be flagged after which they will start to produce a particular resource for the player who owns the mine. There are eight different types of mines: one for each resource type and abandoned mine."
+  },
+  "55": {
+    "name": "Mystical Garden",
+    "wikiTitle": "Mystical Garden",
+    "description": "Mystical Garden is an adventure map location, that can be visited with a hero to receive either 500 Gold or 5 Gem (chosen randomly) once a week."
+  },
+  "57": {
+    "name": "Obelisk",
+    "wikiTitle": "Obelisk",
+    "description": "Obelisk is an adventure map location, that can be visited by a hero to reveal a piece of the puzzle map. The puzzle map reveals the location of the Grail piece by piece. There are multiple different colors of Obelisks: green, light blue, dark blue, brown, purple, white, and black. Orange, red, and dark green were added in Horn of the Abyss Horn of the Abyss. Regardless of color, Obelisks function identically and reveal the same puzzle map. On randomly generated maps and in the map-editor, the colors are tied to terrains (hover-over the obelisk picture to the right)."
+  },
+  "58": {
+    "name": "Redwood Observatory",
+    "wikiTitle": "Redwood Observatory",
+    "description": "Redwood Observatory is an adventure map location which removes shroud within a 20 tile radius around the observatory when it's visited. Even areas clouded by a Cover of Darkness will be revealed, though they will be overclouded again at the beginning of the next day. Although Pillar of Fire exists as an underground variant, Redwood Observatory will still work when placed underground."
+  },
+  "59": {
+    "name": "Ocean Bottle",
+    "wikiTitle": "Ocean Bottle",
+    "description": "Ocean bottle is an adventure map object, that can be picked up with a hero sailing on a boat. The bottle contains a short paragraph of text - maximum of 150 characters. While ocean bottles do not give any bonuses, reading them may give additional information or helpful hints. Unlike signs, ocean bottles will disappear once read. The map-maker can create a custom message for the sign, but if no message is written on the field, a random text will appear. Default random texts are:"
+  },
+  "60": {
+    "name": "Pillar of Fire",
+    "wikiTitle": "Pillar of Fire",
+    "description": "Pillar of Fire is an adventure map location which removes shroud within a 20 tile radius around the observatory when it's visited. Even areas clouded by a Cover of Darkness will be revealed, though they will be overclouded again at the beginning of the next day. Although Pillar of Fire is themed as an underground version of the Redwood Observatory, it will still work when placed on the surface."
+  },
+  "61": {
+    "name": "Star Axis",
+    "wikiTitle": "Star Axis",
+    "description": "Star Axis is an adventure map location, that increases visiting hero's spell power by +1. It will only increase power once per hero."
+  },
+  "62": {
+    "name": "Prison",
+    "wikiTitle": "Prison",
+    "description": "Prison is an adventure map object that holds an imprisoned hero. When a hero visits the prison, they will free the imprisoned hero who then joins the player, free of charge. If the player already has eight heroes outside of towns, the prisoner is not freed. After the imprisoned hero has been freed, the prison will disappear. The imprisoned hero can be set by a mapmaker or be chosen randomly. A random hero will have a default starting army."
+  },
+  "63": {
+    "name": "Pyramid",
+    "wikiTitle": "Pyramid",
+    "description": "Pyramid is an adventure map location, which is guarded by 40 Gold Golems and two stacks of 10 Diamond Golems. After defeating the guards, hero will learn typically a fifth level spell provided that the hero has expert Wisdom and a spell book. If the hero does not have a capability to learn the spell, it is lost forever. If the hero retreats or dies during the battle, the already defeated golems are replenished (unlike in creature banks). Searching an empty pyramid decreases hero's luck by 2."
+  },
+  "64": {
+    "name": "Rally Flag",
+    "wikiTitle": "Rally Flag",
+    "description": "Rally Flag is an adventure map location that gives a visiting heroes +400 movement points until the end of the day and +1 to luck and morale until next battle. Rally Flag can be visited again on the same day after a battle, allowing you to stack bonus movement points from the same flag."
+  },
+  "78": {
+    "name": "Refugee Camp",
+    "wikiTitle": "Refugee Camp",
+    "description": "Refugee Camp is an adventure map location, where a hero can hire a small number of random type creatures (including neutral creatures). The creature type changes every week, and the number available is their basic growth. Unlike External Creature Dwellings, Refugee Camps do not give you first level units for free. Also unlike external creature dwellings, Refugee Camps cannot be flagged, and therefore can't be used with Portal of Summoning."
+  },
+  "79": {
+    "name": "Resource",
+    "wikiTitle": "Resource",
+    "description": "Gold (leather) Wood (leather) Ore (leather) Mercury (leather) Sulfur (leather) Crystal (leather) Gem (leather) Resource is a common name for all basic and magical resources. Basic resources include wood, ore and gold; while magical resources include mercury, sulfur, crystal and gems. Wood and ore are required to build town structures, along with gold. Wood is also needed to build boats. Several town structures require magical resources for construction, and they are also needed to hire most 7th level creatures."
+  },
+  "81": {
+    "name": "Scholar",
+    "wikiTitle": "Scholar",
+    "description": "This article refers to the secondary skill. For the adventure map feature, see Scholar (Adventure Map). Heroes with Scholar as a starting skill: Druid Coronius Coronius the Druid; Alchemist Thane Thane the Alchemist (Advanced); Alchemist Neela Neela the Alchemist; Alchemist Fafner Fafner the Alchemist; Alchemist Iona Iona the Alchemist; Wizard Aine Aine the Wizard; Demoniac Rashka Rashka the Demoniac; Demoniac Octavia Octavia the Demoniac; Heretic Xyron Xyron the Heretic; Necromancer Septienna Septienna the Necromancer; Overlord Synca Synca the Overlord; Warlock Alamar Alamar the Warlock; Arti..."
+  },
+  "82": {
+    "name": "Sea Chest",
+    "wikiTitle": "Sea Chest",
+    "description": "Sea Chest is an adventure map object, that can be gathered by heroes. They can only be located on water squares, and therefore can only be picked up by heroes traveling in boats. If your backpack is full, you will receive 1500 Gold and no artifact."
+  },
+  "83": {
+    "name": "Seer Hut",
+    "wikiTitle": "Seer's Hut",
+    "description": "Seer's Hut is an Adventure Map location, that offers a quest for the players to fulfill. Completing the conditions of the quest, and returning to the Hut, a hero will be prompted a question whether or not he wants to receive the reward. All your quests will be logged in the Quest Log. Returning to the Hut after having received the quest but before completing it, a hero might get a message that contains more hints about fulfilling the quest."
+  },
+  "84": {
+    "name": "Crypt",
+    "wikiTitle": "Crypt",
+    "description": "Crypt is a Creature Bank located on the Adventure Map. The guards are divided into five stacks (red hexes). All the guard stacks of the same speed attack in alphabetic order of these hexes. The hero's troops are located in blue hexes 1-7 (a tail hex for two-hexed creatures) according to stack positioning in the army slots 1-7. If the hero has less than 7 stacks, e.g. 3, they will be placed in hexes 1-3 no matter how they were placed in the army slots."
+  },
+  "85": {
+    "name": "Shipwreck",
+    "wikiTitle": "Shipwreck",
+    "description": "Shipwreck is a Creature Bank located on the Adventure Map. The guards are divided into five stacks (red hexes). All the guard stacks of the same speed attack in alphabetic order of these hexes. The hero's troops are located in blue hexes 1-7 (a tail hex for two-hexed creatures) according to stack positioning in the army slots 1-7. If the hero has less than 7 stacks, e.g. 3, they will be placed in hexes 1-3 no matter how they were placed in the army slots."
+  },
+  "86": {
+    "name": "Shipwreck Survivor",
+    "wikiTitle": "Shipwreck Survivor",
+    "description": "Shipwreck Survivor is an adventure map object, that can be gathered by heroes sailing in boats. The first hero to \"rescue\" the survivor receives an artifact from the survivor. Shipwreck Survivors can only be found from water squares, and they disappear after a hero has picked them up."
+  },
+  "87": {
+    "name": "Shipyard",
+    "wikiTitle": "Shipyard",
+    "description": "Shipyards are structures which allow players to build boats for 1000 Gold and 10 Wood. They can be found on the adventure map and can also be built in Castle, Necropolis, Fortress, Conflux Armageddon's Blade, Cove Horn of the Abyss, and Bulwark Horn of the Abyss, and Conflux Armageddon's Blade."
+  },
+  "91": {
+    "name": "Sign",
+    "wikiTitle": "Sign",
+    "description": "Sign is an adventure map location, that contains a short paragraph of text - maximum of 150 characters. While they do not give any bonuses, reading them may give additional infromation or helpful hints. The map-maker can create a custom message for the sign, but if no message is written on the field, a random text will appear. Default random texts are:"
+  },
+  "92": {
+    "name": "Sirens",
+    "wikiTitle": "Sirens",
+    "description": "Sirens is an adventure map location, that can only be found from the sea. When a hero visits Sirens, 30% (rounded up) of each stack in hero's army will dive under water and perish (one-creature stacks are not affected). However, the hero gains experience equal to the health of the lost troops (with bonuses of Learning secondary skill). A hero can only lose troops to Sirens once, no matter if there are more than one location where Sirens can be found."
+  },
+  "93": {
+    "name": "Spell Scroll",
+    "wikiTitle": "Spell scroll",
+    "description": "Spell scroll typically refers to a treasure that can be found on the adventure map. Although it is not technically an artifact, it works in a very similar way. It appears in the backpack after hero picks it up, and it can be equipped in the miscellaneous artifact slot. The scroll contains one spell, and as long as the scroll is equipped, that spell is added to the hero's spell book. However, unlike artifacts, scrolls cannot be sacrificed at an Altar of Sacrifice for experience."
+  },
+  "94": {
+    "name": "Stables",
+    "wikiTitle": "Stables",
+    "description": "Stables is both an adventure map location and a Castle town building. A Stables gives a hero who's visiting Castle town with built Stables the bonus of +300 Horn of the Abyss +400 The Shadow of Death movement points in this day and each day to the end of the week. The bonus is added to the hero's movement points at the visit, and after that, at the start of each turn until end of the week. The bonus is not cumulative with other Stables. Hero can have only one active Stables bonus at once."
+  },
+  "95": {
+    "name": "Tavern",
+    "wikiTitle": "Tavern",
+    "description": "Hiring Heroes can be hired for 2500 Gold. There are always two heroes available in a Tavern (unless no heroes remain to be hired), and if one is hired, a new hero will immediately appear in their place. The first two heroes available to hire at the beginning of each week (including at the beginning of the game) will start with their regular army. After either one is hired, the hero that takes its place in the Tavern will only have one non-upgraded first level creature in their army."
+  },
+  "96": {
+    "name": "Temple",
+    "wikiTitle": "Temple",
+    "description": "Temple is an adventure map location, which gives a visiting hero +1 or +2 bonus to morale for the next combat. On the week's first 6 days the bonus is +1, but on the 7th day of every week the bonus is +2."
+  },
+  "97": {
+    "name": "Den of Thieves",
+    "wikiTitle": "Den of Thieves",
+    "description": "Den of Thieves is an adventure map location, that can be visited by a hero. It gives information on the relative strength of all the players. Each player is portrayed by a flag of their color which is placed further to the left depending on their rank regarding listed information. It gives the same information as your Thieves' Guild does if you own five towns with Taverns."
+  },
+  "98": {
+    "name": "Town",
+    "wikiTitle": "Town",
+    "description": "Town typically refers to a structure on an Adventure Map, where heroes can recruit troops, replenish their spell points, and learn new spells. More generally, it can refer to one of the nine different town types, that can be seen in the table on the right. In The Restoration of Erathia, there were only eight different town types, but Armageddon's Blade expansion added Conflux. Moreover, unofficial Horn of the Abyss expansion added Cove, Factory and Bulwark. Every player must own at least one town, so as to remain in contention for any amount of time until winning or losing the scenario."
+  },
+  "99": {
+    "name": "Trading Post",
+    "wikiTitle": "Trading Post",
+    "description": "Trading Post is an adventure map location, that can be visited by heroes to trade resources. It works in a similar way Marketplace does, but has the same trading rate as if the player has five Marketplaces built. In other words, if the player has five Marketplaces in towns there is no point in visiting a Trading Post. If the player has six or more Marketplaces, the rate in a Trading Post is actually worse than in a town with a Marketplace."
+  },
+  "100": {
+    "name": "Learning Stone",
+    "wikiTitle": "Learning Stone",
+    "description": "Learning Stone is an adventure map location, which gives each hero 1000 experience points the first time they visit it. There can be up to 32 learning stones in any map."
+  },
+  "101": {
+    "name": "Treasure Chest",
+    "wikiTitle": "Treasure Chest",
+    "description": "Treasure Chest is an adventure map object, that can be gathered with a hero. It gives either gold for the kingdom, experience or an artifact for the hero. When picked up by a hero, a Treasure Chest offers the hero a choice to receive either gold or experience from the chest. If the chest contains an artifact, the player receives no choice but a random treasure class artifact is put in the hero's backpack. If the hero's backpack is full, the chest offers gold and experience. The chest disappears after the hero picks it up."
+  },
+  "102": {
+    "name": "Tree of Knowledge",
+    "wikiTitle": "Tree of Knowledge",
+    "description": "Tree of Knowledge is an adventure map location which gives an experience level once per hero when visited. The amount of experience the tree gives is equal to the amount of xp needed to reach the next level. Naturally, the tree will give more experience to heroes with higher levels because the gaps between experience levels increase exponentially. The tree will give the level for free, for 2000 Gold or for 10 Gem."
+  },
+  "103": {
+    "name": "Subterranean Gate",
+    "wikiTitle": "Subterranean Gate",
+    "description": "Subterranean Gate is an adventure map location, that enables heroes to move between the surface and the underground layers. At the beginning of the map the gates will be paired, and they will lead to the other layer's gate nearest to the corresponding point. If two gates are at equal distance from the corresponding point, the northmost gate will be paired, and if they are at the same \"latitude\", the westmost gate will be paired."
+  },
+  "104": {
+    "name": "University",
+    "wikiTitle": "University",
+    "description": "University is an adventure map location where a hero may learn up to four secondary skills to basic level for 2000 Gold per skill. However, a hero cannot learn class-restricted secondary skills (e.g. Barbarians cannot learn Water magic). The map-maker cannot directly affect the skills offered in the university, but a disabled skill will not appear there."
+  },
+  "105": {
+    "name": "Wagon",
+    "wikiTitle": "Wagon",
+    "description": "Wagon is an adventure map location which may give the first visiting hero 2-5 resources (except gold), an artifact (treasure or minor class), or it may be empty."
+  },
+  "106": {
+    "name": "War Machine Factory",
+    "wikiTitle": "War Machine Factory",
+    "description": "War Machine Factory is an adventure map location that sells war machines to the visiting hero: Ballista Ballistas for 1500 Gold Horn of the Abyss 2500 Gold The Shadow of Death, First Aid Tent First Aid Tent First Aid Tents for 750 Gold, and Ammo Cart Ammo Cart Ammo Carts for 1000 Gold."
+  },
+  "107": {
+    "name": "School of War",
+    "wikiTitle": "School of War",
+    "description": "School of War is an adventure map location, that increases hero's attack or defense (at the player's choice) +1 for 1000 Gold. The school only increases attack or defense once per hero."
+  },
+  "108": {
+    "name": "Warrior Tomb",
+    "wikiTitle": "Warrior's Tomb",
+    "description": "Warrior's Tomb is an adventure map location that a hero can visit and loot a random artifact. When a hero enters the tomb, he will be asked if he wishes to disturb the sanctity of the grave. If the answer is yes and the hero is first to enter the tomb, he will receive one random artifact and -3 to morale until the next battle."
+  },
+  "109": {
+    "name": "Water Wheel",
+    "wikiTitle": "Water Wheel",
+    "description": "Water Wheel is an adventure map location that normally produces 1000 Gold in the first day of the week. However, the first week of the first month it only produces 500 Gold. A hero must visit the Water Wheel to receive the gold."
+  },
+  "110": {
+    "name": "Watering Hole",
+    "wikiTitle": "Watering Hole",
+    "description": "Watering Hole is an adventure map location that gives visiting heroes +400 movement points until the end of the day and +1 morale until next battle."
+  },
+  "111": {
+    "name": "Whirlpool",
+    "wikiTitle": "Whirlpool",
+    "description": "Whirlpool is an adventure map object, that can only be located on water terrain. It can only be entered with a hero traveling on boat, and it instantly transfers the hero (and the boat) to another whirlpool in a fixed order Horn of the Abyss randomly chosen whirlpool The Shadow of Death. If there is only one whirlpool on the map, then the ship has no exit point; thus, the whirlpool simply destroys the hero's troops."
+  },
+  "112": {
+    "name": "Windmill",
+    "wikiTitle": "Windmill",
+    "description": "Windmill is an adventure map location, where 3-6 of random resources are produced each week. A hero must visit the windmill in order for a player to receive the resources. Windmill will never produce wood or gold."
+  },
+  "113": {
+    "name": "Witch Hut",
+    "wikiTitle": "Witch Hut",
+    "description": "Witch Hut is an adventure map location, where a hero can learn a new secondary skill by visiting them. The hut teaches the skill only to basic level if the hero has not already learned it. By default, the secondary skill is randomly chosen, but cannot be Leadership, Necromancy, or Runes Horn of the Abyss or Necromancy. The map-maker can choose which secondary skills (including those banned by default) are eligible for the draw, or choose just one."
+  },
+  "212": {
+    "name": "Border Gate",
+    "wikiTitle": "Border Gate",
+    "description": "Border Gate is an adventure map object, that cannot be entered or crossed unless one of the player's heroes have visited a Keymaster's Tent with the associated color. There are eight different colors of Border Gates: red, green, light blue, dark blue, brown, purple, white and black."
+  },
+  "213": {
+    "name": "Freelancers Guild",
+    "wikiTitle": "Freelancer's Guild",
+    "description": "In Armageddon's Blade and The Shadow of Death, it is also an adventure map location. They both work the same way. Like the marketplace and the Artifact merchants, the price you will receive for your creatures is determined by the number of marketplaces you own."
+  },
+  "215": {
+    "name": "Quest Guard",
+    "wikiTitle": "Quest Guard",
+    "description": "Quest Guard is an adventure map object that does not allow a hero to pass, unless the requirements of the quest are fulfilled. Completing the quest works in a similar way as in Seer's Huts. When Quest Guard is passed, it disappears. There are several different types of quests the guard can have."
+  },
+  "219": {
+    "name": "Garrison Vertical",
+    "wikiTitle": "Garrison",
+    "description": "Garrison is a defensive location on the Adventure Map that is typically used to guard a bottleneck on a map."
+  },
+  "220": {
+    "name": "Abandoned Mine",
+    "wikiTitle": "Abandoned Mine",
+    "description": "Abandoned Mine works as any other mine, but is guarded by a throng (100–249) of Troglodytes. Its production is randomly chosen and it cannot produce wood. The production is determined at the beginning of the map. Additionally, the creator of the map can choose which resource types take part of the draw. If only one choice is selected, then the Abandoned Mine will always produce the chosen resource."
+  },
+  "221": {
+    "name": "Trading Post",
+    "wikiTitle": "Trading Post",
+    "description": "Trading Post is an adventure map location, that can be visited by heroes to trade resources. It works in a similar way Marketplace does, but has the same trading rate as if the player has five Marketplaces built. In other words, if the player has five Marketplaces in towns there is no point in visiting a Trading Post. If the player has six or more Marketplaces, the rate in a Trading Post is actually worse than in a town with a Marketplace."
+  }
+}

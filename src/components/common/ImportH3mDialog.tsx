@@ -21,6 +21,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertTriangle, CheckCircle2 } from '@/components/ui/icons'
+import { ProgressStatus } from '@/components/common/ProgressStatus'
+import { nextStagePct } from '@/lib/h3-import/import-progress'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { importH3mFile, type ImportH3mResult } from '@/lib/h3-import/import-h3m-file'
 import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
@@ -77,9 +79,13 @@ function buildReportText(result: ImportH3mResult): string {
   lines.push(`Scenery placed: ${report.sceneryPlaced}`)
   lines.push(`Other objects placed: ${report.objectsPlaced}`)
   lines.push(`River tiles: ${report.riverTilesConverted}`)
-  lines.push(`Victory quest: ${report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}`)
+  lines.push(`Win conditions: ${report.winConditions.join(', ')}`)
+  if (report.unsupportedVictory) lines.push(`H3 victory condition not converted (Classic is used instead): ${report.unsupportedVictory}`)
   lines.push(`Portals linked: ${report.portalsLinked}`)
+  if (report.anchorFallbacks > 0) lines.push(`Objects placed at the H3 anchor because their entrance could not be put on the H3 entrance tile without standing on rock: ${report.anchorFallbacks}`)
+  if (report.shipyardsFound > 0) lines.push(`Shipyards: ${report.shipyardsFound} (portals placed: ${report.shipyardPortals}, islands joined: ${report.shipyardIslands})`)
   lines.push(`Accessibility fixes: ${report.accessibilityDecorRemoved} removed, ${report.accessibilityTargetsNudged} nudged`)
+  if (report.startPockets > 0) lines.push(`Walled-in player starts: ${report.startPockets} (${report.startPocketSeals} wall pieces added to keep them closed)`)
   lines.push(`Ground-truth floor fixes: ${report.groundTruthDecorRemoved} removed (of ${report.groundTruthTilesChecked} floor tiles checked against the source map's own passability)`)
 
   if (report.groundTruthStillBlocked > 0) {
@@ -198,6 +204,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
 
   const [phase, setPhase] = useState<Phase>('idle')
+  const [progress, setProgress] = useState<{ pct: number; label: string } | null>(null)
   const [result, setResult] = useState<ImportH3mResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [dontShowAgain, setDontShowAgain] = useState(false)
@@ -215,10 +222,11 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
   const handleImport = async () => {
     if (dontShowAgain) localStorage.setItem(INTRO_SHOWN_KEY, '1')
+    setProgress(null)
     setPhase('running')
     setErrorMsg('')
     try {
-      const outcome = await importH3mFile()
+      const outcome = await importH3mFile((label, pct) => setProgress({ label, pct }))
       if (!outcome) { setPhase('idle'); return } // cancelled file picker
       logInfo(`Imported H3 map: ${outcome.name}`)
       setResult(outcome)
@@ -248,7 +256,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[35.2rem]">
         <DialogHeader>
           <DialogTitle>{t('common.importH3mDialog.importHeroesOfMightMagic')}</DialogTitle>
         </DialogHeader>
@@ -291,9 +299,12 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
         {/* ── Running ── */}
         {phase === 'running' && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-            <span>{t('common.importH3mDialog.converting')}</span>
+          <div className="py-2">
+            <ProgressStatus
+              value={progress?.pct ?? 0}
+              creepTo={nextStagePct(progress?.pct ?? 0) - 1}
+              label={progress?.label ?? t('common.importH3mDialog.converting')}
+            />
           </div>
         )}
 
@@ -316,10 +327,22 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <div className="text-foreground">{report.objectsPlaced}</div>
               <div>{t('common.importH3mDialog.riverTiles')}</div>
               <div className="text-foreground">{report.riverTilesConverted}</div>
-              <div>{t('common.importH3mDialog.victoryQuest')}</div>
-              <div className="text-foreground">{report.hasVictoryQuest ? t('common.importH3mDialog.yesDefeatAllEnemies') : t('common.importH3mDialog.noneUnsupportedWinCondition')}</div>
+              <div>{t('common.importH3mDialog.winConditionsRow')}</div>
+              <div className="text-foreground">{report.winConditions.map((id) => t(`common.winConditionsPanel.conditions.${id}.label`)).join(', ')}</div>
+              {report.unsupportedVictory && (
+                <>
+                  <div>{t('common.importH3mDialog.droppedVictory')}</div>
+                  <div className="text-foreground">{report.unsupportedVictory}</div>
+                </>
+              )}
               <div>{t('common.importH3mDialog.portalsLinked')}</div>
               <div className="text-foreground">{report.portalsLinked}</div>
+              {report.shipyardsFound > 0 && (
+                <>
+                  <div>{t('common.importH3mDialog.shipyardPortals')}</div>
+                  <div className="text-foreground">{t('common.importH3mDialog.shipyardPortalsValue', { shipyards: report.shipyardsFound, portals: report.shipyardPortals, islands: report.shipyardIslands })}</div>
+                </>
+              )}
               <div>{t('common.importH3mDialog.accessibilityFixes')}</div>
               <div className="text-foreground">{t('common.importH3mDialog.removedNudged', { accessibilityDecorRemoved: report.accessibilityDecorRemoved, accessibilityTargetsNudged: report.accessibilityTargetsNudged })}</div>
               <div>{t('common.importH3mDialog.groundTruthFloorFixes')}</div>

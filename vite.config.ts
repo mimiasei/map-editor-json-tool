@@ -18,6 +18,8 @@ export default defineConfig({
   define: {
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
+  // The H3 import runs in a module worker (src/lib/h3-import/h3-import.worker.ts); the default iife format cannot code-split.
+  worker: { format: 'es' },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

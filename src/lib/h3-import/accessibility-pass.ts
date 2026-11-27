@@ -34,7 +34,7 @@
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
-import { buildBlockedTileSet, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, footprintOnFlatGround, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 
 export interface ObjectPlacementGroup {
   ids: number[]
@@ -166,6 +166,12 @@ export function applyAccessibilityPass(
   forbiddenIds: Set<number> = new Set(),
   /** Anchors of things that are not in `objectGroups` (the RMG's concrete guard squads): a nudge must not land on one, or two guards share a tile and the game fails to load the map. */
   fixedAnchors: Set<number> = new Set(),
+  /** Nodes no object may be nudged onto, whatever the level (see MapContext.forbiddenNodes). */
+  forbiddenNodes?: Set<number>,
+  /** Every linked portal's entrance counts as a start too. H3 maps put players in sealed pockets whose only way out is a one-way portal, and
+   *  regions reached only through portals (the island around them, the underground via its gates) are not meant to be walkable from the pocket:
+   *  without this the pass would open the pocket's walls to connect them. */
+  seedPortals = false,
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -239,6 +245,15 @@ export function applyAccessibilityPass(
     }
   }
 
+  if (seedPortals) {
+    for (const [from, to] of portalAdjacencyByObjectId) {
+      for (const id of [from, to]) {
+        const node = accessNodeForId(id)
+        if (node !== undefined) seeds.push(node)
+      }
+    }
+  }
+
   const report: AccessibilityReport = {
     targetsChecked: targets.length, decorRemoved: 0, targetsNudged: 0, stillUnreachable: 0,
     groundTruthTilesChecked: mustBeReachable.size, groundTruthDecorRemoved: 0, groundTruthStillBlocked: 0,
@@ -246,7 +261,7 @@ export function applyAccessibilityPass(
   if (seeds.length === 0) return report
   if (targets.length === 0 && mustBeReachable.size === 0) return report
 
-  const passContext = { sizeX: atlasWidth, sizeZ: atlasHeight, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap }
+  const passContext = { sizeX: atlasWidth, sizeZ: atlasHeight, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap, forbiddenNodes }
   let blocked = buildBlockedTileSet({ ...passContext, placedObjects: buildFlatPlaced() }, catalog)
   let reachable = new Set<number>()
   floodFill(seeds, blocked, atlasWidth, atlasHeight, portalNodeAdjacency, reachable)
@@ -456,7 +471,8 @@ export function applyAccessibilityPass(
           if (cell.value === 1 && nudgeBlocked.has(n) && !ownNodes.has(n)) { valid = false; break }
           if (cell.value === 1 && avoidNodes.has(n)) { valid = false; break }
         }
-        if (!valid) continue
+        // Never onto rock, a cliff tile or across a level step: such a spot reads as reachable here but is not where the object belongs.
+        if (!valid || !footprintOnFlatGround(candidateCells, passContext)) continue
         const candidateAccess = NON_BLOCKING_SPAWNER_SIDS.has(sid)
           ? candidateCells.map((c) => nodeAt(c.x, c.z, atlasWidth, atlasHeight)).filter((n): n is number => n !== null)
           : candidateCells.filter((c) => c.value === 2).map((c) => nodeAt(c.x, c.z, atlasWidth, atlasHeight)).filter((n): n is number => n !== null)

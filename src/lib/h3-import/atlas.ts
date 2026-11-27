@@ -7,12 +7,8 @@
 // bit) — H3's Y axis (top-down) flips before packing into OE's flat
 // `node = z*sizeX + x` addressing.
 //
-// Deliberately NOT ported this round: `apply_stock_underground_tunnel_clearance`
-// (a Chebyshev-2 rock→walkable-Dirt widening pass for underground tunnel
-// shoulders, upstream's stand-in for H3's Burrow-adjacent clearance) — a
-// real refinement, not a correctness requirement; omitting it can leave some
-// underground tunnel edges narrower than upstream's output, never wrong.
-// Tracked as a known gap rather than silently dropped.
+// Not ported: `apply_stock_underground_tunnel_clearance` (rock -> walkable Dirt around tunnels). terrain-map.ts `applyRockSkirt` replaces it
+// without widening: rock beside floor drops to level 0, so tunnels keep their H3 width.
 
 export const OLDEN_VIEW_SECTION_SIZE = 16
 
@@ -48,8 +44,10 @@ export function buildSideBySideLayerAtlas(sourceWidth: number, sourceHeight: num
   if (layerIds.length === 0) throw new Error('At least one source layer is required')
   if (new Set(layerIds).size !== layerIds.length) throw new Error(`Source layer list contains duplicates: ${layerIds}`)
 
-  const layerWidth = alignToSector(sourceWidth, sectorSize)
-  const layerHeight = alignToSector(sourceHeight, sectorSize)
+  // Two tiles of margin on every side: the first is the level-0 ring beside floor (terrain-map.ts paintEnvelopePadding), the second the
+  // level-1 wall behind it, which also keeps neighbouring layers apart on a map whose size is already a multiple of 16.
+  const layerWidth = alignToSector(sourceWidth + 4, sectorSize)
+  const layerHeight = alignToSector(sourceHeight + 4, sectorSize)
   const sourceOffsetX = Math.floor((layerWidth - sourceWidth) / 2)
   const sourceOffsetY = Math.floor((layerHeight - sourceHeight) / 2)
   if (sourceOffsetX < 0 || sourceOffsetY < 0) throw new Error('Aligned layer envelope is smaller than the source map')

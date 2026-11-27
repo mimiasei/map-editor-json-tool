@@ -240,6 +240,9 @@ export interface ObjectActions {
 }
 
 export interface MapContext {
+  /** Tiles the placement auto-fix must never move or place an object onto (the H3 import's rock and border). Not read from the map: the
+   *  caller of runPlacementAutoFix supplies it. */
+  forbiddenNodes?: Set<number>
   /** Map name from Block 2 */
   mapName: string
   /** Title from Block 1 */

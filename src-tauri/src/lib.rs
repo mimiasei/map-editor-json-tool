@@ -6,6 +6,7 @@ use tauri::{
 };
 
 mod game_dir;
+mod h3_dir;
 mod text_writer;
 
 use text_writer::{GeneratedText, Provider, StoryDraft, TextRequest, WriterError};
@@ -234,6 +235,18 @@ async fn story_import(
 #[tauri::command]
 fn detect_game_dir() -> Option<String> {
     game_dir::detect().map(|d| d.to_string_lossy().into_owned())
+}
+
+/// The game's per-user `my_maps` folder (see game_dir.rs), or None when not found.
+#[tauri::command]
+fn detect_my_maps_dir() -> Option<String> {
+    game_dir::my_maps_dir().map(|d| d.to_string_lossy().into_owned())
+}
+
+/// The Heroes 3 install folder (see h3_dir.rs), or None when not found.
+#[tauri::command]
+fn detect_h3_dir() -> Option<String> {
+    h3_dir::detect().map(|d| d.to_string_lossy().into_owned())
 }
 
 // ─── Thumbnail extraction ────────────────────────────────────────────────────
@@ -564,6 +577,8 @@ pub fn run() {
             cancel_object_meshes,
             export_ui_skin,
             detect_game_dir,
+            detect_my_maps_dir,
+            detect_h3_dir,
             text_writer_set_key,
             text_writer_has_key,
             text_writer_clear_key,

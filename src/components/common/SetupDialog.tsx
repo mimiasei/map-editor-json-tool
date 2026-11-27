@@ -21,7 +21,8 @@ import { Loader2, FolderOpen, AlertTriangle, CheckCircle2, Database, ImageIcon }
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
 import { buildIconRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
-import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
+import { getGameDir, getH3Dir, getMyMapsDir, streamingAssetsPath } from '@/lib/game-dir'
+import { useInstallPathsStore } from '@/store/useInstallPathsStore'
 import { useTranslation, Trans } from 'react-i18next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,6 +75,17 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
   const [dontShowAgain, setDontShowAgain] = useState(false)
 
   const unlistenRef = useRef<(() => void) | undefined>(undefined)
+  const [h3Dir, setH3Dir]       = useState(() => useInstallPathsStore.getState().h3Dir ?? '')
+  const [myMapsDir, setMyMapsDir] = useState('')
+
+  // Heroes 3 and my_maps are only detected (and saved) here; nothing in the setup depends on them.
+  useEffect(() => {
+    if (!open) return
+    void getH3Dir().then((dir) => {
+      if (dir) setH3Dir((cur) => cur || dir)
+    })
+    void getMyMapsDir().then((dir) => setMyMapsDir(dir ?? ''))
+  }, [open])
 
   // Auto-detect the game dir on first open — and when found, run the whole
   // setup right away (no click needed); the manual fields stay as a fallback.
@@ -159,6 +171,8 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     setPhase('loading-zip')
     const zipOk = await loadCoreZip(coreZipPath(dir))
     if (!zipOk) return // stay in loading-zip phase; error shown inline with fallback picker
+    // Saved only once Core.zip loaded from it, so a mistyped folder never sticks.
+    useInstallPathsStore.getState().setPath('oeGameDir', dir)
 
     // Phase 2
     setPhase('extracting')
@@ -281,6 +295,48 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                   <FolderOpen className="h-4 w-4" />
                 </Button>
               </div>
+            </div>
+
+            {/* Heroes 3 folder: the H3 import picker opens in its Maps folder */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">{t('common.setupDialog.h3InstallationFolder')}</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={h3Dir}
+                  onChange={(e) => {
+                    setH3Dir(e.target.value)
+                    useInstallPathsStore.getState().setPath('h3Dir', e.target.value)
+                  }}
+                  placeholder={t('common.setupDialog.pathToH3Folder')}
+                  disabled={isRunning}
+                  className="flex-1 text-xs font-mono"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={isRunning}
+                  onClick={async () => {
+                    const { open: openDialog } = await import('@tauri-apps/plugin-dialog')
+                    const path = await openDialog({
+                      directory: true,
+                      title: t('common.setupDialog.selectH3Folder'),
+                      defaultPath: h3Dir || undefined,
+                    })
+                    if (typeof path === 'string') {
+                      setH3Dir(path)
+                      useInstallPathsStore.getState().setPath('h3Dir', path)
+                    }
+                  }}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+              </div>
+              {myMapsDir && (
+                <p className="text-xs text-muted-foreground">
+                  {t('common.setupDialog.mapsSaveFolder')}{' '}
+                  <span className="font-mono break-all">{myMapsDir}</span>
+                </p>
+              )}
             </div>
 
             {/* Core.zip path error with manual-pick fallback */}

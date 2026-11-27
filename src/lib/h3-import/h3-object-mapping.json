@@ -53,8 +53,10 @@
     {
       "h3Id": 7,
       "h3Name": "Black Market",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_7"
+      "outcome": "emit",
+      "sid": "forge",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 8,
@@ -77,10 +79,8 @@
     {
       "h3Id": 11,
       "h3Name": "Buoy",
-      "outcome": "emit",
-      "sid": "quixs_path",
-      "kind": "interactable",
-      "reason": "direct_template_sid"
+      "outcome": "omit",
+      "reason": "buoy_water_travel_omit"
     },
     {
       "h3Id": 12,
@@ -93,14 +93,16 @@
     {
       "h3Id": 13,
       "h3Name": "Cartographer",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_13"
+      "outcome": "emit",
+      "sid": "wind_rose",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 14,
       "h3Name": "Swan Pond",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_14"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 15,
@@ -111,8 +113,36 @@
     {
       "h3Id": 16,
       "h3Name": "Creature Bank",
-      "outcome": "omit",
-      "reason": "creature_bank_deferred"
+      "outcome": "dispatch",
+      "kind": "interactable",
+      "reason": "creature_bank_to_guarded_bank",
+      "subtypes": {
+              "0": {
+                "sid": "shady_den"
+              },        "1": {
+                "sid": "circle_of_life"
+              },        "2": {
+                "sid": "jousting_range"
+              },        "3": {
+                "sid": "uncanny_rite"
+              },        "4": {
+                "sid": "troglodyte_throne"
+              },        "5": {
+                "sid": "iridescent_abbey"
+              },        "6": {
+                "sid": "the_gorge"
+              }
+            },
+      "subtypeNames": {
+              "0": "Cyclops Stockpile",
+              "1": "Dwarven Treasury",
+              "2": "Griffin Conservatory",
+              "3": "Imp Cache",
+              "4": "Medusa Stores",
+              "5": "Naga Bank",
+              "6": "Dragon Fly Hive"
+            },
+      "unmatchedReason": "creature_bank_subtype_{value}_unmapped"
     },
     {
       "h3Id": 17,
@@ -170,7 +200,7 @@
         "avgmdsa0.def": "barracks_dungeon_4",
         "avgmino0.def": "barracks_dungeon_5",
         "avgmonk0.def": "barracks_human_5",
-        "avgmumy.def": "barracks_neutral_2",
+        "avgmumy.def": "barracks_neutral_19",
         "avgnaga0.def": "barracks_dungeon_6",
         "avgnoll.def": "barracks_dungeon_1",
         "avgnomd.def": "barracks_human_3",
@@ -406,8 +436,10 @@
     {
       "h3Id": 23,
       "h3Name": "Marletto Tower",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_23"
+      "outcome": "emit",
+      "sid": "armory_automaton",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 24,
@@ -432,8 +464,10 @@
     {
       "h3Id": 27,
       "h3Name": "Eye of the Magi",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_27"
+      "outcome": "emit",
+      "sid": "flattering_mirror",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 28,
@@ -468,8 +502,10 @@
     {
       "h3Id": 32,
       "h3Name": "Garden of Revelation",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_32"
+      "outcome": "emit",
+      "sid": "knowledge_garden",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 33,
@@ -486,14 +522,18 @@
     {
       "h3Id": 35,
       "h3Name": "Hill Fort",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_35"
+      "outcome": "emit",
+      "sid": "arena",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 36,
       "h3Name": "Grail",
-      "outcome": "omit",
-      "reason": "grail_deferred"
+      "outcome": "emit",
+      "sid": "mirage",
+      "kind": "interactable",
+      "reason": "user_mapping"
     },
     {
       "h3Id": 37,
@@ -514,8 +554,10 @@
     {
       "h3Id": 39,
       "h3Name": "Lean To",
-      "outcome": "omit",
-      "reason": "lean_to_deferred"
+      "outcome": "emit",
+      "sid": "peasant_cart",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 40,
@@ -526,28 +568,32 @@
     {
       "h3Id": 41,
       "h3Name": "Library of Enlightenment",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_41"
+      "outcome": "emit",
+      "sid": "college_of_wonder",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 42,
       "h3Name": "Lighthouse",
-      "outcome": "emit",
-      "sid": "watchtower",
-      "kind": "interactable",
-      "reason": "direct_template_sid"
+      "outcome": "omit",
+      "reason": "lighthouse_water_travel_omit"
     },
     {
       "h3Id": 43,
       "h3Name": "Monolith One Way Entrance",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_43"
+      "outcome": "emit",
+      "sid": "portal_1",
+      "kind": "portal",
+      "reason": "one_way_monolith"
     },
     {
       "h3Id": 44,
       "h3Name": "Monolith One Way Exit",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_44"
+      "outcome": "emit",
+      "sid": "portal_1",
+      "kind": "portal",
+      "reason": "one_way_monolith"
     },
     {
       "h3Id": 45,
@@ -593,14 +639,18 @@
     {
       "h3Id": 47,
       "h3Name": "School of Magic",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_47"
+      "outcome": "emit",
+      "sid": "orb_observatory",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 48,
       "h3Name": "Magic Spring",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_48"
+      "outcome": "emit",
+      "sid": "crystal_trail",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 49,
@@ -619,8 +669,10 @@
     {
       "h3Id": 51,
       "h3Name": "Mercenary Camp",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_51"
+      "outcome": "emit",
+      "sid": "stinging_sword",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 52,
@@ -706,8 +758,10 @@
     {
       "h3Id": 55,
       "h3Name": "Mystical Garden",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_55"
+      "outcome": "emit",
+      "sid": "gardener",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 56,
@@ -724,8 +778,10 @@
     {
       "h3Id": 58,
       "h3Name": "Redwood Observatory",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_58"
+      "outcome": "emit",
+      "sid": "watchtower",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 59,
@@ -752,8 +808,10 @@
     {
       "h3Id": 62,
       "h3Name": "Prison",
-      "outcome": "omit",
-      "reason": "prison_payload_deferred"
+      "outcome": "emit",
+      "sid": "prison",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 63,
@@ -812,8 +870,10 @@
     {
       "h3Id": 70,
       "h3Name": "Random Hero",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_70"
+      "outcome": "emit",
+      "sid": "random-hero",
+      "kind": "interactable",
+      "reason": "user_mapping"
     },
     {
       "h3Id": 71,
@@ -829,7 +889,8 @@
       "outcome": "emit",
       "sid": "random-squad",
       "kind": "random_squad",
-      "reason": "direct_template_sid"
+      "reason": "user_mapping",
+      "tier": 0
     },
     {
       "h3Id": 73,
@@ -837,7 +898,8 @@
       "outcome": "emit",
       "sid": "random-squad",
       "kind": "random_squad",
-      "reason": "direct_template_sid"
+      "reason": "user_mapping",
+      "tier": 0
     },
     {
       "h3Id": 74,
@@ -876,8 +938,10 @@
     {
       "h3Id": 78,
       "h3Name": "Refugee Camp",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_78"
+      "outcome": "emit",
+      "sid": "mercenary_guild",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 79,
@@ -925,8 +989,10 @@
     {
       "h3Id": 84,
       "h3Name": "Crypt",
-      "outcome": "omit",
-      "reason": "crypt_bank_deferred"
+      "outcome": "emit",
+      "sid": "abandoned_mansion",
+      "kind": "interactable",
+      "reason": "crypt_to_guarded_bank"
     },
     {
       "h3Id": 85,
@@ -944,7 +1010,7 @@
       "h3Id": 87,
       "h3Name": "Shipyard",
       "outcome": "omit",
-      "reason": "shipyard_requires_boat_omit"
+      "reason": "shipyard_without_island_omit"
     },
     {
       "h3Id": 88,
@@ -985,8 +1051,10 @@
     {
       "h3Id": 93,
       "h3Name": "Spell Scroll",
-      "outcome": "omit",
-      "reason": "spell_scroll_deferred"
+      "outcome": "emit",
+      "sid": "scroll_box",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 94,
@@ -1013,8 +1081,10 @@
     {
       "h3Id": 97,
       "h3Name": "Den of Thieves",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_97"
+      "outcome": "emit",
+      "sid": "insaras_eye",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 98,
@@ -1062,8 +1132,10 @@
     {
       "h3Id": 99,
       "h3Name": "Trading Post",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_99"
+      "outcome": "emit",
+      "sid": "market",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 100,
@@ -1122,14 +1194,18 @@
     {
       "h3Id": 107,
       "h3Name": "School of War",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_107"
+      "outcome": "emit",
+      "sid": "fort",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 108,
       "h3Name": "Warrior Tomb",
-      "outcome": "omit",
-      "reason": "warriors_tomb_deferred"
+      "outcome": "emit",
+      "sid": "heros_crypt",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 109,
@@ -1146,10 +1222,8 @@
     {
       "h3Id": 111,
       "h3Name": "Whirlpool",
-      "outcome": "emit",
-      "sid": "portal_magic",
-      "kind": "portal",
-      "reason": "direct_template_sid"
+      "outcome": "omit",
+      "reason": "whirlpool_water_travel_omit"
     },
     {
       "h3Id": 112,
@@ -1162,8 +1236,10 @@
     {
       "h3Id": 113,
       "h3Name": "Witch Hut",
-      "outcome": "omit",
-      "reason": "witch_hut_deferred"
+      "outcome": "emit",
+      "sid": "wise_owl",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 114,
@@ -1210,8 +1286,8 @@
     {
       "h3Id": 121,
       "h3Name": "Frozen Lake",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_121"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 122,
@@ -1246,14 +1322,266 @@
     {
       "h3Id": 127,
       "h3Name": "Lava Flow",
-      "outcome": "scenery",
-      "role": "pool_big"
+      "outcome": "landmark",
+      "exact": {
+        "avllv150.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv160.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv170.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv180.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv190.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv200.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv230.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv240.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv250.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv260.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        }
+      },
+      "default": {
+        "pieces": [
+          {
+            "size": 3,
+            "sids": [
+              "pool_lava_big_1",
+              "pool_lava_big_2"
+            ]
+          },
+          {
+            "size": 2,
+            "sids": [
+              "lava_ground_1",
+              "lava_ground_3"
+            ]
+          }
+        ]
+      }
     },
     {
       "h3Id": 128,
       "h3Name": "Lava Lake",
-      "outcome": "scenery",
-      "role": "pool"
+      "outcome": "landmark",
+      "exact": {
+        "avllv150.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv160.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv170.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv180.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv190.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv200.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv230.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv240.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv250.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv260.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        }
+      },
+      "default": {
+        "pieces": [
+          {
+            "size": 3,
+            "sids": [
+              "pool_lava_big_1",
+              "pool_lava_big_2"
+            ]
+          },
+          {
+            "size": 2,
+            "sids": [
+              "lava_ground_1",
+              "lava_ground_3"
+            ]
+          }
+        ]
+      }
     },
     {
       "h3Id": 129,
@@ -1266,8 +1594,8 @@
       "h3Name": "Log",
       "outcome": "emit",
       "sid": "grass_log_1",
-      "kind": "interactable",
-      "reason": "direct_template_sid"
+      "kind": "scenery",
+      "reason": "user_mapping"
     },
     {
       "h3Id": 131,
@@ -1379,7 +1707,8 @@
       "h3Id": 147,
       "h3Name": "Rock",
       "outcome": "scenery",
-      "role": "rock"
+      "role": "rock",
+      "onWater": "mountain"
     },
     {
       "h3Id": 148,
@@ -1420,14 +1749,14 @@
     {
       "h3Id": 154,
       "h3Name": "Wasteland Lake",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_154"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 155,
       "h3Name": "Trees",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_155"
+      "outcome": "scenery",
+      "role": "tree"
     },
     {
       "h3Id": 156,
@@ -1438,20 +1767,93 @@
     {
       "h3Id": 157,
       "h3Name": "Volcanic Vent",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_157"
+      "outcome": "landmark",
+      "exact": {},
+      "default": {
+        "pieces": [
+          {
+            "size": 3,
+            "sids": [
+              "mountain_lava_big_3",
+              "mountain_lava_big_4"
+            ]
+          },
+          {
+            "size": 2,
+            "sids": [
+              "mountain_lava_big_2",
+              "mountain_lava_9"
+            ]
+          },
+          {
+            "size": 1,
+            "sids": [
+              "mountain_lava_small_3"
+            ]
+          }
+        ]
+      }
     },
     {
       "h3Id": 158,
       "h3Name": "Volcano",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_158"
+      "outcome": "landmark",
+      "exact": {
+        "avlvol50.def": {
+          "sid": "mountain_lava_big_4",
+          "effectSid": "fx_map_smoke",
+          "smallSid": "mountain_lava_small_1"
+        },
+        "avlvol30.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "mountain_lava_big_2",
+                "mountain_lava_9"
+              ]
+            },
+            {
+              "size": 1,
+              "sids": [
+                "mountain_lava_small_3"
+              ]
+            }
+          ],
+          "effectSid": "fx_map_smoke"
+        }
+      }
     },
     {
       "h3Id": 159,
       "h3Name": "Willow Trees",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_159"
+      "outcome": "mix",
+      "entries": [
+        {
+          "sids": [
+            "tree_dirt_1"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "tree_dirt_2"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "tree_dirt_3"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "tree_dirt_4"
+          ],
+          "weight": 1
+        }
+      ]
     },
     {
       "h3Id": 160,
@@ -1462,8 +1864,9 @@
     {
       "h3Id": 161,
       "h3Name": "Reef",
-      "outcome": "scenery",
-      "role": "rock"
+      "outcome": "omit",
+      "reason": "reef_water_omit",
+      "onWater": "mountain"
     },
     {
       "h3Id": 162,
@@ -1564,8 +1967,8 @@
     {
       "h3Id": 177,
       "h3Name": "Lake",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_177"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 178,
@@ -1816,79 +2219,124 @@
         },
         "avltro00.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro01.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
+        },
+        "avltro02.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro03.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro04.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro05.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
-        },
-        "avltro06.def": {
-          "sid": "tree_dirt_1",
-          "role": "tree"
-        },
-        "avltro07.def": {
-          "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro08.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro09.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro10.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro11.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro12.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
+        },
+        "avltro06.def": {
+          "sid": "tree_dead_1",
+          "role": "tree",
+          "treeBiomes": ["tree_dead_1"]
+        },
+        "avltro07.def": {
+          "sid": "pinetree_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1"]
+        },
+        "avltro13.def": {
+          "sid": "pinetree_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1"]
+        },
+        "avltrro7.def": {
+          "sid": "pinetree_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1"]
         },
         "avltrro0.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
+        },
+        "avltrro1.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro2.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro3.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro4.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro5.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
+        },
+        "avltrro8.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
+        },
+        "avltrro9.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro6.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
-        },
-        "avltrro7.def": {
-          "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1", "tree_dead_1"],
+          "pair": true
         }
       }
     },
@@ -1991,20 +2439,33 @@
     {
       "h3Id": 216,
       "h3Name": "Random Dwelling",
-      "outcome": "omit",
-      "reason": "random_dwelling_decoder_unsupported"
+      "outcome": "emit",
+      "sid": "random-hire",
+      "kind": "dwelling",
+      "reason": "random_dwelling_is_random_hire"
     },
     {
       "h3Id": 217,
       "h3Name": "Random Dwelling Lvl",
-      "outcome": "omit",
-      "reason": "random_dwelling_lvl_unsupported"
+      "outcome": "emit",
+      "sid": "random-hire",
+      "kind": "dwelling",
+      "reason": "random_dwelling_is_random_hire"
     },
     {
       "h3Id": 218,
       "h3Name": "Random Dwelling Faction",
-      "outcome": "omit",
-      "reason": "random_dwelling_faction_unsupported"
+      "outcome": "emit",
+      "sid": "random-hire",
+      "kind": "dwelling",
+      "reason": "random_dwelling_is_random_hire",
+      "fractionBySubtype": {
+        "0": "human",
+        "1": "nature",
+        "3": "demon",
+        "4": "undead",
+        "5": "dungeon"
+      }
     },
     {
       "h3Id": 219,
@@ -2023,8 +2484,10 @@
     {
       "h3Id": 221,
       "h3Name": "Trading Post",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_221"
+      "outcome": "emit",
+      "sid": "market",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 222,
@@ -2065,8 +2528,8 @@
     {
       "h3Id": 228,
       "h3Name": "Lucid Pools",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_228"
+      "outcome": "scenery",
+      "role": "pool"
     },
     {
       "h3Id": 229,
@@ -2087,6 +2550,173 @@
       "reason": "unmapped_template_object_id_231"
     }
   ],
+  "spriteRules": [
+    {
+      "id": "cactus",
+      "name": "Cacti",
+      "pattern": "^av(lca[0-9]|cact)",
+      "entries": [
+        {
+          "prefix": "cactus_",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "jungle",
+      "name": "Jungle clusters (avlswtr)",
+      "pattern": "^avlswtr[0-5789]",
+      "entries": [
+        {
+          "prefix": "palms_",
+          "weight": 45
+        },
+        {
+          "trees": "tree_dirt_1",
+          "weight": 30
+        },
+        {
+          "prefix": "grass_tropical_",
+          "weight": 25
+        }
+      ]
+    },
+    {
+      "id": "palm",
+      "name": "Palms (plain and swamp set)",
+      "pattern": "^(avlspl0[5-9]|avlplm|avlswmp|avlswt|avlswn)",
+      "entries": [
+        {
+          "prefix": "palms_",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "lush",
+      "name": "Lush palms and swamp trees (Dirt trees)",
+      "pattern": "^(avlspl0[1-4]|tpmtree)",
+      "entries": [
+        {
+          "trees": "tree_dirt_1",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "grove",
+      "name": "Palm and lush groves (avlspl10-14)",
+      "pattern": "^avlspl1[0-4]",
+      "entries": [
+        {
+          "prefix": "palms_",
+          "weight": 50
+        },
+        {
+          "trees": "tree_dirt_1",
+          "weight": 50
+        }
+      ]
+    },
+    {
+      "id": "dune",
+      "name": "Sand dunes with a palm (avlxds)",
+      "pattern": "^avlxds",
+      "entries": [
+        {
+          "prefix": "hill_desert_small_",
+          "weight": 1
+        }
+      ],
+      "accent": [
+        {
+          "prefix": "palms_",
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "mountainFrontChance": 0.67,
+    "walkableFillChance": 0.33,
+    "lavaTreeChance": 0.06,
+    "pocketMaxTiles": 64
+  },
+  "decorationRules": [
+    {
+      "into": "Grass",
+      "from": "Dirt",
+      "chance": 0.2
+    },
+    {
+      "into": "Dirt",
+      "from": "Grass",
+      "chance": 0.2
+    },
+    {
+      "into": "Autumn",
+      "from": "Grass",
+      "chance": 0.2
+    },
+    {
+      "into": "Autumn",
+      "from": "Dirt",
+      "chance": 0.2
+    },
+    {
+      "into": "Deathland",
+      "from": "Grass",
+      "chance": 0.15
+    },
+    {
+      "into": "Deathland",
+      "from": "Dirt",
+      "chance": 0.15
+    },
+    {
+      "into": "Grass",
+      "from": "Dirt",
+      "type": "mountain",
+      "chance": 0.3
+    },
+    {
+      "into": "Dirt",
+      "from": "Grass",
+      "type": "mountain",
+      "chance": 0.3
+    },
+    {
+      "into": "Autumn",
+      "from": "Grass",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Autumn",
+      "from": "Dirt",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Grass",
+      "from": "Deathland",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Dirt",
+      "from": "Deathland",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Autumn",
+      "from": "Deathland",
+      "type": "mountain",
+      "chance": 0.2
+    }
+  ],
+  "sceneryGroupIds": [21,223,46,230,114,115,117,122,132,138,139,141,143,152,155,159,160,161,204,222,224,225,226,227,229,231,127,128,130,157,158],
   "sceneryRoleSids": {
     "mountain": {
       "grass": "mountain_green_small_1",

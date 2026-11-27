@@ -89,10 +89,10 @@ import i18n from '@/lib/i18n'
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, entranceGroups, isFootprintInBounds } from './footprint'
-import { buildBlockedTileSet, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from './passability'
 import { groupOf } from './tile-index'
 import { groupPlayerStartsByZone } from './zone-ownership'
-import { findNearestValidPosition } from './relocate'
+import { findNearestValidPosition, wouldCutPassage } from './relocate'
 import { findBlockedEntrancePlacements } from './entrance-validation'
 
 export interface UnreachablePlacement {
@@ -386,8 +386,17 @@ function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog 
   const allSeeds = starts.flatMap((s) => s.accessNodes)
   if (allSeeds.length === 0 || targets.length === 0) return { sizeX, sizeZ, catalogById, unreachable: [] }
 
-  const blocked = buildBlockedTileSet(context, catalog)
-  const nodeOwners = buildNodeOwners(placedObjects, catalogById, sizeX)
+  // A pickup (artifact, resource, chest, camp fire) disappears when a hero takes it, so it never closes a path for good: it is left out of the
+  // walls here. It still counts as a target that must be reachable. Counting it as a wall made ~170 objects on Back For Revenge "unreachable"
+  // behind chests in corridors, and sent the fixer moving pickups around that were never in the way.
+  const walls = placedObjects.filter((o) => {
+    if (o.type !== 0) return true
+    if (NON_BLOCKING_SPAWNER_SIDS.has(o.sid)) return false
+    const group = groupOf(o, catalog)
+    return group !== 'artifacts' && group !== 'resources'
+  })
+  const blocked = buildBlockedTileSet({ ...context, placedObjects: walls }, catalog)
+  const nodeOwners = buildNodeOwners(walls, catalogById, sizeX)
 
   const zones = context.customAreasPainting
   const zoneOf = (node: number): number => zones[node] ?? 0
@@ -541,7 +550,7 @@ function findFreeTileForBlocker(
   )
   const isValid = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, obj.rotation)
-    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
     const anchorNode = z * sizeX + x
     if (occupiedAnchors.has(anchorNode) && anchorNode !== obj.node) return false
     for (const cell of cells) {
@@ -549,7 +558,9 @@ function findFreeTileForBlocker(
       if ((waterMap[n] ?? 0) !== 0) return false
       if (cell.value === 1 && (blocked.has(n) || avoid.has(n))) return false
     }
-    return true
+    // Not into a corridor: moving a pickup out of one gateway into the next only moves the wall.
+    const solid = cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x)
+    return !wouldCutPassage(solid, (n) => blocked.has(n) || avoid.has(n), sizeX, sizeZ)
   }
   const maxRadius = Math.max(sizeX, sizeZ)
   for (let radius = 1; radius <= maxRadius; radius++) {
@@ -769,7 +780,7 @@ export function computeReachabilityGuarantee(context: ReachabilityContext, catal
       const reach = reachFor(node)
       if (mover.type !== 0) return reach.has(node) && !blocked.has(node)
       const cells = computeFootprintTiles(template, x, z, mover.rotation)
-      if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+      if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
       const solid: number[] = []
       for (const c of cells) {
         const n = c.z * sizeX + c.x

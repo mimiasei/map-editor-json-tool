@@ -13,15 +13,17 @@
 import { isTauri, openH3mFile, readBinaryFile } from '@/lib/native-fs'
 import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes } from '@/lib/map-write'
 import { loadParsedMapFile } from '@/lib/map-file'
-import { useMapDocumentStore, containerToRawBlocks } from '@/store/useMapDocumentStore'
+import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { gunzipH3mIfNeeded } from './parse-h3m'
-import { convertH3mToMap, type H3ImportReport } from './convert-h3m-to-map'
-import { validateMapStructure } from '@/lib/map-grid/validate-map'
-import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
-import { extractMapContext } from '@/lib/map-extract'
-import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
+import type { H3ImportReport } from './convert-h3m-to-map'
+import { reportH3Stage, stageLabel, type H3ImportProgress, type H3ImportStage } from './import-progress'
+import { runH3ImportJob, type H3ImportJobInput, type H3ImportJobResult } from './h3-import-job'
+import type { H3WorkerMessage } from './h3-import.worker'
+import type { UnreachablePlacement, IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
+import i18n from '@/lib/i18n'
+import { useH3MappingStore } from '@/store/useH3MappingStore'
 
 export interface ImportH3mResult {
   /** Display name for the freshly-imported map, e.g. "Crimson and Clover.map" */
@@ -52,6 +54,37 @@ export interface ImportH3mResult {
   isolatedPlayerStarts: IsolatedPlayerStart[]
 }
 
+/** Runs the job in a module Web Worker; falls back to running it in-line (a frozen UI, but a working import) if the worker cannot start. */
+function runH3ImportJobOffThread(input: H3ImportJobInput, onProgress?: H3ImportProgress): Promise<H3ImportJobResult> {
+  return new Promise((resolve, reject) => {
+    let worker: Worker
+    try {
+      worker = new Worker(new URL('./h3-import.worker.ts', import.meta.url), { type: 'module' })
+    } catch {
+      runH3ImportJob(input, onProgress).then(resolve, reject)
+      return
+    }
+    let started = false
+    worker.onmessage = (event: MessageEvent<H3WorkerMessage>) => {
+      started = true
+      const message = event.data
+      if (message.type === 'progress') {
+        onProgress?.(stageLabel(message.stage as H3ImportStage), message.pct, message.stage as H3ImportStage)
+        return
+      }
+      worker.terminate()
+      if (message.type === 'done') resolve(message.result)
+      else reject(new Error(message.message))
+    }
+    worker.onerror = (event) => {
+      worker.terminate()
+      if (started) reject(new Error(event.message || 'The H3 import worker failed.'))
+      else runH3ImportJob(input, onProgress).then(resolve, reject)
+    }
+    worker.postMessage(input)
+  })
+}
+
 /**
  * Prompts for a .h3m file, converts it, and loads the result as the current
  * in-memory map document. Returns null if the user cancels the file picker
@@ -59,7 +92,7 @@ export interface ImportH3mResult {
  * unsupported/malformed H3M, or no Game Data catalog loaded yet) — the
  * caller (ImportH3mDialog) is expected to catch and display this.
  */
-export async function importH3mFile(): Promise<ImportH3mResult | null> {
+export async function importH3mFile(onProgress?: H3ImportProgress): Promise<ImportH3mResult | null> {
   if (!isTauri()) return null
 
   const catalog = useCatalogStore.getState().catalog
@@ -79,23 +112,28 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report, localizationTokens, dialogFlows } = convertH3mToMap(data, catalog, templateContainer)
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog)
-
-  const finalContext = extractMapContext(containerToRawBlocks(fixed))
-  const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
-  const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, catalog)
-
-  const decoder = new TextDecoder('utf-8')
-  const b1 = JSON.parse(decoder.decode(fixed.chunks[0])) as Record<string, unknown>
-  const b2 = JSON.parse(decoder.decode(fixed.chunks[1])) as Record<string, unknown>
-  const { errors: validationErrors } = validateMapStructure(b1, b2)
+  // The conversion, the placement auto-fix and the validations run in a Web Worker (h3-import-job.ts), so the dialog's text, bar and spinner stay live.
+  const {
+    container: fixed, report, localizationTokens, customMapObjects, dialogFlows, validationErrors, autoFixWarnings, unreachablePlacements, isolatedPlayerStarts,
+  } = await runH3ImportJobOffThread({ data, catalog, template: templateContainer, mapName: file.name.replace(/.h3m$/i, ''), language: i18n.language, mappingEdits: useH3MappingStore.getState().edits }, onProgress)
+  // The map loads with the converter's custom map objects (the subterranean gates) in the catalog: clones of real ones under a new sid the game's
+  // catalog does not list, same footprint as the source, the clone's own name.
+  const importCatalog = customMapObjects.length === 0 ? catalog : {
+    ...catalog,
+    mapObjects: [...catalog.mapObjects, ...customMapObjects.flatMap((custom) => {
+      const source = catalog.mapObjects.find((o) => o.id === custom.sourceObjectId)
+      return source ? [{ ...source, id: custom.id, name: 'Subterranean Gate', raw: custom.template }] : []
+    })],
+  }
+  const stage = (key: H3ImportStage, pct: number) => reportH3Stage(onProgress, key, pct)
 
   const gzipped = await gzipBytes(buildMapContainer(fixed))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
   const stem = file.name.replace(/\.h3m$/i, '')
   const name = `${stem}.map`
+  await stage('loading', 96)
+  if (importCatalog !== catalog) useCatalogStore.setState({ catalog: importCatalog })
   await loadParsedMapFile(name, null, buffer)
   // A converted map has nowhere on disk yet — same reasoning as
   // create-map.ts's own createNewMap(): the dirty-dot/exit-guard must
@@ -109,11 +147,14 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   if (Object.keys(localizationTokens).length > 0) {
     useScenarioStore.getState().setLocalizationBatch(localizationTokens)
   }
+  // The custom map objects ship in the publish zip (zip-export.ts); loading the map above reset the scenario, so they are registered after it.
+  for (const custom of customMapObjects) useScenarioStore.getState().setCustomMapObject(custom.id, custom)
   // Same for dialog flows built from H3 global timed events (the "day 1"
   // map-opening message, etc.) — no bulk setter exists for these, so loop.
   for (const flow of Object.values(dialogFlows)) {
     useScenarioStore.getState().setDialogFlow(flow.id, flow)
   }
 
+  await stage('done', 100)
   return { name, report, validationErrors, autoFixWarnings, unreachablePlacements, isolatedPlayerStarts }
 }

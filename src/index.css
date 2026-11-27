@@ -199,6 +199,13 @@
 .dark .json-null { color: #f87171; }  /* red-400    */
 
 /* Map Grid search matches: the outline pulses between white and cyan. */
+/* A bar that keeps filling while the main thread is busy: a transform animation runs on the compositor, so it moves during a long synchronous stretch
+   that no JS timer or state update could animate. Started per stage (see Progress `creepTo`). */
+@keyframes progress-creep {
+  from { transform: translateX(calc(var(--creep-from) * 1% - 100%)); }
+  to { transform: translateX(calc(var(--creep-to) * 1% - 100%)); }
+}
+
 @keyframes search-match-pulse {
   0%, 100% { border-color: #ffffff; }
   50% { border-color: #22d3ee; }

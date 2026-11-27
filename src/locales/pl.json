@@ -306,7 +306,6 @@
       "sceneryPlaced": "Umieszczona sceneria",
       "otherObjectsPlaced": "Umieszczone pozostałe obiekty",
       "riverTiles": "Pola rzeki",
-      "victoryQuest": "Zadanie zwycięstwa",
       "portalsLinked": "Połączone portale",
       "accessibilityFixes": "Poprawki dostępności",
       "removedNudged": "usunięto: {{accessibilityDecorRemoved}}, przesunięto: {{accessibilityTargetsNudged}}",
@@ -371,9 +370,23 @@
       "sourceObjects_few": "Obiekty źródłowe ({{count}} rodzaje znalezione na mapie H3)",
       "sourceObjects_many": "Obiekty źródłowe ({{count}} rodzajów znalezionych na mapie H3)",
       "sourceObjects_other": "Obiekty źródłowe ({{count}} rodzaju znalezionego na mapie H3)",
-      "yesDefeatAllEnemies": "Tak (pokonaj wszystkich wrogów)",
-      "noneUnsupportedWinCondition": "Brak (nieobsługiwany warunek zwycięstwa)",
-      "credit": "<credit>Podziękowania dla <author>Levi Ritchie</author> za jego pracę nad <repo>homm3-olden-stock-translator</repo>, który był świetnym punktem odniesienia i inspiracją dla tego narzędzia.</credit><thanks>Dziękuję! 🙏</thanks>"
+      "credit": "<credit>Podziękowania dla <author>Levi Ritchie</author> za jego pracę nad <repo>homm3-olden-stock-translator</repo>, który był świetnym punktem odniesienia i inspiracją dla tego narzędzia.</credit><thanks>Dziękuję! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Odczytywanie mapy…",
+        "terrain": "Konwersja terenu i tuneli…",
+        "objects": "Rozmieszczanie obiektów…",
+        "decoration": "Rozmieszczanie drzew, gór i dekoracji…",
+        "players": "Przygotowywanie graczy i zadań…",
+        "reachability": "Sprawdzanie, czy wszystko jest osiągalne…",
+        "fixing": "Poprawianie rozmieszczenia…",
+        "validating": "Sprawdzanie wyniku…",
+        "loading": "Otwieranie mapy…",
+        "done": "Gotowe"
+      },
+      "shipyardPortals": "Portale stoczni",
+      "shipyardPortalsValue": "Stocznie: {{shipyards}} · Portale: {{portals}} · Wyspy: {{islands}}",
+      "winConditionsRow": "Warunki zwycięstwa",
+      "droppedVictory": "Nieprzekonwertowany warunek zwycięstwa"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "Obiekty interaktywne RMG",
@@ -570,6 +583,10 @@
       "welcomeToTheScenarioEditor": "Witaj w edytorze scenariuszy",
       "gameInstallationFolder": "Folder instalacji gry",
       "pathToGameInstallationFolder": "Ścieżka do folderu instalacji gry",
+      "h3InstallationFolder": "Folder Heroes 3 (do importu map)",
+      "pathToH3Folder": "Ścieżka do folderu Heroes 3",
+      "selectH3Folder": "Wybierz folder Heroes 3",
+      "mapsSaveFolder": "Nowe mapy są zapisywane w",
       "couldNotLoadCoreZip": "Nie udało się wczytać Core.zip z oczekiwanej ścieżki. Możesz wskazać go ręcznie.",
       "browseForCoreZipManually": "Wskaż Core.zip ręcznie",
       "loadingGameData": "Wczytywanie danych gry…",
@@ -1088,6 +1105,8 @@
       "Neutral": "Neutralna"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Banki stworzeń",
+      "heroBoosts": "Bonusy bohatera",
       "dwellings": "Siedziby",
       "portals": "Portale",
       "resourceStorage": "Magazyny zasobów",
@@ -1257,7 +1276,16 @@
         "enableCustomAI": {
           "label": "Własne SI"
         }
-      }
+      },
+      "tabs": {
+        "general": "Ogólne",
+        "rules": "Zasady",
+        "win": "Warunki zwycięstwa"
+      },
+      "winDescription": "Na jakie sposoby można wygrać tę mapę. Można włączyć kilka naraz; co najmniej jeden pozostaje włączony.",
+      "noNeutralCity": "Na tej mapie nie ma neutralnego miasta do utrzymania",
+      "cityToHold": "Miasto do utrzymania",
+      "cityOption": "{{sid}} w ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Generuj na tej mapie",
@@ -1372,7 +1400,6 @@
       "unlink": "Rozłącz",
       "active": "Aktywny",
       "anInactivePortalOnlyReceives": "Nieaktywny portal tylko przyjmuje — wejście na niego nigdzie nie przeniesie (to „portal wyjściowy”).",
-      "highlightConnectedPortalOnGrid": "Podświetl połączony portal na siatce",
       "rewards": "Nagrody",
       "zone": "Strefa",
       "zoneSize": "Rozmiar",
@@ -1416,7 +1443,9 @@
       },
       "addUnit": "Dodaj jednostkę",
       "addSquad": "Dodaj oddział",
-      "itemCountStacked": "{{count}} elementów · początek listy jest rysowany na wierzchu"
+      "itemCountStacked": "{{count}} elementów · początek listy jest rysowany na wierzchu",
+      "jumpToConnected": "Przejdź do połączonego",
+      "highlightPortal": "Podświetl"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Ustawienia siatki mapy",
@@ -1726,6 +1755,7 @@
       "tier": "Poziom {{tier}}",
       "searchBySidOrName": "Szukaj po sid lub nazwie",
       "searchSidName": "Szukaj sid / nazwy",
+      "clearSearch": "Wyczyść wyszukiwanie",
       "noObjectsMatchTheseFilters": "Żadne obiekty nie pasują do tych filtrów.",
       "noCreaturesMatchTheseFilters": "Żadne stworzenia nie pasują do tych filtrów.",
       "objectValue": "Wartość: {{value}}",
@@ -2461,6 +2491,7 @@
         "renderObjectImages": "Renderuj obrazy obiektów…",
         "importScript": "Importuj skrypt (.json)…",
         "importH3Map": "Importuj mapę H3…",
+        "h3ObjectMapping": "Mapowanie obiektów H3",
         "clearMap": "Wyczyść mapę"
       },
       "resaved": "Zapisano ponownie {{bytes}} bajtów.\nKopia zapasowa: {{path}}",
@@ -2814,6 +2845,7 @@
       "filterItems": "Filtruj elementy",
       "category": "Kategoria",
       "biome": "Biom",
+      "size": "Rozmiar",
       "noBiome": "Brak"
     },
     "squadPickerDialog": {
@@ -2838,8 +2870,11 @@
       "kind": "Rodzaj"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Tylko banki stworzeń",
+        "heroBoosts": "Tylko bonusy bohatera"
+      },
       "filterMapObjects": "Filtruj obiekty mapy",
-      "interactableOnly": "Tylko interaktywne",
       "categories": "Kategorie",
       "showingApproximatelyOfObjects": "Wyświetlono około {{filteredCount}} z {{totalCount}} obiektów"
     },
@@ -3635,5 +3670,169 @@
     "removeRecent": "Usuń z listy",
     "byAuthor": "Autor: {{author}}",
     "whatsNew": "Co nowego"
+  },
+  "h3Mapping": {
+    "title": "Mapowanie obiektów H3",
+    "subtitle": "W co zamienia się każdy obiekt Heroes 3 w Olden Era podczas importu mapy. Zmiany obowiązują od następnego importu.",
+    "search": "Szukaj id, nazwy lub celu",
+    "filter": {
+      "all": "Wszystkie obiekty",
+      "omit": "Nie konwertowane",
+      "emit": "Jeden obiekt OE",
+      "scenery": "Role dekoracji",
+      "rule": "Reguły (wg sprite / podtypu)",
+      "mix": "Losowe mieszanki"
+    },
+    "modifiedOnly": "Tylko zmienione",
+    "counts": "{{shown}} z {{total}} obiektów · {{modified}} zmienionych",
+    "import": "Importuj",
+    "export": "Eksportuj",
+    "resetAll": "Zresetuj wszystko",
+    "resetAllConfirm": "Przywrócić {{count}} zmienionych wierszy do dołączonego mapowania?",
+    "close": "Zamknij",
+    "column": {
+      "id": "ID",
+      "object": "Obiekt H3",
+      "type": "Typ",
+      "convertsTo": "Zamienia się w"
+    },
+    "type": {
+      "omit": "Nie konwertowany",
+      "emit": "Obiekt OE",
+      "scenery": "Dekoracja",
+      "rule": "Reguła",
+      "mix": "Mieszanka"
+    },
+    "typeLong": {
+      "omit": "Nie konwertowany (pomijany)",
+      "emit": "Zamienia się w jeden obiekt OE",
+      "scenery": "Dekoracja (wg roli)",
+      "mix": "Zamienia się w losową mieszankę obiektów OE"
+    },
+    "edited": "Zmieniony",
+    "wikiDescription": "Opis z wiki",
+    "save": "Zapisz",
+    "saveHint": "Zapisuje zmiany w pliku w folderze danych aplikacji, poza aplikacją. Importy czytają go stamtąd.",
+    "saved": "Zapisano w {{path}}",
+    "saveFailed": "Nie udało się zapisać: {{error}}",
+    "noSavedFile": "Nie ma jeszcze zapisanego pliku.",
+    "loadSaved": "Wczytaj zapisane",
+    "loadSavedHint": "Zastąp bieżące zmiany zapisanym plikiem",
+    "loadedSaved": "Wczytano {{count}} zmian z zapisanego pliku.",
+    "roles": {
+      "intro": "Obiekt OE, którego każda rola dekoracji używa w każdym biomie OE. Wiersze zamieniające obiekt H3 na rolę dekoracji czytają stąd, a zróżnicowane drzewa i pasma górskie rozszerzają sid do całego zestawu biomu.",
+      "role": "Rola",
+      "resetCell": "Wróć do {{sid}}"
+    },
+    "mixing": {
+      "intro": "Który biom może używać drzew lub gór innego biomu i jaką część losowań stanowią. Dzięki temu las lub pasmo nie jest jednym powtarzanym modelem.",
+      "reset": "Zresetuj reguły",
+      "uses": "używa",
+      "anyType": "dowolny typ",
+      "of": "z",
+      "delete": "Usuń regułę",
+      "add": "Dodaj regułę"
+    },
+    "group": {
+      "all": "Wszystkie grupy",
+      "interactive": "Obiekty interaktywne",
+      "scenery": "Dekoracje",
+      "unknown": "Id bez nazwy"
+    },
+    "default": "Dołączone mapowanie",
+    "noMatches": "Brak pasujących obiektów.",
+    "selectRow": "Wybierz obiekt H3 w tabeli, aby zmienić, w co się zamienia.",
+    "appliesToNext": "Obowiązuje od następnego importu H3. Wyeksportuj tabelę, aby zachować kopię lub zastąpić h3-object-mapping.json.",
+    "exported": "Tabela wyeksportowana.",
+    "imported": "Zaimportowano zmienione wiersze: {{count}}.",
+    "importFailed": "Nie można zaimportować: {{error}}",
+    "inspector": {
+      "type": "Zamienia się w",
+      "oeObject": "Obiekt OE",
+      "pickObject": "Wybierz obiekt OE…",
+      "squadFraction": "Frakcja oddziału",
+      "squadAny": "Dowolna frakcja",
+      "squadTier": "Poziom oddziału",
+      "squadTierAuto": "Auto (z wartości)",
+      "squadHint": "Frakcja i poziom losowego oddziału strzegącego obiektu. Auto pozwala grze wybrać poziom pasujący do wartości; stały poziom z wartością, do której nie pasuje żaden oddział tego poziomu, może zostawić pustego strażnika. Sprawdź w grze.",
+      "hireTierAuto": "Poziom z obiektu H3, inaczej nieustawiony",
+      "hireHint": "Frakcja i poziom losowej rekrutacji. „Dowolna frakcja” to frakcja typowa dla biomu. Poziom: Random Dwelling Lvl zachowuje poziom z H3; w przeciwnym razie nieustawiony, nieprzetestowane w grze.",
+      "townFaction": "Frakcja siedlisk: {{town}}",
+      "townHint": "Frakcja losowej rekrutacji, która zastępuje losowe siedlisko tego miasta H3. Miasta bez odpowiednika w OE najlepiej zostawić na „Dowolna frakcja” (frakcja typowa dla biomu).",
+      "perTownHint": "Frakcję ustawia się dla każdego miasta H3 w wierszach pod tym.",
+      "pickToSave": "Wybierz obiekt OE, aby zapisać ten wiersz.",
+      "unknownSid": "Tego id nie ma w wczytanych danych gry.",
+      "kind": "Rodzaj obiektu",
+      "kindHint": "Określa, jak importer traktuje obiekt (miasta, portale i siedliska mają szczególną obsługę; „interactable” pasuje do większości budynków).",
+      "role": "Rola dekoracji",
+      "roleSids": "Rola używa tych obiektów OE, zależnie od terenu:",
+      "reason": "Powód pokazywany w raporcie importu",
+      "reasonHint": "Obiekt jest pomijany w skonwertowanej mapie.",
+      "ruleHint": "Wynik zależy od sprite, podtypu lub terenu ({{summary}}). Edytuj go jako JSON.",
+      "editJson": "Edytuj JSON",
+      "resetRow": "Zresetuj wiersz",
+      "mixEntries": "Mieszanka: każde zablokowane pole losuje jeden z tych wpisów"
+    },
+    "jsonInvalid": "Nieprawidłowy wiersz: {{error}}",
+    "jsonApply": "Zastosuj",
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Obiekty",
+      "rules": "Reguły sprite",
+      "roles": "Role dekoracji",
+      "mixing": "Mieszanie biomów",
+      "settings": "Ustawienia"
+    },
+    "mix": {
+      "poolObjects": "Obiekt OE",
+      "poolPrefix": "Wszystkie obiekty zaczynające się od",
+      "poolTrees": "Drzewo z biomu",
+      "weight": "Waga: jak często wybierany jest ten wpis",
+      "removeEntry": "Usuń ten wpis",
+      "addEntry": "Dodaj wpis",
+      "hint": "Każde zablokowane pole obiektu H3 losuje wpis według wagi, potem obiekt z niego, unikając modelu obok. Dla śladów pokrywanych większymi elementami (jeziora, góry) użyj Edytuj JSON z wierszem landmark.",
+      "sidList": "Id obiektów OE oddzielone przecinkami",
+      "prefixHint": "Każdy obiekt OE 1x1, którego id zaczyna się tak, na przykład palms_"
+    },
+    "rules": {
+      "intro": "Reguły są sprawdzane przed wierszami obiektów, w tej kolejności. Pierwsza, której wzorzec pasuje do nazwy pliku sprite H3, zamienia obiekt w losową mieszankę.",
+      "trySprite": "Wypróbuj nazwę sprite, np. avlswtr4.def",
+      "matches": "Pasuje: {{name}}",
+      "noMatch": "Żadna reguła nie pasuje",
+      "add": "Dodaj regułę",
+      "reset": "Zresetuj reguły",
+      "name": "Nazwa",
+      "pattern": "Wzorzec (wyrażenie regularne)",
+      "mix": "Mieszanka na zablokowane pole",
+      "invalid": "Nieprawidłowy wzorzec",
+      "newName": "Nowa reguła",
+      "moveUp": "W górę",
+      "moveDown": "W dół",
+      "delete": "Usuń regułę",
+      "patternHint": "Bez rozróżniania wielkości liter, dopasowywany do nazwy pliku sprite, na przykład ^avlspl0[5-9]",
+      "accent": "Jedno losowe pole losuje z innej mieszanki",
+      "accentHint": "Dla obiektów będących jednym elementem na podstawie: wydma to wzgórza z jedną palmą na wierzchu.",
+      "select": "Wybierz regułę, aby ją edytować."
+    },
+    "settings": {
+      "intro": "Liczby używane przez konwerter przy rozmieszczaniu dekoracji i wykrywaniu zamkniętych kieszeni startowych. Obowiązują od następnego importu.",
+      "reset": "Wróć do dołączonej wartości",
+      "mountainFrontChance": {
+        "label": "Dekoracja przed górami",
+        "help": "Szansa, że każde blokujące pole na dolnej krawędzi góry dostanie przed sobą drzewo, krzew lub roślinność (0 do 1)."
+      },
+      "walkableFillChance": {
+        "label": "Przechodnia roślinność",
+        "help": "Szansa, że każde wolne pole dostanie losową przechodnią dekorację swojego biomu (0 do 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Drzewa lawy",
+        "help": "Część drzew na gruncie lawy, które zostają drzewami lawy OE; reszta to martwe drzewa Krainy Śmierci (0 do 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Rozmiar zamkniętej kieszeni",
+        "help": "Obszar startowy większy niż tyle pól to otwarty teren, a nie zamknięta kieszeń zachowująca ściany."
+      }
+    }
   }
 }

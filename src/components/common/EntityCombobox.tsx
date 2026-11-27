@@ -16,7 +16,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { ChevronsUpDown, LayoutGrid, SlidersHorizontal, X } from '@/components/ui/icons'
-import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
+import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter, passesGroupFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import SquadPickerDialog from '@/components/catalog/SquadPickerDialog'
@@ -172,8 +172,8 @@ function applyMapObjectFilter(
   const allowed = new Set(
     rawObjects
       .filter((o) => {
-        if (filter.interactableOnly && !o.isInteractable) return false
         if (!filter.categories[o.category]) return false
+        if (!passesGroupFilter(o.id, filter.onlyGroups)) return false
         return true
       })
       .map((o) => o.id),
@@ -280,7 +280,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
 
   const isFiltered =
     category === 'mapObject' &&
-    (filter.interactableOnly ||
+    (Object.values(filter.onlyGroups).some(Boolean) ||
       !Object.values(filter.categories).every(Boolean))
 
   const filterBadge =

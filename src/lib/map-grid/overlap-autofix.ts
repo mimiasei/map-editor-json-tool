@@ -7,10 +7,10 @@ import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, isFootprintInBounds } from './footprint'
 import { entranceApproachNodes } from './entrance-validation'
-import { buildBlockedTileSet } from './passability'
+import { buildBlockedTileSet, footprintOnFlatGround, objectBlockedCells } from './passability'
 import { groupOf } from './tile-index'
 import { findOverlappingPlacements, type OverlappingPlacement } from './overlap-validation'
-import { findNearestValidPosition, floodFillReachable } from './relocate'
+import { findNearestValidPosition, floodFillReachable, wouldCutPassage } from './relocate'
 
 export interface OverlapAutoFixRelocation {
   entityType: 0 | 1 | 2
@@ -27,6 +27,8 @@ export interface OverlapAutoFixResult {
 }
 
 const PLAYER_START_SIDS = new Set(['city-spawner', 'hero-spawner'])
+/** A placement moved further than this is not a fix; looking further only costs time when nothing near fits. */
+const MAX_RELOCATION_RADIUS = 48
 
 type OverlapAutoFixContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
 
@@ -44,6 +46,12 @@ function pickMover(a: PlacedObject, b: PlacedObject, catalog: GameCatalog | null
   const groupB = groupOf(b, catalog)
   if (groupA === 'decorations' && groupB !== 'decorations') return b
   if (groupB === 'decorations' && groupA !== 'decorations') return a
+  // A pickup always yields: it is the small thing a larger object can bury, and a buried pickup is unreachable (the id tiebreak below would
+  // otherwise move the interactable, or leave the pickup under it when the pickup has the lower id).
+  const aIsPickup = groupA === 'artifacts' || groupA === 'resources'
+  const bIsPickup = groupB === 'artifacts' || groupB === 'resources'
+  if (aIsPickup && !bIsPickup) return a
+  if (bIsPickup && !aIsPickup) return b
   const aIsStart = a.type === 0 && PLAYER_START_SIDS.has(a.sid)
   const bIsStart = b.type === 0 && PLAYER_START_SIDS.has(b.sid)
   if (aIsStart && !bIsStart) return b
@@ -59,6 +67,21 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
   const catalogById = new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o]))
   const placedByKey = new Map((placedObjects as PlacedObject[]).map((o) => [o.key, o]))
   const blocked = buildBlockedTileSet(context, catalog)
+  // What blocks without any object (elevation wall, water), and how many objects block each tile. "Blocked with the mover left out" is then a lookup
+  // per tile: rebuilding the whole blocked set for every overlap took minutes on a large imported map.
+  const terrainBlocked = buildBlockedTileSet({ ...context, placedObjects: [] }, catalog)
+  const blockers = new Map<number, number>()
+  const cellsOf = new Map<string, number[]>()
+  for (const obj of placedObjects as PlacedObject[]) {
+    if (obj.type !== 0) continue
+    const nodes: number[] = []
+    for (const cell of objectBlockedCells(obj.sid, obj.x, obj.z, catalog, false, obj.rotation)) {
+      if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
+      nodes.push(cell.z * sizeX + cell.x)
+    }
+    cellsOf.set(obj.key, nodes)
+    for (const node of nodes) blockers.set(node, (blockers.get(node) ?? 0) + 1)
+  }
   // Cells claimed by a relocation decided earlier in this same pass — merged
   // into each mover's own freshly-recomputed blocked set below, so two
   // movers never pick the same destination.
@@ -100,11 +123,10 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
     // occupies, since both share at least one cell by definition. Mirrors
     // reachability-validation.ts's findFreeTileForBlocker for the identical
     // reason.
-    const moverBlocked = buildBlockedTileSet(
-      { ...context, placedObjects: (placedObjects as PlacedObject[]).filter((o) => o.key !== mover.key) },
-      catalog,
-    )
-    for (const node of claimedDestinations) moverBlocked.add(node)
+    const moverCells = new Set(cellsOf.get(mover.key) ?? [])
+    const moverBlocked = {
+      has: (node: number) => terrainBlocked.has(node) || claimedDestinations.has(node) || (blockers.get(node) ?? 0) - (moverCells.has(node) ? 1 : 0) > 0,
+    }
     // A moved object never lands on another object's entrance or approach ring (it would trade an overlap for a blocked entrance).
     const approach = mover.type === 0 ? entranceApproachNodes(context, catalog, mover.key) : new Set<number>()
 
@@ -116,17 +138,19 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
         return !reachable || reachable.has(node)
       }
       const cells = computeFootprintTiles(template, x, z, mover.rotation)
-      if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+      if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
       let anyReachable = !reachable
       for (const cell of cells) {
         const n = cell.z * sizeX + cell.x
         if (cell.value === 1 && (moverBlocked.has(n) || approach.has(n))) return false
         if (reachable?.has(n)) anyReachable = true
       }
-      return anyReachable
+      if (!anyReachable) return false
+      // Not into a corridor (relocate.ts wouldCutPassage).
+      return !wouldCutPassage(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x), (n) => moverBlocked.has(n), sizeX, sizeZ)
     }
 
-    const found = findNearestValidPosition(mover.x, mover.z, sizeX, sizeZ, isValidCandidate)
+    const found = findNearestValidPosition(mover.x, mover.z, sizeX, sizeZ, isValidCandidate, MAX_RELOCATION_RADIUS)
     if (!found) {
       unresolved.push(overlap)
       continue

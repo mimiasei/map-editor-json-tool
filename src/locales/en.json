@@ -314,7 +314,6 @@
       "sceneryPlaced": "Scenery placed",
       "otherObjectsPlaced": "Other objects placed",
       "riverTiles": "River tiles",
-      "victoryQuest": "Victory quest",
       "portalsLinked": "Portals linked",
       "accessibilityFixes": "Accessibility fixes",
       "removedNudged": "{{accessibilityDecorRemoved}} removed, {{accessibilityTargetsNudged}} nudged",
@@ -353,9 +352,23 @@
       "reasonCount_other": "{{count}} reasons",
       "sourceObjects_one": "Source objects ({{count}} kind found in the H3 map)",
       "sourceObjects_other": "Source objects ({{count}} kinds found in the H3 map)",
-      "yesDefeatAllEnemies": "Yes (defeat all enemies)",
-      "noneUnsupportedWinCondition": "None (unsupported win condition)",
-      "credit": "<credit>Credit goes to <author>Levi Ritchie</author> for his work on the <repo>homm3-olden-stock-translator</repo>, which has been a great reference and inspiration for this tool.</credit><thanks>Thank you! 🙏</thanks>"
+      "credit": "<credit>Credit goes to <author>Levi Ritchie</author> for his work on the <repo>homm3-olden-stock-translator</repo>, which has been a great reference and inspiration for this tool.</credit><thanks>Thank you! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Reading the map…",
+        "terrain": "Converting terrain and tunnels…",
+        "objects": "Placing objects…",
+        "decoration": "Placing trees, mountains and decoration…",
+        "players": "Setting up players and quests…",
+        "reachability": "Checking that everything can be reached…",
+        "fixing": "Fixing placements…",
+        "validating": "Validating the result…",
+        "loading": "Opening the map…",
+        "done": "Done"
+      },
+      "shipyardPortals": "Shipyard portals",
+      "shipyardPortalsValue": "Shipyards: {{shipyards}} · Portals: {{portals}} · Islands: {{islands}}",
+      "winConditionsRow": "Win conditions",
+      "droppedVictory": "Victory condition not converted"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG interactables",
@@ -540,6 +553,10 @@
       "welcomeToTheScenarioEditor": "Welcome to the Scenario Editor",
       "gameInstallationFolder": "Game installation folder",
       "pathToGameInstallationFolder": "Path to game installation folder",
+      "h3InstallationFolder": "Heroes 3 folder (for importing maps)",
+      "pathToH3Folder": "Path to Heroes 3 folder",
+      "selectH3Folder": "Select the Heroes 3 folder",
+      "mapsSaveFolder": "New maps are saved to",
       "couldNotLoadCoreZip": "Could not load Core.zip from the expected path. You can browse to it manually.",
       "browseForCoreZipManually": "Browse for Core.zip manually",
       "loadingGameData": "Loading game data…",
@@ -1038,6 +1055,8 @@
       "Neutral": "Neutral"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Creature banks",
+      "heroBoosts": "Hero boosts",
       "dwellings": "Dwellings",
       "portals": "Portals",
       "resourceStorage": "Resource Storage",
@@ -1207,7 +1226,16 @@
         "enableCustomAI": {
           "label": "Custom AI"
         }
-      }
+      },
+      "tabs": {
+        "general": "General",
+        "rules": "Rules",
+        "win": "Win conditions"
+      },
+      "winDescription": "Which ways this map can be won. Several can be on at once; at least one stays on.",
+      "noNeutralCity": "This map has no neutral city to hold",
+      "cityToHold": "City to hold",
+      "cityOption": "{{sid}} at ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Generate on this map",
@@ -1322,7 +1350,6 @@
       "unlink": "Unlink",
       "active": "Active",
       "anInactivePortalOnlyReceives": "An inactive portal only receives — stepping on it won't send you anywhere (an \"exit portal\").",
-      "highlightConnectedPortalOnGrid": "Highlight connected portal on grid",
       "rewards": "Rewards",
       "zone": "Zone",
       "zoneSize": "Size",
@@ -1362,7 +1389,9 @@
       },
       "addUnit": "Add unit",
       "addSquad": "Add squad",
-      "itemCountStacked": "{{count}} items · top of the list is drawn in front"
+      "itemCountStacked": "{{count}} items · top of the list is drawn in front",
+      "jumpToConnected": "Jump to connected",
+      "highlightPortal": "Highlight"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Map Grid settings",
@@ -1668,6 +1697,7 @@
       "tier": "Tier {{tier}}",
       "searchBySidOrName": "Search by sid or name",
       "searchSidName": "Search sid / name",
+      "clearSearch": "Clear search",
       "noObjectsMatchTheseFilters": "No objects match these filters.",
       "noCreaturesMatchTheseFilters": "No creatures match these filters.",
       "objectValue": "Value: {{value}}",
@@ -2393,6 +2423,7 @@
         "renderObjectImages": "Render Object Images…",
         "importScript": "Import script (.json)…",
         "importH3Map": "Import H3 Map…",
+        "h3ObjectMapping": "H3 Object Mapping",
         "clearMap": "Clear map"
       },
       "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
@@ -2731,6 +2762,7 @@
       "filterItems": "Filter items",
       "category": "Category",
       "biome": "Biome",
+      "size": "Size",
       "noBiome": "None"
     },
     "squadPickerDialog": {
@@ -2755,8 +2787,11 @@
       "kind": "Kind"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Creature banks only",
+        "heroBoosts": "Hero boosts only"
+      },
       "filterMapObjects": "Filter Map Objects",
-      "interactableOnly": "Interactable only",
       "categories": "Categories",
       "showingApproximatelyOfObjects": "Showing approximately {{filteredCount}} of {{totalCount}} objects"
     },
@@ -3544,5 +3579,169 @@
     "removeRecent": "Remove from list",
     "byAuthor": "By {{author}}",
     "whatsNew": "What's new"
+  },
+  "h3Mapping": {
+    "title": "H3 Object Mapping",
+    "subtitle": "What each Heroes 3 object becomes in Olden Era when you import a map. Your edits apply to the next import.",
+    "search": "Search id, name or target",
+    "filter": {
+      "all": "All objects",
+      "omit": "Not converted",
+      "emit": "One OE object",
+      "scenery": "Scenery roles",
+      "rule": "Rules (by sprite / subtype)",
+      "mix": "Random mixes"
+    },
+    "modifiedOnly": "Edited only",
+    "counts": "{{shown}} of {{total}} objects · {{modified}} edited",
+    "import": "Import",
+    "export": "Export",
+    "resetAll": "Reset all",
+    "resetAllConfirm": "Reset the {{count}} edited rows to the shipped mapping?",
+    "close": "Close",
+    "column": {
+      "id": "ID",
+      "object": "H3 object",
+      "type": "Type",
+      "convertsTo": "Converts to"
+    },
+    "type": {
+      "omit": "Not converted",
+      "emit": "OE object",
+      "scenery": "Scenery",
+      "rule": "Rule",
+      "mix": "Mix"
+    },
+    "typeLong": {
+      "omit": "Not converted (left out)",
+      "emit": "Converts to one OE object",
+      "scenery": "Scenery decoration (by role)",
+      "mix": "Converts to a random mix of OE objects"
+    },
+    "edited": "Edited",
+    "wikiDescription": "Wiki description",
+    "save": "Save",
+    "saveHint": "Save the edits to a file in the app data folder, outside the app. Imports read it from there.",
+    "saved": "Saved to {{path}}",
+    "saveFailed": "Could not save: {{error}}",
+    "noSavedFile": "There is no saved file yet.",
+    "loadSaved": "Load saved",
+    "loadSavedHint": "Replace the current edits with the saved file",
+    "loadedSaved": "Loaded {{count}} edits from the saved file.",
+    "roles": {
+      "intro": "The OE object each scenery role uses on each OE biome. Rows that convert an H3 object to a scenery role read from here, and the varied trees and mountain ranges widen the sid to the biome's whole set.",
+      "role": "Role",
+      "resetCell": "Back to {{sid}}"
+    },
+    "mixing": {
+      "intro": "Which biome may use the trees or mountains of another biome, and the share of its picks they make. This is what keeps a forest or range from being one repeated model.",
+      "reset": "Reset rules",
+      "uses": "uses",
+      "anyType": "any type",
+      "of": "of",
+      "delete": "Delete rule",
+      "add": "Add rule"
+    },
+    "group": {
+      "all": "All groups",
+      "interactive": "Interactive objects",
+      "scenery": "Scenery",
+      "unknown": "Unnamed ids"
+    },
+    "default": "Shipped mapping",
+    "noMatches": "No objects match.",
+    "selectRow": "Select an H3 object in the table to change what it converts to.",
+    "appliesToNext": "Applies to the next H3 import. Export the table to keep a copy or to replace h3-object-mapping.json.",
+    "exported": "Mapping table exported.",
+    "imported": "Imported {{count}} edited rows.",
+    "importFailed": "Could not import: {{error}}",
+    "inspector": {
+      "type": "Converts to",
+      "oeObject": "OE object",
+      "pickObject": "Pick an OE object…",
+      "squadFraction": "Squad faction",
+      "squadAny": "Any faction",
+      "squadTier": "Squad tier",
+      "squadTierAuto": "Auto (from value)",
+      "squadHint": "The faction and tier of the random squad that guards this object. Auto lets the game pick a tier that fits the squad value; a fixed tier with a value that no squad of that tier fits can leave the guard empty, so test it in the game.",
+      "hireTierAuto": "Level from the H3 object, else not set",
+      "hireHint": "The faction and tier of the random hire. \"Any faction\" is the faction native to the biome it stands on. Tier: a Random Dwelling Lvl keeps its H3 level; otherwise not set, which is untested in the game.",
+      "townFaction": "Faction of {{town}} dwellings",
+      "townHint": "The faction of the random hire that replaces the random dwelling of this H3 town. Towns without an OE counterpart are best left on \"Any faction\" (the faction native to the biome).",
+      "perTownHint": "The faction is set per H3 town, in the rows listed under this one.",
+      "pickToSave": "Pick an OE object to save this row.",
+      "unknownSid": "This id is not in the loaded game data.",
+      "kind": "Object kind",
+      "kindHint": "Decides how the importer treats the object (towns, portals and dwellings get special handling; interactable is right for most buildings).",
+      "role": "Scenery role",
+      "roleSids": "The role uses these OE objects, by terrain:",
+      "reason": "Reason shown in the import report",
+      "reasonHint": "The object is left out of the converted map.",
+      "ruleHint": "The result depends on the sprite, subtype or terrain ({{summary}}). Edit it as JSON.",
+      "editJson": "Edit JSON",
+      "resetRow": "Reset row",
+      "mixEntries": "Mix: every blocked tile draws one of these"
+    },
+    "jsonInvalid": "Not a valid row: {{error}}",
+    "jsonApply": "Apply",
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Objects",
+      "rules": "Sprite rules",
+      "roles": "Scenery roles",
+      "mixing": "Biome mixing",
+      "settings": "Settings"
+    },
+    "mix": {
+      "poolObjects": "OE object",
+      "poolPrefix": "All objects starting with",
+      "poolTrees": "A tree of the biome",
+      "weight": "Weight: how often this entry is picked",
+      "removeEntry": "Remove this entry",
+      "addEntry": "Add an entry",
+      "hint": "Each blocked tile of the H3 object draws an entry by weight, then an object from it, avoiding the model right beside it. For footprints covered by bigger pieces (pools, mountains) use Edit JSON with a landmark row.",
+      "sidList": "OE object ids, separated by commas",
+      "prefixHint": "Every 1x1 OE object whose id starts with this, for example palms_"
+    },
+    "rules": {
+      "intro": "Rules are checked before the object rows, in this order. The first whose pattern matches the H3 sprite file name turns the object into a random mix.",
+      "trySprite": "Try a sprite name, e.g. avlswtr4.def",
+      "matches": "Matches: {{name}}",
+      "noMatch": "No rule matches",
+      "add": "Add rule",
+      "reset": "Reset rules",
+      "name": "Name",
+      "pattern": "Pattern (regular expression)",
+      "mix": "Mix per blocked tile",
+      "invalid": "Invalid pattern",
+      "newName": "New rule",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "delete": "Delete rule",
+      "patternHint": "Case-insensitive, matched against the sprite file name, for example ^avlspl0[5-9]",
+      "accent": "One random tile draws from a different mix",
+      "accentHint": "For objects that are one feature on a base: a sand dune is hills with one palm on top.",
+      "select": "Select a rule to edit it."
+    },
+    "settings": {
+      "intro": "Numbers the converter uses when it places decoration and finds sealed start pockets. They apply to the next import.",
+      "reset": "Back to the shipped value",
+      "mountainFrontChance": {
+        "label": "Mountain front decoration",
+        "help": "Chance that each blocking tile on the bottom edge of a mountain gets a tree, bush or ground cover in front of it (0 to 1)."
+      },
+      "walkableFillChance": {
+        "label": "Walkable ground cover",
+        "help": "Chance that every open tile gets a random walkable decoration of its biome (0 to 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Lava trees",
+        "help": "Share of trees on lava ground that stay OE lava trees; the rest are Deathland dead trees (0 to 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Sealed pocket size",
+        "help": "A start region bigger than this many tiles is open land, not a walled-in pocket that keeps its walls."
+      }
+    }
   }
 }

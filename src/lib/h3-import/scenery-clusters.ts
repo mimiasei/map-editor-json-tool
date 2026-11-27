@@ -28,6 +28,8 @@
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { blockMaskOffsets } from './h3m-object-registry'
 import { pickVariant } from './scenery-variants'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import type { H3DecorationPicker } from './h3-decoration-pools'
 
 /** One of the 4 base OE rotation quadrants (0/90/180/270°) — deliberately
  *  never a mirrored (+10) variant, a distinct visual flip this feature
@@ -155,6 +157,71 @@ export function packMountainCluster(
     }
     claimed.add(key)
     placements.push({ sid: pickVariant(smallSid, families, rng), anchor: cell })
+  }
+  return placements
+}
+
+/** Like `pickTreeClusterPlacements`, but each cell draws from the whole tree set of its own biome (h3-decoration-pools.ts), and a cell
+ *  never repeats the tree before it. One tree per H3 blocked cell, so what blocks is exactly what H3 blocked. */
+export function pickTreeClusterVaried(
+  cells: FootprintCell[], biomeAt: (cell: FootprintCell) => BiomeId, picker: H3DecorationPicker, rng: () => number,
+): ClusterPlacement[] {
+  let last: string | undefined
+  return cells.map((cell) => {
+    const sid = picker.pickTree(biomeAt(cell), rng, last)
+    last = sid
+    return { sid, anchor: cell }
+  })
+}
+
+/** Like `packMountainCluster`, but fills the footprint with every square size the biome has (3x3, 2x2, 1x1), biggest first with a random
+ *  skip so no two ranges are packed alike, and picks the model from the whole mountain set of the cell's biome. A 3x3 stands on its centre
+ *  cell, a 2x2 on its corner cell (the catalog pivots, see h3-decoration-pools.ts). */
+export function packMountainClusterVaried(
+  cells: FootprintCell[], biomeAt: (cell: FootprintCell) => BiomeId, picker: H3DecorationPicker, rng: () => number,
+): ClusterPlacement[] {
+  const occupied = new Set(cells.map((c) => `${c.x},${c.z}`))
+  const claimed = new Set<string>()
+  const placements: ClusterPlacement[] = []
+  // The model standing on every tile placed so far: a new piece avoids the models beside it (left and above, where scanning has been), so a
+  // band of small mountains is not one model repeated.
+  const modelAt = new Map<string, string>()
+  const neighbourModels = (cell: FootprintCell, size: number): string[] => {
+    const found: string[] = []
+    // Only the edge tiles to the left and above: with two models in a biome that is still possible everywhere (a checkerboard), and every
+    // pair of neighbours is covered by whichever of them comes second.
+    for (let i = 0; i < size; i++) {
+      for (const key of [`${cell.x - 1},${cell.z + i}`, `${cell.x + i},${cell.z - 1}`]) {
+        const sid = modelAt.get(key)
+        if (sid && !found.includes(sid)) found.push(sid)
+      }
+    }
+    return found
+  }
+  const remember = (cell: FootprintCell, size: number, sid: string) => {
+    for (let dz = 0; dz < size; dz++) for (let dx = 0; dx < size; dx++) modelAt.set(`${cell.x + dx},${cell.z + dz}`, sid)
+  }
+  for (const cell of [...cells].sort((a, b) => (a.z - b.z) || (a.x - b.x))) {
+    if (claimed.has(`${cell.x},${cell.z}`)) continue
+    const biome = biomeAt(cell)
+    let placed = false
+    for (const size of picker.mountainSizes(biome)) {
+      if (size === 1 || rng() >= (size === 3 ? 0.55 : 0.6)) continue
+      const block: string[] = []
+      for (let dz = 0; dz < size; dz++) for (let dx = 0; dx < size; dx++) block.push(`${cell.x + dx},${cell.z + dz}`)
+      if (!block.every((k) => occupied.has(k) && !claimed.has(k))) continue
+      for (const k of block) claimed.add(k)
+      const big = picker.pickMountain(biome, size, rng, neighbourModels(cell, size))
+      remember(cell, size, big)
+      placements.push({ sid: big, anchor: size === 3 ? { x: cell.x + 1, z: cell.z + 1 } : cell })
+      placed = true
+      break
+    }
+    if (placed) continue
+    claimed.add(`${cell.x},${cell.z}`)
+    const small = picker.pickMountain(biome, 1, rng, neighbourModels(cell, 1))
+    remember(cell, 1, small)
+    placements.push({ sid: small, anchor: cell })
   }
   return placements
 }

@@ -1,30 +1,27 @@
-// ─── Portal pair linking (propPortals) ───────────────────────────────────────
-// A converted map's portal objects (two-way monolith sids `portal_1`/`_2`/`_3`,
-// subterranean gate `portal_5`, whirlpool `portal_magic`) previously got NO
-// `objectsProperties.propPortals` row at all — confirmed via `map-write.ts`/
-// `map-parser.ts`/`map-extract.ts`: OE's own portal linkage is an explicit
-// one-to-one `{id, targetIdx, isActive}` row (`map-write.ts`'s
-// `PropPortalEntry`/`upsertPropPortals`), never a color/sid-based
-// auto-connect the way H3's own runtime treats same-color monoliths — so a
-// placed-but-unlinked portal is very likely inert in-game. This is a real,
-// load-bearing prerequisite for underground reachability (see
-// `accessibility-pass.ts`), not scope creep: a monolith/gate that doesn't
-// actually teleport makes anything only reachable through it truly
-// unreachable, independent of any physical-blocking fix.
+// ─── Portal linking (propPortals) ────────────────────────────────────────────
+// OE's portal linkage is an explicit one-to-one `{id, targetIdx, isActive}` row (`map-write.ts`'s `PropPortalEntry`), never a colour- or
+// sid-based auto-connect, so a placed-but-unlinked portal is very likely inert in-game: the importer writes every link itself.
 //
-// Exactly 2 same-sid instances get a true reciprocal two-way link (matches
-// this format's own `linkKind: 'two-way'` definition — `map-extract.ts`).
-// More than 2 (a real H3 case — several same-color monoliths sharing one
-// network) get a directed ring instead, since `targetIdx` can only ever name
-// ONE partner: every instance still reaches every other by walking the ring,
-// just not always via a single reciprocal hop. This is a documented
-// approximation of H3's true any-to-any network, not independently confirmed
-// against real game behavior for groups larger than 2 — flagged in the
-// import report (`portalsLinked`/`portalsUnpaired`), not silently assumed.
+// H3 connects monoliths by colour, which is the object subtype (checked on a real map, all_portals.h3m: every colour of a two-way, one-way
+// entrance and one-way exit has its own subtype, and an entrance and its exit share one). Several colours share one OE look, so the network is
+// taken from the H3 data, not from the OE sid:
+//   two-way monoliths (object 45), same subtype  -> a pair gets a two-way link; more than two get a ring (every one still reaches every other
+//                                                    by walking it, not always in one hop: OE has one target per portal)
+//   one-way entrance (43) -> exit (44), same subtype -> each entrance points at an exit (round robin); the exit has no target of its own
+//   subterranean gates (103)                          -> each surface gate is paired with an underground gate of the same kind first, then the
+//                                                        nearest unused one
+// Whether OE lets a portal without a target still be arrived at is an assumption, not tested in the game.
 
-export interface ObjectPlacementGroup {
-  ids: number[]
-  nodes: number[]
+export interface H3PortalPlacement {
+  id: number
+  layer: number
+  x: number
+  y: number
+  kind: 'two-way' | 'entrance' | 'exit' | 'gate'
+  /** The H3 colour (monolith subtype); gates share one network. */
+  network: number
+  /** The H3 sprite, so gates of one kind (cave gate, HotA exit) pair with each other before any other. */
+  look?: string
 }
 
 export interface PortalLinkResult {
@@ -34,46 +31,61 @@ export interface PortalLinkResult {
    *  directly by the accessibility pass's reachability graph so the model
    *  matches exactly what's emitted, not a re-derived assumption. */
   adjacencyByObjectId: Map<number, number>
-  /** Portal instances placed alone (no same-sid sibling to link to) — left
-   *  unlinked, likely inert in-game; a real, disclosed gap. */
+  /** Portals with nothing to link to (a lone monolith, an entrance without exit, a gate without a partner): left unlinked. */
   unpairedCount: number
-  /** Portal instances that did receive a link (either side of a two-way pair,
-   *  or any ring hop). */
+  /** Portals that did receive a link. */
   linkedCount: number
 }
 
-/** `objectGroups` is the importer's own sid -> placement-group map (see
- *  `convert-h3m-to-map.ts`) — only sids starting with `portal` (this
- *  project's own existing convention for portal kind detection, see
- *  `h3-object-mapping.ts`'s `resolveObjectSid`) are considered. */
-export function linkPortalPairs(objectGroups: Map<string, ObjectPlacementGroup>): PortalLinkResult {
+export function linkH3Portals(portals: H3PortalPlacement[]): PortalLinkResult {
   const propPortals: PortalLinkResult['propPortals'] = []
   const adjacencyByObjectId = new Map<number, number>()
   let unpairedCount = 0
   let linkedCount = 0
+  const link = (from: number, to: number) => {
+    propPortals.push({ type: 0, id: from, targetIdx: to, isActive: true })
+    adjacencyByObjectId.set(from, to)
+    linkedCount += 1
+  }
 
-  for (const [sid, group] of objectGroups) {
-    if (!sid.startsWith('portal')) continue
-    const ids = group.ids
-    if (ids.length < 2) {
-      unpairedCount += ids.length
-      continue
-    }
-    if (ids.length === 2) {
-      const [a, b] = ids
-      propPortals.push({ type: 0, id: a, targetIdx: b, isActive: true })
-      propPortals.push({ type: 0, id: b, targetIdx: a, isActive: true })
-      adjacencyByObjectId.set(a, b)
-      adjacencyByObjectId.set(b, a)
-      linkedCount += 2
-      continue
-    }
-    for (let i = 0; i < ids.length; i++) {
-      const from = ids[i]
-      const to = ids[(i + 1) % ids.length]
-      propPortals.push({ type: 0, id: from, targetIdx: to, isActive: true })
-      adjacencyByObjectId.set(from, to)
-      linkedCount += 1
+  const byNetwork = new Map<string, H3PortalPlacement[]>()
+  for (const portal of portals) {
+    // An entrance and its exit are one network; a two-way colour and a one-way colour with the same subtype are not.
+    const key = `${portal.kind === 'entrance' || portal.kind === 'exit' ? 'one-way' : portal.kind}:${portal.network}`
+    byNetwork.set(key, [...(byNetwork.get(key) ?? []), portal])
+  }
+
+  for (const group of byNetwork.values()) {
+    const kind = group[0].kind
+    if (kind === 'two-way') {
+      if (group.length < 2) { unpairedCount += group.length; continue }
+      group.forEach((portal, i) => link(portal.id, group[(i + 1) % group.length].id))
+      // Exactly two: the ring is already the reciprocal link.
+    } else if (kind === 'gate') {
+      const surface = group.filter((g) => g.layer === 0)
+      const under = group.filter((g) => g.layer !== 0)
+      const pairs: [number, number][] = []
+      for (const s of surface) for (const u of under) pairs.push([s.id, u.id])
+      const dist = (a: number, b: number) => {
+        const pa = group.find((g) => g.id === a) as H3PortalPlacement
+        const pb = group.find((g) => g.id === b) as H3PortalPlacement
+        return Math.hypot(pa.x - pb.x, pa.y - pb.y)
+      }
+      const lookOf = (id: number) => (group.find((g) => g.id === id) as H3PortalPlacement).look
+      const mismatch = (l: [number, number]) => (lookOf(l[0]) === lookOf(l[1]) ? 0 : 1)
+      pairs.sort((l, r) => mismatch(l) - mismatch(r) || dist(l[0], l[1]) - dist(r[0], r[1]))
+      const used = new Set<number>()
+      for (const [a, b] of pairs) {
+        if (used.has(a) || used.has(b)) continue
+        used.add(a); used.add(b)
+        link(a, b); link(b, a)
+      }
+      unpairedCount += group.length - used.size
+    } else {
+      const entrances = group.filter((g) => g.kind === 'entrance')
+      const exits = group.filter((g) => g.kind === 'exit')
+      if (exits.length === 0) { unpairedCount += entrances.length; continue }
+      entrances.forEach((entrance, i) => link(entrance.id, exits[i % exits.length].id))
     }
   }
 

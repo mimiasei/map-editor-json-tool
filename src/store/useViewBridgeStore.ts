@@ -95,6 +95,11 @@ interface ViewBridgeStore {
   openRmg: () => void
   closeRmg: () => void
 
+  /** The H3 Object Mapping tool (More menu): a full-pane view that replaces whichever view is showing, and any tab switch closes it. */
+  h3MappingOpen: boolean
+  openH3Mapping: () => void
+  closeH3Mapping: () => void
+
   /** One-shot: Generate Random Map's own warnings, reported once generation
    *  finishes, consumed by Toolbar's existing import-feedback dialog (the
    *  same "Import Issues" surface New Map/Import H3/Open already use) —
@@ -140,26 +145,30 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
       set({ noMapNoticeOpen: true })
       return
     }
-    set({ mapGridOpen: false, rmgOpen: false })
+    set({ mapGridOpen: false, rmgOpen: false, h3MappingOpen: false })
   },
-  confirmGoToQuests: () => set({ noMapNoticeOpen: false, mapGridOpen: false, rmgOpen: false }),
+  confirmGoToQuests: () => set({ noMapNoticeOpen: false, mapGridOpen: false, rmgOpen: false, h3MappingOpen: false }),
   dismissNoMapNotice: () => set({ noMapNoticeOpen: false }),
   // Map Grid and Generate Random Map are mutually exclusive full-pane views
   // (AppShell's own mapGridOpen ? MapGrid : rmgOpen ? RMG : normal editor
   // ternary checks mapGridOpen first) — opening one must close the other,
   // otherwise triggering Generate Random Map while Map Grid is open leaves
   // mapGridOpen still true and the ternary never reaches the RMG branch.
-  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: false }),
+  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false, h3MappingOpen: false, startScreenOpen: false }),
   closeMapGrid: () => set({ mapGridOpen: false }),
   publishNudge: false,
   setPublishNudge: (on) => set({ publishNudge: on }),
   startScreenOpen: false,
-  showStartScreen: () => set({ mapGridOpen: true, rmgOpen: false, startScreenOpen: true }),
+  showStartScreen: () => set({ mapGridOpen: true, rmgOpen: false, h3MappingOpen: false, startScreenOpen: true }),
 
   rmgOpen: false,
-  openRmg: () => set({ rmgOpen: true, mapGridOpen: false }),
+  openRmg: () => set({ rmgOpen: true, mapGridOpen: false, h3MappingOpen: false }),
   // Random Map is opened from the Map tab, so closing it goes back there (the start screen when no map is loaded).
   closeRmg: () => set({ rmgOpen: false, mapGridOpen: true }),
+
+  h3MappingOpen: false,
+  openH3Mapping: () => set({ h3MappingOpen: true }),
+  closeH3Mapping: () => set({ h3MappingOpen: false }),
 
   pendingGeneratedWarnings: null,
   reportGeneratedWarnings: (warnings) => set({ pendingGeneratedWarnings: warnings }),

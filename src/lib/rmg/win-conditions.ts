@@ -4,6 +4,8 @@
 // baseline at a time). The in-game RMG calls 3 "Capital Hold" and 4
 // "Guardian's Demise" (the editor says LostStartCity / LostStartHero).
 
+import type { WinConditionEntryOptions } from '@/lib/map-write'
+
 export const WIN_CONDITION_IDS = ['classic', 'capital-hold', 'city-hold', 'guardians-demise', 'final-battle', 'tournament'] as const
 export type WinConditionId = (typeof WIN_CONDITION_IDS)[number]
 
@@ -97,4 +99,34 @@ export function parseWinConditionList(raw: string | undefined): WinConditionId[]
     return hit
   })
   return [...new Set(ids)]
+}
+
+/** What \`applyWinConditionEntries\` (map-write.ts) needs to make a map hold exactly the conditions in \`active\`. */
+export function winEntryOptions(active: WinConditionId[], options: WinOptions): WinConditionEntryOptions {
+  return {
+    classic: active.includes('classic'),
+    extras: active.filter((id) => id !== 'classic').map((id) => ({ type: winConditionById(id).type, fields: winEntryFields(id, options) })),
+    // Every condition this module knows is edited together: the Hero Lighting and Desertion entries (types 2 and 1) are not touched.
+    removeTypes: WIN_CONDITIONS.filter((c) => c.id !== 'classic').map((c) => c.type),
+  }
+}
+
+/** The editor's view of a map's \`mapWinConditions\` entries: which conditions are on and their settings (defaults for anything absent). */
+export function readWinState(entries: Record<string, unknown>[]): { active: WinConditionId[]; options: WinOptions } {
+  const entry = (id: WinConditionId) => entries.find((e) => e.typeWinCondition === winConditionById(id).type)
+  const num = (value: unknown, fallback: number) => (typeof value === 'number' && Number.isFinite(value) ? value : fallback)
+  const options: WinOptions = { ...DEFAULT_WIN_OPTIONS }
+  const capital = entry('capital-hold')
+  if (capital) options.capitalHoldDays = num(capital.countDayLostStartCity, options.capitalHoldDays)
+  const city = entry('city-hold')
+  if (city) options.cityHoldDays = num(city.countDayCityHold, options.cityHoldDays)
+  const battle = entry('final-battle')
+  if (battle) options.finalBattleDay = num(battle.daysDelayStart, options.finalBattleDay)
+  const tournament = entry('tournament')
+  if (tournament) {
+    const days = Array.isArray(tournament.daysAnounceTournament) ? (tournament.daysAnounceTournament as unknown[]).filter((d): d is number => typeof d === 'number') : []
+    if (days.length > 0) options.tournamentFights = days.map((announceDay) => ({ announceDay }))
+    options.tournamentSaveArmy = tournament.isSaveArmyTournament !== false
+  }
+  return { active: WIN_CONDITION_IDS.filter((id) => entry(id) !== undefined), options }
 }

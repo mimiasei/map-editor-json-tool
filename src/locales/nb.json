@@ -306,7 +306,6 @@
       "sceneryPlaced": "Landskap plassert",
       "otherObjectsPlaced": "Andre objekter plassert",
       "riverTiles": "Elverute",
-      "victoryQuest": "Seiersoppdrag",
       "portalsLinked": "Portaler koblet",
       "accessibilityFixes": "Tilgjengelighetsrettinger",
       "removedNudged": "{{accessibilityDecorRemoved}} fjernet, {{accessibilityTargetsNudged}} flyttet litt",
@@ -345,9 +344,23 @@
       "reasonCount_other": "{{count}} årsaker",
       "sourceObjects_one": "Kildeobjekter ({{count}} type funnet i H3-kartet)",
       "sourceObjects_other": "Kildeobjekter ({{count}} typer funnet i H3-kartet)",
-      "yesDefeatAllEnemies": "Ja (beseir alle fiender)",
-      "noneUnsupportedWinCondition": "Ingen (ikke-støttet seiersbetingelse)",
-      "credit": "<credit>Takk til <author>Levi Ritchie</author> for arbeidet hans på <repo>homm3-olden-stock-translator</repo>, som har vært en flott referanse og inspirasjon for dette verktøyet.</credit><thanks>Tusen takk! 🙏</thanks>"
+      "credit": "<credit>Takk til <author>Levi Ritchie</author> for arbeidet hans på <repo>homm3-olden-stock-translator</repo>, som har vært en flott referanse og inspirasjon for dette verktøyet.</credit><thanks>Tusen takk! 🙏</thanks>",
+      "progress": {
+        "readingMap": "Leser kartet…",
+        "terrain": "Konverterer terreng og tunneler…",
+        "objects": "Plasserer objekter…",
+        "decoration": "Plasserer trær, fjell og dekor…",
+        "players": "Setter opp spillere og oppdrag…",
+        "reachability": "Sjekker at alt kan nås…",
+        "fixing": "Retter opp plasseringer…",
+        "validating": "Validerer resultatet…",
+        "loading": "Åpner kartet…",
+        "done": "Ferdig"
+      },
+      "shipyardPortals": "Verftsportaler",
+      "shipyardPortalsValue": "Verft: {{shipyards}} · Portaler: {{portals}} · Øyer: {{islands}}",
+      "winConditionsRow": "Seierskrav",
+      "droppedVictory": "Seierskrav som ikke ble konvertert"
     },
     "interactableSelectorDialog": {
       "rMGInteractables": "RMG-interaktive objekter",
@@ -532,6 +545,10 @@
       "welcomeToTheScenarioEditor": "Velkommen til scenarioredigereren",
       "gameInstallationFolder": "Spillets installasjonsmappe",
       "pathToGameInstallationFolder": "Sti til spillets installasjonsmappe",
+      "h3InstallationFolder": "Heroes 3-mappe (for import av kart)",
+      "pathToH3Folder": "Sti til Heroes 3-mappen",
+      "selectH3Folder": "Velg Heroes 3-mappen",
+      "mapsSaveFolder": "Nye kart lagres i",
       "couldNotLoadCoreZip": "Kunne ikke laste Core.zip fra den forventede stien. Du kan bla til den manuelt.",
       "browseForCoreZipManually": "Bla etter Core.zip manuelt",
       "loadingGameData": "Laster spilldata…",
@@ -1030,6 +1047,8 @@
       "Neutral": "Nøytral"
     },
     "interactableSubcategories": {
+      "creatureBanks": "Skapningsbanker",
+      "heroBoosts": "Heltebonuser",
       "dwellings": "Boliger",
       "portals": "Portaler",
       "resourceStorage": "Ressurslager",
@@ -1199,7 +1218,16 @@
         "enableCustomAI": {
           "label": "Egendefinert AI"
         }
-      }
+      },
+      "tabs": {
+        "general": "Generelt",
+        "rules": "Regler",
+        "win": "Seierskrav"
+      },
+      "winDescription": "Hvordan dette kartet kan vinnes. Flere kan være på samtidig; minst ett er alltid på.",
+      "noNeutralCity": "Dette kartet har ingen nøytral by å holde",
+      "cityToHold": "By å holde",
+      "cityOption": "{{sid}} ved ({{x}}, {{z}})"
     },
     "generateOnMap": {
       "title": "Generer på dette kartet",
@@ -1314,7 +1342,6 @@
       "unlink": "Koble fra",
       "active": "Aktiv",
       "anInactivePortalOnlyReceives": "En inaktiv portal bare mottar — å gå inn på den sender deg ikke noe sted (en «utgangsportal»).",
-      "highlightConnectedPortalOnGrid": "Fremhev tilkoblet portal i rutenettet",
       "rewards": "Belønninger",
       "zone": "Sone",
       "zoneSize": "Størrelse",
@@ -1354,7 +1381,9 @@
       },
       "addUnit": "Legg til enhet",
       "addSquad": "Legg til tropp",
-      "itemCountStacked": "{{count}} elementer · øverst i listen tegnes foran"
+      "itemCountStacked": "{{count}} elementer · øverst i listen tegnes foran",
+      "jumpToConnected": "Gå til tilkoblet",
+      "highlightPortal": "Fremhev"
     },
     "mapGridSettingsDialog": {
       "mapGridSettings": "Kartrutenett-innstillinger",
@@ -1660,6 +1689,7 @@
       "tier": "Nivå {{tier}}",
       "searchBySidOrName": "Søk etter sid eller navn",
       "searchSidName": "Søk sid / navn",
+      "clearSearch": "Tøm søket",
       "noObjectsMatchTheseFilters": "Ingen objekter samsvarer med disse filtrene.",
       "noCreaturesMatchTheseFilters": "Ingen skapninger samsvarer med disse filtrene.",
       "objectValue": "Verdi: {{value}}",
@@ -2385,6 +2415,7 @@
         "renderObjectImages": "Tegn objektbilder…",
         "importScript": "Importer skript (.json)…",
         "importH3Map": "Importer H3-kart…",
+        "h3ObjectMapping": "H3-objektkobling",
         "clearMap": "Tøm kartet"
       },
       "resaved": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}}",
@@ -2723,6 +2754,7 @@
       "filterItems": "Filtrer gjenstander",
       "category": "Kategori",
       "biome": "Biom",
+      "size": "Størrelse",
       "noBiome": "Ingen"
     },
     "squadPickerDialog": {
@@ -2747,8 +2779,11 @@
       "kind": "Slag"
     },
     "mapObjectFilter": {
+      "only": {
+        "creatureBanks": "Bare skapningsbanker",
+        "heroBoosts": "Bare heltebonuser"
+      },
       "filterMapObjects": "Filtrer kartobjekter",
-      "interactableOnly": "Bare interaktive",
       "categories": "Kategorier",
       "showingApproximatelyOfObjects": "Viser omtrent {{filteredCount}} av {{totalCount}} objekter"
     },
@@ -3536,5 +3571,169 @@
     "removeRecent": "Fjern fra listen",
     "byAuthor": "Av {{author}}",
     "whatsNew": "Hva er nytt"
+  },
+  "h3Mapping": {
+    "title": "H3-objektkobling",
+    "subtitle": "Hva hvert Heroes 3-objekt blir i Olden Era når du importerer et kart. Endringene gjelder neste import.",
+    "search": "Søk etter id, navn eller mål",
+    "filter": {
+      "all": "Alle objekter",
+      "omit": "Ikke konvertert",
+      "emit": "Ett OE-objekt",
+      "scenery": "Dekorroller",
+      "rule": "Regler (etter sprite / undertype)",
+      "mix": "Tilfeldige blandinger"
+    },
+    "modifiedOnly": "Bare endrede",
+    "counts": "{{shown}} av {{total}} objekter · {{modified}} endret",
+    "import": "Importer",
+    "export": "Eksporter",
+    "resetAll": "Tilbakestill alt",
+    "resetAllConfirm": "Tilbakestille de {{count}} endrede radene til den medfølgende koblingen?",
+    "close": "Lukk",
+    "column": {
+      "id": "ID",
+      "object": "H3-objekt",
+      "type": "Type",
+      "convertsTo": "Blir til"
+    },
+    "type": {
+      "omit": "Ikke konvertert",
+      "emit": "OE-objekt",
+      "scenery": "Dekor",
+      "rule": "Regel",
+      "mix": "Blanding"
+    },
+    "typeLong": {
+      "omit": "Ikke konvertert (utelatt)",
+      "emit": "Blir ett OE-objekt",
+      "scenery": "Dekor (etter rolle)",
+      "mix": "Blir en tilfeldig blanding av OE-objekter"
+    },
+    "edited": "Endret",
+    "wikiDescription": "Wiki-beskrivelse",
+    "save": "Lagre",
+    "saveHint": "Lagrer endringene i en fil i appens datamappe, utenfor appen. Importer leser den derfra.",
+    "saved": "Lagret i {{path}}",
+    "saveFailed": "Kunne ikke lagre: {{error}}",
+    "noSavedFile": "Det finnes ingen lagret fil ennå.",
+    "loadSaved": "Last inn lagret",
+    "loadSavedHint": "Erstatt gjeldende endringer med den lagrede filen",
+    "loadedSaved": "Lastet inn {{count}} endringer fra den lagrede filen.",
+    "roles": {
+      "intro": "OE-objektet hver kulisserolle bruker i hvert OE-biom. Rader som konverterer et H3-objekt til en kulisserolle leser herfra, og de varierte trærne og fjellkjedene utvider sid-en til hele biomets utvalg.",
+      "role": "Rolle",
+      "resetCell": "Tilbake til {{sid}}"
+    },
+    "mixing": {
+      "intro": "Hvilket biom som kan bruke trær eller fjell fra et annet biom, og hvor stor andel av valgene de utgjør. Det hindrer at en skog eller fjellkjede blir én gjentatt modell.",
+      "reset": "Tilbakestill regler",
+      "uses": "bruker",
+      "anyType": "alle typer",
+      "of": "fra",
+      "delete": "Slett regel",
+      "add": "Legg til regel"
+    },
+    "group": {
+      "all": "Alle grupper",
+      "interactive": "Interaktive objekter",
+      "scenery": "Kulisser",
+      "unknown": "Ubenevnte ID-er"
+    },
+    "default": "Medfølgende kobling",
+    "noMatches": "Ingen objekter passer.",
+    "selectRow": "Velg et H3-objekt i tabellen for å endre hva det konverteres til.",
+    "appliesToNext": "Gjelder neste H3-import. Eksporter tabellen for å ta vare på en kopi eller erstatte h3-object-mapping.json.",
+    "exported": "Tabellen er eksportert.",
+    "imported": "Importerte {{count}} endrede rader.",
+    "importFailed": "Kunne ikke importere: {{error}}",
+    "inspector": {
+      "type": "Blir til",
+      "oeObject": "OE-objekt",
+      "pickObject": "Velg et OE-objekt …",
+      "squadFraction": "Troppfraksjon",
+      "squadAny": "Hvilken som helst fraksjon",
+      "squadTier": "Troppnivå",
+      "squadTierAuto": "Auto (ut fra verdien)",
+      "squadHint": "Fraksjonen og nivået til den tilfeldige troppen som vokter objektet. Auto lar spillet velge et nivå som passer troppverdien; et fast nivå med en verdi som ingen tropp på det nivået passer til, kan gi en tom vakt. Test i spillet.",
+      "hireTierAuto": "Nivå fra H3-objektet, ellers ikke satt",
+      "hireHint": "Fraksjonen og nivået til den tilfeldige rekrutteringen. «Hvilken som helst fraksjon» er fraksjonen som hører til biomet. Nivå: en Random Dwelling Lvl beholder H3-nivået; ellers ikke satt, utestet i spillet.",
+      "townFaction": "Fraksjon for {{town}}-boliger",
+      "townHint": "Fraksjonen til den tilfeldige rekrutteringen som erstatter den tilfeldige boligen til denne H3-byen. Byer uten OE-motstykke lar du best stå på «Hvilken som helst fraksjon» (fraksjonen som hører til biomet).",
+      "perTownHint": "Fraksjonen settes per H3-by, i radene under denne.",
+      "pickToSave": "Velg et OE-objekt for å lagre denne raden.",
+      "unknownSid": "Denne id-en finnes ikke i de innlastede spilldataene.",
+      "kind": "Objekttype",
+      "kindHint": "Avgjør hvordan importen behandler objektet (byer, portaler og boliger får spesialbehandling; «interactable» passer for de fleste bygninger).",
+      "role": "Dekorrolle",
+      "roleSids": "Rollen bruker disse OE-objektene, etter terreng:",
+      "reason": "Årsak vist i importrapporten",
+      "reasonHint": "Objektet utelates fra det konverterte kartet.",
+      "ruleHint": "Resultatet avhenger av sprite, undertype eller terreng ({{summary}}). Rediger det som JSON.",
+      "editJson": "Rediger JSON",
+      "resetRow": "Tilbakestill rad",
+      "mixEntries": "Blanding: hver blokkerte rute trekker en av disse"
+    },
+    "jsonInvalid": "Ugyldig rad: {{error}}",
+    "jsonApply": "Bruk",
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Objekter",
+      "rules": "Spriteregler",
+      "roles": "Kulisserroller",
+      "mixing": "Biomblanding",
+      "settings": "Innstillinger"
+    },
+    "mix": {
+      "poolObjects": "OE-objekt",
+      "poolPrefix": "Alle objekter som starter med",
+      "poolTrees": "Et tre fra biomet",
+      "weight": "Vekt: hvor ofte denne oppføringen trekkes",
+      "removeEntry": "Fjern denne oppføringen",
+      "addEntry": "Legg til en oppføring",
+      "hint": "Hver blokkerte rute i H3-objektet trekker en oppføring etter vekt, og deretter et objekt fra den, uten å gjenta modellen ved siden av. For flater dekket av større deler (sjøer, fjell) bruk Rediger JSON med en landmark-rad.",
+      "sidList": "OE-objekt-id-er, atskilt med komma",
+      "prefixHint": "Alle 1x1 OE-objekter hvis id starter slik, for eksempel palms_"
+    },
+    "rules": {
+      "intro": "Reglene sjekkes før objektradene, i denne rekkefølgen. Den første der mønsteret passer til H3-spritens filnavn gjør objektet til en tilfeldig blanding.",
+      "trySprite": "Prøv et spritenavn, f.eks. avlswtr4.def",
+      "matches": "Passer: {{name}}",
+      "noMatch": "Ingen regel passer",
+      "add": "Legg til regel",
+      "reset": "Tilbakestill regler",
+      "name": "Navn",
+      "pattern": "Mønster (regulært uttrykk)",
+      "mix": "Blanding per blokkert rute",
+      "invalid": "Ugyldig mønster",
+      "newName": "Ny regel",
+      "moveUp": "Flytt opp",
+      "moveDown": "Flytt ned",
+      "delete": "Slett regel",
+      "patternHint": "Uavhengig av store/små bokstaver, sammenlignet med spritens filnavn, for eksempel ^avlspl0[5-9]",
+      "accent": "Én tilfeldig rute trekker fra en annen blanding",
+      "accentHint": "For objekter som er ett element på en base: en sanddyne er åser med én palme på toppen.",
+      "select": "Velg en regel for å redigere den."
+    },
+    "settings": {
+      "intro": "Tall konverteren bruker når den plasserer dekor og finner lukkede startlommer. De gjelder neste import.",
+      "reset": "Tilbake til den medfølgende verdien",
+      "mountainFrontChance": {
+        "label": "Dekor foran fjell",
+        "help": "Sjanse for at hver blokkerende rute på nedre kant av et fjell får et tre, en busk eller bunndekke foran seg (0 til 1)."
+      },
+      "walkableFillChance": {
+        "label": "Gangbart bunndekke",
+        "help": "Sjanse for at hver åpne rute får en tilfeldig gangbar dekor fra sitt biom (0 til 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Lavatrær",
+        "help": "Andel av trærne på lavagrunn som forblir OE-lavatrær; resten er døde trær fra Dødsland (0 til 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Størrelse på lukket lomme",
+        "help": "Et startområde med flere ruter enn dette er åpent land, ikke en inngjerdet lomme som beholder veggene."
+      }
+    }
   }
 }

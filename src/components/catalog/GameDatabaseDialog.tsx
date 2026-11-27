@@ -15,6 +15,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { CatalogIcon, PortraitThumb, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { objectRender } from '@/lib/object-render/render-index'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import {
   STATIC_HEROES,
@@ -30,6 +31,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Copy, Check, Filter, Sparkles } from '@/components/ui/icons'
+import { resolveInteractableSubcategory } from '@/lib/map-grid/interactable-subcategories'
+import { resolveDecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
+import { objectSizeLabel, sizeKeyOf } from '@/lib/map-grid/object-size'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
@@ -577,6 +581,9 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
 
   const sortable = activeTab === 'creatures' || activeTab === 'artifacts' || activeTab === 'mapObjects'
 
+  // Each map object's footprint size bucket, worked out once per catalog.
+  const mapSizeById = useMemo(() => new Map(catalog.mapObjects.map((o: CatalogMapObject) => [o.id, sizeKeyOf(objectSizeLabel(o))])), [catalog])
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     const fs = filterState
@@ -617,6 +624,10 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         // Campaign and custom objects belong to their own switch, not to their category's.
         const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : mapCategoryKey(category ?? '')
         if (fs.mapCategories.enabled[key] === false) return false
+        // The sub-category lists work as in the Map Grid object browser: all on is every object of the category, turning some off narrows it.
+        if (category === 'environments' && fs.mapDecorationSubs.enabled[resolveDecorationSubcategory(item.id, category)] === false) return false
+        if (category === 'interactables' && fs.mapInteractableSubs.enabled[resolveInteractableSubcategory(item.id)] === false) return false
+        if (fs.mapSizes.enabled[mapSizeById.get(item.id) ?? '1x1'] === false) return false
         if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }
 
@@ -634,7 +645,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       return (va - vb) * dir || a.name.localeCompare(b.name)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts, sortBy])
+  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts, sortBy, mapSizeById])
 
   // Heroes are shown grouped by faction, in the game's own faction order. Null for
   // every other tab, which keeps its flat list.
@@ -651,7 +662,9 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
   /** One list row. Shared by the flat and faction-grouped renderings. */
   const renderListRow = (item: CatalogItem) => {
     const count = totalCount(item.id)
-    return (
+    // The enlarged image is the one the detail pane shows (map objects: their render, else the thumbnail).
+    const previewSrc = activeTab === 'mapObjects' ? (objectRender(item.id)?.src ?? thumbnailPath(item.icon)) : thumbnailPath(item.icon)
+    const row = (
       <button
         key={item.id}
         onClick={() => setSelectedId(item.id === selectedId ? null : item.id)}
@@ -670,6 +683,20 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
           </Badge>
         )}
       </button>
+    )
+    if (!previewSrc) return row
+    return (
+      <Tooltip key={item.id}>
+        <TooltipTrigger asChild>{row}</TooltipTrigger>
+        <TooltipContent side="right" align="start" collisionPadding={12} className="p-1 border-border bg-background">
+          <img
+            src={previewSrc}
+            alt={item.name}
+            className="block"
+            style={{ maxWidth: 'min(192px, 90vw)', maxHeight: 'min(192px, 80vh)', objectFit: 'contain' }}
+          />
+        </TooltipContent>
+      </Tooltip>
     )
   }
 
