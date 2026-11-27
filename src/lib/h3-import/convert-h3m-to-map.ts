@@ -832,7 +832,7 @@ export async function convertH3mToMap(
       // facts from this project's own history, not reference-project
       // guesses (see CLAUDE.md's random-squad "Hard-won lessons").
       propRandomSquads.push({
-        type: 0, id: objectId, sids: [], requestedValue, fraction: '', tier: 0, isMainGuard: false,
+        type: 0, id: objectId, sids: [], requestedValue, fraction: resolution.fraction ?? '', tier: resolution.tier ?? 0, isMainGuard: false,
         reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
         isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
         isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,

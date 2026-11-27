@@ -22,9 +22,15 @@ const BaseRow = { h3Id: z.number().int(), h3Name: z.string() }
 const OmitRowSchema = z.object({ ...BaseRow, outcome: z.literal('omit'), reason: z.string(), onWater: z.literal('mountain').optional() })
 
 /** Always the same OE sid, regardless of subtype/animation/terrain. */
+/** The faction values of a random squad (`propRandomSquads.fraction`) found in the shipped maps: '' (any), 'neutral' or a playable faction. */
+export const SQUAD_FRACTIONS = ['', 'neutral', 'human', 'undead', 'dungeon', 'nature', 'unfrozen', 'demon'] as const
+
 const EmitRowSchema = z.object({
   ...BaseRow, outcome: z.literal('emit'), sid: z.string(), kind: ObjectKindSchema, reason: z.string(),
   factionSid: z.string().optional(), freeChoice: z.boolean().optional(),
+  /** `random-squad` rows only (the H3 monsters): the squad's faction and tier (1-7; 0 or absent: the game derives the tier from the value). */
+  fraction: z.enum(SQUAD_FRACTIONS).optional(),
+  tier: z.number().int().min(0).max(7).optional(),
 })
 
 /** Decorative scenery — resolved via `role` + the current tile's terrain

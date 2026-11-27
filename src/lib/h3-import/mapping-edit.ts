@@ -35,7 +35,9 @@ export function toOmit(row: ObjectRow, reason: string): ObjectRow {
 }
 
 export function toEmit(row: ObjectRow, sid: string, kind: ObjectKind): ObjectRow {
-  return { h3Id: row.h3Id, h3Name: row.h3Name, outcome: 'emit', sid: sid.trim(), kind, reason: USER_REASON }
+  // A random squad's faction and tier belong to the object, not to the sid typed here, so they survive a change of sid or kind.
+  const squad = row.outcome === 'emit' ? { ...(row.fraction !== undefined && { fraction: row.fraction }), ...(row.tier !== undefined && { tier: row.tier }) } : {}
+  return { h3Id: row.h3Id, h3Name: row.h3Name, outcome: 'emit', sid: sid.trim(), kind, reason: USER_REASON, ...squad }
 }
 
 export function toMix(row: ObjectRow, entries: MixEntry[]): ObjectRow {

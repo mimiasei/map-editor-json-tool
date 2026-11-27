@@ -282,7 +282,7 @@ function animationTokenMatch(animation: string, table: Record<string, string>): 
 
 export type ObjectResolution =
   | { action: 'omit'; reason: string }
-  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; role?: SceneryRole; treeBiomes?: string[]; pair?: boolean }
+  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; fraction?: string; tier?: number; role?: SceneryRole; treeBiomes?: string[]; pair?: boolean }
 
 /** Resolve any H3 object to a stock OE sid — table-driven, reading
  *  `h3-object-mapping.json`'s row for `templateObjectId` and dispatching on
@@ -306,7 +306,7 @@ export function resolveObjectSid(
       return { action: 'omit', reason: row.reason }
 
     case 'emit':
-      return { action: 'emit', sid: row.sid, kind: row.kind, reason: row.reason, factionSid: row.factionSid, freeChoice: row.freeChoice }
+      return { action: 'emit', sid: row.sid, kind: row.kind, reason: row.reason, factionSid: row.factionSid, freeChoice: row.freeChoice, fraction: row.fraction, tier: row.tier }
 
     case 'scenery': {
       const biome = H3_TERRAIN_BIOME[h3TerrainAtTile] ?? 'grass'

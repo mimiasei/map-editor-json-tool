@@ -28,8 +28,8 @@ import MixingTab from './MixingTab'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useH3MappingStore } from '@/store/useH3MappingStore'
 import { DEFAULT_MAPPING_ROWS, DEFAULT_DECORATION_RULES, DEFAULT_SETTINGS, DEFAULT_SPRITE_RULES, SCENERY_ROLE_SIDS } from '@/lib/h3-import/h3-object-mapping'
-import { OBJECT_KINDS, SCENERY_ROLES, type MixEntry, type ObjectKind, type ObjectRow, type SceneryRole } from '@/lib/h3-import/h3-object-mapping-schema'
-import { convertsToText, objectGroup, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type ObjectGroup, type RowKind } from '@/lib/h3-import/mapping-edit'
+import { OBJECT_KINDS, SCENERY_ROLES, SQUAD_FRACTIONS, type MixEntry, type ObjectKind, type ObjectRow, type SceneryRole } from '@/lib/h3-import/h3-object-mapping-schema'
+import { USER_REASON, convertsToText, objectGroup, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type ObjectGroup, type RowKind } from '@/lib/h3-import/mapping-edit'
 import { getH3ObjectDescription } from '@/lib/h3-import/h3-object-descriptions'
 import mappingData from '@/lib/h3-import/h3-object-mapping.json'
 import { confirmDialog, isTauri, openFile, saveFile } from '@/lib/native-fs'
@@ -358,6 +358,30 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
                 <SelectContent>{OBJECT_KINDS.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
               </Select>
               <p className="text-muted-foreground">{t('h3Mapping.inspector.kindHint')}</p>
+            </div>
+          )}
+          {lastEmit?.sid === 'random-squad' && (
+            <div className="space-y-2 rounded-md border border-border p-2">
+              <div className="space-y-1">
+                <Label className="text-xs">{t('h3Mapping.inspector.squadFraction')}</Label>
+                <Select value={lastEmit.fraction || ' '} onValueChange={(v) => commit({ ...lastEmit, fraction: v.trim() as (typeof SQUAD_FRACTIONS)[number], reason: USER_REASON })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SQUAD_FRACTIONS.map((f) => <SelectItem key={f || 'any'} value={f || ' '}>{f || t('h3Mapping.inspector.squadAny')}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('h3Mapping.inspector.squadTier')}</Label>
+                <Select value={String(lastEmit.tier ?? 0)} onValueChange={(v) => commit({ ...lastEmit, tier: Number(v), reason: USER_REASON })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">{t('h3Mapping.inspector.squadTierAuto')}</SelectItem>
+                    {[1, 2, 3, 4, 5, 6, 7].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-muted-foreground">{t('h3Mapping.inspector.squadHint')}</p>
             </div>
           )}
         </div>
