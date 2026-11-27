@@ -55,7 +55,7 @@ import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { createH3DecorationPicker } from './h3-decoration-pools'
 import { resolveObjectSid, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
-import { HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
+import { OBJECT_VOLCANO, HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
 import { dedupeSid, generateDisplayNameSid } from '@/lib/slugify'
@@ -79,6 +79,11 @@ import { buildGroundTruthWalkableSet } from './ground-truth-passability'
 import { findStartPockets, pickSpawnerEntrance } from './start-pockets'
 import type { PlacedObject } from '@/types/map-context'
 
+
+/** The H3 volcano sprite that becomes a lava mountain with smoke on top (3 wide, 2 tall in H3, 3x3 in OE). */
+const VOLCANO_BIG_DEF = /^avlvol50\.def$/i
+const VOLCANO_MOUNTAIN_SID = 'mountain_lava_big_4'
+const VOLCANO_SMOKE_SID = 'fx_map_smoke'
 
 export interface H3ImportReport {
   atlasWidth: number
@@ -439,6 +444,8 @@ export async function convertH3mToMap(
   }
 
   const deferredScenery: (() => void)[] = []
+  // Volcanoes go down before any other decoration, so the trees and mountains around one cannot take its 3x3 footprint.
+  const volcanoScenery: (() => void)[] = []
   // Every H3 mountain tile of the map, per layer, with its biome: the mountains are packed once over all of them (not object by object), so
   // squares can span neighbouring H3 objects. The tiles blocked stay exactly the ones H3 blocked.
   const mountainField = new Map<number, Map<string, { cell: { x: number; z: number }; biome: BiomeId }>>()
@@ -612,6 +619,26 @@ export async function convertH3mToMap(
         sceneryVariantCounts[`sand ${sandKind}`] = (sceneryVariantCounts[`sand ${sandKind}`] ?? 0) + placed
         sceneryPlaced += placed
         detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: sandKind, note: `Scenery (sand ${sandKind}, ${placed} placed)` })
+      })
+      continue
+    }
+
+    // The big volcano (AVLvol50: 3 wide, 2 tall) becomes the 3x3 lava mountain with a smoke effect on top, since the H3 one smokes and OE has no
+    // volcano object. The smaller AVLvol30 (3x1) has no counterpart chosen and stays omitted.
+    if (oid === OBJECT_VOLCANO && VOLCANO_BIG_DEF.test(record.templateAnimation)) {
+      volcanoScenery.push(() => {
+        const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+        clusterCellsClipped += clippedCount
+        if (cells.length === 0) return
+        const minX = Math.min(...cells.map((c) => c.x)), maxX = Math.max(...cells.map((c) => c.x))
+        const minZ = Math.min(...cells.map((c) => c.z)), maxZ = Math.max(...cells.map((c) => c.z))
+        // The mountain's centre: the middle column, and for the two rows H3 blocks the northern one, so the extra row of the 3x3 lies behind it.
+        const centre = atlas.targetNode(record.layer, Math.round((minX + maxX) / 2), maxZ - minZ >= 2 ? Math.round((minZ + maxZ) / 2) : minZ)
+        const placed = placeScenery(VOLCANO_MOUNTAIN_SID, centre, 'mountain_lava_small_1')
+        if (placed > 0 && catalogById.has(VOLCANO_SMOKE_SID)) placeObject(VOLCANO_SMOKE_SID, centre, 0)
+        sceneryVariantCounts[VOLCANO_MOUNTAIN_SID] = (sceneryVariantCounts[VOLCANO_MOUNTAIN_SID] ?? 0) + placed
+        sceneryPlaced += placed
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: VOLCANO_MOUNTAIN_SID, note: 'Volcano (lava mountain with smoke)' })
       })
       continue
     }
@@ -996,6 +1023,7 @@ export async function convertH3mToMap(
   }
   if (waterPortals.shipyardsConverted === 0 && shipyardDetails.length > 0) omittedReasonCounts.shipyard_without_island_omit = shipyardDetails.length
   await stage('decoration', 42)
+  for (const place of volcanoScenery) place()
   for (const place of deferredScenery) place()
   for (const [layer, field] of mountainField) {
     const biomeAt = (cell: { x: number; z: number }) => (field.get(`${cell.x},${cell.z}`) as { biome: BiomeId }).biome
