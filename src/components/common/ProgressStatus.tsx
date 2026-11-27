@@ -9,15 +9,18 @@ import { cn } from '@/lib/utils'
 export interface ProgressStatusProps {
   /** 0-100. */
   value: number
+  /** See `Progress`: the bar keeps creeping towards this while a stage has nothing to report. */
+  creepTo?: number
+  creepMs?: number
   /** e.g. "Building roads…" — omitted entirely if blank. */
   label?: string
   className?: string
 }
 
-export function ProgressStatus({ value, label, className }: ProgressStatusProps) {
+export function ProgressStatus({ value, label, creepTo, creepMs, className }: ProgressStatusProps) {
   return (
     <div className={cn('w-full', className)}>
-      <Progress value={value} />
+      <Progress value={value} creepTo={creepTo} creepMs={creepMs} />
       {label && <p className="mt-1.5 truncate text-xs text-muted-foreground">{label}</p>}
     </div>
   )

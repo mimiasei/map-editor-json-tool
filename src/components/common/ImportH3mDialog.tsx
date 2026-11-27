@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertTriangle, CheckCircle2 } from '@/components/ui/icons'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
+import { nextStagePct } from '@/lib/h3-import/import-progress'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { importH3mFile, type ImportH3mResult } from '@/lib/h3-import/import-h3m-file'
 import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
@@ -299,7 +300,11 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
         {/* ── Running ── */}
         {phase === 'running' && (
           <div className="py-2">
-            <ProgressStatus value={progress?.pct ?? 0} label={progress?.label ?? t('common.importH3mDialog.converting')} />
+            <ProgressStatus
+              value={progress?.pct ?? 0}
+              creepTo={nextStagePct(progress?.pct ?? 0) - 1}
+              label={progress?.label ?? t('common.importH3mDialog.converting')}
+            />
           </div>
         )}
 

@@ -10,6 +10,14 @@ export type H3ImportProgress = (label: string, pct: number) => void
 export type H3ImportStage =
   | 'readingMap' | 'terrain' | 'objects' | 'decoration' | 'players' | 'reachability' | 'fixing' | 'validating' | 'loading' | 'done'
 
+/** Where each stage starts (the percentages the converter and importer report), for `nextStagePct`. */
+const STAGE_START_PCTS = [0, 8, 18, 30, 42, 58, 78, 90, 96, 100]
+
+/** The start of the stage after the one at `pct`: the bar creeps towards just short of it while the stage runs. */
+export function nextStagePct(pct: number): number {
+  return STAGE_START_PCTS.find((start) => start > pct) ?? 100
+}
+
 function stageLabel(stage: H3ImportStage): string {
   switch (stage) {
     case 'readingMap': return i18n.t('common.importH3mDialog.progress.readingMap')
