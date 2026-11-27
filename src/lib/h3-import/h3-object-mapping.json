@@ -1864,27 +1864,9 @@
     {
       "h3Id": 161,
       "h3Name": "Reef",
-      "outcome": "mix",
-      "entries": [
-        {
-          "sids": [
-            "mountain_water_small_1"
-          ],
-          "weight": 1
-        },
-        {
-          "sids": [
-            "mountain_water_small_2"
-          ],
-          "weight": 1
-        },
-        {
-          "sids": [
-            "mountain_water_small_3"
-          ],
-          "weight": 1
-        }
-      ]
+      "outcome": "omit",
+      "reason": "reef_water_omit",
+      "onWater": "mountain"
     },
     {
       "h3Id": 162,
