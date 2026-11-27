@@ -9,9 +9,20 @@ import { SCENERY_GROUP_IDS } from './h3-object-mapping'
 /** The H3 towns in the order of their subtype ids (Random Dwelling Faction, subtype 0 to 10; checked on a map with one of each). */
 export const H3_TOWNS = ['Castle', 'Rampart', 'Tower', 'Inferno', 'Necropolis', 'Dungeon', 'Stronghold', 'Fortress', 'Conflux', 'Cove', 'Factory'] as const
 
-/** The subtypes a row lists as rows of their own (one per H3 town), or none. */
-export function subtypeRows(row: ObjectRow): number[] {
-  return row.outcome === 'emit' && row.fractionBySubtype !== undefined ? H3_TOWNS.map((_, i) => i) : []
+export interface SubtypeRowInfo { subtype: number; label: string }
+
+/** The subtypes a row lists as rows of their own in the tool: one per H3 town (a faction by subtype) or one per named subtype of a dispatch row. */
+export function subtypeRows(row: ObjectRow): SubtypeRowInfo[] {
+  if (row.outcome === 'emit' && row.fractionBySubtype !== undefined) return H3_TOWNS.map((label, subtype) => ({ subtype, label }))
+  if (row.outcome === 'dispatch' && row.subtypeNames) {
+    return Object.entries(row.subtypeNames).map(([key, label]) => ({ subtype: Number(key), label })).sort((a, b) => a.subtype - b.subtype)
+  }
+  return []
+}
+
+/** The OE object a dispatch row gives one of its subtypes ('' when it has none). */
+export function subtypeSid(row: ObjectRow, subtype: number): string {
+  return row.outcome === 'dispatch' ? (row.subtypes?.[String(subtype)]?.sid ?? '') : ''
 }
 
 export type RowKind = 'omit' | 'emit' | 'scenery' | 'mix' | 'rule'

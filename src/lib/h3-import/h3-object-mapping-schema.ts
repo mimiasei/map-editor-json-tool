@@ -83,6 +83,8 @@ const SceneryDispatchSubtypeRowSchema = z.object({
 const DispatchRowSchema = z.object({
   ...BaseRow, outcome: z.literal('dispatch'), kind: ObjectKindSchema, reason: z.string(),
   subtypes: z.record(z.string(), z.object({ sid: z.string(), factionSid: z.string().optional() })).optional(),
+  /** The H3 name of each subtype (Creature Bank: 0 Cyclops Stockpile ...). A row with names lists one row per subtype in the mapping tool. */
+  subtypeNames: z.record(z.string(), z.string()).optional(),
   exact: z.record(z.string(), z.string()).optional(),
   tokens: z.record(z.string(), z.string()).optional(),
   default: z.string().optional(),

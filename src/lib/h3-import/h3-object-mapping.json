@@ -113,8 +113,36 @@
     {
       "h3Id": 16,
       "h3Name": "Creature Bank",
-      "outcome": "omit",
-      "reason": "creature_bank_deferred"
+      "outcome": "dispatch",
+      "kind": "interactable",
+      "reason": "creature_bank_to_guarded_bank",
+      "subtypes": {
+              "0": {
+                "sid": "shady_den"
+              },        "1": {
+                "sid": "circle_of_life"
+              },        "2": {
+                "sid": "jousting_range"
+              },        "3": {
+                "sid": "uncanny_rite"
+              },        "4": {
+                "sid": "troglodyte_throne"
+              },        "5": {
+                "sid": "iridescent_abbey"
+              },        "6": {
+                "sid": "the_gorge"
+              }
+            },
+      "subtypeNames": {
+              "0": "Cyclops Stockpile",
+              "1": "Dwarven Treasury",
+              "2": "Griffin Conservatory",
+              "3": "Imp Cache",
+              "4": "Medusa Stores",
+              "5": "Naga Bank",
+              "6": "Dragon Fly Hive"
+            },
+      "unmatchedReason": "creature_bank_subtype_{value}_unmapped"
     },
     {
       "h3Id": 17,
@@ -955,8 +983,10 @@
     {
       "h3Id": 84,
       "h3Name": "Crypt",
-      "outcome": "omit",
-      "reason": "crypt_bank_deferred"
+      "outcome": "emit",
+      "sid": "abandoned_mansion",
+      "kind": "interactable",
+      "reason": "crypt_to_guarded_bank"
     },
     {
       "h3Id": 85,
