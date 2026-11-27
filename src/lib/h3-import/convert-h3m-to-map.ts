@@ -334,7 +334,8 @@ export async function convertH3mToMap(
   const palmSids = sidsWithPrefix('palms_')
   const cactusSids = sidsWithPrefix('cactus_')
   const dunePalmHillSids = sidsWithPrefix('hill_desert_small_')
-  const lushTreeBiomes = [decorationPicker.biomeOf('pinetree_1', 'tree'), decorationPicker.biomeOf('tree_dirt_1', 'tree')].filter((b): b is BiomeId => b !== null)
+  // The lush sand trees (avlspl01-04) are Dirt trees in OE.
+  const lushTreeBiome = decorationPicker.biomeOf('tree_dirt_1', 'tree')
   const pickOf = (list: string[]) => list[Math.floor(rng() * list.length)]
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
   // guard if it appears in at least one real squad template — real-data
@@ -615,7 +616,7 @@ export async function convertH3mToMap(
     // a sand hill with a palm on one cell. Placed with the other decoration, after everything that blocks.
     const sandKind = H3_CACTUS_DEF.test(defName) && cactusSids.length > 0 ? 'cactus'
       : H3_PALM_DEF.test(defName) && palmSids.length > 0 ? 'palm'
-      : H3_LUSH_TREE_DEF.test(defName) && lushTreeBiomes.length > 0 ? 'lush'
+      : H3_LUSH_TREE_DEF.test(defName) && lushTreeBiome !== null ? 'lush'
       : H3_PALM_DUNE_DEF.test(defName) && palmSids.length > 0 && dunePalmHillSids.length > 0 ? 'dune' : null
     if (sandKind !== null) {
       deferredScenery.push(() => {
@@ -626,7 +627,7 @@ export async function convertH3mToMap(
           const sid = sandKind === 'cactus' ? pickOf(cactusSids)
             : sandKind === 'palm' || i === palmCell ? pickOf(palmSids)
             : sandKind === 'dune' ? pickOf(dunePalmHillSids)
-            : decorationPicker.pickTree(lushTreeBiomes[Math.floor(rng() * lushTreeBiomes.length)], rng)
+            : decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
           placed += placeScenery(sid, atlas.targetNode(record.layer, cell.x, cell.z), null)
         })
         sceneryVariantCounts[`sand ${sandKind}`] = (sceneryVariantCounts[`sand ${sandKind}`] ?? 0) + placed
