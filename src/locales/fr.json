@@ -2828,7 +2828,6 @@
         "heroBoosts": "Bonus de héros seulement"
       },
       "filterMapObjects": "Filtrer les objets de la carte",
-      "interactableOnly": "Interactifs uniquement",
       "categories": "Catégories",
       "showingApproximatelyOfObjects": "Affichage d'environ {{filteredCount}} objets sur {{totalCount}}"
     },

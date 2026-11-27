@@ -2874,7 +2874,6 @@
         "heroBoosts": "Tylko bonusy bohatera"
       },
       "filterMapObjects": "Filtruj obiekty mapy",
-      "interactableOnly": "Tylko interaktywne",
       "categories": "Kategorie",
       "showingApproximatelyOfObjects": "Wyświetlono około {{filteredCount}} z {{totalCount}} obiektów"
     },

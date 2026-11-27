@@ -2783,7 +2783,6 @@
         "heroBoosts": "Nur Helden-Boni"
       },
       "filterMapObjects": "Kartenobjekte filtern",
-      "interactableOnly": "Nur interaktive Objekte",
       "categories": "Kategorien",
       "showingApproximatelyOfObjects": "Es werden etwa {{filteredCount}} von {{totalCount}} Objekten angezeigt"
     },

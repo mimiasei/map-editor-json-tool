@@ -172,7 +172,6 @@ function applyMapObjectFilter(
   const allowed = new Set(
     rawObjects
       .filter((o) => {
-        if (filter.interactableOnly && !o.isInteractable) return false
         if (!filter.categories[o.category]) return false
         if (!passesGroupFilter(o.id, filter.onlyGroups)) return false
         return true
@@ -281,8 +280,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
 
   const isFiltered =
     category === 'mapObject' &&
-    (filter.interactableOnly ||
-      Object.values(filter.onlyGroups).some(Boolean) ||
+    (Object.values(filter.onlyGroups).some(Boolean) ||
       !Object.values(filter.categories).every(Boolean))
 
   const filterBadge =

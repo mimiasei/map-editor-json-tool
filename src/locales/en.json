@@ -2791,7 +2791,6 @@
         "heroBoosts": "Hero boosts only"
       },
       "filterMapObjects": "Filter Map Objects",
-      "interactableOnly": "Interactable only",
       "categories": "Categories",
       "showingApproximatelyOfObjects": "Showing approximately {{filteredCount}} of {{totalCount}} objects"
     },

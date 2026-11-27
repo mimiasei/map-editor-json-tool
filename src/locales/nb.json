@@ -2783,7 +2783,6 @@
         "heroBoosts": "Bare heltebonuser"
       },
       "filterMapObjects": "Filtrer kartobjekter",
-      "interactableOnly": "Bare interaktive",
       "categories": "Kategorier",
       "showingApproximatelyOfObjects": "Viser omtrent {{filteredCount}} av {{totalCount}} objekter"
     },

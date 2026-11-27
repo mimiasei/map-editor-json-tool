@@ -2874,7 +2874,6 @@
         "heroBoosts": "Только бонусы героя"
       },
       "filterMapObjects": "Фильтр объектов карты",
-      "interactableOnly": "Только интерактивные",
       "categories": "Категории",
       "showingApproximatelyOfObjects": "Показано примерно {{filteredCount}} из {{totalCount}} объектов"
     },

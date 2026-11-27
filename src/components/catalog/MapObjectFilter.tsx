@@ -32,14 +32,12 @@ export function passesGroupFilter(sid: string, onlyGroups: Record<MapObjectGroup
 }
 
 export interface MapObjectFilterState {
-  interactableOnly: boolean
   /** When any is on, only objects of the groups that are on are listed. */
   onlyGroups: Record<MapObjectGroup, boolean>
   categories: Record<MapObjectCategory, boolean>
 }
 
 export const DEFAULT_FILTER: MapObjectFilterState = {
-  interactableOnly: false,
   onlyGroups: { creatureBanks: false, heroBoosts: false },
   categories: {
     interactables: true,
@@ -129,18 +127,6 @@ export default function MapObjectFilter({
         </DialogHeader>
 
         <div className="space-y-4 text-sm">
-          {/* Interactable only */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="filter-interactable"
-              checked={draft.interactableOnly}
-              onCheckedChange={(v) => setDraft((prev) => ({ ...prev, interactableOnly: Boolean(v) }))}
-            />
-            <Label htmlFor="filter-interactable" className="cursor-pointer">
-              {t('catalog.mapObjectFilter.interactableOnly')}
-            </Label>
-          </div>
-
           {/* Groups of interactables */}
           {GROUPS.map((group) => (
             <div key={group} className="flex items-center gap-2">
