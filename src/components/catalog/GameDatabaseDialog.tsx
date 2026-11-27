@@ -15,6 +15,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { CatalogIcon, PortraitThumb, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { objectRender } from '@/lib/object-render/render-index'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import {
   STATIC_HEROES,
@@ -661,7 +662,9 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
   /** One list row. Shared by the flat and faction-grouped renderings. */
   const renderListRow = (item: CatalogItem) => {
     const count = totalCount(item.id)
-    return (
+    // The enlarged image is the one the detail pane shows (map objects: their render, else the thumbnail).
+    const previewSrc = activeTab === 'mapObjects' ? (objectRender(item.id)?.src ?? thumbnailPath(item.icon)) : thumbnailPath(item.icon)
+    const row = (
       <button
         key={item.id}
         onClick={() => setSelectedId(item.id === selectedId ? null : item.id)}
@@ -680,6 +683,20 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
           </Badge>
         )}
       </button>
+    )
+    if (!previewSrc) return row
+    return (
+      <Tooltip key={item.id}>
+        <TooltipTrigger asChild>{row}</TooltipTrigger>
+        <TooltipContent side="right" align="start" collisionPadding={12} className="p-1 border-border bg-background">
+          <img
+            src={previewSrc}
+            alt={item.name}
+            className="block"
+            style={{ maxWidth: 'min(192px, 90vw)', maxHeight: 'min(192px, 80vh)', objectFit: 'contain' }}
+          />
+        </TooltipContent>
+      </Tooltip>
     )
   }
 
