@@ -1248,14 +1248,266 @@
     {
       "h3Id": 127,
       "h3Name": "Lava Flow",
-      "outcome": "scenery",
-      "role": "pool_big"
+      "outcome": "landmark",
+      "exact": {
+        "avllv150.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv160.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv170.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv180.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv190.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv200.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv230.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv240.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv250.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv260.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        }
+      },
+      "default": {
+        "pieces": [
+          {
+            "size": 3,
+            "sids": [
+              "pool_lava_big_1",
+              "pool_lava_big_2"
+            ]
+          },
+          {
+            "size": 2,
+            "sids": [
+              "lava_ground_1",
+              "lava_ground_3"
+            ]
+          }
+        ]
+      }
     },
     {
       "h3Id": 128,
       "h3Name": "Lava Lake",
-      "outcome": "scenery",
-      "role": "pool"
+      "outcome": "landmark",
+      "exact": {
+        "avllv150.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv160.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv170.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "pool_lava_small_1"
+              ]
+            }
+          ]
+        },
+        "avllv180.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv190.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv200.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv230.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv240.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv250.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        },
+        "avllv260.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "big_fissure",
+                "lava_ground_1"
+              ]
+            }
+          ]
+        }
+      },
+      "default": {
+        "pieces": [
+          {
+            "size": 3,
+            "sids": [
+              "pool_lava_big_1",
+              "pool_lava_big_2"
+            ]
+          },
+          {
+            "size": 2,
+            "sids": [
+              "lava_ground_1",
+              "lava_ground_3"
+            ]
+          }
+        ]
+      }
     },
     {
       "h3Id": 129,
@@ -1441,15 +1693,61 @@
     {
       "h3Id": 157,
       "h3Name": "Volcanic Vent",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_157"
+      "outcome": "landmark",
+      "exact": {},
+      "default": {
+        "pieces": [
+          {
+            "size": 3,
+            "sids": [
+              "mountain_lava_big_3",
+              "mountain_lava_big_4"
+            ]
+          },
+          {
+            "size": 2,
+            "sids": [
+              "mountain_lava_big_2",
+              "mountain_lava_9"
+            ]
+          },
+          {
+            "size": 1,
+            "sids": [
+              "mountain_lava_small_3"
+            ]
+          }
+        ]
+      }
     },
     {
       "h3Id": 158,
       "h3Name": "Volcano",
       "outcome": "landmark",
       "exact": {
-        "avlvol50.def": { "sid": "mountain_lava_big_4", "effectSid": "fx_map_smoke", "smallSid": "mountain_lava_small_1" }
+        "avlvol50.def": {
+          "sid": "mountain_lava_big_4",
+          "effectSid": "fx_map_smoke",
+          "smallSid": "mountain_lava_small_1"
+        },
+        "avlvol30.def": {
+          "pieces": [
+            {
+              "size": 2,
+              "sids": [
+                "mountain_lava_big_2",
+                "mountain_lava_9"
+              ]
+            },
+            {
+              "size": 1,
+              "sids": [
+                "mountain_lava_small_3"
+              ]
+            }
+          ],
+          "effectSid": "fx_map_smoke"
+        }
       }
     },
     {

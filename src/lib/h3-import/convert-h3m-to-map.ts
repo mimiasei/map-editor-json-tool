@@ -77,6 +77,7 @@ import { linkH3Portals, type H3PortalPlacement } from './portal-links'
 import { applyAccessibilityPass } from './accessibility-pass'
 import { buildGroundTruthWalkableSet } from './ground-truth-passability'
 import { findStartPockets, pickSpawnerEntrance } from './start-pockets'
+import { coverCells } from './piece-cover'
 import type { PlacedObject } from '@/types/map-context'
 
 
@@ -449,6 +450,8 @@ export async function convertH3mToMap(
   const waterMountainField = new Map<number, Map<string, { x: number; z: number }>>()
   // Landmarks (the volcano) go down before any other decoration, so the trees and mountains around one cannot take its footprint.
   const landmarkScenery: (() => void)[] = []
+  // The tiles landmark pieces stand on: a piece can hang over H3 floor, so these are not "must stay walkable" for the accessibility pass.
+  const landmarkCells = new Set<number>()
   // Every H3 mountain tile of the map, per layer, with its biome: the mountains are packed once over all of them (not object by object), so
   // squares can span neighbouring H3 objects. The tiles blocked stay exactly the ones H3 blocked.
   const mountainField = new Map<number, Map<string, { cell: { x: number; z: number }; biome: BiomeId }>>()
@@ -673,11 +676,26 @@ export async function convertH3mToMap(
         const minZ = Math.min(...cells.map((c) => c.z)), maxZ = Math.max(...cells.map((c) => c.z))
         // The mountain's centre: the middle column, and for the two rows H3 blocks the northern one, so the extra row of the 3x3 lies behind it.
         const centre = atlas.targetNode(record.layer, Math.round((minX + maxX) / 2), maxZ - minZ >= 2 ? Math.round((minZ + maxZ) / 2) : minZ)
-        const placed = placeScenery(landmark.sid, centre, landmark.smallSid ?? null)
+        let placed = 0
+        const firstId = nextId
+        if (landmark.pieces) {
+          for (const p of coverCells(cells, landmark.pieces.filter((piece) => piece.sids.every((sid) => catalogById.has(sid))), rng)) {
+            const node = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
+            const count = placeScenery(p.sid, node, null)
+            if (count > 0) for (const cell of solidCells(p.sid, node, 0)) landmarkCells.add(cell)
+            placed += count
+          }
+        } else if (landmark.sid) {
+          placed = placeScenery(landmark.sid, centre, landmark.smallSid ?? null)
+          if (placed > 0) for (const cell of solidCells(landmark.sid, centre, 0)) landmarkCells.add(cell)
+        }
+        // Landmarks are not decoration the accessibility pass may delete to open a path: the volcano, the vent or the lake is where H3 put it.
+        for (let id = firstId; id < nextId; id++) sealIds.add(id)
         if (placed > 0 && landmark.effectSid && catalogById.has(landmark.effectSid)) placeObject(landmark.effectSid, centre, 0)
-        sceneryVariantCounts[landmark.sid] = (sceneryVariantCounts[landmark.sid] ?? 0) + placed
+        const landmarkLabel = landmark.sid ?? landmark.pieces?.map((piece) => piece.sids[0]).join('/') ?? 'pieces'
+        sceneryVariantCounts[landmarkLabel] = (sceneryVariantCounts[landmarkLabel] ?? 0) + placed
         sceneryPlaced += placed
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: landmark.sid, note: `Landmark (${landmark.sid}${landmark.effectSid ? ` + ${landmark.effectSid}` : ''})` })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: landmark.sid ?? landmark.pieces?.[0]?.sids[0] ?? null, note: `Landmark (${landmark.sid ?? 'pieces'}${landmark.effectSid ? ` + ${landmark.effectSid}` : ''})` })
       })
       continue
     }
@@ -1196,6 +1214,7 @@ export async function convertH3mToMap(
   // Start pockets (see start-pockets.ts): every tile H3 blocks around a walled-in start is blocked here too, with pieces the accessibility pass
   // may not delete. Placed before the pass so its flood fill starts from the sealed pocket.
   const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
+  for (const cell of landmarkCells) groundTruthWalkable.delete(cell)
   // The tile an H3 hero stands on (or a town is entered from) is its visit cell, not the object's anchor: the anchor can be a blocked tile.
   const startNodes: number[] = []
   for (const record of parsed.records) {

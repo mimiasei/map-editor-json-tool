@@ -29,6 +29,9 @@ export const H3_DECORATION_RULES: DecorationRule[] = [
   { into: 'Autumn', from: 'Deathland', type: 'mountain', chance: 0.2 },
 ]
 
+/** Share of the trees on Lava ground that stay OE lava trees. */
+const LAVA_TREE_CHANCE = 0.06
+
 export interface H3DecorationPicker {
   /** The catalog biome of a table-resolved tree or mountain sid; null for anything else (left to the plain sibling pick). */
   biomeOf(baseSid: string, role: 'tree' | 'mountain'): BiomeId | null
@@ -94,6 +97,9 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
     mountains.set(biome, bySize)
   }
 
+  const lavaBiome = BIOME_ID_BY_CATALOG_NAME.get('Lava')
+  const deadTrees = catalog.mapObjects.filter((o) => /^tree_dead_\d+$/.test(o.id) && squareSize(o) === 1).map((o) => o.id)
+
   // The water mountains rise out of water, so they have a pool of their own and are never part of a land range.
   const waterMountains = new Map<number, string[]>()
   for (const obj of catalog.mapObjects) {
@@ -139,6 +145,11 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
       return pickWeighted(walkables.get(biome) as string[], rng, walkMixed.weights?.[biome])
     },
     pickTree(biome, rng, not) {
+      // OE's lava trees are disliked: H3 lava trees become Deathland dead trees (not the withered pines or mushrooms), with a few lava trees mixed in.
+      if (biome === lavaBiome && deadTrees.length > 0 && rng() >= LAVA_TREE_CHANCE) {
+        const fresh = deadTrees.filter((sid) => sid !== not)
+        return fresh[Math.floor(rng() * fresh.length)] ?? deadTrees[0]
+      }
       const list = trees.get(biome) as string[]
       for (let attempt = 0; attempt < 3; attempt++) {
         const sid = pickWeighted(list, rng, mixed.weights?.[biome])

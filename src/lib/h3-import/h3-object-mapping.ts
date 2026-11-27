@@ -103,12 +103,12 @@ export const H3_OAK_TREES_OBJECT_ID = 135
 const mapping = H3ObjectMappingSchema.parse(mappingData)
 const objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
 
-export interface LandmarkResolution { sid: string; effectSid?: string; smallSid?: string }
+export interface LandmarkResolution { sid?: string; effectSid?: string; smallSid?: string; pieces?: { size: number; sids: string[] }[] }
 
 /** The OE objects an H3 landmark sprite is built from (see `LandmarkRowSchema`), or null when the object is not a landmark or its sprite has no entry. */
 export function resolveLandmark(templateObjectId: number, templateAnimation: string): LandmarkResolution | null {
   const row = objectsById.get(templateObjectId)
-  return row?.outcome === 'landmark' ? (row.exact[(templateAnimation || '').toLowerCase()] ?? null) : null
+  return row?.outcome === 'landmark' ? (row.exact[(templateAnimation || '').toLowerCase()] ?? row.default ?? null) : null
 }
 
 /** H3 objects (rocks, reefs) that become OE water mountains when they stand on water: the rows with `onWater: 'mountain'`. */
