@@ -53,8 +53,8 @@ import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS, buildBlockedTileSet } from '@/lib/map-grid/passability'
 import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
-import { createH3DecorationPicker } from './h3-decoration-pools'
-import { resolveObjectSid, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
+import { createH3DecorationPicker, type H3DecorationPicker } from './h3-decoration-pools'
+import { resolveObjectSid, WATER_MOUNTAIN_OBJECT_IDS, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_VOLCANO, HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
@@ -444,6 +444,7 @@ export async function convertH3mToMap(
   }
 
   const deferredScenery: (() => void)[] = []
+  const waterMountainField = new Map<number, Map<string, { x: number; z: number }>>()
   // Volcanoes go down before any other decoration, so the trees and mountains around one cannot take its 3x3 footprint.
   const volcanoScenery: (() => void)[] = []
   // Every H3 mountain tile of the map, per layer, with its biome: the mountains are packed once over all of them (not object by object), so
@@ -561,7 +562,24 @@ export async function convertH3mToMap(
       shipyardDetails.push(shipyardDetail)
       continue
     }
-    // Anything standing on water (a boat, a sea monster, a sea chest...) has no counterpart: OE has no ships and nothing to reach on the sea.
+    // Rocks and reefs standing on water become OE water mountains: their blocked water tiles are collected per layer and packed after the loop
+    // like a land range (the table rows carry `onWater: 'mountain'`).
+    if (h3Terrain === 8 && WATER_MOUNTAIN_OBJECT_IDS.has(oid)) {
+      const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+      clusterCellsClipped += clippedCount
+      const field = waterMountainField.get(record.layer) ?? new Map<string, { x: number; z: number }>()
+      waterMountainField.set(record.layer, field)
+      const layerTilesHere = parsed.layers[record.layer]
+      let onWater = 0
+      for (const cell of cells) {
+        if (layerTilesHere?.[cell.z * size + cell.x]?.terrain !== 8) continue
+        field.set(`${cell.x},${cell.z}`, cell)
+        onWater += 1
+      }
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: 'mountain_water', note: `Water mountain (${onWater} water tiles, packed after the loop)` })
+      continue
+    }
+    // Anything else standing on water (a boat, a sea monster, a sea chest...) has no counterpart: OE has no ships and nothing to reach on the sea.
     if (h3Terrain === 8) {
       omittedReasonCounts.water_object_omit = (omittedReasonCounts.water_object_omit ?? 0) + 1
       detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'water_object_omit' })
@@ -1033,6 +1051,21 @@ export async function convertH3mToMap(
       placed += placeScenery(p.sid, atlas.targetNode(layer, p.anchor.x, p.anchor.z), (avoid) => decorationPicker.pickMountain(biome, 1, rng, avoid))
     }
     sceneryVariantCounts['mountain (merged ranges)'] = (sceneryVariantCounts['mountain (merged ranges)'] ?? 0) + placed
+    sceneryPlaced += placed
+  }
+
+  // Water mountains: the same packing as a land range, from the water mountain models only.
+  const waterPicker: H3DecorationPicker = {
+    ...decorationPicker,
+    mountainSizes: () => decorationPicker.waterMountainSizes(),
+    pickMountain: (_biome, pieceSize, pickRng, avoid) => decorationPicker.pickWaterMountain(pieceSize, pickRng, avoid),
+  }
+  for (const [layer, field] of waterMountainField) {
+    let placed = 0
+    for (const p of packMountainClusterVaried([...field.values()], () => 1 as BiomeId, waterPicker, rng)) {
+      placed += placeScenery(p.sid, atlas.targetNode(layer, p.anchor.x, p.anchor.z), (avoid) => decorationPicker.pickWaterMountain(1, rng, avoid))
+    }
+    sceneryVariantCounts['water mountains'] = (sceneryVariantCounts['water mountains'] ?? 0) + placed
     sceneryPlaced += placed
   }
 

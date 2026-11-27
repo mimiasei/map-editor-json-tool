@@ -1377,7 +1377,8 @@
       "h3Id": 147,
       "h3Name": "Rock",
       "outcome": "scenery",
-      "role": "rock"
+      "role": "rock",
+      "onWater": "mountain"
     },
     {
       "h3Id": 148,
@@ -1461,7 +1462,8 @@
       "h3Id": 161,
       "h3Name": "Reef",
       "outcome": "omit",
-      "reason": "reef_water_omit"
+      "reason": "reef_water_omit",
+      "onWater": "mountain"
     },
     {
       "h3Id": 162,

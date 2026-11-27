@@ -47,6 +47,10 @@ JSON validation alone doesn't prove the mapping is *correct* — import an `.h3m
 - either through TSE's own Import H3M dialog (the report will show it under "Source objects" and it'll no longer appear in "Not converted"),
 - or find a real sample map with that object, convert it, and confirm the expected sid landed in the output (e.g. `All for One.h3m` has a Tavern instance — confirmed one `tavern` object in the converted result).
 
+## Water mountains (`onWater`)
+
+A `scenery` or `omit` row can carry `"onWater": "mountain"`. When that object stands on H3 water (a Rock or a Reef in the sea), the importer places OE water mountains instead of dropping it: `mountain_water_big_1..3` (2x2) and `mountain_water_small_1..3` (1x1), packed over the object's blocked cells with the same rules as a land mountain range (biggest first with a random skip, models varied). The catalog files them under Grass, but the land ranges never use them. The same object on land keeps its normal row.
+
 ## Other outcome shapes
 
 `scenery`, `dispatch`, `scenery-dispatch`, and `scenery-dispatch-subtype` exist for objects that resolve differently depending on subtype/animation/terrain (see the doc comments in `h3-object-mapping-schema.ts`) — but for a plain "this H3 object is always this one OE object," `emit` is all you need, same shape as Tavern above.

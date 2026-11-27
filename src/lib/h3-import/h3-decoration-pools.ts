@@ -45,6 +45,10 @@ export interface H3DecorationPicker {
   /** The catalog biome of any decoration sid, or null. */
   biomeIdOf(sid: string): BiomeId | null
   hasTrees(biome: BiomeId): boolean
+  /** Square sizes of the water mountains (`mountain_water_*`), biggest first (2, 1). */
+  waterMountainSizes(): number[]
+  /** A water mountain of `size`, not one of `avoid` while there is a choice. */
+  pickWaterMountain(size: number, rng: () => number, avoid?: string[]): string
   /** A small bush-like plant for `biome` (OE has no bush model: stumps, logs, thorns, pumpkins, strange plants), or null when it has none. */
   pickBush(biome: BiomeId, rng: () => number): string | null
 }
@@ -90,7 +94,24 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
     mountains.set(biome, bySize)
   }
 
+  // The water mountains rise out of water, so they have a pool of their own and are never part of a land range.
+  const waterMountains = new Map<number, string[]>()
+  for (const obj of catalog.mapObjects) {
+    if (!obj.id.startsWith('mountain_water')) continue
+    const size = squareSize(obj)
+    if (size !== null) waterMountains.set(size, [...(waterMountains.get(size) ?? []), obj.id])
+  }
+
   return {
+    waterMountainSizes() {
+      return [...waterMountains.keys()].sort((a, b) => b - a)
+    },
+    pickWaterMountain(size, rng, avoid = []) {
+      const list = waterMountains.get(size) as string[]
+      const free = list.filter((sid) => !avoid.includes(sid))
+      const from = free.length > 0 ? free : list
+      return from[Math.floor(rng() * from.length)]
+    },
     biomeOf(baseSid, role) {
       const obj = byId.get(baseSid)
       const biome = obj?.biome ? BIOME_ID_BY_CATALOG_NAME.get(obj.biome) : undefined

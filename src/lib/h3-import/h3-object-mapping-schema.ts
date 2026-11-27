@@ -17,8 +17,9 @@ export const ObjectKindSchema = z.enum(OBJECT_KINDS)
 const BaseRow = { h3Id: z.number().int(), h3Name: z.string() }
 
 /** No OE equivalent — omitted with a named, stable reason (surfaced in the
- *  import report's "Not converted" list). */
-const OmitRowSchema = z.object({ ...BaseRow, outcome: z.literal('omit'), reason: z.string() })
+ *  import report's "Not converted" list). `onWater: 'mountain'` (here and on `scenery` rows): standing on H3 water, the object becomes the
+ *  OE water mountains (`mountain_water_big_*` 2x2, `mountain_water_small_*` 1x1), packed over its blocked cells like a land range. */
+const OmitRowSchema = z.object({ ...BaseRow, outcome: z.literal('omit'), reason: z.string(), onWater: z.literal('mountain').optional() })
 
 /** Always the same OE sid, regardless of subtype/animation/terrain. */
 const EmitRowSchema = z.object({
@@ -29,7 +30,7 @@ const EmitRowSchema = z.object({
 /** Decorative scenery — resolved via `role` + the current tile's terrain
  *  biome (`sceneryRoleSids`), feeding the tree/mountain cluster-simulation
  *  path unchanged for those two roles. */
-const SceneryRowSchema = z.object({ ...BaseRow, outcome: z.literal('scenery'), role: SceneryRoleSchema })
+const SceneryRowSchema = z.object({ ...BaseRow, outcome: z.literal('scenery'), role: SceneryRoleSchema, onWater: z.literal('mountain').optional() })
 
 /** Object 199 only: one real H3 scenery family whose exact `.def` animation
  *  determines BOTH the sid and the role (tree-shaped vs rock-shaped) —

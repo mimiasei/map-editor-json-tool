@@ -103,6 +103,9 @@ export const H3_OAK_TREES_OBJECT_ID = 135
 const mapping = H3ObjectMappingSchema.parse(mappingData)
 const objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
 
+/** H3 objects (rocks, reefs) that become OE water mountains when they stand on water: the rows with `onWater: 'mountain'`. */
+export const WATER_MOUNTAIN_OBJECT_IDS = new Set<number>(mapping.objects.filter((row) => 'onWater' in row && row.onWater === 'mountain').map((row) => row.h3Id))
+
 export const BIOME_ROLE_REPLACEMENTS: Record<SceneryRole, Record<OeBiome, string>> = mapping.sceneryRoleSids as Record<SceneryRole, Record<OeBiome, string>>
 
 /** `"<Name> (id N)"`, or `"H3 object id N (unidentified)"` when this id has
