@@ -27,7 +27,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useH3MappingStore } from '@/store/useH3MappingStore'
 import { DEFAULT_MAPPING_ROWS, DEFAULT_SETTINGS, DEFAULT_SPRITE_RULES, SCENERY_ROLE_SIDS } from '@/lib/h3-import/h3-object-mapping'
 import { OBJECT_KINDS, SCENERY_ROLES, type MixEntry, type ObjectKind, type ObjectRow, type SceneryRole } from '@/lib/h3-import/h3-object-mapping-schema'
-import { convertsToText, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type RowKind } from '@/lib/h3-import/mapping-edit'
+import { convertsToText, objectGroup, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type ObjectGroup, type RowKind } from '@/lib/h3-import/mapping-edit'
 import { getH3ObjectDescription } from '@/lib/h3-import/h3-object-descriptions'
 import mappingData from '@/lib/h3-import/h3-object-mapping.json'
 import { confirmDialog, openFile, saveFile } from '@/lib/native-fs'
@@ -36,6 +36,8 @@ import { cn } from '@/lib/utils'
 type KindFilter = 'all' | RowKind
 type Tab = 'objects' | 'rules' | 'settings'
 
+const GROUP_FILTERS: ('all' | ObjectGroup)[] = ['all', 'interactive', 'scenery', 'unknown']
+const GROUP_BY_ID = new Map(DEFAULT_MAPPING_ROWS.map((row) => [row.h3Id, objectGroup(row)]))
 const KIND_FILTERS: KindFilter[] = ['all', 'omit', 'emit', 'mix', 'scenery', 'rule']
 const TABS: Tab[] = ['objects', 'rules', 'settings']
 
@@ -56,6 +58,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('objects')
   const [query, setQuery] = useState('')
   const [kindFilter, setKindFilter] = useState<KindFilter>('all')
+  const [groupFilter, setGroupFilter] = useState<'all' | ObjectGroup>('all')
   const [modifiedOnly, setModifiedOnly] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -70,11 +73,12 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
     const q = query.trim().toLowerCase()
     return rows.filter((row) => {
       if (kindFilter !== 'all' && rowKind(row) !== kindFilter) return false
+      if (groupFilter !== 'all' && GROUP_BY_ID.get(row.h3Id) !== groupFilter) return false
       if (modifiedOnly && !overrides[String(row.h3Id)]) return false
       if (!q) return true
       return `${row.h3Id} ${row.h3Name} ${convertsToText(row)} ${nameBySid.get(row.outcome === 'emit' ? row.sid : '') ?? ''}`.toLowerCase().includes(q)
     })
-  }, [rows, query, kindFilter, modifiedOnly, overrides, nameBySid])
+  }, [rows, query, kindFilter, groupFilter, modifiedOnly, overrides, nameBySid])
 
   const selected = selectedId === null ? null : rows.find((row) => row.h3Id === selectedId) ?? null
 
@@ -144,6 +148,12 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
         )}
         {tab === 'objects' && (
           <>
+            <Select value={groupFilter} onValueChange={(v) => setGroupFilter(v as 'all' | ObjectGroup)}>
+              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {GROUP_FILTERS.map((group) => <SelectItem key={group} value={group}>{t(`h3Mapping.group.${group}`)}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Select value={kindFilter} onValueChange={(v) => setKindFilter(v as KindFilter)}>
               <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>

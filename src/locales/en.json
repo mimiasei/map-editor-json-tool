@@ -3614,6 +3614,12 @@
     },
     "edited": "Edited",
     "wikiDescription": "Wiki description",
+    "group": {
+      "all": "All groups",
+      "interactive": "Interactive objects",
+      "scenery": "Scenery",
+      "unknown": "Unnamed ids"
+    },
     "default": "Shipped mapping",
     "noMatches": "No objects match.",
     "selectRow": "Select an H3 object in the table to change what it converts to.",

@@ -3705,6 +3705,12 @@
     },
     "edited": "Zmieniony",
     "wikiDescription": "Opis z wiki",
+    "group": {
+      "all": "Wszystkie grupy",
+      "interactive": "Obiekty interaktywne",
+      "scenery": "Dekoracje",
+      "unknown": "Id bez nazwy"
+    },
     "default": "Dołączone mapowanie",
     "noMatches": "Brak pasujących obiektów.",
     "selectRow": "Wybierz obiekt H3 w tabeli, aby zmienić, w co się zamienia.",

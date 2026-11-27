@@ -3606,6 +3606,12 @@
     },
     "edited": "Endret",
     "wikiDescription": "Wiki-beskrivelse",
+    "group": {
+      "all": "Alle grupper",
+      "interactive": "Interaktive objekter",
+      "scenery": "Kulisser",
+      "unknown": "Ubenevnte ID-er"
+    },
     "default": "Medfølgende kobling",
     "noMatches": "Ingen objekter passer.",
     "selectRow": "Velg et H3-objekt i tabellen for å endre hva det konverteres til.",

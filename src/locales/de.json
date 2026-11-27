@@ -3606,6 +3606,12 @@
     },
     "edited": "Geändert",
     "wikiDescription": "Wiki-Beschreibung",
+    "group": {
+      "all": "Alle Gruppen",
+      "interactive": "Interaktive Objekte",
+      "scenery": "Dekoration",
+      "unknown": "Unbenannte IDs"
+    },
     "default": "Mitgelieferte Zuordnung",
     "noMatches": "Keine passenden Objekte.",
     "selectRow": "Wähle ein H3-Objekt in der Tabelle, um zu ändern, was daraus wird.",

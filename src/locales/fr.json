@@ -3655,6 +3655,12 @@
     },
     "edited": "Modifié",
     "wikiDescription": "Description du wiki",
+    "group": {
+      "all": "Tous les groupes",
+      "interactive": "Objets interactifs",
+      "scenery": "Décor",
+      "unknown": "IDs sans nom"
+    },
     "default": "Correspondance d’origine",
     "noMatches": "Aucun objet ne correspond.",
     "selectRow": "Sélectionnez un objet H3 dans le tableau pour changer ce en quoi il est converti.",
