@@ -54,11 +54,6 @@
     "wikiTitle": "Cartographer",
     "description": "Cartographer is an adventure map location, that can be visited by a hero. There are three different types of cartographers, which have different effects: The tower cartographer reveals all tiles, except water and subterranean; The water cartographer will reveal all water tiles; The stalagmite cartographer will reveal all subterranean tiles (not to be mixed with the whole underground layer)"
   },
-  "14": {
-    "name": "Swan Pond",
-    "wikiTitle": "Swan Pond",
-    "description": "Swan Pond is an adventure map location, that gives a visiting hero +2 to luck until next battle. The Swan Pond also causes the visiting hero to lose all remaining movement points for the day. The latter feature makes the Swan Pond a popular strategic map object among map-makers. For example, it can be used in tight bottle necks to force heroes travel through it, causing them to stop for a day."
-  },
   "15": {
     "name": "Cover of Darkness",
     "wikiTitle": "Cover of Darkness (Adventure Map)",
@@ -418,11 +413,6 @@
     "name": "Witch Hut",
     "wikiTitle": "Witch Hut",
     "description": "Witch Hut is an adventure map location, where a hero can learn a new secondary skill by visiting them. The hut teaches the skill only to basic level if the hero has not already learned it. By default, the secondary skill is randomly chosen, but cannot be Leadership, Necromancy, or Runes Horn of the Abyss or Necromancy. The map-maker can choose which secondary skills (including those banned by default) are eligible for the draw, or choose just one."
-  },
-  "124": {
-    "name": "Hole",
-    "wikiTitle": "Hole",
-    "description": "Hole is an Adventure Map feature that can be located on any land tile - that is not water. They can either be placed on the map by the map-maker, or they appear after a hero has dug the ground. Digging has two purposes. Firstly, it is typically the only way to find the grail artifact (another possibility is to find a dismissed hero with the grail artifact in a tavern). Secondly, tiles with holes cannot be disembarked with a boat. This makes digging holes on the shoreline in order to prevent enemy heroes' invasions a strategic feature."
   },
   "212": {
     "name": "Border Gate",
