@@ -200,7 +200,7 @@
         "avgmdsa0.def": "barracks_dungeon_4",
         "avgmino0.def": "barracks_dungeon_5",
         "avgmonk0.def": "barracks_human_5",
-        "avgmumy.def": "barracks_neutral_2",
+        "avgmumy.def": "barracks_neutral_19",
         "avgnaga0.def": "barracks_dungeon_6",
         "avgnoll.def": "barracks_dungeon_1",
         "avgnomd.def": "barracks_human_3",
@@ -530,8 +530,10 @@
     {
       "h3Id": 36,
       "h3Name": "Grail",
-      "outcome": "omit",
-      "reason": "grail_deferred"
+      "outcome": "emit",
+      "sid": "mirage",
+      "kind": "interactable",
+      "reason": "user_mapping"
     },
     {
       "h3Id": 37,
@@ -868,8 +870,10 @@
     {
       "h3Id": 70,
       "h3Name": "Random Hero",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_70"
+      "outcome": "emit",
+      "sid": "random-hero",
+      "kind": "interactable",
+      "reason": "user_mapping"
     },
     {
       "h3Id": 71,
@@ -885,7 +889,8 @@
       "outcome": "emit",
       "sid": "random-squad",
       "kind": "random_squad",
-      "reason": "direct_template_sid"
+      "reason": "user_mapping",
+      "tier": 0
     },
     {
       "h3Id": 73,
@@ -893,7 +898,8 @@
       "outcome": "emit",
       "sid": "random-squad",
       "kind": "random_squad",
-      "reason": "direct_template_sid"
+      "reason": "user_mapping",
+      "tier": 0
     },
     {
       "h3Id": 74,
@@ -1588,8 +1594,8 @@
       "h3Name": "Log",
       "outcome": "emit",
       "sid": "grass_log_1",
-      "kind": "interactable",
-      "reason": "direct_template_sid"
+      "kind": "scenery",
+      "reason": "user_mapping"
     },
     {
       "h3Id": 131,
@@ -1749,8 +1755,8 @@
     {
       "h3Id": 155,
       "h3Name": "Trees",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_155"
+      "outcome": "scenery",
+      "role": "tree"
     },
     {
       "h3Id": 156,
@@ -1821,8 +1827,33 @@
     {
       "h3Id": 159,
       "h3Name": "Willow Trees",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_159"
+      "outcome": "mix",
+      "entries": [
+        {
+          "sids": [
+            "tree_dirt_1"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "tree_dirt_2"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "tree_dirt_3"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "tree_dirt_4"
+          ],
+          "weight": 1
+        }
+      ]
     },
     {
       "h3Id": 160,
@@ -1833,9 +1864,27 @@
     {
       "h3Id": 161,
       "h3Name": "Reef",
-      "outcome": "omit",
-      "reason": "reef_water_omit",
-      "onWater": "mountain"
+      "outcome": "mix",
+      "entries": [
+        {
+          "sids": [
+            "mountain_water_small_1"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "mountain_water_small_2"
+          ],
+          "weight": 1
+        },
+        {
+          "sids": [
+            "mountain_water_small_3"
+          ],
+          "weight": 1
+        }
+      ]
     },
     {
       "h3Id": 162,
