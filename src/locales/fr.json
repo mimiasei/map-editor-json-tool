@@ -3654,6 +3654,7 @@
       "mix": "Devient un mélange aléatoire d’objets OE"
     },
     "edited": "Modifié",
+    "wikiDescription": "Description du wiki",
     "default": "Correspondance d’origine",
     "noMatches": "Aucun objet ne correspond.",
     "selectRow": "Sélectionnez un objet H3 dans le tableau pour changer ce en quoi il est converti.",

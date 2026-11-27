@@ -3613,6 +3613,7 @@
       "mix": "Converts to a random mix of OE objects"
     },
     "edited": "Edited",
+    "wikiDescription": "Wiki description",
     "default": "Shipped mapping",
     "noMatches": "No objects match.",
     "selectRow": "Select an H3 object in the table to change what it converts to.",

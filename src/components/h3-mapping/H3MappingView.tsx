@@ -28,6 +28,7 @@ import { useH3MappingStore } from '@/store/useH3MappingStore'
 import { DEFAULT_MAPPING_ROWS, DEFAULT_SETTINGS, DEFAULT_SPRITE_RULES, SCENERY_ROLE_SIDS } from '@/lib/h3-import/h3-object-mapping'
 import { OBJECT_KINDS, SCENERY_ROLES, type MixEntry, type ObjectKind, type ObjectRow, type SceneryRole } from '@/lib/h3-import/h3-object-mapping-schema'
 import { convertsToText, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type RowKind } from '@/lib/h3-import/mapping-edit'
+import { getH3ObjectDescription } from '@/lib/h3-import/h3-object-descriptions'
 import mappingData from '@/lib/h3-import/h3-object-mapping.json'
 import { confirmDialog, openFile, saveFile } from '@/lib/native-fs'
 import { cn } from '@/lib/utils'
@@ -198,7 +199,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
                     >
                       <td className="px-2 py-1 text-center">{edited && <span className="inline-block h-2 w-2 rounded-full bg-primary" title={t('h3Mapping.edited')} />}</td>
                       <td className="px-2 py-1 tabular-nums text-muted-foreground">{row.h3Id}</td>
-                      <td className="truncate px-2 py-1">{row.h3Name}</td>
+                      <td className="truncate px-2 py-1" title={getH3ObjectDescription(row.h3Id)?.description}>{row.h3Name}</td>
                       <td className="px-2 py-1"><span className={cn('rounded px-1.5 py-0.5', KIND_BADGE[kind])}>{t(`h3Mapping.type.${kind}`)}</span></td>
                       <td className={cn('truncate px-2 py-1 font-mono', kind === 'omit' && 'text-muted-foreground')}>
                         {convertsToText(row)}
@@ -229,6 +230,7 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
   const setRow = useH3MappingStore((s) => s.setRow)
   const clearRow = useH3MappingStore((s) => s.clearRow)
   const defaultRow = DEFAULT_BY_ID.get(row.h3Id) as ObjectRow
+  const wiki = getH3ObjectDescription(row.h3Id)
   const edited = !sameRow(row, defaultRow)
   const kind = rowKind(row)
   const [jsonOpen, setJsonOpen] = useState(false)
@@ -259,6 +261,13 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
           {edited && <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">{t('h3Mapping.edited')}</Badge>}
         </div>
         <p className="mt-0.5 text-muted-foreground">{t('h3Mapping.default')}: <span className="font-mono">{convertsToText(defaultRow)}</span></p>
+        {wiki && (
+          <p className="mt-1.5 rounded-md border border-border bg-muted/40 p-2 text-muted-foreground">
+            <span className="font-medium text-foreground">{t('h3Mapping.wikiDescription')}</span>
+            {(wiki.generic || wiki.titleMismatch) && <span> ({wiki.wikiTitle})</span>}
+            {': '}{wiki.description}
+          </p>
+        )}
       </div>
 
       <div className="space-y-1">

@@ -3704,6 +3704,7 @@
       "mix": "Zamienia się w losową mieszankę obiektów OE"
     },
     "edited": "Zmieniony",
+    "wikiDescription": "Opis z wiki",
     "default": "Dołączone mapowanie",
     "noMatches": "Brak pasujących obiektów.",
     "selectRow": "Wybierz obiekt H3 w tabeli, aby zmienić, w co się zamienia.",
