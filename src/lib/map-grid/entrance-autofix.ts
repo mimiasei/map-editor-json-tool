@@ -30,6 +30,7 @@ import {computeFootprintTiles, entranceGroups, isFootprintInBounds} from './foot
 import { groupOf } from './tile-index'
 import { buildBlockedTileSet, footprintOnFlatGround } from './passability'
 import { entranceApproachNodes, findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
+import { wouldCutPassage } from './relocate'
 
 export interface EntranceAutoFixDeletion {
   /** The object being removed — always type 0 (a footprint template is what
@@ -265,7 +266,9 @@ function findNearbyFreeTile(
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z, obj.rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ) || !footprintOnFlatGround(cells, context)) return false
-    return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x) && !approach.has(cell.z * sizeX + cell.x)))
+    if (!cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x) && !approach.has(cell.z * sizeX + cell.x)))) return false
+    // Not into a corridor (relocate.ts wouldCutPassage).
+    return !wouldCutPassage(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x), (n) => blocked.has(n) || claimedDestinations.has(n), sizeX, sizeZ)
   }
 
   const maxRadius = Math.max(sizeX, sizeZ)
@@ -318,7 +321,8 @@ function findRelocationTarget(
     for (const cell of cells) {
       if (cell.value === 1 && (isBlocked(cell.z * sizeX + cell.x) || approach.has(cell.z * sizeX + cell.x))) return false
     }
-    return entranceGroups(cells, sizeX, sizeZ).some((g) => !isBlocked(g.entranceNode) && ![...g.protectedNodes].some((n) => isBlocked(n)))
+    if (!entranceGroups(cells, sizeX, sizeZ).some((g) => !isBlocked(g.entranceNode) && ![...g.protectedNodes].some((n) => isBlocked(n)))) return false
+    return !wouldCutPassage(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x), isBlocked, sizeX, sizeZ)
   }
 
   if (isValidCandidate(violation.x, violation.z)) return violation.z * sizeX + violation.x

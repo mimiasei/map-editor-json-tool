@@ -10,7 +10,7 @@ import { entranceApproachNodes } from './entrance-validation'
 import { buildBlockedTileSet, footprintOnFlatGround, objectBlockedCells } from './passability'
 import { groupOf } from './tile-index'
 import { findOverlappingPlacements, type OverlappingPlacement } from './overlap-validation'
-import { findNearestValidPosition, floodFillReachable } from './relocate'
+import { findNearestValidPosition, floodFillReachable, wouldCutPassage } from './relocate'
 
 export interface OverlapAutoFixRelocation {
   entityType: 0 | 1 | 2
@@ -139,7 +139,9 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
         if (cell.value === 1 && (moverBlocked.has(n) || approach.has(n))) return false
         if (reachable?.has(n)) anyReachable = true
       }
-      return anyReachable
+      if (!anyReachable) return false
+      // Not into a corridor (relocate.ts wouldCutPassage).
+      return !wouldCutPassage(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x), (n) => moverBlocked.has(n), sizeX, sizeZ)
     }
 
     const found = findNearestValidPosition(mover.x, mover.z, sizeX, sizeZ, isValidCandidate, MAX_RELOCATION_RADIUS)
