@@ -3749,6 +3749,8 @@
       "squadTier": "Poziom oddziału",
       "squadTierAuto": "Auto (z wartości)",
       "squadHint": "Frakcja i poziom losowego oddziału strzegącego obiektu. Auto pozwala grze wybrać poziom pasujący do wartości; stały poziom z wartością, do której nie pasuje żaden oddział tego poziomu, może zostawić pustego strażnika. Sprawdź w grze.",
+      "hireTierAuto": "Poziom z obiektu H3, inaczej nieustawiony",
+      "hireHint": "Frakcja i poziom losowej rekrutacji. „Dowolna frakcja” to frakcja typowa dla biomu. Poziom: Random Dwelling Lvl zachowuje poziom z H3; w przeciwnym razie nieustawiony, nieprzetestowane w grze.",
       "pickToSave": "Wybierz obiekt OE, aby zapisać ten wiersz.",
       "unknownSid": "Tego id nie ma w wczytanych danych gry.",
       "kind": "Rodzaj obiektu",

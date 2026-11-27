@@ -2340,20 +2340,26 @@
     {
       "h3Id": 216,
       "h3Name": "Random Dwelling",
-      "outcome": "omit",
-      "reason": "random_dwelling_decoder_unsupported"
+      "outcome": "emit",
+      "sid": "random-hire",
+      "kind": "dwelling",
+      "reason": "random_dwelling_is_random_hire"
     },
     {
       "h3Id": 217,
       "h3Name": "Random Dwelling Lvl",
-      "outcome": "omit",
-      "reason": "random_dwelling_lvl_unsupported"
+      "outcome": "emit",
+      "sid": "random-hire",
+      "kind": "dwelling",
+      "reason": "random_dwelling_is_random_hire"
     },
     {
       "h3Id": 218,
       "h3Name": "Random Dwelling Faction",
-      "outcome": "omit",
-      "reason": "random_dwelling_faction_unsupported"
+      "outcome": "emit",
+      "sid": "random-hire",
+      "kind": "dwelling",
+      "reason": "random_dwelling_is_random_hire"
     },
     {
       "h3Id": 219,

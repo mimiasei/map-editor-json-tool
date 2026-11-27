@@ -3699,6 +3699,8 @@
       "squadTier": "Niveau de l'escouade",
       "squadTierAuto": "Auto (selon la valeur)",
       "squadHint": "La faction et le niveau de l'escouade aléatoire qui garde cet objet. Auto laisse le jeu choisir un niveau adapté à la valeur ; un niveau fixe avec une valeur qu'aucune escouade de ce niveau ne satisfait peut laisser la garde vide, à tester dans le jeu.",
+      "hireTierAuto": "Niveau de l'objet H3, sinon non défini",
+      "hireHint": "La faction et le niveau du recrutement aléatoire. « Toute faction » est la faction native du biome. Niveau : un Random Dwelling Lvl garde son niveau H3 ; sinon non défini, non testé dans le jeu.",
       "pickToSave": "Choisissez un objet OE pour enregistrer cette ligne.",
       "unknownSid": "Cet id n’est pas dans les données du jeu chargées.",
       "kind": "Type d’objet",

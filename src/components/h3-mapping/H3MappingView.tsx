@@ -360,7 +360,7 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
               <p className="text-muted-foreground">{t('h3Mapping.inspector.kindHint')}</p>
             </div>
           )}
-          {lastEmit?.sid === 'random-squad' && (
+          {(lastEmit?.sid === 'random-squad' || lastEmit?.sid === 'random-hire') && (
             <div className="space-y-2 rounded-md border border-border p-2">
               <div className="space-y-1">
                 <Label className="text-xs">{t('h3Mapping.inspector.squadFraction')}</Label>
@@ -376,12 +376,12 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
                 <Select value={String(lastEmit.tier ?? 0)} onValueChange={(v) => commit({ ...lastEmit, tier: Number(v), reason: USER_REASON })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">{t('h3Mapping.inspector.squadTierAuto')}</SelectItem>
+                    <SelectItem value="0">{t(lastEmit.sid === 'random-hire' ? 'h3Mapping.inspector.hireTierAuto' : 'h3Mapping.inspector.squadTierAuto')}</SelectItem>
                     {[1, 2, 3, 4, 5, 6, 7].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-muted-foreground">{t('h3Mapping.inspector.squadHint')}</p>
+              <p className="text-muted-foreground">{t(lastEmit.sid === 'random-hire' ? 'h3Mapping.inspector.hireHint' : 'h3Mapping.inspector.squadHint')}</p>
             </div>
           )}
         </div>

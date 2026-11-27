@@ -3650,6 +3650,8 @@
       "squadTier": "Truppen-Stufe",
       "squadTierAuto": "Automatisch (aus dem Wert)",
       "squadHint": "Fraktion und Stufe der Zufallstruppe, die dieses Objekt bewacht. Automatisch lässt das Spiel eine zum Truppenwert passende Stufe wählen; eine feste Stufe mit einem Wert, zu dem keine Truppe dieser Stufe passt, kann die Wache leer lassen. Im Spiel testen.",
+      "hireTierAuto": "Stufe des H3-Objekts, sonst nicht gesetzt",
+      "hireHint": "Fraktion und Stufe der Zufallsrekrutierung. „Beliebige Fraktion“ ist die zum Biom passende Fraktion. Stufe: Ein Random Dwelling Lvl behält seine H3-Stufe; sonst nicht gesetzt (im Spiel ungetestet).",
       "pickToSave": "Wähle ein OE-Objekt, um diese Zeile zu speichern.",
       "unknownSid": "Diese ID ist nicht in den geladenen Spieldaten.",
       "kind": "Objektart",

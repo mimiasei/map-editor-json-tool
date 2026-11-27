@@ -55,6 +55,7 @@ import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { createH3DecorationPicker, type H3DecorationPicker } from './h3-decoration-pools'
 import { resolveObjectSid, resolveLandmark, resolveMix, matchSpriteRule, getSetting, WATER_MOUNTAIN_OBJECT_IDS, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
+import { RANDOM_HIRE_BIOME_FRACTION, RANDOM_HIRE_FRACTION_BY_FACTION, RANDOM_HIRE_TIER_RANDOM } from '@/lib/map-grid/random-hire'
 import { HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
@@ -273,6 +274,8 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  to detect a gzip-wrapped `.h3m` before calling this). `seed` defaults to a
  *  hash of the map's own title, so re-converting the same source map is
  *  reproducible. */
+// Random Dwelling Lvl: the subtype is the dwelling level minus one (sprites avrcgen1..avrcgen7 are subtypes 0..6 in the H3 maps sampled).
+const OBJECT_RANDOM_DWELLING_LVL = 217
 const OBJECT_MONOLITH_ONE_WAY_ENTRANCE = 43
 const OBJECT_MONOLITH_ONE_WAY_EXIT = 44
 const OBJECT_SUBTERRANEAN_GATE = 103
@@ -489,6 +492,7 @@ export async function convertH3mToMap(
   const heroEntries: HeroEntry[] = []
   const propRandomSquads: Record<string, unknown>[] = []
   const propRandomItems: Record<string, unknown>[] = []
+  const propRandomHires: Record<string, unknown>[] = []
   const propSquads: Record<string, unknown>[] = []
   // Every generated display-name SID so far in this import (so two
   // custom-named H3 towns never collide), and the real text each one
@@ -892,6 +896,11 @@ export async function convertH3mToMap(
     const placedSid = oid === OBJECT_MONOLITH_ONE_WAY_ENTRANCE || oid === OBJECT_MONOLITH_ONE_WAY_EXIT ? `portal_${1 + (subId % 3)}` : resolution.sid
     const placedId = placeObject(placedSid, node, 0, visit)
     objectsPlaced += 1
+    if (placedSid === 'random-hire') {
+      // The faction and tier come from the mapping row; without a tier, a level-specific H3 dwelling keeps its level. Tier 0 is "not set" (untested in the game).
+      const tier = resolution.tier || (oid === OBJECT_RANDOM_DWELLING_LVL ? subId + 1 : RANDOM_HIRE_TIER_RANDOM)
+      propRandomHires.push({ type: 0, id: placedId, tier, fraction: RANDOM_HIRE_FRACTION_BY_FACTION[resolution.fraction ?? ''] ?? RANDOM_HIRE_BIOME_FRACTION })
+    }
     if (resolution.kind === 'portal') {
       // H3 connects monoliths by colour (the subtype), not by look: several colours share one OE look, so the network is kept here.
       h3Portals.push({
@@ -1439,7 +1448,7 @@ export async function convertH3mToMap(
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
+      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propRandomHires, propGrowthUnits, propHeroes, propSquads,
       propCitiesHold: cityHoldId === null ? [] : [{ type: 0, id: cityHoldId, isCityHold: true }],
       propPortals: portalLinks.propPortals,
     },

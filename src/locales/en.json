@@ -3658,6 +3658,8 @@
       "squadTier": "Squad tier",
       "squadTierAuto": "Auto (from value)",
       "squadHint": "The faction and tier of the random squad that guards this object. Auto lets the game pick a tier that fits the squad value; a fixed tier with a value that no squad of that tier fits can leave the guard empty, so test it in the game.",
+      "hireTierAuto": "Level from the H3 object, else not set",
+      "hireHint": "The faction and tier of the random hire. \"Any faction\" is the faction native to the biome it stands on. Tier: a Random Dwelling Lvl keeps its H3 level; otherwise not set, which is untested in the game.",
       "pickToSave": "Pick an OE object to save this row.",
       "unknownSid": "This id is not in the loaded game data.",
       "kind": "Object kind",

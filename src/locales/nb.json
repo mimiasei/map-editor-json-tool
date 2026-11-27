@@ -3650,6 +3650,8 @@
       "squadTier": "Troppnivå",
       "squadTierAuto": "Auto (ut fra verdien)",
       "squadHint": "Fraksjonen og nivået til den tilfeldige troppen som vokter objektet. Auto lar spillet velge et nivå som passer troppverdien; et fast nivå med en verdi som ingen tropp på det nivået passer til, kan gi en tom vakt. Test i spillet.",
+      "hireTierAuto": "Nivå fra H3-objektet, ellers ikke satt",
+      "hireHint": "Fraksjonen og nivået til den tilfeldige rekrutteringen. «Hvilken som helst fraksjon» er fraksjonen som hører til biomet. Nivå: en Random Dwelling Lvl beholder H3-nivået; ellers ikke satt, utestet i spillet.",
       "pickToSave": "Velg et OE-objekt for å lagre denne raden.",
       "unknownSid": "Denne id-en finnes ikke i de innlastede spilldataene.",
       "kind": "Objekttype",
