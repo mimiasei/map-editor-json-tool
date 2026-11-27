@@ -2413,6 +2413,7 @@
         "renderObjectImages": "Tegn objektbilder…",
         "importScript": "Importer skript (.json)…",
         "importH3Map": "Importer H3-kart…",
+        "h3ObjectMapping": "H3-objektkobling",
         "clearMap": "Tøm kartet"
       },
       "resaved": "Lagret på nytt {{bytes}} byte.\nSikkerhetskopi: {{path}}",
@@ -3564,5 +3565,68 @@
     "removeRecent": "Fjern fra listen",
     "byAuthor": "Av {{author}}",
     "whatsNew": "Hva er nytt"
+  },
+  "h3Mapping": {
+    "title": "H3-objektkobling",
+    "subtitle": "Hva hvert Heroes 3-objekt blir i Olden Era når du importerer et kart. Endringene gjelder neste import.",
+    "search": "Søk etter id, navn eller mål",
+    "filter": {
+      "all": "Alle objekter",
+      "omit": "Ikke konvertert",
+      "emit": "Ett OE-objekt",
+      "scenery": "Dekorroller",
+      "rule": "Regler (etter sprite / undertype)"
+    },
+    "modifiedOnly": "Bare endrede",
+    "counts": "{{shown}} av {{total}} objekter · {{modified}} endret",
+    "import": "Importer",
+    "export": "Eksporter",
+    "resetAll": "Tilbakestill alt",
+    "resetAllConfirm": "Tilbakestille de {{count}} endrede radene til den medfølgende koblingen?",
+    "close": "Lukk",
+    "column": {
+      "id": "ID",
+      "object": "H3-objekt",
+      "type": "Type",
+      "convertsTo": "Blir til"
+    },
+    "type": {
+      "omit": "Ikke konvertert",
+      "emit": "OE-objekt",
+      "scenery": "Dekor",
+      "rule": "Regel"
+    },
+    "typeLong": {
+      "omit": "Ikke konvertert (utelatt)",
+      "emit": "Blir ett OE-objekt",
+      "scenery": "Dekor (etter rolle)"
+    },
+    "edited": "Endret",
+    "default": "Medfølgende kobling",
+    "noMatches": "Ingen objekter passer.",
+    "selectRow": "Velg et H3-objekt i tabellen for å endre hva det konverteres til.",
+    "appliesToNext": "Gjelder neste H3-import. Eksporter tabellen for å ta vare på en kopi eller erstatte h3-object-mapping.json.",
+    "exported": "Tabellen er eksportert.",
+    "imported": "Importerte {{count}} endrede rader.",
+    "importFailed": "Kunne ikke importere: {{error}}",
+    "inspector": {
+      "type": "Blir til",
+      "oeObject": "OE-objekt",
+      "pickObject": "Velg et OE-objekt …",
+      "pickToSave": "Velg et OE-objekt for å lagre denne raden.",
+      "unknownSid": "Denne id-en finnes ikke i de innlastede spilldataene.",
+      "kind": "Objekttype",
+      "kindHint": "Avgjør hvordan importen behandler objektet (byer, portaler og boliger får spesialbehandling; «interactable» passer for de fleste bygninger).",
+      "role": "Dekorrolle",
+      "roleSids": "Rollen bruker disse OE-objektene, etter terreng:",
+      "reason": "Årsak vist i importrapporten",
+      "reasonHint": "Objektet utelates fra det konverterte kartet.",
+      "ruleHint": "Resultatet avhenger av sprite, undertype eller terreng ({{summary}}). Rediger det som JSON.",
+      "editJson": "Rediger JSON",
+      "resetRow": "Tilbakestill rad"
+    },
+    "jsonInvalid": "Ugyldig rad: {{error}}",
+    "jsonApply": "Bruk",
+    "jsonTitle": "#{{id}} {{name}} — JSON"
   }
 }

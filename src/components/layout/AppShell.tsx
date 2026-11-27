@@ -52,6 +52,7 @@ import StoryBuilderDialog from '@/components/story/StoryBuilderDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
 import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
 import MapGridDialog from '@/components/map-grid/MapGridDialog'
+import H3MappingView from '@/components/h3-mapping/H3MappingView'
 import GenerateRandomMapDialog from '@/components/common/GenerateRandomMapDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import SetupDialog from '@/components/common/SetupDialog'
@@ -146,6 +147,8 @@ export default function AppShell() {
   const startScreenOpen = useViewBridgeStore((s) => s.startScreenOpen)
   const showStartScreen = useViewBridgeStore((s) => s.showStartScreen)
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
+  const h3MappingOpen = useViewBridgeStore((s) => s.h3MappingOpen)
+  const closeH3Mapping = useViewBridgeStore((s) => s.closeH3Mapping)
   const openRmg = useViewBridgeStore((s) => s.openRmg)
   const closeRmg = useViewBridgeStore((s) => s.closeRmg)
   const pendingDatabaseFocus = useViewBridgeStore((s) => s.pendingDatabaseFocus)
@@ -841,7 +844,12 @@ export default function AppShell() {
         onOpenChange={(o) => { setGameDatabaseOpen(o); if (!o) clearDatabaseFocus() }}
         focusRequest={pendingDatabaseFocus}
       />
-      {mapGridOpen ? (
+      {h3MappingOpen ? (
+        // Same inline full-pane pattern as Map Grid below: replaces the view that was showing, and a tab switch closes it.
+        <div className="flex-1 overflow-hidden p-3">
+          <H3MappingView onClose={closeH3Mapping} />
+        </div>
+      ) : mapGridOpen ? (
         // Inline view (issue #195 follow-up), not a modal — replaces this
         // whole slot instead of layering on top, so it fills the same space
         // the normal 3-pane editor Group occupies below and needs no resize

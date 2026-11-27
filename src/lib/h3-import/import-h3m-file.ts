@@ -23,6 +23,7 @@ import { runH3ImportJob, type H3ImportJobInput, type H3ImportJobResult } from '.
 import type { H3WorkerMessage } from './h3-import.worker'
 import type { UnreachablePlacement, IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 import i18n from '@/lib/i18n'
+import { useH3MappingStore } from '@/store/useH3MappingStore'
 
 export interface ImportH3mResult {
   /** Display name for the freshly-imported map, e.g. "Crimson and Clover.map" */
@@ -114,7 +115,7 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   // The conversion, the placement auto-fix and the validations run in a Web Worker (h3-import-job.ts), so the dialog's text, bar and spinner stay live.
   const {
     container: fixed, report, localizationTokens, customMapObjects, dialogFlows, validationErrors, autoFixWarnings, unreachablePlacements, isolatedPlayerStarts,
-  } = await runH3ImportJobOffThread({ data, catalog, template: templateContainer, mapName: file.name.replace(/.h3m$/i, ''), language: i18n.language }, onProgress)
+  } = await runH3ImportJobOffThread({ data, catalog, template: templateContainer, mapName: file.name.replace(/.h3m$/i, ''), language: i18n.language, mappingOverrides: useH3MappingStore.getState().overrides }, onProgress)
   // The map loads with the converter's custom map objects (the subterranean gates) in the catalog: clones of real ones under a new sid the game's
   // catalog does not list, same footprint as the source, the clone's own name.
   const importCatalog = customMapObjects.length === 0 ? catalog : {

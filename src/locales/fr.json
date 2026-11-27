@@ -2451,6 +2451,7 @@
         "renderObjectImages": "Générer les images d'objets…",
         "importScript": "Importer un script (.json)…",
         "importH3Map": "Importer une carte H3…",
+        "h3ObjectMapping": "Correspondance des objets H3",
         "clearMap": "Vider la carte"
       },
       "resaved": "Réenregistré : {{bytes}} octets.\nSauvegarde : {{path}}",
@@ -3613,5 +3614,68 @@
     "removeRecent": "Retirer de la liste",
     "byAuthor": "Par {{author}}",
     "whatsNew": "Nouveautés"
+  },
+  "h3Mapping": {
+    "title": "Correspondance des objets H3",
+    "subtitle": "Ce que devient chaque objet de Heroes 3 dans Olden Era lors de l’import d’une carte. Vos modifications s’appliquent au prochain import.",
+    "search": "Rechercher un id, un nom ou une cible",
+    "filter": {
+      "all": "Tous les objets",
+      "omit": "Non convertis",
+      "emit": "Un objet OE",
+      "scenery": "Rôles de décor",
+      "rule": "Règles (par sprite / sous-type)"
+    },
+    "modifiedOnly": "Modifiés seulement",
+    "counts": "{{shown}} objets sur {{total}} · {{modified}} modifiés",
+    "import": "Importer",
+    "export": "Exporter",
+    "resetAll": "Tout réinitialiser",
+    "resetAllConfirm": "Réinitialiser les {{count}} lignes modifiées avec la correspondance d’origine ?",
+    "close": "Fermer",
+    "column": {
+      "id": "ID",
+      "object": "Objet H3",
+      "type": "Type",
+      "convertsTo": "Devient"
+    },
+    "type": {
+      "omit": "Non converti",
+      "emit": "Objet OE",
+      "scenery": "Décor",
+      "rule": "Règle"
+    },
+    "typeLong": {
+      "omit": "Non converti (ignoré)",
+      "emit": "Devient un objet OE",
+      "scenery": "Décor (par rôle)"
+    },
+    "edited": "Modifié",
+    "default": "Correspondance d’origine",
+    "noMatches": "Aucun objet ne correspond.",
+    "selectRow": "Sélectionnez un objet H3 dans le tableau pour changer ce en quoi il est converti.",
+    "appliesToNext": "S’applique au prochain import H3. Exportez le tableau pour en garder une copie ou remplacer h3-object-mapping.json.",
+    "exported": "Tableau exporté.",
+    "imported": "{{count}} lignes modifiées importées.",
+    "importFailed": "Import impossible : {{error}}",
+    "inspector": {
+      "type": "Devient",
+      "oeObject": "Objet OE",
+      "pickObject": "Choisir un objet OE…",
+      "pickToSave": "Choisissez un objet OE pour enregistrer cette ligne.",
+      "unknownSid": "Cet id n’est pas dans les données du jeu chargées.",
+      "kind": "Type d’objet",
+      "kindHint": "Détermine comment l’importeur traite l’objet (villes, portails et habitations ont un traitement spécial ; « interactable » convient à la plupart des bâtiments).",
+      "role": "Rôle de décor",
+      "roleSids": "Le rôle utilise ces objets OE, selon le terrain :",
+      "reason": "Raison affichée dans le rapport d’import",
+      "reasonHint": "L’objet est omis de la carte convertie.",
+      "ruleHint": "Le résultat dépend du sprite, du sous-type ou du terrain ({{summary}}). Modifiez-le en JSON.",
+      "editJson": "Modifier le JSON",
+      "resetRow": "Réinitialiser la ligne"
+    },
+    "jsonInvalid": "Ligne invalide : {{error}}",
+    "jsonApply": "Appliquer",
+    "jsonTitle": "#{{id}} {{name}} — JSON"
   }
 }

@@ -2489,6 +2489,7 @@
         "renderObjectImages": "Renderuj obrazy obiektów…",
         "importScript": "Importuj skrypt (.json)…",
         "importH3Map": "Importuj mapę H3…",
+        "h3ObjectMapping": "Mapowanie obiektów H3",
         "clearMap": "Wyczyść mapę"
       },
       "resaved": "Zapisano ponownie {{bytes}} bajtów.\nKopia zapasowa: {{path}}",
@@ -3663,5 +3664,68 @@
     "removeRecent": "Usuń z listy",
     "byAuthor": "Autor: {{author}}",
     "whatsNew": "Co nowego"
+  },
+  "h3Mapping": {
+    "title": "Mapowanie obiektów H3",
+    "subtitle": "W co zamienia się każdy obiekt Heroes 3 w Olden Era podczas importu mapy. Zmiany obowiązują od następnego importu.",
+    "search": "Szukaj id, nazwy lub celu",
+    "filter": {
+      "all": "Wszystkie obiekty",
+      "omit": "Nie konwertowane",
+      "emit": "Jeden obiekt OE",
+      "scenery": "Role dekoracji",
+      "rule": "Reguły (wg sprite / podtypu)"
+    },
+    "modifiedOnly": "Tylko zmienione",
+    "counts": "{{shown}} z {{total}} obiektów · {{modified}} zmienionych",
+    "import": "Importuj",
+    "export": "Eksportuj",
+    "resetAll": "Zresetuj wszystko",
+    "resetAllConfirm": "Przywrócić {{count}} zmienionych wierszy do dołączonego mapowania?",
+    "close": "Zamknij",
+    "column": {
+      "id": "ID",
+      "object": "Obiekt H3",
+      "type": "Typ",
+      "convertsTo": "Zamienia się w"
+    },
+    "type": {
+      "omit": "Nie konwertowany",
+      "emit": "Obiekt OE",
+      "scenery": "Dekoracja",
+      "rule": "Reguła"
+    },
+    "typeLong": {
+      "omit": "Nie konwertowany (pomijany)",
+      "emit": "Zamienia się w jeden obiekt OE",
+      "scenery": "Dekoracja (wg roli)"
+    },
+    "edited": "Zmieniony",
+    "default": "Dołączone mapowanie",
+    "noMatches": "Brak pasujących obiektów.",
+    "selectRow": "Wybierz obiekt H3 w tabeli, aby zmienić, w co się zamienia.",
+    "appliesToNext": "Obowiązuje od następnego importu H3. Wyeksportuj tabelę, aby zachować kopię lub zastąpić h3-object-mapping.json.",
+    "exported": "Tabela wyeksportowana.",
+    "imported": "Zaimportowano zmienione wiersze: {{count}}.",
+    "importFailed": "Nie można zaimportować: {{error}}",
+    "inspector": {
+      "type": "Zamienia się w",
+      "oeObject": "Obiekt OE",
+      "pickObject": "Wybierz obiekt OE…",
+      "pickToSave": "Wybierz obiekt OE, aby zapisać ten wiersz.",
+      "unknownSid": "Tego id nie ma w wczytanych danych gry.",
+      "kind": "Rodzaj obiektu",
+      "kindHint": "Określa, jak importer traktuje obiekt (miasta, portale i siedliska mają szczególną obsługę; „interactable” pasuje do większości budynków).",
+      "role": "Rola dekoracji",
+      "roleSids": "Rola używa tych obiektów OE, zależnie od terenu:",
+      "reason": "Powód pokazywany w raporcie importu",
+      "reasonHint": "Obiekt jest pomijany w skonwertowanej mapie.",
+      "ruleHint": "Wynik zależy od sprite, podtypu lub terenu ({{summary}}). Edytuj go jako JSON.",
+      "editJson": "Edytuj JSON",
+      "resetRow": "Zresetuj wiersz"
+    },
+    "jsonInvalid": "Nieprawidłowy wiersz: {{error}}",
+    "jsonApply": "Zastosuj",
+    "jsonTitle": "#{{id}} {{name}} — JSON"
   }
 }

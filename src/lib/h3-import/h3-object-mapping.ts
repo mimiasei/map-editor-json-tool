@@ -101,7 +101,23 @@ export const H3_TERRAIN_BIOME: Record<number, OeBiome> = {
 export const H3_OAK_TREES_OBJECT_ID = 135
 
 const mapping = H3ObjectMappingSchema.parse(mappingData)
-const objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
+
+/** The shipped table, one row per H3 object id (what the mapping tool shows as the default). */
+export const DEFAULT_MAPPING_ROWS: readonly ObjectRow[] = mapping.objects
+/** The `sceneryRoleSids` table: the OE sid each scenery role uses per terrain biome. */
+export const SCENERY_ROLE_SIDS: Readonly<Record<string, Record<string, string>>> = mapping.sceneryRoleSids
+
+/** The table in use: the shipped rows, with the user's edits (the mapping tool, `useH3MappingStore`) on top. */
+let objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
+
+/** Row edits by H3 id, as saved by the mapping tool. Every resolver below reads the result, in the main thread and (passed along with the job) in the import worker. */
+export type MappingOverrides = Record<string, ObjectRow>
+
+export function applyMappingOverrides(overrides: MappingOverrides): void {
+  objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, overrides[String(row.h3Id)] ?? row]))
+  WATER_MOUNTAIN_OBJECT_IDS.clear()
+  for (const row of objectsById.values()) if ('onWater' in row && row.onWater === 'mountain') WATER_MOUNTAIN_OBJECT_IDS.add(row.h3Id)
+}
 
 export interface LandmarkResolution { sid?: string; effectSid?: string; smallSid?: string; pieces?: { size: number; sids: string[] }[] }
 
@@ -113,6 +129,7 @@ export function resolveLandmark(templateObjectId: number, templateAnimation: str
 
 /** H3 objects (rocks, reefs) that become OE water mountains when they stand on water: the rows with `onWater: 'mountain'`. */
 export const WATER_MOUNTAIN_OBJECT_IDS = new Set<number>(mapping.objects.filter((row) => 'onWater' in row && row.onWater === 'mountain').map((row) => row.h3Id))
+
 
 export const BIOME_ROLE_REPLACEMENTS: Record<SceneryRole, Record<OeBiome, string>> = mapping.sceneryRoleSids as Record<SceneryRole, Record<OeBiome, string>>
 

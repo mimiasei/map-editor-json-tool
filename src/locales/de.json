@@ -2413,6 +2413,7 @@
         "renderObjectImages": "Objektbilder rendern…",
         "importScript": "Skript importieren (.json)…",
         "importH3Map": "H3-Karte importieren…",
+        "h3ObjectMapping": "H3-Objektzuordnung",
         "clearMap": "Karte leeren"
       },
       "resaved": "{{bytes}} Bytes erneut gespeichert.\nSicherung: {{path}}",
@@ -3564,5 +3565,68 @@
     "removeRecent": "Aus der Liste entfernen",
     "byAuthor": "Von {{author}}",
     "whatsNew": "Neuigkeiten"
+  },
+  "h3Mapping": {
+    "title": "H3-Objektzuordnung",
+    "subtitle": "Was jedes Heroes-3-Objekt beim Import einer Karte in Olden Era wird. Änderungen gelten für den nächsten Import.",
+    "search": "ID, Name oder Ziel suchen",
+    "filter": {
+      "all": "Alle Objekte",
+      "omit": "Nicht umgewandelt",
+      "emit": "Ein OE-Objekt",
+      "scenery": "Dekorationsrollen",
+      "rule": "Regeln (nach Sprite / Untertyp)"
+    },
+    "modifiedOnly": "Nur geänderte",
+    "counts": "{{shown}} von {{total}} Objekten · {{modified}} geändert",
+    "import": "Importieren",
+    "export": "Exportieren",
+    "resetAll": "Alle zurücksetzen",
+    "resetAllConfirm": "Die {{count}} geänderten Zeilen auf die mitgelieferte Zuordnung zurücksetzen?",
+    "close": "Schließen",
+    "column": {
+      "id": "ID",
+      "object": "H3-Objekt",
+      "type": "Typ",
+      "convertsTo": "Wird zu"
+    },
+    "type": {
+      "omit": "Nicht umgewandelt",
+      "emit": "OE-Objekt",
+      "scenery": "Dekoration",
+      "rule": "Regel"
+    },
+    "typeLong": {
+      "omit": "Nicht umgewandelt (weggelassen)",
+      "emit": "Wird zu einem OE-Objekt",
+      "scenery": "Dekoration (nach Rolle)"
+    },
+    "edited": "Geändert",
+    "default": "Mitgelieferte Zuordnung",
+    "noMatches": "Keine passenden Objekte.",
+    "selectRow": "Wähle ein H3-Objekt in der Tabelle, um zu ändern, was daraus wird.",
+    "appliesToNext": "Gilt für den nächsten H3-Import. Exportiere die Tabelle, um eine Kopie zu behalten oder h3-object-mapping.json zu ersetzen.",
+    "exported": "Tabelle exportiert.",
+    "imported": "{{count}} geänderte Zeilen importiert.",
+    "importFailed": "Import nicht möglich: {{error}}",
+    "inspector": {
+      "type": "Wird zu",
+      "oeObject": "OE-Objekt",
+      "pickObject": "OE-Objekt wählen …",
+      "pickToSave": "Wähle ein OE-Objekt, um diese Zeile zu speichern.",
+      "unknownSid": "Diese ID ist nicht in den geladenen Spieldaten.",
+      "kind": "Objektart",
+      "kindHint": "Bestimmt, wie der Import das Objekt behandelt (Städte, Portale und Behausungen werden besonders behandelt; „interactable“ passt für die meisten Gebäude).",
+      "role": "Dekorationsrolle",
+      "roleSids": "Die Rolle verwendet je nach Gelände diese OE-Objekte:",
+      "reason": "Grund im Importbericht",
+      "reasonHint": "Das Objekt wird in der umgewandelten Karte weggelassen.",
+      "ruleHint": "Das Ergebnis hängt von Sprite, Untertyp oder Gelände ab ({{summary}}). Bearbeite es als JSON.",
+      "editJson": "JSON bearbeiten",
+      "resetRow": "Zeile zurücksetzen"
+    },
+    "jsonInvalid": "Keine gültige Zeile: {{error}}",
+    "jsonApply": "Übernehmen",
+    "jsonTitle": "#{{id}} {{name}} — JSON"
   }
 }

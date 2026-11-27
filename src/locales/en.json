@@ -2421,6 +2421,7 @@
         "renderObjectImages": "Render Object Images…",
         "importScript": "Import script (.json)…",
         "importH3Map": "Import H3 Map…",
+        "h3ObjectMapping": "H3 Object Mapping",
         "clearMap": "Clear map"
       },
       "resaved": "Re-saved {{bytes}} bytes.\nBackup: {{path}}",
@@ -3572,5 +3573,68 @@
     "removeRecent": "Remove from list",
     "byAuthor": "By {{author}}",
     "whatsNew": "What's new"
+  },
+  "h3Mapping": {
+    "title": "H3 Object Mapping",
+    "subtitle": "What each Heroes 3 object becomes in Olden Era when you import a map. Your edits apply to the next import.",
+    "search": "Search id, name or target",
+    "filter": {
+      "all": "All objects",
+      "omit": "Not converted",
+      "emit": "One OE object",
+      "scenery": "Scenery roles",
+      "rule": "Rules (by sprite / subtype)"
+    },
+    "modifiedOnly": "Edited only",
+    "counts": "{{shown}} of {{total}} objects · {{modified}} edited",
+    "import": "Import",
+    "export": "Export",
+    "resetAll": "Reset all",
+    "resetAllConfirm": "Reset the {{count}} edited rows to the shipped mapping?",
+    "close": "Close",
+    "column": {
+      "id": "ID",
+      "object": "H3 object",
+      "type": "Type",
+      "convertsTo": "Converts to"
+    },
+    "type": {
+      "omit": "Not converted",
+      "emit": "OE object",
+      "scenery": "Scenery",
+      "rule": "Rule"
+    },
+    "typeLong": {
+      "omit": "Not converted (left out)",
+      "emit": "Converts to one OE object",
+      "scenery": "Scenery decoration (by role)"
+    },
+    "edited": "Edited",
+    "default": "Shipped mapping",
+    "noMatches": "No objects match.",
+    "selectRow": "Select an H3 object in the table to change what it converts to.",
+    "appliesToNext": "Applies to the next H3 import. Export the table to keep a copy or to replace h3-object-mapping.json.",
+    "exported": "Mapping table exported.",
+    "imported": "Imported {{count}} edited rows.",
+    "importFailed": "Could not import: {{error}}",
+    "inspector": {
+      "type": "Converts to",
+      "oeObject": "OE object",
+      "pickObject": "Pick an OE object…",
+      "pickToSave": "Pick an OE object to save this row.",
+      "unknownSid": "This id is not in the loaded game data.",
+      "kind": "Object kind",
+      "kindHint": "Decides how the importer treats the object (towns, portals and dwellings get special handling; interactable is right for most buildings).",
+      "role": "Scenery role",
+      "roleSids": "The role uses these OE objects, by terrain:",
+      "reason": "Reason shown in the import report",
+      "reasonHint": "The object is left out of the converted map.",
+      "ruleHint": "The result depends on the sprite, subtype or terrain ({{summary}}). Edit it as JSON.",
+      "editJson": "Edit JSON",
+      "resetRow": "Reset row"
+    },
+    "jsonInvalid": "Not a valid row: {{error}}",
+    "jsonApply": "Apply",
+    "jsonTitle": "#{{id}} {{name}} — JSON"
   }
 }

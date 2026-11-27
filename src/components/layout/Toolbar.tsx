@@ -1187,6 +1187,11 @@ export default function Toolbar({
                 </>
               )}
 
+              <DropdownMenuItem onClick={() => setTimeout(() => useViewBridgeStore.getState().openH3Mapping(), 0)}>
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                {t('layout.toolbar.menu.h3ObjectMapping')}
+              </DropdownMenuItem>
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem onClick={() => setTimeout(() => setHotkeysOpen(true), 0)}>
