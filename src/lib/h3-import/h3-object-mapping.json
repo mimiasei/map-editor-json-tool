@@ -619,8 +619,10 @@
     {
       "h3Id": 51,
       "h3Name": "Mercenary Camp",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_51"
+      "outcome": "emit",
+      "sid": "stinging_sword",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 52,
