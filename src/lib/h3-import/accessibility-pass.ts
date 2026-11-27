@@ -168,6 +168,10 @@ export function applyAccessibilityPass(
   fixedAnchors: Set<number> = new Set(),
   /** Nodes no object may be nudged onto, whatever the level (see MapContext.forbiddenNodes). */
   forbiddenNodes?: Set<number>,
+  /** Every linked portal's entrance counts as a start too. H3 maps put players in sealed pockets whose only way out is a one-way portal, and
+   *  regions reached only through portals (the island around them, the underground via its gates) are not meant to be walkable from the pocket:
+   *  without this the pass would open the pocket's walls to connect them. */
+  seedPortals = false,
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -238,6 +242,15 @@ export function applyAccessibilityPass(
       if (accessNodes.length === 0) continue
       if (PLAYER_START_SIDS.has(sid)) seeds.push(...accessNodes)
       targets.push({ id, sid, accessNodes })
+    }
+  }
+
+  if (seedPortals) {
+    for (const [from, to] of portalAdjacencyByObjectId) {
+      for (const id of [from, to]) {
+        const node = accessNodeForId(id)
+        if (node !== undefined) seeds.push(node)
+      }
     }
   }
 

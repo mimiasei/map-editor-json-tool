@@ -50,12 +50,12 @@ import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyRockSkirt, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
-import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
+import { NON_BLOCKING_SPAWNER_SIDS, buildBlockedTileSet } from '@/lib/map-grid/passability'
 import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { createH3DecorationPicker } from './h3-decoration-pools'
 import { resolveObjectSid, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
-import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
+import { HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
 import { dedupeSid, generateDisplayNameSid } from '@/lib/slugify'
@@ -76,6 +76,8 @@ import { winEntryOptions, type WinConditionId } from '@/lib/rmg/win-conditions'
 import { linkH3Portals, type H3PortalPlacement } from './portal-links'
 import { applyAccessibilityPass } from './accessibility-pass'
 import { buildGroundTruthWalkableSet } from './ground-truth-passability'
+import { findStartPockets, pickSpawnerEntrance } from './start-pockets'
+import type { PlacedObject } from '@/types/map-context'
 
 
 export interface H3ImportReport {
@@ -155,6 +157,9 @@ export interface H3ImportReport {
   /** Ground-truth-walkable tiles still unreached after decor removal — a
    *  real, disclosed gap (see accessibility-pass.ts's own doc comment). */
   groundTruthStillBlocked: number
+  /** Walled-in player starts (see start-pockets.ts) and the solid pieces added to keep their walls closed. */
+  startPockets: number
+  startPocketSeals: number
   /** H3 river tiles converted to OE's own `rivers[0].nodes` data (real river
    *  art, not impassable — previously these were wrongly stamped into
    *  waterMap, making them look and behave like lake/ocean water). */
@@ -571,11 +576,15 @@ export async function convertH3mToMap(
         detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'No owner (skipped)' })
         continue
       }
-      const node = atlas.targetNode(record.layer, record.x, record.y)
+      // The tile a hero stands on is its visit cell (checked on [HotA] Barren Lands: the record's own x,y is a tree tile in 4 of the 8 starts, the
+      // cell one to the left is where the hero is), and that is where its start's entrance must be (the 3x3 spawner would otherwise reach into rock).
+      const anchorNode = atlas.targetNode(record.layer, record.x, record.y)
+      const standing = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+      const visit = standing ?? { x: anchorNode % atlas.atlasWidth, z: Math.floor(anchorNode / atlas.atlasWidth) }
+      const node = visit.z * atlas.atlasWidth + visit.x
       const index = heroCandidates.length
       heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
-      // A hero has no visit mask: the tile it stands on is where its start's entrance must be (its 3x3 spawner would otherwise reach into rock).
-      heroEntries.push({ index, node, visit: { x: node % atlas.atlasWidth, z: Math.floor(node / atlas.atlasWidth) } })
+      heroEntries.push({ index, node, visit })
       const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending hero start resolution' }
       detailInstances.push(heroDetail)
       heroDetailByIndex.push(heroDetail)
@@ -1080,6 +1089,112 @@ export async function convertH3mToMap(
   sceneryVariantCounts['walkable fill'] = fillPlaced
   sceneryPlaced += fillPlaced
 
+  // Start pockets (see start-pockets.ts): every tile H3 blocks around a walled-in start is blocked here too, with pieces the accessibility pass
+  // may not delete. Placed before the pass so its flood fill starts from the sealed pocket.
+  const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
+  // The tile an H3 hero stands on (or a town is entered from) is its visit cell, not the object's anchor: the anchor can be a blocked tile.
+  const startNodes: number[] = []
+  for (const record of parsed.records) {
+    if (!HERO_OBJECT_IDS.has(record.templateObjectId) && record.templateObjectId !== OBJECT_TOWN && record.templateObjectId !== OBJECT_RANDOM_TOWN) continue
+    if (typeof record.owner !== 'number' || record.owner >= 8) continue
+    const cell = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+    if (cell) startNodes.push(cell.z * atlas.atlasWidth + cell.x)
+  }
+  const pocketWalkable = new Set<number>([...groundTruthWalkable, ...startNodes])
+  for (const record of parsed.records) {
+    const cell = visitCellOe(record.templateVisitMask, record.x, record.y, record.layer, atlas)
+    if (cell) pocketWalkable.add(cell.z * atlas.atlasWidth + cell.x)
+  }
+  const startPockets = findStartPockets(startNodes, pocketWalkable, atlas.atlasWidth, atlas.atlasHeight)
+  let pocketSealsPlaced = 0
+  if (startPockets.length > 0) {
+    // The 3x3 hero-spawner blocks all but its entrance cell, which in a pocket a few tiles wide can wall the hero in from its own portal. Each
+    // spawner is moved to the pocket tile that keeps the most portal entrances reachable.
+    const spawnerTemplate = catalogById.get('hero-spawner')
+    const spawnerGroup = objectGroups.get('hero-spawner')
+    if (spawnerTemplate && spawnerGroup) {
+      const probe = computeFootprintTiles(spawnerTemplate, 1000, 1000, 0)
+      const probeEntrance = probe.find((c) => c.value === 2)
+      if (probeEntrance) {
+        const relSolid = probe.filter((c) => c.value === 1).map((c) => ({ dx: c.x - probeEntrance.x, dz: c.z - probeEntrance.z }))
+        const entranceOf = (sid: string, node: number, rotation: number) =>
+          computeFootprintTiles(catalogById.get(sid), node % atlas.atlasWidth, Math.floor(node / atlas.atlasWidth), rotation).filter((c) => c.value === 2).map((c) => c.z * atlas.atlasWidth + c.x)
+        // Everything that blocks and is not decoration (a portal's own solid cell, a real object) stays where it is; decoration gives way.
+        const hardBlocked = new Set<number>()
+        const goals: number[] = []
+        for (const [sid, group] of objectGroups) {
+          for (let i = 0; i < group.ids.length; i++) {
+            if (decorativeIds.has(group.ids[i]) || sealIds.has(group.ids[i])) continue
+            if (sid !== 'hero-spawner') for (const cell of solidCells(sid, group.nodes[i], group.rotations[i] ?? 0)) hardBlocked.add(cell)
+            if (/^portal_/.test(sid)) goals.push(...entranceOf(sid, group.nodes[i], group.rotations[i] ?? 0))
+          }
+        }
+        for (let i = 0; i < spawnerGroup.ids.length; i++) {
+          const current = entranceOf('hero-spawner', spawnerGroup.nodes[i], spawnerGroup.rotations[i] ?? 0)[0]
+          const pocket = startPockets.find((candidate) => candidate.nodes.has(current))
+          if (!pocket) continue
+          const entrance = pickSpawnerEntrance(pocket.nodes, hardBlocked, goals.filter((g) => pocket.nodes.has(g)), relSolid, atlas.atlasWidth, atlas.atlasHeight, current)
+          if (entrance !== null && entrance !== current) {
+            spawnerGroup.nodes[i] = (Math.floor(entrance / atlas.atlasWidth) - (probeEntrance.z - 1000)) * atlas.atlasWidth + (entrance % atlas.atlasWidth) - (probeEntrance.x - 1000)
+          }
+          const placed = spawnerGroup.nodes[i]
+          for (const cell of solidCells('hero-spawner', placed, spawnerGroup.rotations[i] ?? 0)) hardBlocked.add(cell)
+          hardBlocked.add(entranceOf('hero-spawner', placed, spawnerGroup.rotations[i] ?? 0)[0])
+          // Decoration under the new footprint goes: the tile blocks either way.
+          const footprint = new Set(solidCells('hero-spawner', placed, spawnerGroup.rotations[i] ?? 0))
+          for (const [sid, group] of objectGroups) {
+            for (let j = group.ids.length - 1; j >= 0; j--) {
+              if (!decorativeIds.has(group.ids[j]) || !solidCells(sid, group.nodes[j], group.rotations[j] ?? 0).some((cell) => footprint.has(cell))) continue
+              decorativeIds.delete(group.ids[j])
+              group.ids.splice(j, 1); group.nodes.splice(j, 1); group.rotations.splice(j, 1); group.levels.splice(j, 1)
+            }
+          }
+        }
+      }
+    }
+    // Decoration whose solid footprint reaches into a pocket is taken out: it would wall the start in from the inside. The ring tiles it covered
+    // are closed again below with 1x1 pieces.
+    const interior = new Set<number>(startPockets.flatMap((pocket) => [...pocket.nodes]))
+    for (const [sid, group] of objectGroups) {
+      for (let i = group.ids.length - 1; i >= 0; i--) {
+        if (!decorativeIds.has(group.ids[i]) || !solidCells(sid, group.nodes[i], group.rotations[i] ?? 0).some((cell) => interior.has(cell))) continue
+        decorativeIds.delete(group.ids[i])
+        group.ids.splice(i, 1); group.nodes.splice(i, 1); group.rotations.splice(i, 1); group.levels.splice(i, 1)
+      }
+    }
+    const placedNow: PlacedObject[] = []
+    // The entrance cell of an interactable is never sealed (the object would become unreachable); a walk-onto placeholder can sit under a seal.
+    const entrancesNow = new Set<number>()
+    for (const [sid, group] of objectGroups) {
+      for (let i = 0; i < group.ids.length; i++) {
+        const node = group.nodes[i]
+        if (!NON_BLOCKING_SPAWNER_SIDS.has(sid)) {
+          for (const c of computeFootprintTiles(catalogById.get(sid), node % atlas.atlasWidth, Math.floor(node / atlas.atlasWidth), group.rotations[i] ?? 0)) if (c.value === 2) entrancesNow.add(c.z * atlas.atlasWidth + c.x)
+        }
+        placedNow.push({ key: `0:${group.ids[i]}`, type: 0, id: group.ids[i], sid, x: node % atlas.atlasWidth, z: Math.floor(node / atlas.atlasWidth), node, rotation: group.rotations[i] ?? 0 })
+      }
+    }
+    const blockedNow = buildBlockedTileSet({ sizeX: atlas.atlasWidth, sizeZ: atlas.atlasHeight, placedObjects: placedNow, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap }, catalog)
+    // A tree or rock already standing on the ring is part of the wall too: neither the accessibility pass nor the auto-fix may delete or move it.
+    const ringNodes = new Set<number>(startPockets.flatMap((pocket) => pocket.ring))
+    for (const [sid, group] of objectGroups) {
+      for (let i = 0; i < group.ids.length; i++) {
+        if (!decorativeIds.has(group.ids[i])) continue
+        if (solidCells(sid, group.nodes[i], group.rotations[i] ?? 0).some((cell) => ringNodes.has(cell))) sealIds.add(group.ids[i])
+      }
+    }
+    for (const pocket of startPockets) {
+      for (const node of pocket.ring) {
+        if (blockedNow.has(node) || entrancesNow.has(node)) continue
+        const oe = oeBiomeOfNode(node)
+        const biome = oe ? decorationPicker.biomeIdOf(BIOME_ROLE_REPLACEMENTS.ground[oe]) : null
+        sealIds.add(placeObject(decorationPicker.pickMountain(biome ?? 7, 1, rng), node, randomDecorRotation(rng)))
+        blockedNow.add(node)
+        pocketSealsPlaced += 1
+      }
+    }
+  }
+
   // Every object (scenery, towns/spawners, everything else) has been placed
   // and clamped clear of the envelope margin by this point — safe to paint
   // the wall now.
@@ -1099,11 +1214,10 @@ export async function convertH3mToMap(
     portalLinks.adjacencyByObjectId.set(b, a)
     portalLinks.linkedCount += 2
   }
-  const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
   const accessibility = applyAccessibilityPass(
     objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
     decorativeIds, portalLinks.adjacencyByObjectId, groundTruthWalkable,
-    undefined, undefined, sealIds, undefined, forbiddenNodes,
+    undefined, undefined, sealIds, undefined, forbiddenNodes, true,
   )
 
   // The game takes an object's name from its sid (Core.zip's `portal_name` for every portal), so the subterranean gates ship as a map-local clone of
@@ -1312,6 +1426,7 @@ export async function convertH3mToMap(
       accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
       groundTruthTilesChecked: accessibility.groundTruthTilesChecked, groundTruthDecorRemoved: accessibility.groundTruthDecorRemoved,
       groundTruthStillBlocked: accessibility.groundTruthStillBlocked,
+      startPockets: startPockets.length, startPocketSeals: pocketSealsPlaced,
       riverTilesConverted: out.riverNodes.size,
       detailRows,
     },

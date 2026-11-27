@@ -84,6 +84,7 @@ function buildReportText(result: ImportH3mResult): string {
   if (report.anchorFallbacks > 0) lines.push(`Objects placed at the H3 anchor because their entrance could not be put on the H3 entrance tile without standing on rock: ${report.anchorFallbacks}`)
   if (report.shipyardsFound > 0) lines.push(`Shipyards: ${report.shipyardsFound} (portals placed: ${report.shipyardPortals}, islands joined: ${report.shipyardIslands})`)
   lines.push(`Accessibility fixes: ${report.accessibilityDecorRemoved} removed, ${report.accessibilityTargetsNudged} nudged`)
+  if (report.startPockets > 0) lines.push(`Walled-in player starts: ${report.startPockets} (${report.startPocketSeals} wall pieces added to keep them closed)`)
   lines.push(`Ground-truth floor fixes: ${report.groundTruthDecorRemoved} removed (of ${report.groundTruthTilesChecked} floor tiles checked against the source map's own passability)`)
 
   if (report.groundTruthStillBlocked > 0) {
