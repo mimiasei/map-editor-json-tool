@@ -277,8 +277,9 @@ const OBJECT_MONOLITH_ONE_WAY_EXIT = 44
 const OBJECT_SUBTERRANEAN_GATE = 103
 
 const H3_CACTUS_DEF = /^av(lca[0-9]|cact)/i // cacti: object 116 and 138
-const H3_LUSH_TREE_DEF = /^avlspl0[1-4]/i // named palms, but lush like willows
+const H3_LUSH_TREE_DEF = /^(avlspl0[1-4]|tpmtree)/i // named palms, but lush like willows; tpmtree1-6 are the HotA swamp trees (object 140, subtype 11)
 const H3_PALM_DEF = /^avlspl0[5-9]/i
+const H3_GROVE_DEF = /^avlspl1[0-4]/i // groves of 4-7 cells that mix palms and lush trees (checked by rendering the sprites)
 const H3_PALM_DUNE_DEF = /^avlxds/i // a small sand hill with a palm on top (object 206)
 
 export async function convertH3mToMap(
@@ -617,6 +618,7 @@ export async function convertH3mToMap(
     const sandKind = H3_CACTUS_DEF.test(defName) && cactusSids.length > 0 ? 'cactus'
       : H3_PALM_DEF.test(defName) && palmSids.length > 0 ? 'palm'
       : H3_LUSH_TREE_DEF.test(defName) && lushTreeBiome !== null ? 'lush'
+      : H3_GROVE_DEF.test(defName) && palmSids.length > 0 && lushTreeBiome !== null ? 'grove'
       : H3_PALM_DUNE_DEF.test(defName) && palmSids.length > 0 && dunePalmHillSids.length > 0 ? 'dune' : null
     if (sandKind !== null) {
       deferredScenery.push(() => {
@@ -625,7 +627,7 @@ export async function convertH3mToMap(
         let placed = 0
         cells.forEach((cell, i) => {
           const sid = sandKind === 'cactus' ? pickOf(cactusSids)
-            : sandKind === 'palm' || i === palmCell ? pickOf(palmSids)
+            : sandKind === 'palm' || i === palmCell || (sandKind === 'grove' && rng() < 0.5) ? pickOf(palmSids)
             : sandKind === 'dune' ? pickOf(dunePalmHillSids)
             : decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
           placed += placeScenery(sid, atlas.targetNode(record.layer, cell.x, cell.z), null)
