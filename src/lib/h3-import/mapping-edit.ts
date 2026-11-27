@@ -6,6 +6,14 @@ import type { MixEntry, ObjectKind, ObjectRow, SceneryRole } from './h3-object-m
 import { ObjectRowSchema } from './h3-object-mapping-schema'
 import { SCENERY_GROUP_IDS } from './h3-object-mapping'
 
+/** The H3 towns in the order of their subtype ids (Random Dwelling Faction, subtype 0 to 10; checked on a map with one of each). */
+export const H3_TOWNS = ['Castle', 'Rampart', 'Tower', 'Inferno', 'Necropolis', 'Dungeon', 'Stronghold', 'Fortress', 'Conflux', 'Cove', 'Factory'] as const
+
+/** The subtypes a row lists as rows of their own (one per H3 town), or none. */
+export function subtypeRows(row: ObjectRow): number[] {
+  return row.outcome === 'emit' && row.fractionBySubtype !== undefined ? H3_TOWNS.map((_, i) => i) : []
+}
+
 export type RowKind = 'omit' | 'emit' | 'scenery' | 'mix' | 'rule'
 
 /** What a hero can do with the object: visit/pick it up (interactive), or it only decorates or marks terrain (scenery). Ids with no name are unknown. */

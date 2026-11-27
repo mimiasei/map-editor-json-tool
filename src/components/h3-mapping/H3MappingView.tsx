@@ -29,7 +29,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useH3MappingStore } from '@/store/useH3MappingStore'
 import { DEFAULT_MAPPING_ROWS, DEFAULT_DECORATION_RULES, DEFAULT_SETTINGS, DEFAULT_SPRITE_RULES, SCENERY_ROLE_SIDS } from '@/lib/h3-import/h3-object-mapping'
 import { OBJECT_KINDS, SCENERY_ROLES, SQUAD_FRACTIONS, type MixEntry, type ObjectKind, type ObjectRow, type SceneryRole } from '@/lib/h3-import/h3-object-mapping-schema'
-import { USER_REASON, convertsToText, objectGroup, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type ObjectGroup, type RowKind } from '@/lib/h3-import/mapping-edit'
+import { H3_TOWNS, USER_REASON, convertsToText, subtypeRows, objectGroup, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type ObjectGroup, type RowKind } from '@/lib/h3-import/mapping-edit'
 import { getH3ObjectDescription } from '@/lib/h3-import/h3-object-descriptions'
 import mappingData from '@/lib/h3-import/h3-object-mapping.json'
 import { confirmDialog, isTauri, openFile, saveFile } from '@/lib/native-fs'
@@ -82,6 +82,8 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
   const [groupFilter, setGroupFilter] = useState<'all' | ObjectGroup>('all')
   const [modifiedOnly, setModifiedOnly] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  /** With a row that lists one row per town (Random Dwelling Faction), the town row selected under it. */
+  const [selectedSub, setSelectedSub] = useState<number | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
   const overrides = edits.rows
@@ -148,6 +150,47 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
   const resetAll = async () => {
     if (editCount === 0) return
     if (await confirmDialog(t('h3Mapping.resetAllConfirm', { count: editCount }), t('h3Mapping.title'))) useH3MappingStore.getState().clearAll()
+  }
+
+  const renderTownRow = (row: ObjectRow, subtype: number) => {
+    const faction = (row.outcome === 'emit' && (row.fractionBySubtype?.[String(subtype)] ?? row.fraction)) || ''
+    const defaultRow = DEFAULT_BY_ID.get(row.h3Id)
+    const defaultFaction = (defaultRow?.outcome === 'emit' && (defaultRow.fractionBySubtype?.[String(subtype)] ?? defaultRow.fraction)) || ''
+    return (
+      <tr
+        key={`${row.h3Id}.${subtype}`}
+        onClick={() => { setSelectedId(row.h3Id); setSelectedSub(subtype) }}
+        className={cn('cursor-pointer border-t border-border/60 hover:bg-accent/50', selectedId === row.h3Id && selectedSub === subtype && 'bg-accent')}
+      >
+        <td className="px-2 py-1 text-center">{faction !== defaultFaction && <span className="inline-block h-2 w-2 rounded-full bg-primary" title={t('h3Mapping.edited')} />}</td>
+        <td className="px-2 py-1 tabular-nums text-muted-foreground">{`${row.h3Id}.${subtype}`}</td>
+        <td className="truncate px-2 py-1 pl-5">{`${row.h3Name}: ${H3_TOWNS[subtype]}`}</td>
+        <td className="px-2 py-1"><span className={cn('rounded px-1.5 py-0.5', KIND_BADGE.emit)}>{t('h3Mapping.type.emit')}</span></td>
+        <td className="truncate px-2 py-1 font-mono">{`random-hire (${faction || t('h3Mapping.inspector.squadAny')})`}</td>
+      </tr>
+    )
+  }
+
+  const renderObjectRow = (row: ObjectRow) => {
+    const kind = rowKind(row)
+    const edited = !!overrides[String(row.h3Id)]
+    const oeName = row.outcome === 'emit' ? nameBySid.get(row.sid) : undefined
+    return (
+      <tr
+        key={row.h3Id}
+        onClick={() => { setSelectedId(row.h3Id); setSelectedSub(null) }}
+        className={cn('cursor-pointer border-t border-border/60 hover:bg-accent/50', selectedId === row.h3Id && selectedSub === null && 'bg-accent')}
+      >
+        <td className="px-2 py-1 text-center">{edited && <span className="inline-block h-2 w-2 rounded-full bg-primary" title={t('h3Mapping.edited')} />}</td>
+        <td className="px-2 py-1 tabular-nums text-muted-foreground">{row.h3Id}</td>
+        <td className="truncate px-2 py-1" title={getH3ObjectDescription(row.h3Id)?.description}>{row.h3Name}</td>
+        <td className="px-2 py-1"><span className={cn('rounded px-1.5 py-0.5', KIND_BADGE[kind])}>{t(`h3Mapping.type.${kind}`)}</span></td>
+        <td className={cn('truncate px-2 py-1 font-mono', kind === 'omit' && 'text-muted-foreground')}>
+          {convertsToText(row)}
+          {oeName && oeName !== (row.outcome === 'emit' ? row.sid : '') && <span className="ml-2 font-sans text-muted-foreground">{oeName}</span>}
+        </td>
+      </tr>
+    )
   }
 
   return (
@@ -239,27 +282,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
                 </tr>
               </thead>
               <tbody>
-                {visible.map((row) => {
-                  const kind = rowKind(row)
-                  const edited = !!overrides[String(row.h3Id)]
-                  const oeName = row.outcome === 'emit' ? nameBySid.get(row.sid) : undefined
-                  return (
-                    <tr
-                      key={row.h3Id}
-                      onClick={() => setSelectedId(row.h3Id)}
-                      className={cn('cursor-pointer border-t border-border/60 hover:bg-accent/50', selectedId === row.h3Id && 'bg-accent')}
-                    >
-                      <td className="px-2 py-1 text-center">{edited && <span className="inline-block h-2 w-2 rounded-full bg-primary" title={t('h3Mapping.edited')} />}</td>
-                      <td className="px-2 py-1 tabular-nums text-muted-foreground">{row.h3Id}</td>
-                      <td className="truncate px-2 py-1" title={getH3ObjectDescription(row.h3Id)?.description}>{row.h3Name}</td>
-                      <td className="px-2 py-1"><span className={cn('rounded px-1.5 py-0.5', KIND_BADGE[kind])}>{t(`h3Mapping.type.${kind}`)}</span></td>
-                      <td className={cn('truncate px-2 py-1 font-mono', kind === 'omit' && 'text-muted-foreground')}>
-                        {convertsToText(row)}
-                        {oeName && oeName !== (row.outcome === 'emit' ? row.sid : '') && <span className="ml-2 font-sans text-muted-foreground">{oeName}</span>}
-                      </td>
-                    </tr>
-                  )
-                })}
+                {visible.flatMap((row) => [renderObjectRow(row), ...subtypeRows(row).map((subtype) => renderTownRow(row, subtype))])}
                 {visible.length === 0 && (
                   <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">{t('h3Mapping.noMatches')}</td></tr>
                 )}
@@ -267,10 +290,42 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
             </table>
           </div>
           <aside className="w-96 shrink-0 overflow-y-auto border-l border-border p-3">
-            {selected ? <RowInspector key={selected.h3Id} row={selected} nameBySid={nameBySid} /> : <p className="text-xs text-muted-foreground">{t('h3Mapping.selectRow')}</p>}
+            {selected && selectedSub !== null ? <TownFactionInspector key={`${selected.h3Id}.${selectedSub}`} row={selected} subtype={selectedSub} /> : selected ? <RowInspector key={selected.h3Id} row={selected} nameBySid={nameBySid} /> : <p className="text-xs text-muted-foreground">{t('h3Mapping.selectRow')}</p>}
           </aside>
         </div>
       )}
+    </div>
+  )
+}
+
+/** The faction of one H3 town of a row that lists a row per town (Random Dwelling Faction): what a hire of that town's dwellings becomes. */
+function TownFactionInspector({ row, subtype }: { row: ObjectRow; subtype: number }) {
+  const { t } = useTranslation()
+  const setRow = useH3MappingStore((s) => s.setRow)
+  const clearRow = useH3MappingStore((s) => s.clearRow)
+  if (row.outcome !== 'emit') return null
+  const town = H3_TOWNS[subtype]
+  const current = row.fractionBySubtype?.[String(subtype)] ?? row.fraction ?? ''
+  const change = (value: string) => {
+    const next: ObjectRow = { ...row, reason: USER_REASON, fractionBySubtype: { ...row.fractionBySubtype, [String(subtype)]: value as (typeof SQUAD_FRACTIONS)[number] } }
+    const base = DEFAULT_BY_ID.get(row.h3Id) as ObjectRow
+    if (sameRow(next, base)) clearRow(row.h3Id)
+    else setRow(row.h3Id, next)
+  }
+  return (
+    <div className="space-y-3 text-xs">
+      <span className="text-sm font-semibold">{`#${row.h3Id}.${subtype} ${row.h3Name}: ${town}`}</span>
+      <div className="space-y-1">
+        <Label className="text-xs">{t('h3Mapping.inspector.townFaction', { town })}</Label>
+        <Select value={current || ' '} onValueChange={(v) => change(v.trim())}>
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {SQUAD_FRACTIONS.map((f) => <SelectItem key={f || 'any'} value={f || ' '}>{f || t('h3Mapping.inspector.squadAny')}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <p className="text-muted-foreground">{t('h3Mapping.inspector.townHint')}</p>
+      <p className="text-muted-foreground">{t('h3Mapping.appliesToNext')}</p>
     </div>
   )
 }
@@ -361,6 +416,7 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
             </div>
           )}
           {(lastEmit?.sid === 'random-squad' || lastEmit?.sid === 'random-hire') && (
+            lastEmit.fractionBySubtype !== undefined ? <p className="rounded-md border border-border p-2 text-muted-foreground">{t('h3Mapping.inspector.perTownHint')}</p> : (
             <div className="space-y-2 rounded-md border border-border p-2">
               <div className="space-y-1">
                 <Label className="text-xs">{t('h3Mapping.inspector.squadFraction')}</Label>
@@ -383,7 +439,7 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
               </div>
               <p className="text-muted-foreground">{t(lastEmit.sid === 'random-hire' ? 'h3Mapping.inspector.hireHint' : 'h3Mapping.inspector.squadHint')}</p>
             </div>
-          )}
+          ))}
         </div>
       )}
 
