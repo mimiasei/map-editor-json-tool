@@ -281,6 +281,8 @@ const H3_LUSH_TREE_DEF = /^(avlspl0[1-4]|tpmtree)/i // named palms, but lush lik
 // Palms from the swamp set (checked by rendering the sprites): avlplm/avlswmp/avlswt are single palms, often with undergrowth, avlswtr/avlswn are
 // premade clusters of palms and plants. They stand on sand and swamp alike and are all palms.
 const H3_PALM_DEF = /^(avlspl0[5-9]|avlplm|avlswmp|avlswt|avlswn)/i
+// The big avlswtr clusters are a jungle: palms with broadleaf trees and tropical plants between them (avlswtr6 is just two palms and stays a palm).
+const H3_JUNGLE_DEF = /^avlswtr[0-5789]/i
 const H3_GROVE_DEF = /^avlspl1[0-4]/i // groves of 4-7 cells that mix palms and lush trees (checked by rendering the sprites)
 const H3_PALM_DUNE_DEF = /^avlxds/i // a small sand hill with a palm on top (object 206)
 
@@ -339,6 +341,7 @@ export async function convertH3mToMap(
   const dunePalmHillSids = sidsWithPrefix('hill_desert_small_')
   // The lush sand trees (avlspl01-04) are Dirt trees in OE.
   const lushTreeBiome = decorationPicker.biomeOf('tree_dirt_1', 'tree')
+  const tropicalSids = sidsWithPrefix('grass_tropical_')
   const pickOf = (list: string[]) => list[Math.floor(rng() * list.length)]
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
   // guard if it appears in at least one real squad template — real-data
@@ -618,6 +621,7 @@ export async function convertH3mToMap(
     // Palms, cacti and the lush "palms" stay what they are in every biome, each cell a random model of its kind (the variation rule); a palm dune is
     // a sand hill with a palm on one cell. Placed with the other decoration, after everything that blocks.
     const sandKind = H3_CACTUS_DEF.test(defName) && cactusSids.length > 0 ? 'cactus'
+      : H3_JUNGLE_DEF.test(defName) && palmSids.length > 0 && lushTreeBiome !== null ? 'jungle'
       : H3_PALM_DEF.test(defName) && palmSids.length > 0 ? 'palm'
       : H3_LUSH_TREE_DEF.test(defName) && lushTreeBiome !== null ? 'lush'
       : H3_GROVE_DEF.test(defName) && palmSids.length > 0 && lushTreeBiome !== null ? 'grove'
@@ -629,6 +633,13 @@ export async function convertH3mToMap(
         let placed = 0
         // OE has three palm models: a cluster mixes them, so no palm stands beside one of its own model while there is a choice.
         const palmAt = new Map<string, string>()
+        // A jungle cell is a palm, a Dirt tree or a tropical plant (grass_tropical_1, the one 1x1 model), about 45 / 30 / 25.
+        const pickJungle = (cell: { x: number; z: number }): string => {
+          const roll = rng()
+          if (roll < 0.45) return pickPalm(cell)
+          if (roll < 0.75) return decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
+          return tropicalSids.length > 0 ? pickOf(tropicalSids) : pickPalm(cell)
+        }
         const pickPalm = (cell: { x: number; z: number }): string => {
           const beside = [[-1, 0], [1, 0], [0, -1], [0, 1]].map(([dx, dz]) => palmAt.get(`${cell.x + dx},${cell.z + dz}`))
           const free = palmSids.filter((sid) => !beside.includes(sid))
@@ -639,6 +650,7 @@ export async function convertH3mToMap(
         cells.forEach((cell, i) => {
           const sid = sandKind === 'cactus' ? pickOf(cactusSids)
             : sandKind === 'palm' || i === palmCell || (sandKind === 'grove' && rng() < 0.5) ? pickPalm(cell)
+            : sandKind === 'jungle' ? pickJungle(cell)
             : sandKind === 'dune' ? pickOf(dunePalmHillSids)
             : decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
           placed += placeScenery(sid, atlas.targetNode(record.layer, cell.x, cell.z), null)
