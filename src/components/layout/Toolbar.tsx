@@ -1281,11 +1281,11 @@ export default function Toolbar({
 
       {/* Validate dialog */}
       <Dialog open={validateOpen} onOpenChange={setValidateOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DraggableDialogContent className="p-0 gap-0" defaultWidth={560} defaultHeight={560} minWidth={380} minHeight={280} storageKey="validation-results">
+          <DraggableDialogDragHandle className="shrink-0 border-b border-border px-6 py-4 pr-10">
             <DialogTitle>{t('layout.toolbar.validationResults')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          </DraggableDialogDragHandle>
+          <div className="space-y-3 flex-1 min-h-0 overflow-y-auto px-6 py-4">
             <button
               type="button"
               className="flex items-center gap-1 text-xs font-medium text-muted-foreground w-full"
@@ -1459,7 +1459,7 @@ export default function Toolbar({
               </>
             )}
           </div>
-        </DialogContent>
+        </DraggableDialogContent>
       </Dialog>
 
       {/* Import feedback dialog */}
