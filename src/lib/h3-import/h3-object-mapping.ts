@@ -306,7 +306,7 @@ export function resolveObjectSid(
       return { action: 'omit', reason: row.reason }
 
     case 'emit':
-      return { action: 'emit', sid: row.sid, kind: row.kind, reason: row.reason, factionSid: row.factionSid, freeChoice: row.freeChoice, fraction: row.fraction, tier: row.tier }
+      return { action: 'emit', sid: row.sid, kind: row.kind, reason: row.reason, factionSid: row.factionSid, freeChoice: row.freeChoice, fraction: row.fractionBySubtype?.[String(subtype)] ?? row.fraction, tier: row.tier }
 
     case 'scenery': {
       const biome = H3_TERRAIN_BIOME[h3TerrainAtTile] ?? 'grass'

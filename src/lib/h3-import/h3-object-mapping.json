@@ -2359,7 +2359,14 @@
       "outcome": "emit",
       "sid": "random-hire",
       "kind": "dwelling",
-      "reason": "random_dwelling_is_random_hire"
+      "reason": "random_dwelling_is_random_hire",
+      "fractionBySubtype": {
+        "0": "human",
+        "1": "nature",
+        "3": "demon",
+        "4": "undead",
+        "5": "dungeon"
+      }
     },
     {
       "h3Id": 219,

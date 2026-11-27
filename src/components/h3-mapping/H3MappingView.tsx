@@ -364,7 +364,7 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
             <div className="space-y-2 rounded-md border border-border p-2">
               <div className="space-y-1">
                 <Label className="text-xs">{t('h3Mapping.inspector.squadFraction')}</Label>
-                <Select value={lastEmit.fraction || ' '} onValueChange={(v) => commit({ ...lastEmit, fraction: v.trim() as (typeof SQUAD_FRACTIONS)[number], reason: USER_REASON })}>
+                <Select value={lastEmit.fraction || ' '} onValueChange={(v) => commit({ ...lastEmit, fraction: v.trim() as (typeof SQUAD_FRACTIONS)[number], fractionBySubtype: undefined, reason: USER_REASON })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SQUAD_FRACTIONS.map((f) => <SelectItem key={f || 'any'} value={f || ' '}>{f || t('h3Mapping.inspector.squadAny')}</SelectItem>)}

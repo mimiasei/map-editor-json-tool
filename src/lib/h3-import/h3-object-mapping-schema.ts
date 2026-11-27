@@ -30,6 +30,8 @@ const EmitRowSchema = z.object({
   factionSid: z.string().optional(), freeChoice: z.boolean().optional(),
   /** `random-squad` rows only (the H3 monsters): the squad's faction and tier (1-7; 0 or absent: the game derives the tier from the value). */
   fraction: z.enum(SQUAD_FRACTIONS).optional(),
+  /** The faction by the H3 object's subtype, for objects whose subtype is a town (Random Dwelling Faction: 0 Castle ... 10 Factory); a subtype with no entry uses `fraction`. */
+  fractionBySubtype: z.record(z.string(), z.enum(SQUAD_FRACTIONS)).optional(),
   tier: z.number().int().min(0).max(7).optional(),
 })
 
