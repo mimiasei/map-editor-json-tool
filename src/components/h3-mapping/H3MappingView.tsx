@@ -4,7 +4,7 @@
 // Rows that depend on the sprite, subtype or terrain ("rules") show a summary and are edited as JSON. Edits are kept per H3 id in
 // useH3MappingStore (localStorage), apply to the next import (they travel with the import job to its worker), and can be exported as a full table.
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -304,14 +304,14 @@ function JsonDialog({ open, onOpenChange, row, onApply }: { open: boolean; onOpe
   const { t } = useTranslation()
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // The parent opens the dialog by setting `open`, which never calls onOpenChange: load the row's JSON whenever it opens.
+  useEffect(() => {
+    if (!open) return
+    setText(JSON.stringify(row, null, 2))
+    setError(null)
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (next) { setText(JSON.stringify(row, null, 2)); setError(null) }
-        onOpenChange(next)
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader><DialogTitle>{t('h3Mapping.jsonTitle', { id: row.h3Id, name: row.h3Name })}</DialogTitle></DialogHeader>
         <Textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} className="h-96 font-mono text-xs" />
