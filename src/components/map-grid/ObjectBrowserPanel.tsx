@@ -773,7 +773,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 className="relative h-6 w-6 shrink-0"
                 title={query ? `${t('mapGrid.objectBrowserPanel.searchBySidOrName')}: ${query}` : t('mapGrid.objectBrowserPanel.searchBySidOrName')}
               >
-                <Search className="h-3.5 w-3.5" />
+                <Search className="h-3.5 w-3.5" {...(query ? { strokeWidth: 3.5 } : {})} />
                 {/* A search is filtering the list: the closed popover would otherwise hide it. */}
                 {query && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" aria-hidden />}
               </Button>
