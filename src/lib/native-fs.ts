@@ -213,11 +213,17 @@ export async function openH3mFile(): Promise<{
   if (isTauri()) {
     const { open } = await import('@tauri-apps/plugin-dialog')
     const { readFile } = await import('@tauri-apps/plugin-fs')
+    // Dynamic imports: game-dir.ts imports isTauri from this file.
+    const { getH3Dir, h3MapsPath } = await import('@/lib/game-dir')
+    const { useInstallPathsStore } = await import('@/store/useInstallPathsStore')
+    const h3Dir = await getH3Dir()
     const selected = await open({
       multiple: false,
+      defaultPath: useInstallPathsStore.getState().h3LastImportDir ?? (h3Dir ? h3MapsPath(h3Dir) : undefined),
       filters: [{ name: i18n.t('shared.fileFilters.h3Map'), extensions: ['h3m'] }],
     })
     if (!selected || typeof selected !== 'string') return null
+    useInstallPathsStore.getState().setPath('h3LastImportDir', selected.replace(/[\\/][^\\/]*$/, ''))
     const bytes = await readFile(selected)
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
     const name = selected.replace(/\\/g, '/').split('/').pop() ?? selected

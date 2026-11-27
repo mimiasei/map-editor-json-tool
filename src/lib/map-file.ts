@@ -3,6 +3,7 @@
 // This is the single entry point for "Open .map file".
 
 import { openMapFile, checkFileExists, readTextFileAt, readBinaryFile, pickSavePath } from '@/lib/native-fs'
+import { getMyMapsDir, myMapsPath } from '@/lib/game-dir'
 import { recordRecentFile } from '@/lib/recent-files'
 import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext, extractScenario } from '@/lib/map-extract'
@@ -274,7 +275,8 @@ export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean
   if (!mapPath || forceNewPath) {
     const suggested = scenarioState.mapName || 'New Map'
     const fileName = suggested.endsWith('.map') ? suggested : `${suggested}.map`
-    mapPath = await pickSavePath(fileName, { name: i18n.t('shared.fileFilters.mapFile'), extensions: ['map'] }, i18n.t('shared.fileDialogs.saveMap'))
+    const myMaps = await getMyMapsDir()
+    mapPath = await pickSavePath(myMaps ? myMapsPath(myMaps, fileName) : fileName,{ name: i18n.t('shared.fileFilters.mapFile'), extensions: ['map'] }, i18n.t('shared.fileDialogs.saveMap'))
     if (!mapPath) return 'cancelled' // user cancelled — leave the in-memory edits dirty
   }
   await commitToDisk(mapPath, scenarioState.scenario)

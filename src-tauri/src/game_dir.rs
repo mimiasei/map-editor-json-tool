@@ -131,6 +131,22 @@ pub fn detect() -> Option<PathBuf> {
     from_installer_file().or_else(from_steam)
 }
 
+/// The folder the game's own map editor saves to: `<LocalLow>/Unfrozen/HeroesOldenEra/users/<last_user.txt>/my_maps`
+/// (the same path gme-mod/Plugin.cs uses). Windows only: the other platforms' user-data folder is not known.
+pub fn my_maps_dir() -> Option<PathBuf> {
+    if !cfg!(windows) {
+        return None;
+    }
+    let base = PathBuf::from(std::env::var_os("USERPROFILE")?)
+        .join("AppData")
+        .join("LocalLow")
+        .join("Unfrozen")
+        .join("HeroesOldenEra");
+    let user = std::fs::read_to_string(base.join("last_user.txt")).ok()?;
+    let dir = base.join("users").join(user.trim()).join("my_maps");
+    dir.is_dir().then_some(dir)
+}
+
 /// `app --detect-game-dir [--out <file>]`: handled before the app window
 /// starts (used by the Windows installer). Writes the folder (or an empty
 /// file when not found) and returns true when the flag was present.
