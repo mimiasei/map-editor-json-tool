@@ -69,10 +69,18 @@ export interface PlacementAutoFixOptions {
   fixElevation?: boolean
   /** Tiles nothing may be moved onto (the H3 import: rock and the border, where a footprint can lie on one level yet be sealed inside a mountain). */
   forbiddenNodes?: Set<number>
+  /** Called with 0-1 as the passes advance (a large imported map takes about a minute; the import dialog shows it). Estimated from measured passes, not exact. */
+  onProgress?: (fraction: number) => void
 }
 
 export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null, options: PlacementAutoFixOptions = {}): PlacementAutoFixResult {
   const may = options.mayChange ?? (() => true)
+  let reported = 0
+  const progress = (fraction: number) => {
+    if (fraction <= reported) return
+    reported = fraction
+    options.onProgress?.(fraction)
+  }
   const readContext = (c: MapContainer) => ({ ...extractMapContext(containerToRawBlocks(c)), forbiddenNodes: options.forbiddenNodes })
   let fixed = container
   const boundsCtx = readContext(fixed)
@@ -82,47 +90,63 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode }).container
   }
 
+  progress(0.02)
   let entranceFixCount = 0
   for (let pass = 0; pass < MAX_ENTRANCE_AUTOFIX_PASSES; pass++) {
     const entranceCtx = readContext(fixed)
     const entranceAll = computeEntranceAutoFix(entranceCtx, catalog)
     const entrance = { deletions: entranceAll.deletions.filter((d) => may(0, d.id)), relocations: entranceAll.relocations.filter((r) => may(0, r.id)) }
     if (entrance.deletions.length === 0 && entrance.relocations.length === 0) break
+    const entranceTotal = entrance.deletions.length + entrance.relocations.length
+    let entranceDone = 0
+    const entranceStep = () => progress(0.02 + 0.07 * (pass + ++entranceDone / entranceTotal))
     for (const del of entrance.deletions) {
       fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: del.id }).container
+      entranceStep()
     }
     for (const rel of entrance.relocations) {
       fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: 0, entityId: rel.id, newNode: rel.toNode }).container
+      entranceStep()
     }
     entranceFixCount += entrance.deletions.length + entrance.relocations.length
   }
 
+  progress(0.37)
   let reachabilityFixCount = 0
   for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
     const reachabilityCtx = readContext(fixed)
     const reachabilityAll = computeReachabilityAutoFix(reachabilityCtx, catalog)
     const reachability = { deletions: reachabilityAll.deletions.filter((d) => may(d.entityType, d.id)), relocations: reachabilityAll.relocations.filter((r) => may(r.entityType, r.id)) }
     if (reachability.deletions.length === 0 && reachability.relocations.length === 0) break
+    const reachabilityTotal = reachability.deletions.length + reachability.relocations.length
+    let reachabilityDone = 0
+    const reachabilityStep = () => progress(0.37 + 0.035 * (pass + ++reachabilityDone / reachabilityTotal))
     for (const del of reachability.deletions) {
       fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: del.entityType, entityId: del.id }).container
+      reachabilityStep()
     }
     for (const rel of reachability.relocations) {
       fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
+      reachabilityStep()
     }
     reachabilityFixCount += reachability.deletions.length + reachability.relocations.length
   }
 
+  progress(0.545)
   let overlapFixCount = 0
   for (let pass = 0; pass < MAX_OVERLAP_AUTOFIX_PASSES; pass++) {
     const overlapCtx = readContext(fixed)
     const overlap = { relocations: computeOverlapAutoFix(overlapCtx, catalog).relocations.filter((r) => may(r.entityType, r.id)) }
     if (overlap.relocations.length === 0) break
+    let overlapDone = 0
     for (const rel of overlap.relocations) {
       fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
+      progress(0.545 + 0.09 * (pass + ++overlapDone / overlap.relocations.length))
     }
     overlapFixCount += overlap.relocations.length
   }
 
+  progress(0.99)
   // The relocations above can stack two encounters on one tile, which the game cannot load.
   for (const id of duplicateEncounterIds(readContext(fixed).placedObjects, may)) {
     fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: id }).container

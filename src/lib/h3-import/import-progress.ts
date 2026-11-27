@@ -5,7 +5,7 @@
 import i18n from '@/lib/i18n'
 import { yieldToUI } from '@/lib/async-utils'
 
-export type H3ImportProgress = (label: string, pct: number) => void
+export type H3ImportProgress = (label: string, pct: number, stage?: H3ImportStage) => void
 
 export type H3ImportStage =
   | 'readingMap' | 'terrain' | 'objects' | 'decoration' | 'players' | 'reachability' | 'fixing' | 'validating' | 'loading' | 'done'
@@ -18,7 +18,7 @@ export function nextStagePct(pct: number): number {
   return STAGE_START_PCTS.find((start) => start > pct) ?? 100
 }
 
-function stageLabel(stage: H3ImportStage): string {
+export function stageLabel(stage: H3ImportStage): string {
   switch (stage) {
     case 'readingMap': return i18n.t('common.importH3mDialog.progress.readingMap')
     case 'terrain': return i18n.t('common.importH3mDialog.progress.terrain')
@@ -35,6 +35,6 @@ function stageLabel(stage: H3ImportStage): string {
 
 export async function reportH3Stage(onProgress: H3ImportProgress | undefined, stage: H3ImportStage, pct: number): Promise<void> {
   if (!onProgress) return
-  onProgress(stageLabel(stage), pct)
+  onProgress(stageLabel(stage), pct, stage)
   await yieldToUI()
 }

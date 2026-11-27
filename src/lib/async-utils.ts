@@ -27,5 +27,7 @@ export function yieldToUI(): Promise<void> {
       channel.port2.postMessage(null)
     })
   }
+  // No animation frames in a Web Worker (or Node): nothing to paint, just let queued messages through.
+  if (typeof requestAnimationFrame === 'undefined') return new Promise((resolve) => setTimeout(resolve, 0))
   return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)))
 }

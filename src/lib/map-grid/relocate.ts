@@ -51,16 +51,17 @@ export function floodFillReachable(seeds: number[], blocked: Set<number>, sizeX:
 
 /** Searches outward in expanding rings from `(seedX, seedZ)` — checking the
  *  seed itself first — for the nearest position `isValidCandidate` accepts.
- *  Returns null if nothing on the whole map qualifies. */
+ *  Returns null if nothing within `maxRadius` (default: the whole map) qualifies. A search that finds nothing visits every tile, so callers that
+ *  would not accept a far-away spot anyway pass a limit: on a large imported map unlimited searches took minutes. */
 export function findNearestValidPosition(
   seedX: number,
   seedZ: number,
   sizeX: number,
   sizeZ: number,
   isValidCandidate: (x: number, z: number) => boolean,
+  maxRadius = Math.max(sizeX, sizeZ),
 ): { x: number; z: number } | null {
   if (isValidCandidate(seedX, seedZ)) return { x: seedX, z: seedZ }
-  const maxRadius = Math.max(sizeX, sizeZ)
   for (let radius = 1; radius <= maxRadius; radius++) {
     for (const [x, z] of ringOffsets(seedX, seedZ, radius)) {
       if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
