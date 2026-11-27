@@ -28,7 +28,7 @@ export const H3_TO_STOCK_TILE: Record<number, number> = {
   2: 1, // grass
   3: 4, // snow
   4: 5, // swamp → Autumn
-  5: 1, // rough → grass
+  5: 7, // rough → dirt
   6: STOCK_SUBTERRANEAN_TILE_ID, // subterranean → Dirt (Burrow is GE-only)
   7: 6, // lava
   8: STOCK_OCEAN_TILE_ID, // water → sand basin

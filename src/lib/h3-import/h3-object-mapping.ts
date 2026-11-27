@@ -205,7 +205,7 @@ function animationTokenMatch(animation: string, table: Record<string, string>): 
 
 export type ObjectResolution =
   | { action: 'omit'; reason: string }
-  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; role?: SceneryRole }
+  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; role?: SceneryRole; treeBiomes?: string[]; pair?: boolean }
 
 /** Resolve any H3 object to a stock OE sid — table-driven, reading
  *  `h3-object-mapping.json`'s row for `templateObjectId` and dispatching on
@@ -240,7 +240,7 @@ export function resolveObjectSid(
     case 'scenery-dispatch': {
       const hit = row.exact[anim]
       if (!hit) return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
-      return { action: 'emit', sid: hit.sid, kind: 'scenery', role: hit.role, reason: 'scenery_role_or_animation' }
+      return { action: 'emit', sid: hit.sid, kind: 'scenery', role: hit.role, treeBiomes: hit.treeBiomes, pair: hit.pair, reason: 'scenery_role_or_animation' }
     }
 
     case 'scenery-dispatch-subtype': {

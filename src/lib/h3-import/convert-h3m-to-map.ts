@@ -709,7 +709,12 @@ export async function convertH3mToMap(
           const role = resolution.role
           const anchorBiome = decorationPicker.biomeOf(resolution.sid, role)
           const layerTilesHere = parsed.layers[record.layer]
+          // A table entry can name its own tree biomes (rough trees: dirt, deathland, pine, or a mix): each cell draws one at random.
+          const fixedBiomes = role === 'tree' && resolution.treeBiomes ? resolution.treeBiomes.map((sid) => decorationPicker.biomeIdOf(sid)).filter((b): b is BiomeId => b !== null) : []
+          const fixedBiomeAt = new Map<string, BiomeId>(cells.map((cell) => [`${cell.x},${cell.z}`, fixedBiomes[Math.floor(rng() * fixedBiomes.length)]]))
           const biomeAt = (cell: { x: number; z: number }) => {
+            const fixed = fixedBiomeAt.get(`${cell.x},${cell.z}`)
+            if (fixed !== undefined) return fixed
             const terrain = layerTilesHere?.[cell.z * size + cell.x]?.terrain
             const h3Biome = terrain !== undefined && terrain !== 8 && terrain !== 9 ? H3_TERRAIN_BIOME[terrain] : undefined
             return (h3Biome ? decorationPicker.biomeOf(BIOME_ROLE_REPLACEMENTS[role][h3Biome], role) : null) ?? (anchorBiome as NonNullable<typeof anchorBiome>)
@@ -719,6 +724,23 @@ export async function convertH3mToMap(
             mountainField.set(record.layer, field)
             for (const cell of cells) field.set(`${cell.x},${cell.z}`, { cell, biome: biomeAt(cell) })
             detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: 'Scenery (mountain range, merged across objects)' })
+            return
+          }
+          if (role === 'tree' && resolution.pair && fixedBiomes.length === 2 && cells.length === 1) {
+            // Two trees in one sprite: the first biome's on the cell, the second's on a free open tile beside it.
+            const cell = cells[0]
+            const usable = (x: number, z: number) => {
+              const terrain = layerTilesHere?.[z * size + x]?.terrain
+              const node = atlas.targetNode(record.layer, x, z)
+              return x >= 0 && z >= 0 && x < size && z < size && terrain !== undefined && terrain !== 8 && terrain !== 9 && floorNodes.has(node) && !rockNodes.has(node) && out.waterMap[node] === 0 && !solidClaimed.has(node)
+            }
+            const first = decorationPicker.pickTree(fixedBiomes[0], rng)
+            let placedPair = placeScenery(first, atlas.targetNode(record.layer, cell.x, cell.z), null)
+            const beside = [[-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]].find(([dx, dz]) => usable(cell.x + dx, cell.z + dz))
+            if (beside) placedPair += placeScenery(decorationPicker.pickTree(fixedBiomes[1], rng), atlas.targetNode(record.layer, cell.x + beside[0], cell.z + beside[1]), null)
+            sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placedPair
+            sceneryPlaced += placedPair
+            detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (tree pair, ${placedPair} placed)` })
             return
           }
           const placements = anchorBiome !== null && !(role === 'tree' && oid === H3_OAK_TREES_OBJECT_ID)

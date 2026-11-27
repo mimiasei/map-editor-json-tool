@@ -1822,79 +1822,124 @@
         },
         "avltro00.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro01.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
+        },
+        "avltro02.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro03.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro04.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro05.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
-        },
-        "avltro06.def": {
-          "sid": "tree_dirt_1",
-          "role": "tree"
-        },
-        "avltro07.def": {
-          "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro08.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro09.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro10.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro11.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
         },
         "avltro12.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1"]
+        },
+        "avltro06.def": {
+          "sid": "tree_dead_1",
+          "role": "tree",
+          "treeBiomes": ["tree_dead_1"]
+        },
+        "avltro07.def": {
+          "sid": "pinetree_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1"]
+        },
+        "avltro13.def": {
+          "sid": "pinetree_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1"]
+        },
+        "avltrro7.def": {
+          "sid": "pinetree_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1"]
         },
         "avltrro0.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
+        },
+        "avltrro1.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro2.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro3.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro4.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro5.def": {
-          "sid": "dirt_rock_1",
-          "role": "rock"
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
+        },
+        "avltrro8.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
+        },
+        "avltrro9.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree",
+          "treeBiomes": ["pinetree_1", "tree_dirt_1", "tree_dead_1"]
         },
         "avltrro6.def": {
           "sid": "tree_dirt_1",
-          "role": "tree"
-        },
-        "avltrro7.def": {
-          "sid": "tree_dirt_1",
-          "role": "tree"
+          "role": "tree",
+          "treeBiomes": ["tree_dirt_1", "tree_dead_1"],
+          "pair": true
         }
       }
     },

@@ -38,7 +38,15 @@ const SceneryRowSchema = z.object({ ...BaseRow, outcome: z.literal('scenery'), r
  *  role instead of the single-role `scenery` shape above. */
 const SceneryDispatchRowSchema = z.object({
   ...BaseRow, outcome: z.literal('scenery-dispatch'),
-  exact: z.record(z.string(), z.object({ sid: z.string(), role: SceneryRoleSchema })),
+  exact: z.record(z.string(), z.object({
+    sid: z.string(), role: SceneryRoleSchema,
+    /** Tree role only: the biomes this sprite's trees come from, named by a tree sid of each (`tree_dirt_1`: Dirt). Every blocked cell draws one of them
+     *  at random, whatever terrain the sprite stands on. Absent: the biome of the terrain under each cell. */
+    treeBiomes: z.array(z.string()).optional(),
+    /** With two `treeBiomes` and a one-cell footprint: the first biome's tree on the cell and the second's on a free tile right beside it (the sprite
+     *  is two trees). */
+    pair: z.boolean().optional(),
+  })),
 })
 
 /** A single H3 id whose subtype selects between genuinely different
