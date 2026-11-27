@@ -3,7 +3,9 @@
 // map category) as a live-update Popover. No Apply button — changes are
 // immediately reflected. State is persisted to localStorage.
 
+import { useState } from 'react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { SlidersHorizontal } from '@/components/ui/icons'
 import type { CatalogCreature, CatalogArtifact, CatalogSpell } from '@/lib/catalog/types'
@@ -140,6 +142,103 @@ interface CatalogShape {
   spells:     CatalogSpell[]
 }
 
+// ─── Map Objects tabs ─────────────────────────────────────────────────────────
+// Vertical tabs like the map settings dialog: Category, then the sub-category lists of Interactables and Decorations (each hidden while its category
+// switch is off), then Biome and Size. Every list works as in the Map Grid object browser: all on is everything, turning keys off narrows it.
+
+type MapObjectTab = 'category' | 'interactables' | 'decorations' | 'biome' | 'size'
+
+function MapObjectTabs({ value, update }: { value: GameDatabaseFilterState; update: (key: keyof GameDatabaseFilterState) => (g: FilterGroup) => void }) {
+  const { t } = useTranslation()
+  const [tab, setTab] = useState<MapObjectTab>('category')
+  const tabs: MapObjectTab[] = [
+    'category',
+    ...(value.mapCategories.enabled.interactables !== false ? (['interactables'] as const) : []),
+    ...(value.mapCategories.enabled.environments !== false ? (['decorations'] as const) : []),
+    'biome',
+    'size',
+  ]
+  // The tab being shown can disappear when its category is switched off.
+  const shown = tabs.includes(tab) ? tab : 'category'
+  const label = (id: MapObjectTab) => {
+    switch (id) {
+      case 'category': return t('catalog.gameDatabaseFilter.category')
+      case 'interactables': return t('catalog.mapCategories.interactables')
+      case 'decorations': return t('catalog.mapCategories.environments')
+      case 'biome': return t('catalog.gameDatabaseFilter.biome')
+      case 'size': return t('catalog.gameDatabaseFilter.size')
+    }
+  }
+  return (
+    <div className="flex h-[min(24rem,calc(100vh-14rem))] gap-3">
+      <div role="tablist" aria-orientation="vertical" className="flex w-24 shrink-0 flex-col gap-1">
+        {tabs.map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={shown === id}
+            onClick={() => setTab(id)}
+            className={cn(
+              'rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+              shown === id ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50',
+            )}
+          >
+            {label(id)}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto pr-1">
+        {shown === 'category' && (
+          <FilterRows
+            label={label('category')}
+            group={value.mapCategories}
+            keys={MAP_CATEGORIES}
+            labelFor={(k) => t(`catalog.mapCategories.${k as MapCategoryKey}`)}
+            onChange={update('mapCategories')}
+          />
+        )}
+        {shown === 'interactables' && (
+          <FilterRows
+            label={label('interactables')}
+            group={value.mapInteractableSubs}
+            keys={INTERACTABLE_SUBS}
+            labelFor={(k) => interactableSubcategoryName(k as InteractableSubcategory)}
+            onChange={update('mapInteractableSubs')}
+          />
+        )}
+        {shown === 'decorations' && (
+          <FilterRows
+            label={label('decorations')}
+            group={value.mapDecorationSubs}
+            keys={DECORATION_SUBS}
+            labelFor={(k) => decorationSubcategoryName(k as DecorationSubcategory)}
+            onChange={update('mapDecorationSubs')}
+          />
+        )}
+        {shown === 'biome' && (
+          <FilterRows
+            label={label('biome')}
+            group={value.mapBiomes}
+            keys={MAP_BIOMES}
+            labelFor={(k) => (k === 'none' ? t('catalog.gameDatabaseFilter.noBiome') : k)}
+            onChange={update('mapBiomes')}
+          />
+        )}
+        {shown === 'size' && (
+          <FilterRows
+            label={label('size')}
+            group={value.mapSizes}
+            keys={[...SIZE_ORDER]}
+            labelFor={(k) => (k === 'other' ? t('mapGrid.objectBrowserPanel.sizeOther') : k)}
+            onChange={update('mapSizes')}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -190,7 +289,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className={`${activeTab === 'mapObjects' ? 'w-[34rem]' : 'w-56'} max-h-[80vh] overflow-y-auto p-3 space-y-4 text-sm`} align="end">
+      <PopoverContent className={`${activeTab === 'mapObjects' ? 'w-[26rem]' : 'w-56'} max-h-[80vh] overflow-y-auto p-3 space-y-4 text-sm`} align="end">
         {/* ── Heroes ── */}
         {activeTab === 'heroes' && (
           <FilterRows
@@ -253,54 +352,8 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
           />
         )}
 
-        {/* ── Map Objects: categories (with the sub-categories of the two that have them) on the left, biome and size on the right ── */}
-        {activeTab === 'mapObjects' && (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <FilterRows
-                label={t('catalog.gameDatabaseFilter.category')}
-                group={value.mapCategories}
-                keys={MAP_CATEGORIES}
-                labelFor={(k) => t(`catalog.mapCategories.${k as MapCategoryKey}`)}
-                onChange={update('mapCategories')}
-              />
-              {value.mapCategories.enabled.interactables !== false && (
-                <FilterRows
-                  label={t('catalog.mapCategories.interactables')}
-                  group={value.mapInteractableSubs}
-                  keys={INTERACTABLE_SUBS}
-                  labelFor={(k) => interactableSubcategoryName(k as InteractableSubcategory)}
-                  onChange={update('mapInteractableSubs')}
-                />
-              )}
-              {value.mapCategories.enabled.environments !== false && (
-                <FilterRows
-                  label={t('catalog.mapCategories.environments')}
-                  group={value.mapDecorationSubs}
-                  keys={DECORATION_SUBS}
-                  labelFor={(k) => decorationSubcategoryName(k as DecorationSubcategory)}
-                  onChange={update('mapDecorationSubs')}
-                />
-              )}
-            </div>
-            <div className="space-y-4">
-              <FilterRows
-                label={t('catalog.gameDatabaseFilter.biome')}
-                group={value.mapBiomes}
-                keys={MAP_BIOMES}
-                labelFor={(k) => (k === 'none' ? t('catalog.gameDatabaseFilter.noBiome') : k)}
-                onChange={update('mapBiomes')}
-              />
-              <FilterRows
-                label={t('catalog.gameDatabaseFilter.size')}
-                group={value.mapSizes}
-                keys={[...SIZE_ORDER]}
-                labelFor={(k) => (k === 'other' ? t('mapGrid.objectBrowserPanel.sizeOther') : k)}
-                onChange={update('mapSizes')}
-              />
-            </div>
-          </div>
-        )}
+        {/* ── Map Objects: tabs, like the map settings ── */}
+        {activeTab === 'mapObjects' && <MapObjectTabs value={value} update={update} />}
 
         <div className="pt-1 border-t border-border">
           <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={handleReset}>
