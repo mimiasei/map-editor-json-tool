@@ -45,7 +45,7 @@ const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
 // 'campaign' and 'custom' are not categories: an object whose sid contains that word (campaign_x, x_custom) is governed by that switch alone,
 // whatever its category ('campaign' wins when both words occur).
 // 'creatureBanks' and 'heroBoosts' are parts of Interactables (see interactable-subcategories.ts): an object of one shows only when its own switch and
-// the Interactables switch are both on.
+// the Interactables switch are both on, so their switches are hidden while Interactables is off.
 const MAP_CATEGORIES = ['interactables', 'creatureBanks', 'heroBoosts', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'miscellaneous', 'campaign', 'custom']
 type MapCategoryKey = 'interactables' | 'creatureBanks' | 'heroBoosts' | 'resources' | 'environments' | 'spawns' | 'animals' | 'fxs' | 'miscellaneous' | 'campaign' | 'custom'
 // The values of CatalogMapObject.biome (see its doc), plus objects that carry none.
@@ -243,7 +243,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
             <FilterRows
               label={t('catalog.gameDatabaseFilter.category')}
               group={value.mapCategories}
-              keys={MAP_CATEGORIES}
+              keys={value.mapCategories.enabled.interactables === false ? MAP_CATEGORIES.filter((k) => k !== 'creatureBanks' && k !== 'heroBoosts') : MAP_CATEGORIES}
               labelFor={(k) => t(`catalog.mapCategories.${k as MapCategoryKey}`)}
               onChange={update('mapCategories')}
             />
