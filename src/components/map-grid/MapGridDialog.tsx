@@ -3314,7 +3314,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
     ctx.fillStyle = 'rgba(85,255,65,0.6)'
+    // A tile that is blocked stays red: red under green mixed into a colour that is hard to read.
     for (const node of entranceTileSet) {
+      if (blockedTileSet.has(node)) continue
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
