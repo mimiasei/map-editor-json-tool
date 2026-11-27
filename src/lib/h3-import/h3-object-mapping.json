@@ -53,8 +53,10 @@
     {
       "h3Id": 7,
       "h3Name": "Black Market",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_7"
+      "outcome": "emit",
+      "sid": "forge",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 8,
@@ -91,8 +93,10 @@
     {
       "h3Id": 13,
       "h3Name": "Cartographer",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_13"
+      "outcome": "emit",
+      "sid": "wind_rose",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 14,
@@ -404,8 +408,10 @@
     {
       "h3Id": 23,
       "h3Name": "Marletto Tower",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_23"
+      "outcome": "emit",
+      "sid": "armory_automaton",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 24,
@@ -430,8 +436,10 @@
     {
       "h3Id": 27,
       "h3Name": "Eye of the Magi",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_27"
+      "outcome": "emit",
+      "sid": "flattering_mirror",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 28,
@@ -466,8 +474,10 @@
     {
       "h3Id": 32,
       "h3Name": "Garden of Revelation",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_32"
+      "outcome": "emit",
+      "sid": "knowledge_garden",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 33,
@@ -484,8 +494,10 @@
     {
       "h3Id": 35,
       "h3Name": "Hill Fort",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_35"
+      "outcome": "emit",
+      "sid": "arena",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 36,
@@ -512,8 +524,10 @@
     {
       "h3Id": 39,
       "h3Name": "Lean To",
-      "outcome": "omit",
-      "reason": "lean_to_deferred"
+      "outcome": "emit",
+      "sid": "peasant_cart",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 40,
@@ -524,8 +538,10 @@
     {
       "h3Id": 41,
       "h3Name": "Library of Enlightenment",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_41"
+      "outcome": "emit",
+      "sid": "college_of_wonder",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 42,
@@ -593,14 +609,18 @@
     {
       "h3Id": 47,
       "h3Name": "School of Magic",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_47"
+      "outcome": "emit",
+      "sid": "orb_observatory",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 48,
       "h3Name": "Magic Spring",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_48"
+      "outcome": "emit",
+      "sid": "crystal_trail",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 49,
@@ -708,8 +728,10 @@
     {
       "h3Id": 55,
       "h3Name": "Mystical Garden",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_55"
+      "outcome": "emit",
+      "sid": "gardener",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 56,
@@ -726,8 +748,10 @@
     {
       "h3Id": 58,
       "h3Name": "Redwood Observatory",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_58"
+      "outcome": "emit",
+      "sid": "watchtower",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 59,
@@ -754,8 +778,10 @@
     {
       "h3Id": 62,
       "h3Name": "Prison",
-      "outcome": "omit",
-      "reason": "prison_payload_deferred"
+      "outcome": "emit",
+      "sid": "prison",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 63,
@@ -989,8 +1015,10 @@
     {
       "h3Id": 93,
       "h3Name": "Spell Scroll",
-      "outcome": "omit",
-      "reason": "spell_scroll_deferred"
+      "outcome": "emit",
+      "sid": "scroll_box",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 94,
@@ -1017,8 +1045,10 @@
     {
       "h3Id": 97,
       "h3Name": "Den of Thieves",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_97"
+      "outcome": "emit",
+      "sid": "insaras_eye",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 98,
@@ -1066,8 +1096,10 @@
     {
       "h3Id": 99,
       "h3Name": "Trading Post",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_99"
+      "outcome": "emit",
+      "sid": "market",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 100,
@@ -1126,14 +1158,18 @@
     {
       "h3Id": 107,
       "h3Name": "School of War",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_107"
+      "outcome": "emit",
+      "sid": "fort",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 108,
       "h3Name": "Warrior Tomb",
-      "outcome": "omit",
-      "reason": "warriors_tomb_deferred"
+      "outcome": "emit",
+      "sid": "heros_crypt",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 109,
@@ -1164,8 +1200,10 @@
     {
       "h3Id": 113,
       "h3Name": "Witch Hut",
-      "outcome": "omit",
-      "reason": "witch_hut_deferred"
+      "outcome": "emit",
+      "sid": "wise_owl",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 114,
@@ -2385,8 +2423,10 @@
     {
       "h3Id": 221,
       "h3Name": "Trading Post",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_221"
+      "outcome": "emit",
+      "sid": "market",
+      "kind": "interactable",
+      "reason": "matched_by_wiki_description"
     },
     {
       "h3Id": 222,
