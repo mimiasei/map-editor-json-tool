@@ -55,6 +55,12 @@ A `scenery` or `omit` row can carry `"onWater": "mountain"`. When that object st
 
 A `landmark` row builds one H3 sprite (matched by its `.def`) from a blocking OE object plus an optional effect on its centre tile. The big volcano (`avlvol50.def`) is `mountain_lava_big_4` with `fx_map_smoke` on top; `smallSid` fills the tiles that are already taken when the 3x3 does not fit. A sprite with no entry (the small volcano) is omitted. Landmarks go down before any other decoration. An entry can instead carry `pieces` (a list of `{ size, sids }`, size 1, 2 or 3): the footprint is then covered with those OE pieces, biggest first, with a smaller piece hanging over the footprint where nothing fits exactly (`piece-cover.ts`). A row's `default` entry covers every sprite with no `exact` entry. Volcanic vents, lava lakes and flows use this.
 
+## Random mixes (`mix`) and sprite rules (`spriteRules`)
+
+A row with `"outcome": "mix"` and `entries` converts the object to a random mix of OE objects: each blocked H3 tile draws an entry by `weight`, then an object from the entry's pool, avoiding the model right beside it. An entry names its pool with one of `sids` (these OE objects), `prefix` (every 1x1 OE object whose id starts with it) or `trees` (a tree of the biome of that tree sid).
+
+`spriteRules` is an ordered list checked before the rows: the first rule whose `pattern` (a case-insensitive regular expression) matches the H3 sprite file name turns the object into a mix, whatever its object id. This is how cacti, palms, jungle clusters and sand dunes work; with `accent`, one random tile draws from a different mix (a dune's palm). `settings` holds the numbers the decoration passes use. All of it is editable in the H3 Object Mapping tool (More menu).
+
 ## Other outcome shapes
 
 `scenery`, `dispatch`, `scenery-dispatch`, and `scenery-dispatch-subtype` exist for objects that resolve differently depending on subtype/animation/terrain (see the doc comments in `h3-object-mapping-schema.ts`) — but for a plain "this H3 object is always this one OE object," `emit` is all you need, same shape as Tavern above.

@@ -2,13 +2,13 @@
 // The table has simple rows (an H3 object that is nothing, one OE object, or a scenery role) and rule rows (the result depends on the sprite, the
 // subtype or the terrain). The tool edits the simple kinds with fields and every kind as JSON. These are the pure helpers for both.
 
-import type { ObjectKind, ObjectRow, SceneryRole } from './h3-object-mapping-schema'
+import type { MixEntry, ObjectKind, ObjectRow, SceneryRole } from './h3-object-mapping-schema'
 import { ObjectRowSchema } from './h3-object-mapping-schema'
 
-export type RowKind = 'omit' | 'emit' | 'scenery' | 'rule'
+export type RowKind = 'omit' | 'emit' | 'scenery' | 'mix' | 'rule'
 
 export function rowKind(row: ObjectRow): RowKind {
-  if (row.outcome === 'omit' || row.outcome === 'emit' || row.outcome === 'scenery') return row.outcome
+  if (row.outcome === 'omit' || row.outcome === 'emit' || row.outcome === 'scenery' || row.outcome === 'mix') return row.outcome
   return 'rule'
 }
 
@@ -27,6 +27,10 @@ export function toEmit(row: ObjectRow, sid: string, kind: ObjectKind): ObjectRow
   return { h3Id: row.h3Id, h3Name: row.h3Name, outcome: 'emit', sid: sid.trim(), kind, reason: USER_REASON }
 }
 
+export function toMix(row: ObjectRow, entries: MixEntry[]): ObjectRow {
+  return { h3Id: row.h3Id, h3Name: row.h3Name, outcome: 'mix', entries }
+}
+
 export function toScenery(row: ObjectRow, role: SceneryRole): ObjectRow {
   return { h3Id: row.h3Id, h3Name: row.h3Name, outcome: 'scenery', role, ...keepOnWater(row) }
 }
@@ -41,7 +45,16 @@ export function convertsToText(row: ObjectRow): string {
     case 'scenery-dispatch': return ruleSummary('sprite', row.exact)
     case 'scenery-dispatch-subtype': return ruleSummary('subtype', row.subtypes)
     case 'landmark': return ruleSummary('sprite', row.exact)
+    case 'mix': return row.entries.map((e) => `${mixEntryLabel(e)} ×${e.weight}`).join(', ')
   }
+}
+
+/** One mix entry as text: its objects, name prefix or tree biome. */
+export function mixEntryLabel(entry: { sids?: string[]; prefix?: string; trees?: string }): string {
+  if (entry.sids) return entry.sids.join('|')
+  if (entry.prefix) return `${entry.prefix}*`
+  if (entry.trees) return `trees(${entry.trees})`
+  return '?'
 }
 
 function ruleSummary(by: string, ...tables: (Record<string, unknown> | undefined)[]): string {

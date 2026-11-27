@@ -3583,7 +3583,8 @@
       "omit": "Not converted",
       "emit": "One OE object",
       "scenery": "Scenery roles",
-      "rule": "Rules (by sprite / subtype)"
+      "rule": "Rules (by sprite / subtype)",
+      "mix": "Random mixes"
     },
     "modifiedOnly": "Edited only",
     "counts": "{{shown}} of {{total}} objects · {{modified}} edited",
@@ -3602,12 +3603,14 @@
       "omit": "Not converted",
       "emit": "OE object",
       "scenery": "Scenery",
-      "rule": "Rule"
+      "rule": "Rule",
+      "mix": "Mix"
     },
     "typeLong": {
       "omit": "Not converted (left out)",
       "emit": "Converts to one OE object",
-      "scenery": "Scenery decoration (by role)"
+      "scenery": "Scenery decoration (by role)",
+      "mix": "Converts to a random mix of OE objects"
     },
     "edited": "Edited",
     "default": "Shipped mapping",
@@ -3631,10 +3634,67 @@
       "reasonHint": "The object is left out of the converted map.",
       "ruleHint": "The result depends on the sprite, subtype or terrain ({{summary}}). Edit it as JSON.",
       "editJson": "Edit JSON",
-      "resetRow": "Reset row"
+      "resetRow": "Reset row",
+      "mixEntries": "Mix: every blocked tile draws one of these"
     },
     "jsonInvalid": "Not a valid row: {{error}}",
     "jsonApply": "Apply",
-    "jsonTitle": "#{{id}} {{name}} — JSON"
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Objects",
+      "rules": "Sprite rules",
+      "settings": "Settings"
+    },
+    "mix": {
+      "poolObjects": "OE object",
+      "poolPrefix": "All objects starting with",
+      "poolTrees": "A tree of the biome",
+      "weight": "Weight: how often this entry is picked",
+      "removeEntry": "Remove this entry",
+      "addEntry": "Add an entry",
+      "hint": "Each blocked tile of the H3 object draws an entry by weight, then an object from it, avoiding the model right beside it. For footprints covered by bigger pieces (pools, mountains) use Edit JSON with a landmark row.",
+      "sidList": "OE object ids, separated by commas",
+      "prefixHint": "Every 1x1 OE object whose id starts with this, for example palms_"
+    },
+    "rules": {
+      "intro": "Rules are checked before the object rows, in this order. The first whose pattern matches the H3 sprite file name turns the object into a random mix.",
+      "trySprite": "Try a sprite name, e.g. avlswtr4.def",
+      "matches": "Matches: {{name}}",
+      "noMatch": "No rule matches",
+      "add": "Add rule",
+      "reset": "Reset rules",
+      "name": "Name",
+      "pattern": "Pattern (regular expression)",
+      "mix": "Mix per blocked tile",
+      "invalid": "Invalid pattern",
+      "newName": "New rule",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "delete": "Delete rule",
+      "patternHint": "Case-insensitive, matched against the sprite file name, for example ^avlspl0[5-9]",
+      "accent": "One random tile draws from a different mix",
+      "accentHint": "For objects that are one feature on a base: a sand dune is hills with one palm on top.",
+      "select": "Select a rule to edit it."
+    },
+    "settings": {
+      "intro": "Numbers the converter uses when it places decoration and finds sealed start pockets. They apply to the next import.",
+      "reset": "Back to the shipped value",
+      "mountainFrontChance": {
+        "label": "Mountain front decoration",
+        "help": "Chance that each blocking tile on the bottom edge of a mountain gets a tree, bush or ground cover in front of it (0 to 1)."
+      },
+      "walkableFillChance": {
+        "label": "Walkable ground cover",
+        "help": "Chance that every open tile gets a random walkable decoration of its biome (0 to 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Lava trees",
+        "help": "Share of trees on lava ground that stay OE lava trees; the rest are Deathland dead trees (0 to 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Sealed pocket size",
+        "help": "A start region bigger than this many tiles is open land, not a walled-in pocket that keeps its walls."
+      }
+    }
   }
 }

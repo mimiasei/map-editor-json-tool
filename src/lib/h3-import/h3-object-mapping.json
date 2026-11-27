@@ -2436,6 +2436,98 @@
       "reason": "unmapped_template_object_id_231"
     }
   ],
+  "spriteRules": [
+    {
+      "id": "cactus",
+      "name": "Cacti",
+      "pattern": "^av(lca[0-9]|cact)",
+      "entries": [
+        {
+          "prefix": "cactus_",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "jungle",
+      "name": "Jungle clusters (avlswtr)",
+      "pattern": "^avlswtr[0-5789]",
+      "entries": [
+        {
+          "prefix": "palms_",
+          "weight": 45
+        },
+        {
+          "trees": "tree_dirt_1",
+          "weight": 30
+        },
+        {
+          "prefix": "grass_tropical_",
+          "weight": 25
+        }
+      ]
+    },
+    {
+      "id": "palm",
+      "name": "Palms (plain and swamp set)",
+      "pattern": "^(avlspl0[5-9]|avlplm|avlswmp|avlswt|avlswn)",
+      "entries": [
+        {
+          "prefix": "palms_",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "lush",
+      "name": "Lush palms and swamp trees (Dirt trees)",
+      "pattern": "^(avlspl0[1-4]|tpmtree)",
+      "entries": [
+        {
+          "trees": "tree_dirt_1",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "grove",
+      "name": "Palm and lush groves (avlspl10-14)",
+      "pattern": "^avlspl1[0-4]",
+      "entries": [
+        {
+          "prefix": "palms_",
+          "weight": 50
+        },
+        {
+          "trees": "tree_dirt_1",
+          "weight": 50
+        }
+      ]
+    },
+    {
+      "id": "dune",
+      "name": "Sand dunes with a palm (avlxds)",
+      "pattern": "^avlxds",
+      "entries": [
+        {
+          "prefix": "hill_desert_small_",
+          "weight": 1
+        }
+      ],
+      "accent": [
+        {
+          "prefix": "palms_",
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "mountainFrontChance": 0.67,
+    "walkableFillChance": 0.33,
+    "lavaTreeChance": 0.06,
+    "pocketMaxTiles": 64
+  },
   "sceneryRoleSids": {
     "mountain": {
       "grass": "mountain_green_small_1",

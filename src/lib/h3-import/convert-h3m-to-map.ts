@@ -54,7 +54,7 @@ import { NON_BLOCKING_SPAWNER_SIDS, buildBlockedTileSet } from '@/lib/map-grid/p
 import { anchorByVisitCell, visitCellOe, type VisitCell } from './object-anchor'
 import { H3_UNDERGROUND_ROCK_TERRAIN_ID } from './terrain-map'
 import { createH3DecorationPicker, type H3DecorationPicker } from './h3-decoration-pools'
-import { resolveObjectSid, resolveLandmark, WATER_MOUNTAIN_OBJECT_IDS, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
+import { resolveObjectSid, resolveLandmark, resolveMix, matchSpriteRule, getSetting, WATER_MOUNTAIN_OBJECT_IDS, H3_TERRAIN_BIOME, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { HERO_OBJECT_IDS, OBJECT_TOWN, OBJECT_RANDOM_TOWN, OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT, OBJECT_SHIPYARD, blockMaskOffsets } from './h3m-object-registry'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildWaterPortals, WATER_PORTAL_SID } from './water-portals'
@@ -78,6 +78,8 @@ import { applyAccessibilityPass } from './accessibility-pass'
 import { buildGroundTruthWalkableSet } from './ground-truth-passability'
 import { findStartPockets, pickSpawnerEntrance } from './start-pockets'
 import { coverCells } from './piece-cover'
+import { createMixCover } from './mix-cover'
+import type { MixEntry } from './h3-object-mapping-schema'
 import type { PlacedObject } from '@/types/map-context'
 
 
@@ -271,21 +273,9 @@ const OBJECT_KIND_LABELS: Record<string, string> = {
  *  to detect a gzip-wrapped `.h3m` before calling this). `seed` defaults to a
  *  hash of the map's own title, so re-converting the same source map is
  *  reproducible. */
-// Sand trees, told apart by sprite (checked on a real map, sand_trees.h3m): the table sends them to a plain Grass/Dirt/Sand pick, which has no cactus,
-// palm or dune on sand.
 const OBJECT_MONOLITH_ONE_WAY_ENTRANCE = 43
 const OBJECT_MONOLITH_ONE_WAY_EXIT = 44
 const OBJECT_SUBTERRANEAN_GATE = 103
-
-const H3_CACTUS_DEF = /^av(lca[0-9]|cact)/i // cacti: object 116 and 138
-const H3_LUSH_TREE_DEF = /^(avlspl0[1-4]|tpmtree)/i // named palms, but lush like willows; tpmtree1-6 are the HotA swamp trees (object 140, subtype 11)
-// Palms from the swamp set (checked by rendering the sprites): avlplm/avlswmp/avlswt are single palms, often with undergrowth, avlswtr/avlswn are
-// premade clusters of palms and plants. They stand on sand and swamp alike and are all palms.
-const H3_PALM_DEF = /^(avlspl0[5-9]|avlplm|avlswmp|avlswt|avlswn)/i
-// The big avlswtr clusters are a jungle: palms with broadleaf trees and tropical plants between them (avlswtr6 is just two palms and stays a palm).
-const H3_JUNGLE_DEF = /^avlswtr[0-5789]/i
-const H3_GROVE_DEF = /^avlspl1[0-4]/i // groves of 4-7 cells that mix palms and lush trees (checked by rendering the sprites)
-const H3_PALM_DUNE_DEF = /^avlxds/i // a small sand hill with a palm on top (object 206)
 
 export async function convertH3mToMap(
   data: Uint8Array, catalog: GameCatalog, template: MapContainer, seed?: number, onProgress?: H3ImportProgress,
@@ -336,14 +326,6 @@ export async function convertH3mToMap(
   const families = buildVariantFamilies(catalog.mapObjects)
   const decorationPicker = createH3DecorationPicker(catalog)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
-  const sidsWithPrefix = (prefix: string) => catalog.mapObjects.filter((o) => o.id.startsWith(prefix) && (o.sizeX ?? 1) === 1 && (o.sizeZ ?? 1) === 1).map((o) => o.id)
-  const palmSids = sidsWithPrefix('palms_')
-  const cactusSids = sidsWithPrefix('cactus_')
-  const dunePalmHillSids = sidsWithPrefix('hill_desert_small_')
-  // The lush sand trees (avlspl01-04) are Dirt trees in OE.
-  const lushTreeBiome = decorationPicker.biomeOf('tree_dirt_1', 'tree')
-  const tropicalSids = sidsWithPrefix('grass_tropical_')
-  const pickOf = (list: string[]) => list[Math.floor(rng() * list.length)]
   // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
   // guard if it appears in at least one real squad template — real-data
   // confirmed gap: a roster-only sid with zero squad-template references
@@ -355,6 +337,7 @@ export async function convertH3mToMap(
   // silently emitting an unplaceable guard.
   const placeableCreatureSids = new Set(catalog.squadTemplates.flatMap((t) => t.unitSids))
   const rng = createSeededRng(seed ?? seedFromString(title || 'h3-import'))
+  const mixCover = createMixCover(catalog, decorationPicker, rng)
 
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
   // Tiles a blocking object already stands on. Everything that blocks is placed first and the decoration after (see deferredScenery), so a
@@ -621,46 +604,21 @@ export async function convertH3mToMap(
       continue
     }
 
-    // Palms, cacti and the lush "palms" stay what they are in every biome, each cell a random model of its kind (the variation rule); a palm dune is
-    // a sand hill with a palm on one cell. Placed with the other decoration, after everything that blocks.
-    const sandKind = H3_CACTUS_DEF.test(defName) && cactusSids.length > 0 ? 'cactus'
-      : H3_JUNGLE_DEF.test(defName) && palmSids.length > 0 && lushTreeBiome !== null ? 'jungle'
-      : H3_PALM_DEF.test(defName) && palmSids.length > 0 ? 'palm'
-      : H3_LUSH_TREE_DEF.test(defName) && lushTreeBiome !== null ? 'lush'
-      : H3_GROVE_DEF.test(defName) && palmSids.length > 0 && lushTreeBiome !== null ? 'grove'
-      : H3_PALM_DUNE_DEF.test(defName) && palmSids.length > 0 && dunePalmHillSids.length > 0 ? 'dune' : null
-    if (sandKind !== null) {
+    // A sprite rule of the table (cacti, palms, sand dunes, ...) or a `mix` row: every blocked tile is a random pick from a mix of OE objects. Placed with
+    // the other decoration, after everything that blocks.
+    const spriteRule = matchSpriteRule(defName)
+    const mixEntries = spriteRule ? null : resolveMix(oid)
+    if (spriteRule || mixEntries) {
+      const entries = (spriteRule?.entries ?? mixEntries) as MixEntry[]
+      const mixLabel = spriteRule?.id ?? 'mix'
       deferredScenery.push(() => {
         const { cells } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
-        const palmCell = sandKind === 'dune' ? Math.floor(rng() * cells.length) : -1
+        const placements = mixCover.cover(cells, entries, spriteRule?.accent)
         let placed = 0
-        // OE has three palm models: a cluster mixes them, so no palm stands beside one of its own model while there is a choice.
-        const palmAt = new Map<string, string>()
-        // A jungle cell is a palm, a Dirt tree or a tropical plant (grass_tropical_1, the one 1x1 model), about 45 / 30 / 25.
-        const pickJungle = (cell: { x: number; z: number }): string => {
-          const roll = rng()
-          if (roll < 0.45) return pickPalm(cell)
-          if (roll < 0.75) return decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
-          return tropicalSids.length > 0 ? pickOf(tropicalSids) : pickPalm(cell)
-        }
-        const pickPalm = (cell: { x: number; z: number }): string => {
-          const beside = [[-1, 0], [1, 0], [0, -1], [0, 1]].map(([dx, dz]) => palmAt.get(`${cell.x + dx},${cell.z + dz}`))
-          const free = palmSids.filter((sid) => !beside.includes(sid))
-          const sid = pickOf(free.length > 0 ? free : palmSids)
-          palmAt.set(`${cell.x},${cell.z}`, sid)
-          return sid
-        }
-        cells.forEach((cell, i) => {
-          const sid = sandKind === 'cactus' ? pickOf(cactusSids)
-            : sandKind === 'palm' || i === palmCell || (sandKind === 'grove' && rng() < 0.5) ? pickPalm(cell)
-            : sandKind === 'jungle' ? pickJungle(cell)
-            : sandKind === 'dune' ? pickOf(dunePalmHillSids)
-            : decorationPicker.pickTree(lushTreeBiome as BiomeId, rng)
-          placed += placeScenery(sid, atlas.targetNode(record.layer, cell.x, cell.z), null)
-        })
-        sceneryVariantCounts[`sand ${sandKind}`] = (sceneryVariantCounts[`sand ${sandKind}`] ?? 0) + placed
+        for (const p of placements ?? []) placed += placeScenery(p.sid, atlas.targetNode(record.layer, p.cell.x, p.cell.z), null)
+        sceneryVariantCounts[`${mixLabel} mix`] = (sceneryVariantCounts[`${mixLabel} mix`] ?? 0) + placed
         sceneryPlaced += placed
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: sandKind, note: `Scenery (sand ${sandKind}, ${placed} placed)` })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: mixLabel, note: `Scenery (${mixLabel} mix, ${placed} placed)` })
       })
       continue
     }
@@ -1168,7 +1126,7 @@ export async function convertH3mToMap(
   // In front of a mountain (the tiles with the lower tile number, toward the bottom of the map) a bare tile looks odd: a mountain or a range
   // with nothing near it stands out. Each blocking tile on the bottom edge of a mountain has this chance of getting a tree, a bush or a walkable
   // on the empty tile in front of it.
-  const MOUNTAIN_FRONT_CHANCE = 0.67
+  const MOUNTAIN_FRONT_CHANCE = getSetting('mountainFrontChance')
   const mountainCells = new Set<number>()
   for (const [sid, group] of objectGroups) {
     const template = catalogById.get(sid)
@@ -1200,7 +1158,7 @@ export async function convertH3mToMap(
   sceneryPlaced += frontPlaced
 
   // The last pass: more walkable decoration. Every open tile gets a random walkable of its biome with this chance.
-  const WALKABLE_FILL_CHANCE = 0.33
+  const WALKABLE_FILL_CHANCE = getSetting('walkableFillChance')
   let fillPlaced = 0
   for (const node of floorNodes) {
     if (!isOpenGround(node) || rng() >= WALKABLE_FILL_CHANCE) continue

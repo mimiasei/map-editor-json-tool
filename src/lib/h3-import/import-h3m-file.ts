@@ -115,7 +115,7 @@ export async function importH3mFile(onProgress?: H3ImportProgress): Promise<Impo
   // The conversion, the placement auto-fix and the validations run in a Web Worker (h3-import-job.ts), so the dialog's text, bar and spinner stay live.
   const {
     container: fixed, report, localizationTokens, customMapObjects, dialogFlows, validationErrors, autoFixWarnings, unreachablePlacements, isolatedPlayerStarts,
-  } = await runH3ImportJobOffThread({ data, catalog, template: templateContainer, mapName: file.name.replace(/.h3m$/i, ''), language: i18n.language, mappingOverrides: useH3MappingStore.getState().overrides }, onProgress)
+  } = await runH3ImportJobOffThread({ data, catalog, template: templateContainer, mapName: file.name.replace(/.h3m$/i, ''), language: i18n.language, mappingEdits: useH3MappingStore.getState().edits }, onProgress)
   // The map loads with the converter's custom map objects (the subterranean gates) in the catalog: clones of real ones under a new sid the game's
   // catalog does not list, same footprint as the source, the clone's own name.
   const importCatalog = customMapObjects.length === 0 ? catalog : {

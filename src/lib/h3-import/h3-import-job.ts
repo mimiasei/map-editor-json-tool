@@ -10,7 +10,7 @@ import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { DialogFlow } from '@/types/dialog'
 import i18n from '@/lib/i18n'
 import { convertH3mToMap, type H3ImportReport } from './convert-h3m-to-map'
-import { applyMappingOverrides, type MappingOverrides } from './h3-object-mapping'
+import { applyMappingEdits, type MappingEdits } from './h3-object-mapping'
 import { reportH3Stage, stageLabel, type H3ImportProgress } from './import-progress'
 import { validateMapStructure } from '@/lib/map-grid/validate-map'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
@@ -27,7 +27,7 @@ export interface H3ImportJobInput {
   /** The UI language, so the auto-fix warnings are written in it. */
   language: string
   /** The user's edits to the object mapping table (the mapping tool): the worker has its own copy of the table, so they travel with the job. */
-  mappingOverrides: MappingOverrides
+  mappingEdits: MappingEdits
 }
 
 export interface H3ImportJobResult {
@@ -44,7 +44,7 @@ export interface H3ImportJobResult {
 
 export async function runH3ImportJob(input: H3ImportJobInput, onProgress?: H3ImportProgress): Promise<H3ImportJobResult> {
   if (i18n.language !== input.language) await i18n.changeLanguage(input.language)
-  applyMappingOverrides(input.mappingOverrides)
+  applyMappingEdits(input.mappingEdits)
   const { container, report, localizationTokens, customMapObjects, dialogFlows, sealIds, forbiddenNodes } =
     await convertH3mToMap(input.data, input.catalog, input.template, undefined, onProgress, input.mapName)
   // The converter's custom map objects (the subterranean gates) are clones of real ones under a new sid the game's catalog does not list, so the

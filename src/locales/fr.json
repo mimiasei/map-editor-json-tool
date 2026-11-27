@@ -3624,7 +3624,8 @@
       "omit": "Non convertis",
       "emit": "Un objet OE",
       "scenery": "Rôles de décor",
-      "rule": "Règles (par sprite / sous-type)"
+      "rule": "Règles (par sprite / sous-type)",
+      "mix": "Mélanges aléatoires"
     },
     "modifiedOnly": "Modifiés seulement",
     "counts": "{{shown}} objets sur {{total}} · {{modified}} modifiés",
@@ -3643,12 +3644,14 @@
       "omit": "Non converti",
       "emit": "Objet OE",
       "scenery": "Décor",
-      "rule": "Règle"
+      "rule": "Règle",
+      "mix": "Mélange"
     },
     "typeLong": {
       "omit": "Non converti (ignoré)",
       "emit": "Devient un objet OE",
-      "scenery": "Décor (par rôle)"
+      "scenery": "Décor (par rôle)",
+      "mix": "Devient un mélange aléatoire d’objets OE"
     },
     "edited": "Modifié",
     "default": "Correspondance d’origine",
@@ -3672,10 +3675,67 @@
       "reasonHint": "L’objet est omis de la carte convertie.",
       "ruleHint": "Le résultat dépend du sprite, du sous-type ou du terrain ({{summary}}). Modifiez-le en JSON.",
       "editJson": "Modifier le JSON",
-      "resetRow": "Réinitialiser la ligne"
+      "resetRow": "Réinitialiser la ligne",
+      "mixEntries": "Mélange : chaque case bloquée tire l’une de ces entrées"
     },
     "jsonInvalid": "Ligne invalide : {{error}}",
     "jsonApply": "Appliquer",
-    "jsonTitle": "#{{id}} {{name}} — JSON"
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Objets",
+      "rules": "Règles de sprite",
+      "settings": "Réglages"
+    },
+    "mix": {
+      "poolObjects": "Objet OE",
+      "poolPrefix": "Tous les objets commençant par",
+      "poolTrees": "Un arbre du biome",
+      "weight": "Poids : fréquence de cette entrée",
+      "removeEntry": "Supprimer cette entrée",
+      "addEntry": "Ajouter une entrée",
+      "hint": "Chaque case bloquée de l’objet H3 tire une entrée selon son poids, puis un objet de cette entrée, en évitant le modèle voisin. Pour les empreintes couvertes par de plus grandes pièces (bassins, montagnes), utilisez Modifier le JSON avec une ligne « landmark ».",
+      "sidList": "Ids d’objets OE, séparés par des virgules",
+      "prefixHint": "Tout objet OE 1x1 dont l’id commence ainsi, par exemple palms_"
+    },
+    "rules": {
+      "intro": "Les règles sont vérifiées avant les lignes d’objets, dans cet ordre. La première dont le motif correspond au nom du fichier de sprite H3 transforme l’objet en mélange aléatoire.",
+      "trySprite": "Essayer un nom de sprite, ex. avlswtr4.def",
+      "matches": "Correspond à : {{name}}",
+      "noMatch": "Aucune règle ne correspond",
+      "add": "Ajouter une règle",
+      "reset": "Réinitialiser les règles",
+      "name": "Nom",
+      "pattern": "Motif (expression régulière)",
+      "mix": "Mélange par case bloquée",
+      "invalid": "Motif invalide",
+      "newName": "Nouvelle règle",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "delete": "Supprimer la règle",
+      "patternHint": "Insensible à la casse, appliqué au nom du fichier de sprite, par exemple ^avlspl0[5-9]",
+      "accent": "Une case au hasard tire dans un autre mélange",
+      "accentHint": "Pour les objets formés d’un élément sur une base : une dune de sable est faite de collines avec un palmier dessus.",
+      "select": "Sélectionnez une règle pour la modifier."
+    },
+    "settings": {
+      "intro": "Nombres utilisés par le convertisseur pour placer le décor et trouver les poches de départ fermées. Ils s’appliquent au prochain import.",
+      "reset": "Revenir à la valeur d’origine",
+      "mountainFrontChance": {
+        "label": "Décor devant les montagnes",
+        "help": "Probabilité que chaque case bloquante du bord inférieur d’une montagne reçoive un arbre, un buisson ou un couvre-sol devant elle (0 à 1)."
+      },
+      "walkableFillChance": {
+        "label": "Couvre-sol praticable",
+        "help": "Probabilité que chaque case libre reçoive un décor praticable aléatoire de son biome (0 à 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Arbres de lave",
+        "help": "Part des arbres sur terrain de lave qui restent des arbres de lave OE ; les autres sont des arbres morts de Terres mortes (0 à 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Taille d’une poche fermée",
+        "help": "Une zone de départ de plus de ce nombre de cases est une terre ouverte, pas une poche murée qui garde ses murs."
+      }
+    }
   }
 }

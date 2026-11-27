@@ -3674,7 +3674,8 @@
       "omit": "Nie konwertowane",
       "emit": "Jeden obiekt OE",
       "scenery": "Role dekoracji",
-      "rule": "Reguły (wg sprite / podtypu)"
+      "rule": "Reguły (wg sprite / podtypu)",
+      "mix": "Losowe mieszanki"
     },
     "modifiedOnly": "Tylko zmienione",
     "counts": "{{shown}} z {{total}} obiektów · {{modified}} zmienionych",
@@ -3693,12 +3694,14 @@
       "omit": "Nie konwertowany",
       "emit": "Obiekt OE",
       "scenery": "Dekoracja",
-      "rule": "Reguła"
+      "rule": "Reguła",
+      "mix": "Mieszanka"
     },
     "typeLong": {
       "omit": "Nie konwertowany (pomijany)",
       "emit": "Zamienia się w jeden obiekt OE",
-      "scenery": "Dekoracja (wg roli)"
+      "scenery": "Dekoracja (wg roli)",
+      "mix": "Zamienia się w losową mieszankę obiektów OE"
     },
     "edited": "Zmieniony",
     "default": "Dołączone mapowanie",
@@ -3722,10 +3725,67 @@
       "reasonHint": "Obiekt jest pomijany w skonwertowanej mapie.",
       "ruleHint": "Wynik zależy od sprite, podtypu lub terenu ({{summary}}). Edytuj go jako JSON.",
       "editJson": "Edytuj JSON",
-      "resetRow": "Zresetuj wiersz"
+      "resetRow": "Zresetuj wiersz",
+      "mixEntries": "Mieszanka: każde zablokowane pole losuje jeden z tych wpisów"
     },
     "jsonInvalid": "Nieprawidłowy wiersz: {{error}}",
     "jsonApply": "Zastosuj",
-    "jsonTitle": "#{{id}} {{name}} — JSON"
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Obiekty",
+      "rules": "Reguły sprite",
+      "settings": "Ustawienia"
+    },
+    "mix": {
+      "poolObjects": "Obiekt OE",
+      "poolPrefix": "Wszystkie obiekty zaczynające się od",
+      "poolTrees": "Drzewo z biomu",
+      "weight": "Waga: jak często wybierany jest ten wpis",
+      "removeEntry": "Usuń ten wpis",
+      "addEntry": "Dodaj wpis",
+      "hint": "Każde zablokowane pole obiektu H3 losuje wpis według wagi, potem obiekt z niego, unikając modelu obok. Dla śladów pokrywanych większymi elementami (jeziora, góry) użyj Edytuj JSON z wierszem landmark.",
+      "sidList": "Id obiektów OE oddzielone przecinkami",
+      "prefixHint": "Każdy obiekt OE 1x1, którego id zaczyna się tak, na przykład palms_"
+    },
+    "rules": {
+      "intro": "Reguły są sprawdzane przed wierszami obiektów, w tej kolejności. Pierwsza, której wzorzec pasuje do nazwy pliku sprite H3, zamienia obiekt w losową mieszankę.",
+      "trySprite": "Wypróbuj nazwę sprite, np. avlswtr4.def",
+      "matches": "Pasuje: {{name}}",
+      "noMatch": "Żadna reguła nie pasuje",
+      "add": "Dodaj regułę",
+      "reset": "Zresetuj reguły",
+      "name": "Nazwa",
+      "pattern": "Wzorzec (wyrażenie regularne)",
+      "mix": "Mieszanka na zablokowane pole",
+      "invalid": "Nieprawidłowy wzorzec",
+      "newName": "Nowa reguła",
+      "moveUp": "W górę",
+      "moveDown": "W dół",
+      "delete": "Usuń regułę",
+      "patternHint": "Bez rozróżniania wielkości liter, dopasowywany do nazwy pliku sprite, na przykład ^avlspl0[5-9]",
+      "accent": "Jedno losowe pole losuje z innej mieszanki",
+      "accentHint": "Dla obiektów będących jednym elementem na podstawie: wydma to wzgórza z jedną palmą na wierzchu.",
+      "select": "Wybierz regułę, aby ją edytować."
+    },
+    "settings": {
+      "intro": "Liczby używane przez konwerter przy rozmieszczaniu dekoracji i wykrywaniu zamkniętych kieszeni startowych. Obowiązują od następnego importu.",
+      "reset": "Wróć do dołączonej wartości",
+      "mountainFrontChance": {
+        "label": "Dekoracja przed górami",
+        "help": "Szansa, że każde blokujące pole na dolnej krawędzi góry dostanie przed sobą drzewo, krzew lub roślinność (0 do 1)."
+      },
+      "walkableFillChance": {
+        "label": "Przechodnia roślinność",
+        "help": "Szansa, że każde wolne pole dostanie losową przechodnią dekorację swojego biomu (0 do 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Drzewa lawy",
+        "help": "Część drzew na gruncie lawy, które zostają drzewami lawy OE; reszta to martwe drzewa Krainy Śmierci (0 do 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Rozmiar zamkniętej kieszeni",
+        "help": "Obszar startowy większy niż tyle pól to otwarty teren, a nie zamknięta kieszeń zachowująca ściany."
+      }
+    }
   }
 }

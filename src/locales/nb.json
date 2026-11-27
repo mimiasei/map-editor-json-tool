@@ -3575,7 +3575,8 @@
       "omit": "Ikke konvertert",
       "emit": "Ett OE-objekt",
       "scenery": "Dekorroller",
-      "rule": "Regler (etter sprite / undertype)"
+      "rule": "Regler (etter sprite / undertype)",
+      "mix": "Tilfeldige blandinger"
     },
     "modifiedOnly": "Bare endrede",
     "counts": "{{shown}} av {{total}} objekter · {{modified}} endret",
@@ -3594,12 +3595,14 @@
       "omit": "Ikke konvertert",
       "emit": "OE-objekt",
       "scenery": "Dekor",
-      "rule": "Regel"
+      "rule": "Regel",
+      "mix": "Blanding"
     },
     "typeLong": {
       "omit": "Ikke konvertert (utelatt)",
       "emit": "Blir ett OE-objekt",
-      "scenery": "Dekor (etter rolle)"
+      "scenery": "Dekor (etter rolle)",
+      "mix": "Blir en tilfeldig blanding av OE-objekter"
     },
     "edited": "Endret",
     "default": "Medfølgende kobling",
@@ -3623,10 +3626,67 @@
       "reasonHint": "Objektet utelates fra det konverterte kartet.",
       "ruleHint": "Resultatet avhenger av sprite, undertype eller terreng ({{summary}}). Rediger det som JSON.",
       "editJson": "Rediger JSON",
-      "resetRow": "Tilbakestill rad"
+      "resetRow": "Tilbakestill rad",
+      "mixEntries": "Blanding: hver blokkerte rute trekker en av disse"
     },
     "jsonInvalid": "Ugyldig rad: {{error}}",
     "jsonApply": "Bruk",
-    "jsonTitle": "#{{id}} {{name}} — JSON"
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Objekter",
+      "rules": "Spriteregler",
+      "settings": "Innstillinger"
+    },
+    "mix": {
+      "poolObjects": "OE-objekt",
+      "poolPrefix": "Alle objekter som starter med",
+      "poolTrees": "Et tre fra biomet",
+      "weight": "Vekt: hvor ofte denne oppføringen trekkes",
+      "removeEntry": "Fjern denne oppføringen",
+      "addEntry": "Legg til en oppføring",
+      "hint": "Hver blokkerte rute i H3-objektet trekker en oppføring etter vekt, og deretter et objekt fra den, uten å gjenta modellen ved siden av. For flater dekket av større deler (sjøer, fjell) bruk Rediger JSON med en landmark-rad.",
+      "sidList": "OE-objekt-id-er, atskilt med komma",
+      "prefixHint": "Alle 1x1 OE-objekter hvis id starter slik, for eksempel palms_"
+    },
+    "rules": {
+      "intro": "Reglene sjekkes før objektradene, i denne rekkefølgen. Den første der mønsteret passer til H3-spritens filnavn gjør objektet til en tilfeldig blanding.",
+      "trySprite": "Prøv et spritenavn, f.eks. avlswtr4.def",
+      "matches": "Passer: {{name}}",
+      "noMatch": "Ingen regel passer",
+      "add": "Legg til regel",
+      "reset": "Tilbakestill regler",
+      "name": "Navn",
+      "pattern": "Mønster (regulært uttrykk)",
+      "mix": "Blanding per blokkert rute",
+      "invalid": "Ugyldig mønster",
+      "newName": "Ny regel",
+      "moveUp": "Flytt opp",
+      "moveDown": "Flytt ned",
+      "delete": "Slett regel",
+      "patternHint": "Uavhengig av store/små bokstaver, sammenlignet med spritens filnavn, for eksempel ^avlspl0[5-9]",
+      "accent": "Én tilfeldig rute trekker fra en annen blanding",
+      "accentHint": "For objekter som er ett element på en base: en sanddyne er åser med én palme på toppen.",
+      "select": "Velg en regel for å redigere den."
+    },
+    "settings": {
+      "intro": "Tall konverteren bruker når den plasserer dekor og finner lukkede startlommer. De gjelder neste import.",
+      "reset": "Tilbake til den medfølgende verdien",
+      "mountainFrontChance": {
+        "label": "Dekor foran fjell",
+        "help": "Sjanse for at hver blokkerende rute på nedre kant av et fjell får et tre, en busk eller bunndekke foran seg (0 til 1)."
+      },
+      "walkableFillChance": {
+        "label": "Gangbart bunndekke",
+        "help": "Sjanse for at hver åpne rute får en tilfeldig gangbar dekor fra sitt biom (0 til 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Lavatrær",
+        "help": "Andel av trærne på lavagrunn som forblir OE-lavatrær; resten er døde trær fra Dødsland (0 til 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Størrelse på lukket lomme",
+        "help": "Et startområde med flere ruter enn dette er åpent land, ikke en inngjerdet lomme som beholder veggene."
+      }
+    }
   }
 }

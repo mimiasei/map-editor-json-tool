@@ -101,12 +101,49 @@ const LandmarkRowSchema = z.object({
   default: LandmarkEntrySchema.optional(),
 })
 
+/** One choice in a random mix: the OE objects it draws from and how often it is picked. Exactly one of `sids` (these objects), `prefix` (every 1x1 OE
+ *  object whose sid starts with it, `palms_`) or `trees` (a tree of the biome of this tree sid, `tree_dirt_1`: a Dirt tree) names the pool. */
+export const MixEntrySchema = z.object({
+  sids: z.array(z.string()).optional(),
+  prefix: z.string().optional(),
+  trees: z.string().optional(),
+  weight: z.number().min(0),
+})
+
+/** A random mix of OE objects over an H3 object's blocked tiles: each tile draws an entry by weight, then an object from its pool, avoiding the models
+ *  standing right beside it. For one H3 object to become several OE objects (see `piece-cover.ts` for the size-based kind). */
+const MixRowSchema = z.object({ ...BaseRow, outcome: z.literal('mix'), entries: z.array(MixEntrySchema).min(1) })
+
 export const ObjectRowSchema = z.discriminatedUnion('outcome', [
-  OmitRowSchema, EmitRowSchema, SceneryRowSchema, SceneryDispatchRowSchema, SceneryDispatchSubtypeRowSchema, DispatchRowSchema, LandmarkRowSchema,
+  OmitRowSchema, EmitRowSchema, SceneryRowSchema, SceneryDispatchRowSchema, SceneryDispatchSubtypeRowSchema, DispatchRowSchema, LandmarkRowSchema, MixRowSchema,
 ])
+
+/** A rule on the sprite's file name (not the object id), checked before the object rows: the first rule whose `pattern` (a case-insensitive regular
+ *  expression) matches the sprite turns the object into a random mix. With `accent`, one random tile of the object draws from those entries instead. */
+export const SpriteRuleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  pattern: z.string(),
+  entries: z.array(MixEntrySchema).min(1),
+  accent: z.array(MixEntrySchema).optional(),
+})
+
+/** Numbers the converter's decoration passes use. */
+export const H3SettingsSchema = z.object({
+  /** Chance that each blocking tile on the bottom edge of a mountain gets a tree, bush or walkable in front of it. */
+  mountainFrontChance: z.number().min(0).max(1),
+  /** Chance that every open tile gets a random walkable ground cover. */
+  walkableFillChance: z.number().min(0).max(1),
+  /** Share of the trees on lava ground that stay OE lava trees (the rest are Deathland dead trees). */
+  lavaTreeChance: z.number().min(0).max(1),
+  /** A start region larger than this many tiles is open land, not a sealed pocket. */
+  pocketMaxTiles: z.number().int().min(1).max(500),
+})
 
 export const H3ObjectMappingSchema = z.object({
   objects: z.array(ObjectRowSchema),
+  spriteRules: z.array(SpriteRuleSchema),
+  settings: H3SettingsSchema,
   sceneryRoleSids: z.record(z.string(), z.record(z.string(), z.string())),
   /** Real H3 creature-type index (object id 54's `subtype`) -> real
    *  creature name, e.g. `"4": "Griffin"` — only the ids actually sourced
@@ -135,6 +172,9 @@ export const H3ObjectMappingSchema = z.object({
 })
 
 export type ObjectRow = z.infer<typeof ObjectRowSchema>
+export type MixEntry = z.infer<typeof MixEntrySchema>
+export type SpriteRule = z.infer<typeof SpriteRuleSchema>
+export type H3Settings = z.infer<typeof H3SettingsSchema>
 export type H3ObjectMapping = z.infer<typeof H3ObjectMappingSchema>
 export type SceneryRole = z.infer<typeof SceneryRoleSchema>
 export type OeBiome = z.infer<typeof OeBiomeSchema>

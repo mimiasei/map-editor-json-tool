@@ -42,7 +42,7 @@
 // 11/13 aren't in EdObjts.txt's own id-140 listing at all — real, disclosed
 // gaps, not guesses).
 
-import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind } from './h3-object-mapping-schema'
+import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind, type MixEntry, type SpriteRule, type H3Settings } from './h3-object-mapping-schema'
 import mappingData from './h3-object-mapping.json'
 
 export type { SceneryRole, OeBiome, ObjectKind }
@@ -110,13 +110,55 @@ export const SCENERY_ROLE_SIDS: Readonly<Record<string, Record<string, string>>>
 /** The table in use: the shipped rows, with the user's edits (the mapping tool, `useH3MappingStore`) on top. */
 let objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
 
-/** Row edits by H3 id, as saved by the mapping tool. Every resolver below reads the result, in the main thread and (passed along with the job) in the import worker. */
-export type MappingOverrides = Record<string, ObjectRow>
+/** The shipped sprite rules and numbers (what the mapping tool shows as the default). */
+export const DEFAULT_SPRITE_RULES: readonly SpriteRule[] = mapping.spriteRules
+export const DEFAULT_SETTINGS: Readonly<H3Settings> = mapping.settings
+let spriteRules: SpriteRule[] = [...mapping.spriteRules]
+let compiledRules: { rule: SpriteRule; regex: RegExp | null }[] = compile(spriteRules)
+let settings: H3Settings = { ...mapping.settings }
 
-export function applyMappingOverrides(overrides: MappingOverrides): void {
-  objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, overrides[String(row.h3Id)] ?? row]))
+function compile(rules: SpriteRule[]) {
+  return rules.map((rule) => {
+    try {
+      return { rule, regex: new RegExp(rule.pattern, 'i') }
+    } catch {
+      return { rule, regex: null }
+    }
+  })
+}
+
+/** What the user changed in the mapping tool (useH3MappingStore): rows by H3 id, the whole sprite rule list (null: the shipped one) and numbers. Every
+ *  resolver below reads the result, in the main thread and (passed along with the job) in the import worker. */
+export interface MappingEdits {
+  rows: Record<string, ObjectRow>
+  spriteRules: SpriteRule[] | null
+  settings: Partial<H3Settings>
+}
+
+export const NO_MAPPING_EDITS: MappingEdits = { rows: {}, spriteRules: null, settings: {} }
+
+export function applyMappingEdits(edits: MappingEdits): void {
+  objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, edits.rows[String(row.h3Id)] ?? row]))
   WATER_MOUNTAIN_OBJECT_IDS.clear()
   for (const row of objectsById.values()) if ('onWater' in row && row.onWater === 'mountain') WATER_MOUNTAIN_OBJECT_IDS.add(row.h3Id)
+  spriteRules = edits.spriteRules ? [...edits.spriteRules] : [...mapping.spriteRules]
+  compiledRules = compile(spriteRules)
+  settings = { ...mapping.settings, ...edits.settings }
+}
+
+/** The first sprite rule whose pattern matches this sprite's file name, or null. A rule with an invalid pattern never matches. */
+export function matchSpriteRule(spriteName: string): SpriteRule | null {
+  return compiledRules.find((entry) => entry.regex?.test(spriteName))?.rule ?? null
+}
+
+export function getSetting<K extends keyof H3Settings>(key: K): H3Settings[K] {
+  return settings[key]
+}
+
+/** The random mix an H3 object id converts to (rows with `outcome: 'mix'`), or null. */
+export function resolveMix(templateObjectId: number): MixEntry[] | null {
+  const row = objectsById.get(templateObjectId)
+  return row?.outcome === 'mix' ? row.entries : null
 }
 
 export interface LandmarkResolution { sid?: string; effectSid?: string; smallSid?: string; pieces?: { size: number; sids: string[] }[] }
@@ -207,6 +249,7 @@ export function h3ObjectCategory(id: number): string | null {
     case 'scenery-dispatch':
     case 'scenery-dispatch-subtype':
     case 'landmark':
+    case 'mix':
       return 'scenery'
     case 'omit':
       return null
@@ -269,6 +312,7 @@ export function resolveObjectSid(
     }
 
     // Landmarks are intercepted by the converter (`resolveLandmark`) before this runs; reaching here means the sprite has no entry.
+    case 'mix':
     case 'landmark':
       return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
 

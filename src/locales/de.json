@@ -3575,7 +3575,8 @@
       "omit": "Nicht umgewandelt",
       "emit": "Ein OE-Objekt",
       "scenery": "Dekorationsrollen",
-      "rule": "Regeln (nach Sprite / Untertyp)"
+      "rule": "Regeln (nach Sprite / Untertyp)",
+      "mix": "Zufallsmischungen"
     },
     "modifiedOnly": "Nur geänderte",
     "counts": "{{shown}} von {{total}} Objekten · {{modified}} geändert",
@@ -3594,12 +3595,14 @@
       "omit": "Nicht umgewandelt",
       "emit": "OE-Objekt",
       "scenery": "Dekoration",
-      "rule": "Regel"
+      "rule": "Regel",
+      "mix": "Mischung"
     },
     "typeLong": {
       "omit": "Nicht umgewandelt (weggelassen)",
       "emit": "Wird zu einem OE-Objekt",
-      "scenery": "Dekoration (nach Rolle)"
+      "scenery": "Dekoration (nach Rolle)",
+      "mix": "Wird zu einer Zufallsmischung aus OE-Objekten"
     },
     "edited": "Geändert",
     "default": "Mitgelieferte Zuordnung",
@@ -3623,10 +3626,67 @@
       "reasonHint": "Das Objekt wird in der umgewandelten Karte weggelassen.",
       "ruleHint": "Das Ergebnis hängt von Sprite, Untertyp oder Gelände ab ({{summary}}). Bearbeite es als JSON.",
       "editJson": "JSON bearbeiten",
-      "resetRow": "Zeile zurücksetzen"
+      "resetRow": "Zeile zurücksetzen",
+      "mixEntries": "Mischung: jedes blockierte Feld zieht einen dieser Einträge"
     },
     "jsonInvalid": "Keine gültige Zeile: {{error}}",
     "jsonApply": "Übernehmen",
-    "jsonTitle": "#{{id}} {{name}} — JSON"
+    "jsonTitle": "#{{id}} {{name}} — JSON",
+    "tab": {
+      "objects": "Objekte",
+      "rules": "Sprite-Regeln",
+      "settings": "Einstellungen"
+    },
+    "mix": {
+      "poolObjects": "OE-Objekt",
+      "poolPrefix": "Alle Objekte, die beginnen mit",
+      "poolTrees": "Ein Baum des Bioms",
+      "weight": "Gewicht: wie oft dieser Eintrag gezogen wird",
+      "removeEntry": "Diesen Eintrag entfernen",
+      "addEntry": "Eintrag hinzufügen",
+      "hint": "Jedes blockierte Feld des H3-Objekts zieht einen Eintrag nach Gewicht und daraus ein Objekt, ohne das Modell direkt daneben zu wiederholen. Für Flächen aus größeren Teilen (Tümpel, Berge) nutze JSON bearbeiten mit einer Landmark-Zeile.",
+      "sidList": "OE-Objekt-IDs, durch Kommas getrennt",
+      "prefixHint": "Jedes 1x1-OE-Objekt, dessen ID so beginnt, zum Beispiel palms_"
+    },
+    "rules": {
+      "intro": "Regeln werden vor den Objektzeilen in dieser Reihenfolge geprüft. Die erste, deren Muster zum Sprite-Dateinamen des H3-Objekts passt, macht es zu einer Zufallsmischung.",
+      "trySprite": "Sprite-Namen testen, z. B. avlswtr4.def",
+      "matches": "Passt: {{name}}",
+      "noMatch": "Keine Regel passt",
+      "add": "Regel hinzufügen",
+      "reset": "Regeln zurücksetzen",
+      "name": "Name",
+      "pattern": "Muster (regulärer Ausdruck)",
+      "mix": "Mischung pro blockiertem Feld",
+      "invalid": "Ungültiges Muster",
+      "newName": "Neue Regel",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "delete": "Regel löschen",
+      "patternHint": "Ohne Groß-/Kleinschreibung, gegen den Sprite-Dateinamen geprüft, zum Beispiel ^avlspl0[5-9]",
+      "accent": "Ein zufälliges Feld zieht aus einer anderen Mischung",
+      "accentHint": "Für Objekte aus einem Element auf einer Basis: eine Sanddüne ist Hügel mit einer Palme darauf.",
+      "select": "Wähle eine Regel zum Bearbeiten."
+    },
+    "settings": {
+      "intro": "Zahlen, die der Konverter beim Platzieren von Dekoration und beim Finden abgeschlossener Startnischen nutzt. Sie gelten für den nächsten Import.",
+      "reset": "Auf den mitgelieferten Wert zurück",
+      "mountainFrontChance": {
+        "label": "Dekoration vor Bergen",
+        "help": "Wahrscheinlichkeit, dass jedes blockierende Feld am unteren Rand eines Bergs davor einen Baum, Busch oder Bodenbewuchs bekommt (0 bis 1)."
+      },
+      "walkableFillChance": {
+        "label": "Begehbarer Bodenbewuchs",
+        "help": "Wahrscheinlichkeit, dass jedes freie Feld eine zufällige begehbare Dekoration seines Bioms bekommt (0 bis 1)."
+      },
+      "lavaTreeChance": {
+        "label": "Lavabäume",
+        "help": "Anteil der Bäume auf Lavaboden, die OE-Lavabäume bleiben; der Rest sind tote Bäume des Todeslands (0 bis 1)."
+      },
+      "pocketMaxTiles": {
+        "label": "Größe einer geschlossenen Nische",
+        "help": "Ein Startbereich mit mehr Feldern ist offenes Land, keine ummauerte Nische, die ihre Wände behält."
+      }
+    }
   }
 }

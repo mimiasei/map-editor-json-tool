@@ -10,6 +10,7 @@
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { BIOME_ID_TO_CATALOG_BIOME, buildFuzzyObstaclePools, buildWalkablePools, isTreeDecoration, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { getSetting } from './h3-object-mapping'
 import { applyBiomeDecorationMix, type DecorationRule } from '@/lib/rmg/biome-decoration-mix'
 
 export const H3_DECORATION_RULES: DecorationRule[] = [
@@ -28,9 +29,6 @@ export const H3_DECORATION_RULES: DecorationRule[] = [
   { into: 'Dirt', from: 'Deathland', type: 'mountain', chance: 0.25 },
   { into: 'Autumn', from: 'Deathland', type: 'mountain', chance: 0.2 },
 ]
-
-/** Share of the trees on Lava ground that stay OE lava trees. */
-const LAVA_TREE_CHANCE = 0.06
 
 export interface H3DecorationPicker {
   /** The catalog biome of a table-resolved tree or mountain sid; null for anything else (left to the plain sibling pick). */
@@ -146,7 +144,7 @@ export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPick
     },
     pickTree(biome, rng, not) {
       // OE's lava trees are disliked: H3 lava trees become Deathland dead trees (not the withered pines or mushrooms), with a few lava trees mixed in.
-      if (biome === lavaBiome && deadTrees.length > 0 && rng() >= LAVA_TREE_CHANCE) {
+      if (biome === lavaBiome && deadTrees.length > 0 && rng() >= getSetting('lavaTreeChance')) {
         const fresh = deadTrees.filter((sid) => sid !== not)
         return fresh[Math.floor(rng() * fresh.length)] ?? deadTrees[0]
       }

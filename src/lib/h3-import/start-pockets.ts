@@ -8,8 +8,7 @@
 // to be an enclosure and not just a spot in open land. Its ring is every tile touching it that H3 blocks; the converter makes sure each ring
 // tile is blocked in OE too, with solid pieces the accessibility pass is not allowed to delete (`sealIds`).
 
-/** A start region larger than this is open land, not a pocket. Barren Lands' pockets are 1 to 8 tiles. */
-export const POCKET_MAX_TILES = 64
+import { getSetting } from './h3-object-mapping'
 
 export interface StartPocket {
   nodes: Set<number>
@@ -43,7 +42,7 @@ export function findStartPockets(startNodes: number[], walkable: Set<number>, at
           queue.push(n)
         }
       }
-      if (nodes.size > POCKET_MAX_TILES) open = true
+      if (nodes.size > getSetting('pocketMaxTiles')) open = true
     }
     for (const n of nodes) claimed.add(n)
     if (open) continue
