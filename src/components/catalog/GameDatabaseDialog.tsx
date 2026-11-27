@@ -616,8 +616,11 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       if (activeTab === 'mapObjects') {
         const { category, biome } = item as CatalogItem & { category?: string; biome?: string }
         // Campaign and custom objects belong to their own switch, not to their category's.
-        const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : (interactableGroupOf(item.id) ?? mapCategoryKey(category ?? ''))
+        const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : mapCategoryKey(category ?? '')
         if (fs.mapCategories.enabled[key] === false) return false
+        // Creature banks and hero boosts are parts of Interactables: they need their own switch and the Interactables one.
+        const group = key === 'interactables' ? interactableGroupOf(item.id) : null
+        if (group && fs.mapCategories.enabled[group] === false) return false
         if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }
 

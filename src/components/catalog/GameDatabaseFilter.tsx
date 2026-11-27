@@ -44,7 +44,8 @@ const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
 // The CatalogMapObject['category'] set, with the debug `test` and `blocks` merged into 'miscellaneous'.
 // 'campaign' and 'custom' are not categories: an object whose sid contains that word (campaign_x, x_custom) is governed by that switch alone,
 // whatever its category ('campaign' wins when both words occur).
-// 'creatureBanks' and 'heroBoosts' are groups of interactables (see interactable-subcategories.ts) with a switch of their own, like campaign and custom.
+// 'creatureBanks' and 'heroBoosts' are parts of Interactables (see interactable-subcategories.ts): an object of one shows only when its own switch and
+// the Interactables switch are both on.
 const MAP_CATEGORIES = ['interactables', 'creatureBanks', 'heroBoosts', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'miscellaneous', 'campaign', 'custom']
 type MapCategoryKey = 'interactables' | 'creatureBanks' | 'heroBoosts' | 'resources' | 'environments' | 'spawns' | 'animals' | 'fxs' | 'miscellaneous' | 'campaign' | 'custom'
 // The values of CatalogMapObject.biome (see its doc), plus objects that carry none.
