@@ -140,10 +140,24 @@ export const H3SettingsSchema = z.object({
   pocketMaxTiles: z.number().int().min(1).max(500),
 })
 
+export const BIOME_NAMES = ['Grass', 'Dirt', 'Autumn', 'Deathland', 'Snow', 'Sand', 'Lava'] as const
+
+/** `into` may use the `type` objects (all objects when there is no type) of `from`, making up `chance` of its picks (see rmg/biome-decoration-mix.ts). */
+export const DecorationRuleSchema = z.object({
+  into: z.enum(BIOME_NAMES),
+  from: z.enum(BIOME_NAMES),
+  type: z.string().optional(),
+  chance: z.number().min(0).max(1),
+})
+
 export const H3ObjectMappingSchema = z.object({
   objects: z.array(ObjectRowSchema),
   spriteRules: z.array(SpriteRuleSchema),
   settings: H3SettingsSchema,
+  /** Which biomes borrow trees and mountains from which, for the varied trees and ranges of the import. */
+  decorationRules: z.array(DecorationRuleSchema),
+  /** H3 object ids that are decoration or terrain overlays whatever their row converts them to: the tool's Scenery group. */
+  sceneryGroupIds: z.array(z.number().int()),
   sceneryRoleSids: z.record(z.string(), z.record(z.string(), z.string())),
   /** Real H3 creature-type index (object id 54's `subtype`) -> real
    *  creature name, e.g. `"4": "Griffin"` — only the ids actually sourced
@@ -173,6 +187,7 @@ export const H3ObjectMappingSchema = z.object({
 
 export type ObjectRow = z.infer<typeof ObjectRowSchema>
 export type MixEntry = z.infer<typeof MixEntrySchema>
+export type DecorationRuleData = z.infer<typeof DecorationRuleSchema>
 export type SpriteRule = z.infer<typeof SpriteRuleSchema>
 export type H3Settings = z.infer<typeof H3SettingsSchema>
 export type H3ObjectMapping = z.infer<typeof H3ObjectMappingSchema>

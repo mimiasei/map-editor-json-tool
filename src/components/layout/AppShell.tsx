@@ -9,6 +9,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
+import { loadMappingEditsIfEmpty } from '@/lib/h3-import/mapping-edits-file'
 import { commitMapWithPathPrompt } from '@/lib/map-file'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
@@ -158,6 +159,8 @@ export default function AppShell() {
   }, [pendingDatabaseFocus])
   // With a text writer key saved, confirm once at startup that the model still exists.
   useEffect(() => { void checkModelAtStartup() }, [])
+  // The saved H3 mapping edits (data folder) are what imports use when this browser profile has none of its own.
+  useEffect(() => { void loadMappingEditsIfEmpty() }, [])
   // Desktop exit-confirmation (issue #195 follow-up) — resolved via
   // askExitChoice below, which the close-request handler awaits.
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)

@@ -3705,6 +3705,28 @@
     },
     "edited": "Zmieniony",
     "wikiDescription": "Opis z wiki",
+    "save": "Zapisz",
+    "saveHint": "Zapisuje zmiany w pliku w folderze danych aplikacji, poza aplikacją. Importy czytają go stamtąd.",
+    "saved": "Zapisano w {{path}}",
+    "saveFailed": "Nie udało się zapisać: {{error}}",
+    "noSavedFile": "Nie ma jeszcze zapisanego pliku.",
+    "loadSaved": "Wczytaj zapisane",
+    "loadSavedHint": "Zastąp bieżące zmiany zapisanym plikiem",
+    "loadedSaved": "Wczytano {{count}} zmian z zapisanego pliku.",
+    "roles": {
+      "intro": "Obiekt OE, którego każda rola dekoracji używa w każdym biomie OE. Wiersze zamieniające obiekt H3 na rolę dekoracji czytają stąd, a zróżnicowane drzewa i pasma górskie rozszerzają sid do całego zestawu biomu.",
+      "role": "Rola",
+      "resetCell": "Wróć do {{sid}}"
+    },
+    "mixing": {
+      "intro": "Który biom może używać drzew lub gór innego biomu i jaką część losowań stanowią. Dzięki temu las lub pasmo nie jest jednym powtarzanym modelem.",
+      "reset": "Zresetuj reguły",
+      "uses": "używa",
+      "anyType": "dowolny typ",
+      "of": "z",
+      "delete": "Usuń regułę",
+      "add": "Dodaj regułę"
+    },
     "group": {
       "all": "Wszystkie grupy",
       "interactive": "Obiekty interaktywne",
@@ -3741,6 +3763,8 @@
     "tab": {
       "objects": "Obiekty",
       "rules": "Reguły sprite",
+      "roles": "Role dekoracji",
+      "mixing": "Mieszanie biomów",
       "settings": "Ustawienia"
     },
     "mix": {

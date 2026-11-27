@@ -4,27 +4,17 @@
 
 import type { MixEntry, ObjectKind, ObjectRow, SceneryRole } from './h3-object-mapping-schema'
 import { ObjectRowSchema } from './h3-object-mapping-schema'
+import { SCENERY_GROUP_IDS } from './h3-object-mapping'
 
 export type RowKind = 'omit' | 'emit' | 'scenery' | 'mix' | 'rule'
 
 /** What a hero can do with the object: visit/pick it up (interactive), or it only decorates or marks terrain (scenery). Ids with no name are unknown. */
 export type ObjectGroup = 'interactive' | 'scenery' | 'unknown'
 
-// Decoration or terrain overlays that the table's "scenery" outcome does not cover (omitted, or converted by a landmark/emit row), so they are listed by hand
-// (H3 object ids from h3-object-mapping.json).
-const EXTRA_SCENERY_IDS = new Set([
-  21, 223, // Cursed Ground
-  46, 230, // Magic Plains
-  114, 115, 117, 122, 132, 138, 139, 141, 143, 152, 155, 159, 160, 161, 204, 222, 224, 225, 226, 227, 229, 231,
-  // Brush, Bush, Canyon, Hedge, Moss, Plant, misc scenery, magical terrain, River Delta, Stalagmite, Trees, Willow, Sand Decoration, Reef, Yucca,
-  // Clover Field, Evil Fog, Favorable Winds, Fiery Fields, Holy Ground, Magic Clouds, Rocklands
-  127, 128, 130, 157, 158, // Lava Flow, Lava Lake, Log, Volcanic Vent, Volcano
-])
-
 /** Grouped by the shipped row, so editing what an object converts to never moves it between groups. */
 export function objectGroup(defaultRow: ObjectRow): ObjectGroup {
   if (defaultRow.h3Name === 'Unidentified') return 'unknown'
-  if (defaultRow.outcome.startsWith('scenery') || EXTRA_SCENERY_IDS.has(defaultRow.h3Id)) return 'scenery'
+  if (defaultRow.outcome.startsWith('scenery') || SCENERY_GROUP_IDS.has(defaultRow.h3Id)) return 'scenery'
   return 'interactive'
 }
 

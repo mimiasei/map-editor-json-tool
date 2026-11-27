@@ -2528,6 +2528,81 @@
     "lavaTreeChance": 0.06,
     "pocketMaxTiles": 64
   },
+  "decorationRules": [
+    {
+      "into": "Grass",
+      "from": "Dirt",
+      "chance": 0.2
+    },
+    {
+      "into": "Dirt",
+      "from": "Grass",
+      "chance": 0.2
+    },
+    {
+      "into": "Autumn",
+      "from": "Grass",
+      "chance": 0.2
+    },
+    {
+      "into": "Autumn",
+      "from": "Dirt",
+      "chance": 0.2
+    },
+    {
+      "into": "Deathland",
+      "from": "Grass",
+      "chance": 0.15
+    },
+    {
+      "into": "Deathland",
+      "from": "Dirt",
+      "chance": 0.15
+    },
+    {
+      "into": "Grass",
+      "from": "Dirt",
+      "type": "mountain",
+      "chance": 0.3
+    },
+    {
+      "into": "Dirt",
+      "from": "Grass",
+      "type": "mountain",
+      "chance": 0.3
+    },
+    {
+      "into": "Autumn",
+      "from": "Grass",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Autumn",
+      "from": "Dirt",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Grass",
+      "from": "Deathland",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Dirt",
+      "from": "Deathland",
+      "type": "mountain",
+      "chance": 0.25
+    },
+    {
+      "into": "Autumn",
+      "from": "Deathland",
+      "type": "mountain",
+      "chance": 0.2
+    }
+  ],
+  "sceneryGroupIds": [21,223,46,230,114,115,117,122,132,138,139,141,143,152,155,159,160,161,204,222,224,225,226,227,229,231,127,128,130,157,158],
   "sceneryRoleSids": {
     "mountain": {
       "grass": "mountain_green_small_1",

@@ -3614,6 +3614,28 @@
     },
     "edited": "Edited",
     "wikiDescription": "Wiki description",
+    "save": "Save",
+    "saveHint": "Save the edits to a file in the app data folder, outside the app. Imports read it from there.",
+    "saved": "Saved to {{path}}",
+    "saveFailed": "Could not save: {{error}}",
+    "noSavedFile": "There is no saved file yet.",
+    "loadSaved": "Load saved",
+    "loadSavedHint": "Replace the current edits with the saved file",
+    "loadedSaved": "Loaded {{count}} edits from the saved file.",
+    "roles": {
+      "intro": "The OE object each scenery role uses on each OE biome. Rows that convert an H3 object to a scenery role read from here, and the varied trees and mountain ranges widen the sid to the biome's whole set.",
+      "role": "Role",
+      "resetCell": "Back to {{sid}}"
+    },
+    "mixing": {
+      "intro": "Which biome may use the trees or mountains of another biome, and the share of its picks they make. This is what keeps a forest or range from being one repeated model.",
+      "reset": "Reset rules",
+      "uses": "uses",
+      "anyType": "any type",
+      "of": "of",
+      "delete": "Delete rule",
+      "add": "Add rule"
+    },
     "group": {
       "all": "All groups",
       "interactive": "Interactive objects",
@@ -3650,6 +3672,8 @@
     "tab": {
       "objects": "Objects",
       "rules": "Sprite rules",
+      "roles": "Scenery roles",
+      "mixing": "Biome mixing",
       "settings": "Settings"
     },
     "mix": {

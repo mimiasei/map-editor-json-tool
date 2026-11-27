@@ -10,25 +10,8 @@
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { BIOME_ID_TO_CATALOG_BIOME, buildFuzzyObstaclePools, buildWalkablePools, isTreeDecoration, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { getSetting } from './h3-object-mapping'
+import { getDecorationRules, getSetting } from './h3-object-mapping'
 import { applyBiomeDecorationMix, type DecorationRule } from '@/lib/rmg/biome-decoration-mix'
-
-export const H3_DECORATION_RULES: DecorationRule[] = [
-  { into: 'Grass', from: 'Dirt', chance: 0.2 },
-  { into: 'Dirt', from: 'Grass', chance: 0.2 },
-  { into: 'Autumn', from: 'Grass', chance: 0.2 },
-  { into: 'Autumn', from: 'Dirt', chance: 0.2 },
-  { into: 'Deathland', from: 'Grass', chance: 0.15 },
-  { into: 'Deathland', from: 'Dirt', chance: 0.15 },
-  // Mountains mix more than the rest, so a range is not one repeated model: Deathland's are used on Grass, Dirt and Autumn too.
-  { into: 'Grass', from: 'Dirt', type: 'mountain', chance: 0.3 },
-  { into: 'Dirt', from: 'Grass', type: 'mountain', chance: 0.3 },
-  { into: 'Autumn', from: 'Grass', type: 'mountain', chance: 0.25 },
-  { into: 'Autumn', from: 'Dirt', type: 'mountain', chance: 0.25 },
-  { into: 'Grass', from: 'Deathland', type: 'mountain', chance: 0.25 },
-  { into: 'Dirt', from: 'Deathland', type: 'mountain', chance: 0.25 },
-  { into: 'Autumn', from: 'Deathland', type: 'mountain', chance: 0.2 },
-]
 
 export interface H3DecorationPicker {
   /** The catalog biome of a table-resolved tree or mountain sid; null for anything else (left to the plain sibling pick). */
@@ -70,10 +53,12 @@ function squareSize(obj: CatalogMapObject): number | null {
 
 export function createH3DecorationPicker(catalog: GameCatalog): H3DecorationPicker {
   const byId = new Map(catalog.mapObjects.map((o) => [o.id, o]))
+  // The borrowing rules are table data (h3-object-mapping.json `decorationRules`, editable in the mapping tool).
+  const rules = getDecorationRules() as DecorationRule[]
   // No RMG pick weights: they leave some real variants out (never picked), and variety is the point here.
-  const mixed = applyBiomeDecorationMix(buildFuzzyObstaclePools(catalog.mapObjects), undefined, H3_DECORATION_RULES)
+  const mixed = applyBiomeDecorationMix(buildFuzzyObstaclePools(catalog.mapObjects), undefined, rules)
 
-  const walkMixed = applyBiomeDecorationMix(buildWalkablePools(catalog), undefined, H3_DECORATION_RULES)
+  const walkMixed = applyBiomeDecorationMix(buildWalkablePools(catalog), undefined, rules)
   const walkables = new Map<BiomeId, string[]>(Object.entries(walkMixed.pools).map(([key, pool]) => [Number(key) as BiomeId, pool.obstacles]))
 
   const trees = new Map<BiomeId, string[]>()

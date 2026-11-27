@@ -3606,6 +3606,28 @@
     },
     "edited": "Endret",
     "wikiDescription": "Wiki-beskrivelse",
+    "save": "Lagre",
+    "saveHint": "Lagrer endringene i en fil i appens datamappe, utenfor appen. Importer leser den derfra.",
+    "saved": "Lagret i {{path}}",
+    "saveFailed": "Kunne ikke lagre: {{error}}",
+    "noSavedFile": "Det finnes ingen lagret fil ennå.",
+    "loadSaved": "Last inn lagret",
+    "loadSavedHint": "Erstatt gjeldende endringer med den lagrede filen",
+    "loadedSaved": "Lastet inn {{count}} endringer fra den lagrede filen.",
+    "roles": {
+      "intro": "OE-objektet hver kulisserolle bruker i hvert OE-biom. Rader som konverterer et H3-objekt til en kulisserolle leser herfra, og de varierte trærne og fjellkjedene utvider sid-en til hele biomets utvalg.",
+      "role": "Rolle",
+      "resetCell": "Tilbake til {{sid}}"
+    },
+    "mixing": {
+      "intro": "Hvilket biom som kan bruke trær eller fjell fra et annet biom, og hvor stor andel av valgene de utgjør. Det hindrer at en skog eller fjellkjede blir én gjentatt modell.",
+      "reset": "Tilbakestill regler",
+      "uses": "bruker",
+      "anyType": "alle typer",
+      "of": "fra",
+      "delete": "Slett regel",
+      "add": "Legg til regel"
+    },
     "group": {
       "all": "Alle grupper",
       "interactive": "Interaktive objekter",
@@ -3642,6 +3664,8 @@
     "tab": {
       "objects": "Objekter",
       "rules": "Spriteregler",
+      "roles": "Kulisserroller",
+      "mixing": "Biomblanding",
       "settings": "Innstillinger"
     },
     "mix": {

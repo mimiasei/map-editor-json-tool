@@ -3606,6 +3606,28 @@
     },
     "edited": "Geändert",
     "wikiDescription": "Wiki-Beschreibung",
+    "save": "Speichern",
+    "saveHint": "Speichert die Änderungen in einer Datei im App-Datenordner, außerhalb der App. Importe lesen sie von dort.",
+    "saved": "Gespeichert in {{path}}",
+    "saveFailed": "Speichern fehlgeschlagen: {{error}}",
+    "noSavedFile": "Es gibt noch keine gespeicherte Datei.",
+    "loadSaved": "Gespeichertes laden",
+    "loadSavedHint": "Aktuelle Änderungen durch die gespeicherte Datei ersetzen",
+    "loadedSaved": "{{count}} Änderungen aus der gespeicherten Datei geladen.",
+    "roles": {
+      "intro": "Das OE-Objekt, das jede Dekorationsrolle in jedem OE-Biom verwendet. Zeilen, die ein H3-Objekt in eine Dekorationsrolle umwandeln, lesen von hier; die abwechslungsreichen Bäume und Gebirge erweitern die Sid auf alle Objekte des Bioms.",
+      "role": "Rolle",
+      "resetCell": "Zurück zu {{sid}}"
+    },
+    "mixing": {
+      "intro": "Welches Biom die Bäume oder Berge eines anderen Bioms verwenden darf und mit welchem Anteil. So besteht ein Wald oder Gebirge nicht aus einem einzigen wiederholten Modell.",
+      "reset": "Regeln zurücksetzen",
+      "uses": "verwendet",
+      "anyType": "jeder Typ",
+      "of": "von",
+      "delete": "Regel löschen",
+      "add": "Regel hinzufügen"
+    },
     "group": {
       "all": "Alle Gruppen",
       "interactive": "Interaktive Objekte",
@@ -3642,6 +3664,8 @@
     "tab": {
       "objects": "Objekte",
       "rules": "Sprite-Regeln",
+      "roles": "Dekorationsrollen",
+      "mixing": "Biom-Mischung",
       "settings": "Einstellungen"
     },
     "mix": {

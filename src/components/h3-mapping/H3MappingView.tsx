@@ -18,28 +18,31 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Download, Pencil, Search, Undo2, Upload, X } from '@/components/ui/icons'
+import { Download, Pencil, Save, Search, Undo2, Upload, X } from '@/components/ui/icons'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MixEditor from './MixEditor'
 import SpriteRulesTab from './SpriteRulesTab'
 import SettingsTab from './SettingsTab'
+import RolesTab from './RolesTab'
+import MixingTab from './MixingTab'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useH3MappingStore } from '@/store/useH3MappingStore'
-import { DEFAULT_MAPPING_ROWS, DEFAULT_SETTINGS, DEFAULT_SPRITE_RULES, SCENERY_ROLE_SIDS } from '@/lib/h3-import/h3-object-mapping'
+import { DEFAULT_MAPPING_ROWS, DEFAULT_DECORATION_RULES, DEFAULT_SETTINGS, DEFAULT_SPRITE_RULES, SCENERY_ROLE_SIDS } from '@/lib/h3-import/h3-object-mapping'
 import { OBJECT_KINDS, SCENERY_ROLES, type MixEntry, type ObjectKind, type ObjectRow, type SceneryRole } from '@/lib/h3-import/h3-object-mapping-schema'
 import { convertsToText, objectGroup, parseRowJson, rowKind, sameRow, toEmit, toMix, toOmit, toScenery, type ObjectGroup, type RowKind } from '@/lib/h3-import/mapping-edit'
 import { getH3ObjectDescription } from '@/lib/h3-import/h3-object-descriptions'
 import mappingData from '@/lib/h3-import/h3-object-mapping.json'
-import { confirmDialog, openFile, saveFile } from '@/lib/native-fs'
+import { confirmDialog, isTauri, openFile, saveFile } from '@/lib/native-fs'
+import { loadMappingEditsFile, saveMappingEditsFile } from '@/lib/h3-import/mapping-edits-file'
 import { cn } from '@/lib/utils'
 
 type KindFilter = 'all' | RowKind
-type Tab = 'objects' | 'rules' | 'settings'
+type Tab = 'objects' | 'rules' | 'roles' | 'mixing' | 'settings'
 
 const GROUP_FILTERS: ('all' | ObjectGroup)[] = ['all', 'interactive', 'scenery', 'unknown']
 const GROUP_BY_ID = new Map(DEFAULT_MAPPING_ROWS.map((row) => [row.h3Id, objectGroup(row)]))
 const KIND_FILTERS: KindFilter[] = ['all', 'omit', 'emit', 'mix', 'scenery', 'rule']
-const TABS: Tab[] = ['objects', 'rules', 'settings']
+const TABS: Tab[] = ['objects', 'rules', 'roles', 'mixing', 'settings']
 
 const KIND_BADGE: Record<RowKind, string> = {
   omit: 'bg-muted text-muted-foreground',
@@ -50,6 +53,24 @@ const KIND_BADGE: Record<RowKind, string> = {
 }
 
 const DEFAULT_BY_ID = new Map<number, ObjectRow>(DEFAULT_MAPPING_ROWS.map((row) => [row.h3Id, row]))
+
+/** The whole role table: the shipped sids with the edited cells on top (what an exported table lists). */
+function mergedRoleSids(edited: Record<string, Record<string, string>>): Record<string, Record<string, string>> {
+  return Object.fromEntries(Object.entries(SCENERY_ROLE_SIDS).map(([role, cells]) => [role, { ...cells, ...edited[role] }]))
+}
+
+/** The role cells and borrowing rules of an imported table that differ from the shipped ones (a full table lists them all). */
+function importedExtras(parsed: unknown): { sceneryRoleSids: unknown; decorationRules: unknown } {
+  const table = (Array.isArray(parsed) ? {} : parsed) as { sceneryRoleSids?: Record<string, Record<string, unknown>>; decorationRules?: unknown }
+  const cells: Record<string, Record<string, unknown>> = {}
+  for (const [role, byBiome] of Object.entries(table.sceneryRoleSids ?? {})) {
+    for (const [biome, sid] of Object.entries(byBiome ?? {})) {
+      if (SCENERY_ROLE_SIDS[role]?.[biome] !== sid) (cells[role] ??= {})[biome] = sid
+    }
+  }
+  const sameRules = JSON.stringify(table.decorationRules) === JSON.stringify(DEFAULT_DECORATION_RULES)
+  return { sceneryRoleSids: cells, decorationRules: sameRules ? null : table.decorationRules }
+}
 
 export default function H3MappingView({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation()
@@ -67,7 +88,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
   const rows = useMemo(() => DEFAULT_MAPPING_ROWS.map((row) => overrides[String(row.h3Id)] ?? row), [overrides])
   const nameBySid = useMemo(() => new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o.name])), [catalog])
   const modifiedRows = Object.keys(overrides).length
-  const editCount = modifiedRows + (edits.spriteRules ? 1 : 0) + Object.keys(edits.settings).length
+  const editCount = modifiedRows + (edits.spriteRules ? 1 : 0) + Object.keys(edits.settings).length + Object.keys(edits.sceneryRoleSids).length + (edits.decorationRules ? 1 : 0)
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -83,7 +104,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
   const selected = selectedId === null ? null : rows.find((row) => row.h3Id === selectedId) ?? null
 
   const exportTable = async () => {
-    const table = { ...mappingData, objects: rows, spriteRules: edits.spriteRules ?? DEFAULT_SPRITE_RULES, settings: { ...DEFAULT_SETTINGS, ...edits.settings } }
+    const table = { ...mappingData, objects: rows, spriteRules: edits.spriteRules ?? DEFAULT_SPRITE_RULES, settings: { ...DEFAULT_SETTINGS, ...edits.settings }, decorationRules: edits.decorationRules ?? DEFAULT_DECORATION_RULES, sceneryRoleSids: mergedRoleSids(edits.sceneryRoleSids) }
     const path = await saveFile(JSON.stringify(table, null, 2) + '\n', 'h3-object-mapping.json')
     if (path) setNotice(t('h3Mapping.exported'))
   }
@@ -92,7 +113,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
     const file = await openFile()
     if (!file) return
     try {
-      const parsed = JSON.parse(file.content) as { objects?: unknown[]; spriteRules?: unknown; settings?: unknown } | unknown[]
+      const parsed = JSON.parse(file.content) as { objects?: unknown[]; spriteRules?: unknown; settings?: unknown; decorationRules?: unknown; sceneryRoleSids?: unknown } | unknown[]
       const list = Array.isArray(parsed) ? parsed : parsed.objects
       if (!Array.isArray(list)) throw new Error('no objects array')
       // A full table lists every row: only the ones that differ from the shipped table are edits; the same goes for the rules and the numbers.
@@ -105,10 +126,23 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
       const settings = Array.isArray(parsed) || typeof parsed.settings !== 'object' || parsed.settings === null
         ? {}
         : Object.fromEntries(Object.entries(parsed.settings).filter(([key, value]) => DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS] !== value))
-      setNotice(t('h3Mapping.imported', { count: useH3MappingStore.getState().importEdits(changed, rules, settings) }))
+      setNotice(t('h3Mapping.imported', { count: useH3MappingStore.getState().importEdits(changed, rules, settings, importedExtras(parsed)) }))
     } catch (error) {
       setNotice(t('h3Mapping.importFailed', { error: error instanceof Error ? error.message : String(error) }))
     }
+  }
+
+  const saveToDataFolder = async () => {
+    try {
+      setNotice(t('h3Mapping.saved', { path: await saveMappingEditsFile(useH3MappingStore.getState().edits) }))
+    } catch (error) {
+      setNotice(t('h3Mapping.saveFailed', { error: error instanceof Error ? error.message : String(error) }))
+    }
+  }
+
+  const loadFromDataFolder = async () => {
+    const taken = await loadMappingEditsFile()
+    setNotice(taken === null ? t('h3Mapping.noSavedFile') : t('h3Mapping.loadedSaved', { count: taken }))
   }
 
   const resetAll = async () => {
@@ -168,6 +202,12 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
           </>
         )}
         <div className="ml-auto flex items-center gap-1.5">
+          {isTauri() && (
+            <>
+              <Button size="sm" className="h-8 text-xs" onClick={() => void saveToDataFolder()} title={t('h3Mapping.saveHint')}><Save className="mr-1.5 h-3.5 w-3.5" />{t('h3Mapping.save')}</Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => void loadFromDataFolder()} title={t('h3Mapping.loadSavedHint')}>{t('h3Mapping.loadSaved')}</Button>
+            </>
+          )}
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => void importTable()}><Upload className="mr-1.5 h-3.5 w-3.5" />{t('h3Mapping.import')}</Button>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => void exportTable()}><Download className="mr-1.5 h-3.5 w-3.5" />{t('h3Mapping.export')}</Button>
           <Button variant="outline" size="sm" className="h-8 text-xs" disabled={editCount === 0} onClick={() => void resetAll()}><Undo2 className="mr-1.5 h-3.5 w-3.5" />{t('h3Mapping.resetAll')}</Button>
@@ -182,6 +222,8 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
       )}
 
       {tab === 'rules' && <SpriteRulesTab query={query} />}
+      {tab === 'roles' && <RolesTab />}
+      {tab === 'mixing' && <MixingTab />}
       {tab === 'settings' && <SettingsTab />}
       {tab === 'objects' && (
         <div className="flex min-h-0 flex-1">
@@ -236,6 +278,7 @@ export default function H3MappingView({ onClose }: { onClose: () => void }) {
 // ─── Inspector ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<string, string> }) {
+  const editedRoleSids = useH3MappingStore((s) => s.edits.sceneryRoleSids)
   const { t } = useTranslation()
   const setRow = useH3MappingStore((s) => s.setRow)
   const clearRow = useH3MappingStore((s) => s.clearRow)
@@ -339,7 +382,7 @@ function RowInspector({ row, nameBySid }: { row: ObjectRow; nameBySid: Map<strin
           <div className="rounded-md border border-border p-2">
             <p className="mb-1 text-muted-foreground">{t('h3Mapping.inspector.roleSids')}</p>
             <ul className="space-y-0.5 font-mono">
-              {Object.entries(SCENERY_ROLE_SIDS[row.role] ?? {}).map(([biome, sid]) => <li key={biome}><span className="text-muted-foreground">{biome}</span> → {sid}</li>)}
+              {Object.entries({ ...SCENERY_ROLE_SIDS[row.role], ...editedRoleSids[row.role] }).map(([biome, sid]) => <li key={biome}><span className="text-muted-foreground">{biome}</span> → {sid}</li>)}
             </ul>
           </div>
         </div>

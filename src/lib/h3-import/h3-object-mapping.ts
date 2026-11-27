@@ -42,7 +42,7 @@
 // 11/13 aren't in EdObjts.txt's own id-140 listing at all — real, disclosed
 // gaps, not guesses).
 
-import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind, type MixEntry, type SpriteRule, type H3Settings } from './h3-object-mapping-schema'
+import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind, type MixEntry, type SpriteRule, type H3Settings, type DecorationRuleData } from './h3-object-mapping-schema'
 import mappingData from './h3-object-mapping.json'
 
 export type { SceneryRole, OeBiome, ObjectKind }
@@ -106,6 +106,15 @@ const mapping = H3ObjectMappingSchema.parse(mappingData)
 export const DEFAULT_MAPPING_ROWS: readonly ObjectRow[] = mapping.objects
 /** The `sceneryRoleSids` table: the OE sid each scenery role uses per terrain biome. */
 export const SCENERY_ROLE_SIDS: Readonly<Record<string, Record<string, string>>> = mapping.sceneryRoleSids
+/** The shipped decoration borrowing rules and Scenery-group ids (the tool's defaults). */
+export const DEFAULT_DECORATION_RULES: readonly DecorationRuleData[] = mapping.decorationRules
+export const SCENERY_GROUP_IDS: ReadonlySet<number> = new Set(mapping.sceneryGroupIds)
+let decorationRules: DecorationRuleData[] = [...mapping.decorationRules]
+
+/** The biome borrowing rules in use (shipped, or the user's list). */
+export function getDecorationRules(): readonly DecorationRuleData[] {
+  return decorationRules
+}
 
 /** The table in use: the shipped rows, with the user's edits (the mapping tool, `useH3MappingStore`) on top. */
 let objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, row]))
@@ -133,9 +142,13 @@ export interface MappingEdits {
   rows: Record<string, ObjectRow>
   spriteRules: SpriteRule[] | null
   settings: Partial<H3Settings>
+  /** Only the changed cells: scenery role → OE biome → sid. */
+  sceneryRoleSids: Record<string, Record<string, string>>
+  /** The whole biome borrowing rule list; null: the shipped one. */
+  decorationRules: DecorationRuleData[] | null
 }
 
-export const NO_MAPPING_EDITS: MappingEdits = { rows: {}, spriteRules: null, settings: {} }
+export const NO_MAPPING_EDITS: MappingEdits = { rows: {}, spriteRules: null, settings: {}, sceneryRoleSids: {}, decorationRules: null }
 
 export function applyMappingEdits(edits: MappingEdits): void {
   objectsById = new Map<number, ObjectRow>(mapping.objects.map((row) => [row.h3Id, edits.rows[String(row.h3Id)] ?? row]))
@@ -144,6 +157,9 @@ export function applyMappingEdits(edits: MappingEdits): void {
   spriteRules = edits.spriteRules ? [...edits.spriteRules] : [...mapping.spriteRules]
   compiledRules = compile(spriteRules)
   settings = { ...mapping.settings, ...edits.settings }
+  decorationRules = edits.decorationRules ? [...edits.decorationRules] : [...mapping.decorationRules]
+  // BIOME_ROLE_REPLACEMENTS is read by reference all over the converter, so it is rewritten in place.
+  for (const [role, byBiome] of Object.entries(mapping.sceneryRoleSids)) Object.assign(BIOME_ROLE_REPLACEMENTS[role as SceneryRole], byBiome, edits.sceneryRoleSids?.[role])
 }
 
 /** The first sprite rule whose pattern matches this sprite's file name, or null. A rule with an invalid pattern never matches. */
@@ -173,7 +189,8 @@ export function resolveLandmark(templateObjectId: number, templateAnimation: str
 export const WATER_MOUNTAIN_OBJECT_IDS = new Set<number>(mapping.objects.filter((row) => 'onWater' in row && row.onWater === 'mountain').map((row) => row.h3Id))
 
 
-export const BIOME_ROLE_REPLACEMENTS: Record<SceneryRole, Record<OeBiome, string>> = mapping.sceneryRoleSids as Record<SceneryRole, Record<OeBiome, string>>
+/** The OE sid each scenery role uses per biome: the shipped table with the user's edits on top (see applyMappingEdits). */
+export const BIOME_ROLE_REPLACEMENTS = structuredClone(mapping.sceneryRoleSids) as Record<SceneryRole, Record<OeBiome, string>>
 
 /** `"<Name> (id N)"`, or `"H3 object id N (unidentified)"` when this id has
  *  no entry in VCMI's own registry — used by the import report so a raw

@@ -3655,6 +3655,28 @@
     },
     "edited": "Modifié",
     "wikiDescription": "Description du wiki",
+    "save": "Enregistrer",
+    "saveHint": "Enregistre les modifications dans un fichier du dossier de données de l'application, hors de l'application. Les imports le lisent à cet endroit.",
+    "saved": "Enregistré dans {{path}}",
+    "saveFailed": "Échec de l'enregistrement : {{error}}",
+    "noSavedFile": "Il n'y a pas encore de fichier enregistré.",
+    "loadSaved": "Charger l'enregistrement",
+    "loadSavedHint": "Remplacer les modifications actuelles par le fichier enregistré",
+    "loadedSaved": "{{count}} modifications chargées depuis le fichier enregistré.",
+    "roles": {
+      "intro": "L'objet OE que chaque rôle de décor utilise dans chaque biome OE. Les lignes qui convertissent un objet H3 en rôle de décor lisent ici, et les arbres et chaînes de montagnes variés élargissent le sid à tout l'ensemble du biome.",
+      "role": "Rôle",
+      "resetCell": "Revenir à {{sid}}"
+    },
+    "mixing": {
+      "intro": "Quel biome peut utiliser les arbres ou les montagnes d'un autre biome, et quelle part de ses tirages ils représentent. Cela évite qu'une forêt ou une chaîne ne soit qu'un seul modèle répété.",
+      "reset": "Réinitialiser les règles",
+      "uses": "utilise",
+      "anyType": "tout type",
+      "of": "de",
+      "delete": "Supprimer la règle",
+      "add": "Ajouter une règle"
+    },
     "group": {
       "all": "Tous les groupes",
       "interactive": "Objets interactifs",
@@ -3691,6 +3713,8 @@
     "tab": {
       "objects": "Objets",
       "rules": "Règles de sprite",
+      "roles": "Rôles de décor",
+      "mixing": "Mélange des biomes",
       "settings": "Réglages"
     },
     "mix": {
