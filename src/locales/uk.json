@@ -2845,6 +2845,7 @@
       "filterItems": "Фільтр елементів",
       "category": "Категорія",
       "biome": "Біом",
+      "size": "Розмір",
       "noBiome": "Немає"
     },
     "squadPickerDialog": {
@@ -2878,8 +2879,6 @@
       "showingApproximatelyOfObjects": "Показано приблизно {{filteredCount}} із {{totalCount}} об'єктів"
     },
     "mapCategories": {
-      "creatureBanks": "Банки істот",
-      "heroBoosts": "Бонуси героя",
       "interactables": "Інтерактивні об'єкти",
       "resources": "Ресурси",
       "environments": "Середовища",

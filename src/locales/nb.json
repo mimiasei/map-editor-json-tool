@@ -2754,6 +2754,7 @@
       "filterItems": "Filtrer gjenstander",
       "category": "Kategori",
       "biome": "Biom",
+      "size": "Størrelse",
       "noBiome": "Ingen"
     },
     "squadPickerDialog": {
@@ -2787,8 +2788,6 @@
       "showingApproximatelyOfObjects": "Viser omtrent {{filteredCount}} av {{totalCount}} objekter"
     },
     "mapCategories": {
-      "creatureBanks": "Skapningsbanker",
-      "heroBoosts": "Heltebonuser",
       "interactables": "Interaktive objekter",
       "resources": "Ressurser",
       "environments": "Omgivelser",

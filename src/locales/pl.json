@@ -2845,6 +2845,7 @@
       "filterItems": "Filtruj elementy",
       "category": "Kategoria",
       "biome": "Biom",
+      "size": "Rozmiar",
       "noBiome": "Brak"
     },
     "squadPickerDialog": {
@@ -2878,8 +2879,6 @@
       "showingApproximatelyOfObjects": "Wyświetlono około {{filteredCount}} z {{totalCount}} obiektów"
     },
     "mapCategories": {
-      "creatureBanks": "Banki stworzeń",
-      "heroBoosts": "Bonusy bohatera",
       "interactables": "Obiekty interaktywne",
       "resources": "Zasoby",
       "environments": "Otoczenie",

@@ -30,7 +30,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Copy, Check, Filter, Sparkles } from '@/components/ui/icons'
-import { interactableGroupOf } from '@/lib/map-grid/interactable-subcategories'
+import { resolveInteractableSubcategory } from '@/lib/map-grid/interactable-subcategories'
+import { resolveDecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
+import { objectSizeLabel, sizeKeyOf } from '@/lib/map-grid/object-size'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
@@ -578,6 +580,9 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
 
   const sortable = activeTab === 'creatures' || activeTab === 'artifacts' || activeTab === 'mapObjects'
 
+  // Each map object's footprint size bucket, worked out once per catalog.
+  const mapSizeById = useMemo(() => new Map(catalog.mapObjects.map((o: CatalogMapObject) => [o.id, sizeKeyOf(objectSizeLabel(o))])), [catalog])
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     const fs = filterState
@@ -618,9 +623,10 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         // Campaign and custom objects belong to their own switch, not to their category's.
         const key = sidHasWord(item.id, 'campaign') ? 'campaign' : sidHasWord(item.id, 'custom') ? 'custom' : mapCategoryKey(category ?? '')
         if (fs.mapCategories.enabled[key] === false) return false
-        // Creature banks and hero boosts are parts of Interactables: they need their own switch and the Interactables one.
-        const group = key === 'interactables' ? interactableGroupOf(item.id) : null
-        if (group && fs.mapCategories.enabled[group] === false) return false
+        // The sub-category lists work as in the Map Grid object browser: all on is every object of the category, turning some off narrows it.
+        if (category === 'environments' && fs.mapDecorationSubs.enabled[resolveDecorationSubcategory(item.id, category)] === false) return false
+        if (category === 'interactables' && fs.mapInteractableSubs.enabled[resolveInteractableSubcategory(item.id)] === false) return false
+        if (fs.mapSizes.enabled[mapSizeById.get(item.id) ?? '1x1'] === false) return false
         if (fs.mapBiomes.enabled[biome || 'none'] === false) return false
       }
 
@@ -638,7 +644,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       return (va - vb) * dir || a.name.localeCompare(b.name)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts, sortBy])
+  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts, sortBy, mapSizeById])
 
   // Heroes are shown grouped by faction, in the game's own faction order. Null for
   // every other tab, which keeps its flat list.

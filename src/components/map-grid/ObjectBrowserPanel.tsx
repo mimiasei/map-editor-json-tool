@@ -49,7 +49,7 @@ import {
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
-import { computeFootprintTiles, footprintIconBounds } from '@/lib/map-grid/footprint'
+import { SIZE_ORDER, objectSizeLabel, type SizeKey } from '@/lib/map-grid/object-size'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 import { useTranslation } from 'react-i18next'
 import { factionLabel } from '@/lib/factions'
@@ -88,16 +88,6 @@ type BrowseMode = 'objects' | 'creatures'
 // Core/DB/squads/squads_neutral/*) but there's no real "neutral" playable
 // faction entry in Core/DB/fractions, so it isn't part of `catalog.factions`.
 const NEUTRAL_FRACTION_ID = 'neutral'
-
-// Footprint size buckets for the Size filter; anything else (non-square, 4x4 and up) is "other".
-const SIZE_ORDER = ['1x1', '2x2', '3x3', 'other'] as const
-type SizeKey = (typeof SIZE_ORDER)[number]
-
-/** Visual footprint ("1" cells only, as the grid draws it) as "WxH"; objects with no footprint count as 1x1. */
-function objectSizeLabel(o: CatalogMapObject): string {
-  const b = footprintIconBounds(computeFootprintTiles(o, 0, 0))
-  return b ? `${b.maxX - b.minX + 1}x${b.maxZ - b.minZ + 1}` : '1x1'
-}
 
 const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 // Object catalog entries use their own biome string ("Desert") where tiles

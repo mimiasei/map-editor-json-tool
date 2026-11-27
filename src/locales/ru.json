@@ -2845,6 +2845,7 @@
       "filterItems": "Фильтр предметов",
       "category": "Категория",
       "biome": "Биом",
+      "size": "Размер",
       "noBiome": "Нет"
     },
     "squadPickerDialog": {
@@ -2878,8 +2879,6 @@
       "showingApproximatelyOfObjects": "Показано примерно {{filteredCount}} из {{totalCount}} объектов"
     },
     "mapCategories": {
-      "creatureBanks": "Банки существ",
-      "heroBoosts": "Бонусы героя",
       "interactables": "Интерактивные",
       "resources": "Ресурсы",
       "environments": "Окружение",

@@ -2762,6 +2762,7 @@
       "filterItems": "Filter items",
       "category": "Category",
       "biome": "Biome",
+      "size": "Size",
       "noBiome": "None"
     },
     "squadPickerDialog": {
@@ -2795,8 +2796,6 @@
       "showingApproximatelyOfObjects": "Showing approximately {{filteredCount}} of {{totalCount}} objects"
     },
     "mapCategories": {
-      "creatureBanks": "Creature banks",
-      "heroBoosts": "Hero boosts",
       "interactables": "Interactables",
       "resources": "Resources",
       "environments": "Environments",

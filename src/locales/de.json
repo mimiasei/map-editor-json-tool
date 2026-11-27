@@ -2754,6 +2754,7 @@
       "filterItems": "Einträge filtern",
       "category": "Kategorie",
       "biome": "Biom",
+      "size": "Größe",
       "noBiome": "Keines"
     },
     "squadPickerDialog": {
@@ -2787,8 +2788,6 @@
       "showingApproximatelyOfObjects": "Es werden etwa {{filteredCount}} von {{totalCount}} Objekten angezeigt"
     },
     "mapCategories": {
-      "creatureBanks": "Kreaturenbanken",
-      "heroBoosts": "Helden-Boni",
       "interactables": "Interaktive Objekte",
       "resources": "Ressourcen",
       "environments": "Umgebungen",
